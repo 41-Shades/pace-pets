@@ -131,6 +131,7 @@ Before changing visibility to public:
 - Run the release checks from that repo.
 - Run the package workflow from that repo.
 - Confirm the generated `.release.json` records a clean worktree and the expected release tag before Web Store submission.
+- Configure lightweight `main` protection or a ruleset before changing visibility: require CI before merge, block force pushes, and block branch deletion.
 
 ## Tag The Public-Candidate Source
 
@@ -146,7 +147,7 @@ The Chrome Web Store package should be built from this tagged public-candidate s
 
 ## Flip To Public
 
-Only after the private public-candidate repo passes the review, checks, package, metadata, and identity gates, change `41-Shades/pace-pets` from private to public in GitHub repository settings.
+Only after the private public-candidate repo passes the review, checks, package, metadata, branch-protection, and identity gates, change `41-Shades/pace-pets` from private to public in GitHub repository settings.
 
 After the flip:
 

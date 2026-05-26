@@ -67,6 +67,7 @@ Run broader checks such as `npm run check`, `npm run security:check`, or `npm ru
 - Confirm the private public-candidate repo renders the README, license, privacy doc, security doc, and maintainer docs correctly.
 - Confirm the repo description says this is an unofficial local-only Chrome extension for sanitized Codex usage pace.
 - Confirm the README describes the project as maintainer-led public source rather than a community contribution project.
+- Configure lightweight protection for `main` before changing visibility: require the CI status check before merge, block force pushes, and block branch deletion.
 - Do not use this repo as a scratchpad; only push public-candidate source and release artifacts.
 
 ## 5. Tag And Verify The Public-Candidate Source Release
@@ -108,6 +109,7 @@ Do not submit the package unless the `.release.json` file says `workingTreeClean
 
 - Confirm the private `41-Shades/pace-pets` repo contains only public-candidate source and release artifacts.
 - Confirm the package was built from the matching tag in that repo.
+- Confirm `main` protection or a ruleset is active before changing visibility.
 - Confirm owner, support contact, privacy policy URL, and publisher identity are ready to be public.
 - In GitHub repository settings, change `41-Shades/pace-pets` from private to public.
 - After the flip, confirm unauthenticated users can see the README, license, privacy doc, security doc, release tag, and intended release artifacts.
