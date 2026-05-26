@@ -32,6 +32,7 @@ The public export must not include:
 - Private Git history.
 - `.codex` files or skills.
 - Internal-only planning notes.
+- Maintainer-only launch checklists.
 - Local security-review reports with machine-specific paths.
 - Generated private usage data such as `data/usage.json`.
 - Cookies, auth headers, access tokens, raw upstream responses, raw HTML, raw page text, screenshots, account identifiers, logs, databases, or local dumps.
