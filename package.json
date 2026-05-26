@@ -28,13 +28,13 @@
     "preflight": "npm run check && npm run security:check"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
-    "eslint": "^9.0.0",
-    "globals": "^15.0.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
     "pngjs": "^7.0.0",
-    "prettier": "^3.0.0",
-    "stylelint": "^16.0.0",
-    "stylelint-config-standard": "^36.0.0",
+    "prettier": "^3.8.3",
+    "stylelint": "^17.12.0",
+    "stylelint-config-standard": "^40.0.0",
     "vitest": "^4.1.7"
   },
   "dependencies": {
