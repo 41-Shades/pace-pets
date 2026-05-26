@@ -2,4 +2,5 @@
 .codex/** export-ignore
 docs/plans export-ignore
 docs/plans/** export-ignore
+docs/guides/maintainer-launch-checklist.md export-ignore
 security_best_practices_report.md export-ignore

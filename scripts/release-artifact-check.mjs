@@ -19,7 +19,11 @@ const textFileExtensions = new Set([
   ".yml",
   ".yaml",
 ]);
-const requiredTrackedTextPaths = ["LICENSE", ".gitattributes", ".prettierignore"];
+const requiredTrackedTextPaths = [
+  "LICENSE",
+  ".gitattributes",
+  ".prettierignore",
+];
 const publicSurfacePatterns = [
   /^README\.md$/,
   /^LICENSE$/,
@@ -37,6 +41,7 @@ const publicSurfacePatterns = [
   /^\.github\/.*\.ya?ml$/,
 ];
 const publicSurfaceExclusions = [
+  /^docs\/guides\/maintainer-launch-checklist\.md$/,
   /^collector\/extension\/vendor\//,
   /^collector\/extension\/.*\.png$/,
 ];
@@ -51,7 +56,8 @@ const disallowedTrackedPathPatterns = [
 ];
 const disallowedTrackedContentPatterns = [
   {
-    pattern: /(?:\/(?:Users|home)\/[^/\s]+|[A-Za-z]:[\\/]+Users[\\/][^\\/\s]+)/i,
+    pattern:
+      /(?:\/(?:Users|home)\/[^/\s]+|[A-Za-z]:[\\/]+Users[\\/][^\\/\s]+)/i,
     message: "tracked text must not contain local user-profile paths",
   },
   {
@@ -79,6 +85,7 @@ const requiredExportIgnorePaths = [
   ".codex/**",
   ["docs", "plans"].join("/"),
   `${["docs", "plans"].join("/")}/**`,
+  "docs/guides/maintainer-launch-checklist.md",
   "security_best_practices_report.md",
 ];
 
