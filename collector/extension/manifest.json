@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Pace Pets",
+  "version": "1.0.0",
+  "description": "Tracks sanitized Codex usage history locally in your browser.",
+  "icons": {
+    "16": "themes/default/app-icons/icon16.png",
+    "32": "themes/default/app-icons/icon32.png",
+    "48": "themes/default/app-icons/icon48.png",
+    "128": "themes/default/app-icons/icon128.png"
+  },
+  "permissions": ["alarms", "contextMenus", "storage"],
+  "host_permissions": ["https://chatgpt.com/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Pace Pets",
+    "default_icon": {
+      "16": "themes/default/app-icons/icon16.png",
+      "32": "themes/default/app-icons/icon32.png",
+      "48": "themes/default/app-icons/icon48.png",
+      "128": "themes/default/app-icons/icon128.png"
+    }
+  }
+}

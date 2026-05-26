@@ -1,0 +1,5 @@
+.codex export-ignore
+.codex/** export-ignore
+docs/plans export-ignore
+docs/plans/** export-ignore
+security_best_practices_report.md export-ignore

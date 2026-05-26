@@ -1,0 +1,43 @@
+{
+  "name": "pace-pets",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Chrome extension dashboard for sanitized Codex usage pace.",
+  "license": "MIT",
+  "scripts": {
+    "format": "prettier --write \"**/*.{css,html,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{css,html,js,json,md}\"",
+    "lint:js": "eslint . --max-warnings=0 --report-unused-disable-directives",
+    "lint:css": "stylelint \"**/*.css\" --max-warnings=0",
+    "lint:extension": "node scripts/extension-check.mjs",
+    "lint:assets": "node scripts/vendor-asset-check.mjs",
+    "lint:release": "node scripts/release-artifact-check.mjs",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:extension && npm run lint:assets && npm run lint:release",
+    "smoke": "node scripts/smoke-check.mjs",
+    "test": "vitest run --environment node",
+    "docs:storage": "node scripts/storage-schema-doc.mjs --write",
+    "docs:storage:check": "node scripts/storage-schema-doc.mjs --check",
+    "package:extension": "node scripts/package-extension.mjs",
+    "icons:optimize": "node scripts/optimize-pace-icons.mjs",
+    "icons:transparent": "node scripts/transparent-pace-icons.mjs",
+    "vendor:chart": "node scripts/vendor-chart.mjs",
+    "audit:deps": "npm audit --audit-level=high",
+    "audit:deps:prod": "npm audit --omit=dev --audit-level=high",
+    "security:check": "npm run audit:deps:prod && npm run audit:deps",
+    "check": "npm run format:check && npm run lint && npm run smoke && npm run test",
+    "preflight": "npm run check && npm run security:check"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "pngjs": "^7.0.0",
+    "prettier": "^3.0.0",
+    "stylelint": "^16.0.0",
+    "stylelint-config-standard": "^36.0.0",
+    "vitest": "^4.1.7"
+  },
+  "dependencies": {
+    "chart.js": "4.5.1"
+  }
+}

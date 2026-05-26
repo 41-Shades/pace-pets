@@ -1,0 +1,7 @@
+.git/
+node_modules/
+data/usage.json
+collector/extension/vendor/
+*.png
+*.pyc
+__pycache__/

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Extension Setup</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Extension Setup</h1>
+        <p class="summary">
+          The local Chrome extension reads the ChatGPT/Codex usage endpoint with
+          your existing signed-in browser session, stores bounded safe history
+          in extension-local storage, and renders the Pace Pets dashboard.
+        </p>
+        <nav aria-label="Extension sections">
+          <a href="./index.html">Docs Home</a>
+          <a href="#install">Install</a>
+          <a href="#refresh">Refresh</a>
+          <a href="#stored-data">Stored Data</a>
+          <a href="#custom-icons">Custom Icons</a>
+          <a href="#chart">Chart Asset</a>
+        </nav>
+      </header>
+
+      <section id="install">
+        <h2>Install</h2>
+        <ol>
+          <li>Open <code>chrome://extensions</code>.</li>
+          <li>Enable Developer Mode.</li>
+          <li>Click Load unpacked.</li>
+          <li>
+            Select the <code>collector/extension</code> folder from this
+            project.
+          </li>
+          <li>Click the Pace Pets toolbar icon to open the dashboard.</li>
+        </ol>
+      </section>
+
+      <section id="refresh">
+        <h2>Refresh Behavior</h2>
+        <ul>
+          <li>Refreshes every five minutes from the background worker.</li>
+          <li>
+            The first scheduled refresh runs shortly after install/startup.
+          </li>
+          <li>
+            If the toolbar badge shows <code>!</code>, confirm Chrome is signed
+            in to ChatGPT and reload the unpacked extension if needed.
+          </li>
+          <li>
+            Right-click the toolbar icon to choose whether the badge shows the
+            <code>7d</code> or <code>5h</code> view.
+          </li>
+        </ul>
+      </section>
+
+      <section id="stored-data">
+        <h2>Stored Data</h2>
+        <p>
+          The extension stores only normalized usage history in
+          <code>chrome.storage.local</code>.
+        </p>
+        <p>
+          The generated storage schema reference is maintained from the runtime
+          storage contracts and sample fixture in
+          <code>docs/reference/storage-schema.md</code>.
+        </p>
+        <ul>
+          <li>Cookies and browser session state remain in Chrome.</li>
+          <li>
+            The extension may read a ChatGPT session token in memory during
+            refresh, but it does not persist or log it.
+          </li>
+          <li>
+            No cookies, tokens, raw responses, account IDs, raw page text, or
+            raw HTML are stored locally.
+          </li>
+          <li>
+            History is bounded to 14 days or 500 samples, whichever is smaller.
+          </li>
+          <li>
+            The collector uses an undocumented ChatGPT web endpoint and may need
+            maintenance if that endpoint or response shape changes.
+          </li>
+        </ul>
+      </section>
+
+      <section id="custom-icons">
+        <h2>Custom Icons</h2>
+        <p>
+          Replace PNG files under
+          <code>collector/extension/themes/default/</code> to customize the
+          local extension artwork. Keep the existing filenames for a no-code
+          swap, then reload the unpacked extension from
+          <code>chrome://extensions</code>.
+        </p>
+        <p>
+          The theme asset mapping lives in
+          <code>collector/extension/themes/default/asset-manifest.js</code>. App
+          icon paths also have to stay aligned with
+          <code>collector/extension/manifest.json</code> because Chrome reads
+          them directly from its extension manifest.
+        </p>
+      </section>
+
+      <section id="chart">
+        <h2>Chart Asset</h2>
+        <p>
+          Chart.js is loaded from
+          <code>collector/extension/vendor/chart.umd.min.js</code>. After
+          changing the pinned package version, run
+          <code>npm run vendor:chart</code> to refresh the vendored browser
+          bundle.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

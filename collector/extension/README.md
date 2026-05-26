@@ -1,0 +1,62 @@
+# Pace Pets Extension
+
+This unpacked extension reads the ChatGPT/Codex web usage endpoint with your
+existing signed-in browser session, normalizes supported usage windows, and
+stores only safe usage history in `chrome.storage.local`.
+
+Stored samples contain only normalized local fields:
+
+```json
+{
+  "collectedAt": "2026-05-23T18:00:00.000Z",
+  "source": "codex-wham-extension-background",
+  "collectorVersion": "0.3.0",
+  "windows": {
+    "weekly": {
+      "remainingPercent": 75,
+      "usedPercent": 25,
+      "resetsAt": "2026-05-30T18:32:00.000Z",
+      "windowMinutes": 10080
+    }
+  }
+}
+```
+
+## Install
+
+1. Open `chrome://extensions`.
+2. Enable Developer Mode.
+3. Click Load unpacked.
+4. Select this folder: `collector/extension`.
+
+The extension refreshes every five minutes. Click the extension toolbar icon to
+open the Pace Pets page. Right-click the toolbar icon to choose whether the
+badge shows the 7d or 5h view.
+
+If the toolbar badge shows `!`, confirm that Chrome is signed in to ChatGPT.
+
+## Custom icons
+
+Replace the PNGs under `themes/default/` to customize the local extension
+artwork. Keep the existing filenames for a no-code swap, then reload the
+unpacked extension from `chrome://extensions`.
+
+## Chart.js asset
+
+The dashboard loads Chart.js from `vendor/chart.umd.min.js` inside the extension.
+After changing the pinned `chart.js` package version, run:
+
+```sh
+npm run vendor:chart
+```
+
+## Notes
+
+- Cookies and browser session state remain in Chrome.
+- The extension may read a ChatGPT session token in memory during refresh so it
+  can call the usage endpoint as the signed-in browser session.
+- The session token is not persisted, logged, or stored in local history.
+- No extension code is injected into ChatGPT pages; refreshes happen from the
+  extension background worker.
+- This uses an undocumented ChatGPT web endpoint, so the collector may need
+  updates if that endpoint or response shape changes.

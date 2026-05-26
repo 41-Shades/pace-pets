@@ -1,0 +1,92 @@
+# Pace Pets
+
+Local-only Chrome extension for displaying sanitized Codex usage, pace, and reset timing.
+
+This is an unofficial utility. It is not affiliated with OpenAI, and it depends on browser-visible ChatGPT/Codex usage endpoints that may change.
+
+## How It Works
+
+Pace Pets is loaded as an unpacked Chrome extension. Each user runs their own local copy in their own Chrome profile, and the background worker uses that user's existing signed-in ChatGPT browser session to refresh usage every five minutes.
+
+There is no shared backend, central database, hosted account connection, or cross-user data path. See [Local Extension Distribution Model](docs/guides/local-extension-distribution.md) and [Extension Architecture](docs/reference/extension-architecture.md).
+
+To swap the bundled artwork for a local copy, replace the PNGs under
+`collector/extension/themes/default/`. See [Custom Icons](docs/guides/custom-icons.md).
+
+## Install / Update
+
+1. Open `chrome://extensions`.
+2. Enable Developer Mode.
+3. Click Load unpacked.
+4. Select `collector/extension`.
+5. Click the Pace Pets toolbar icon to open the dashboard. Right-click the toolbar icon to choose whether the badge shows the 7d or 5h view.
+
+To update after pulling or downloading new repo contents, reload the unpacked extension from `chrome://extensions`.
+
+## Data & Privacy
+
+Usage history is stored only in `chrome.storage.local` for the user's local extension install. History is bounded by code constants: 14 days or 500 samples, whichever is smaller.
+
+Stored samples contain only normalized safe usage fields: collection timestamps, source/version markers, supported window keys, remaining/used percentages, reset timestamps, and window duration. See [Storage Schema](docs/reference/storage-schema.md).
+
+The selected usage window is also stored locally so the dashboard, toolbar badge, and badge-view menu stay in sync. The dashboard theme preference stays in extension-page `localStorage`.
+
+`data/usage.sample.json` is a safe fixture used by static checks and docs. Do not publish generated local usage exports such as `data/usage.json`.
+
+See [Privacy](PRIVACY.md) for the full local-data boundary and [Security](SECURITY.md) for sensitive-reporting guidance.
+
+## Upstream Fragility
+
+The collector uses an undocumented ChatGPT web usage endpoint. If that endpoint or response shape changes, the extension may need a repo update.
+
+Keep the current `chatgpt.com` host permission aligned with real runtime fetches. Do not add legacy or fallback host permissions unless the fallback is actually implemented.
+
+## Maintenance
+
+Pace Pets is a maintainer-led public source project. The source is published so users can inspect it, copy it, fork it, and adapt it under the MIT license.
+
+It is not currently run as a community contribution project. There is no contributor workflow, governance process, or promise that feature requests or pull requests will be reviewed or accepted. Maintenance is best-effort and focused on keeping the local extension usable and privacy-readable.
+
+## Development
+
+Chart.js is pinned in `package.json` and vendored into `collector/extension/vendor/` for extension runtime use. After changing the pinned package version, run:
+
+```sh
+npm run vendor:chart
+```
+
+Useful narrow checks:
+
+```sh
+python3 -m json.tool collector/extension/manifest.json >/dev/null
+python3 -m json.tool data/usage.sample.json >/dev/null
+node scripts/extension-check.mjs
+node scripts/vendor-asset-check.mjs
+node scripts/release-artifact-check.mjs
+node scripts/smoke-check.mjs
+npm run test
+```
+
+See [Testing Guide](docs/guides/testing.md) for the lightweight testing layers
+and scope.
+
+## Security Rules
+
+- Do not store browser cookies, auth headers, access tokens, raw HTML, raw page text, screenshots, raw network responses, or account identifiers.
+- Keep real usage history local to Chrome extension storage.
+- Store only normalized usage windows, collection timestamps, reset timestamps, source/version markers, and derived percentages.
+- Keep extension permissions limited to hosts the runtime code actually calls.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+## Internal Docs
+
+- [Local Extension Distribution Model](docs/guides/local-extension-distribution.md)
+- [Custom Icons](docs/guides/custom-icons.md)
+- [Testing Guide](docs/guides/testing.md)
+- [Maintainer Launch Checklist](docs/guides/maintainer-launch-checklist.md)
+- [Clean Public Export Workflow](docs/guides/clean-public-export.md)
+- [Extension Architecture](docs/reference/extension-architecture.md)
+- [Storage Schema](docs/reference/storage-schema.md)

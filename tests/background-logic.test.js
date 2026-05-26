@@ -1,0 +1,128 @@
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { beforeAll, describe, expect, it } from "vitest";
+
+const projectRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+);
+
+beforeAll(async () => {
+  await import(
+    pathToFileURL(
+      path.join(projectRoot, "collector/extension/integration-config.js"),
+    )
+  );
+  await import(
+    pathToFileURL(
+      path.join(projectRoot, "collector/extension/usage-windows.js"),
+    )
+  );
+  await import(
+    pathToFileURL(
+      path.join(projectRoot, "collector/extension/background-logic.js"),
+    )
+  );
+});
+
+describe("PacePetsBackgroundLogic", () => {
+  it("extracts access tokens from supported session shapes only", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+
+    expect(logic.extractAccessToken({ accessToken: "direct" })).toBe("direct");
+    expect(logic.extractAccessToken({ access_token: "snake" })).toBe("snake");
+    expect(
+      logic.extractAccessToken({ session: { accessToken: "nested" } }),
+    ).toBe("nested");
+    expect(
+      logic.extractAccessToken({ session: { access_token: "nested-snake" } }),
+    ).toBe("nested-snake");
+    expect(logic.extractAccessToken({ session: {} })).toBeNull();
+  });
+
+  it("reads session response tokens without throwing on unusable responses", async () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+
+    await expect(
+      logic.extractAccessTokenFromSessionResponse({
+        ok: true,
+        json: async () => ({ accessToken: "direct" }),
+      }),
+    ).resolves.toBe("direct");
+    await expect(
+      logic.extractAccessTokenFromSessionResponse({
+        ok: false,
+        json: async () => {
+          throw new Error("should not parse");
+        },
+      }),
+    ).resolves.toBeNull();
+    await expect(
+      logic.extractAccessTokenFromSessionResponse({
+        ok: true,
+        json: async () => {
+          throw new SyntaxError("unexpected token");
+        },
+      }),
+    ).resolves.toBeNull();
+  });
+
+  it("builds usage headers without adding authorization when no token exists", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+
+    expect(logic.usageHeaders(null, "en-GB")).toEqual({
+      Accept: "application/json",
+      "oai-language": "en-GB",
+    });
+    expect(logic.usageHeaders("token", "en-US")).toEqual({
+      Accept: "application/json",
+      Authorization: "Bearer token",
+      "oai-language": "en-US",
+    });
+  });
+
+  it("retries only auth failures that used an access token", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+
+    expect(logic.shouldRetryUsageResponse(401, "token")).toBe(true);
+    expect(logic.shouldRetryUsageResponse(403, "token")).toBe(true);
+    expect(logic.shouldRetryUsageResponse(401, null)).toBe(false);
+    expect(logic.shouldRetryUsageResponse(500, "token")).toBe(false);
+  });
+
+  it("selects badge windows from valid stored preferences and available data", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const storageKey = globalThis.CodexUsageWindows.WINDOW_STORAGE_KEY;
+
+    expect(logic.selectedBadgeWindowKeyFromItems({}, storageKey)).toBe(
+      "weekly",
+    );
+    expect(
+      logic.selectedBadgeWindowKeyFromItems(
+        { [storageKey]: "fiveHour" },
+        storageKey,
+      ),
+    ).toBe("fiveHour");
+    expect(
+      logic.selectedBadgeWindowKeyFromItems(
+        { [storageKey]: "unsupported" },
+        storageKey,
+      ),
+    ).toBe("weekly");
+
+    expect(
+      logic.badgeWindowKey({ fiveHour: { remainingPercent: 50 } }, "weekly"),
+    ).toBe("fiveHour");
+    expect(
+      logic.badgeWindowKey(
+        {
+          weekly: { remainingPercent: 80 },
+          fiveHour: { remainingPercent: 50 },
+        },
+        "fiveHour",
+      ),
+    ).toBe("fiveHour");
+    expect(logic.badgeWindowKey({}, "unsupported")).toBe("weekly");
+  });
+});

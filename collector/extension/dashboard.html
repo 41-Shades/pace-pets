@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pace Pets</title>
+    <link
+      id="dynamic-favicon"
+      rel="icon"
+      href="./themes/default/app-icons/icon32.png"
+    />
+    <link rel="stylesheet" href="./dashboard.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <div class="content-grid">
+        <section class="usage-panel" aria-labelledby="usage-title">
+          <header class="panel-header">
+            <div class="brand-title">
+              <h1 id="usage-title">Pace Pets</h1>
+              <p id="usage-description">Codex usage, pace, and reset timing.</p>
+            </div>
+            <div class="panel-actions">
+              <div class="panel-controls">
+                <button
+                  class="theme-toggle"
+                  id="theme-toggle"
+                  type="button"
+                  aria-label="Switch theme"
+                  data-tooltip="Switch theme"
+                >
+                  <svg
+                    class="theme-toggle-icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M12.2 3.6a7.4 7.4 0 0 0 7.2 9.2 8.2 8.2 0 1 1-7.2-9.2Z"
+                    ></path>
+                  </svg>
+                </button>
+                <button
+                  class="window-toggle"
+                  id="window-toggle"
+                  type="button"
+                  aria-label="Usage window"
+                  aria-keyshortcuts="T"
+                  data-tooltip="Switch window (T)"
+                >
+                  <span class="window-toggle-option" data-window-key="weekly">
+                    7d
+                  </span>
+                  <span class="window-toggle-option" data-window-key="fiveHour">
+                    5h
+                  </span>
+                </button>
+                <button
+                  class="info-toggle"
+                  id="info-toggle"
+                  type="button"
+                  aria-label="Show dashboard info"
+                  aria-controls="info-overlay"
+                  aria-expanded="false"
+                  data-tooltip="About Pace Pets"
+                >
+                  <svg
+                    class="info-toggle-icon"
+                    viewBox="3 3 18 18"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle
+                      class="info-toggle-ring"
+                      cx="12"
+                      cy="12"
+                      r="8"
+                    ></circle>
+                    <path class="info-toggle-mark" d="M12 11v5"></path>
+                    <path class="info-toggle-mark" d="M12 8h.01"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="collection-meta">
+                <span
+                  class="collection-pulse live"
+                  id="collection-pulse"
+                  aria-hidden="true"
+                  data-tooltip="Usage collection status: Live"
+                ></span>
+                <span
+                  class="last-collected"
+                  id="last-collected"
+                  aria-label="Checked: waiting. Status: Live"
+                  data-tooltip="Status: Live"
+                >
+                  <span class="last-collected-label">Checked:</span>
+                  <span class="last-collected-value" id="last-collected-value"
+                    >waiting</span
+                  >
+                </span>
+                <span id="collector-version" hidden>v...</span>
+              </div>
+            </div>
+          </header>
+
+          <section
+            class="pace-card"
+            id="pace-card"
+            aria-labelledby="pace-title"
+          >
+            <div class="pace-icon" id="pace-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img">
+                <path d="M20 6 9 17l-5-5"></path>
+              </svg>
+            </div>
+            <div class="pace-copy">
+              <h2 id="pace-title">Checking pace</h2>
+              <p id="pace-copy">Waiting for usage.</p>
+            </div>
+            <div class="pace-stats" aria-label="Usage to time summary" hidden>
+              <div
+                class="pace-stat pace-ratio-stat"
+                id="pace-ratio-stat"
+                hidden
+              >
+                <strong id="pace-ratio-value">--</strong>
+                <span class="pace-alt-ratio" id="pace-alt-ratio" hidden></span>
+              </div>
+            </div>
+          </section>
+
+          <div class="dashboard-lower-row">
+            <section class="chart-panel" aria-labelledby="chart-title">
+              <div class="panel-title chart-meta">
+                <h2 id="chart-title">Relative perfect</h2>
+              </div>
+              <div class="chart-frame empty" id="chart-frame">
+                <canvas
+                  id="usage-chart"
+                  aria-label="Usage to time history"
+                  role="img"
+                  hidden
+                ></canvas>
+                <p class="chart-state" id="chart-state">Waiting for history.</p>
+              </div>
+            </section>
+
+            <section
+              class="metrics"
+              aria-label="Weekly usage and time remaining"
+            >
+              <div class="metric-row">
+                <div class="metric-main">
+                  <div class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img">
+                      <path d="M5 20V10"></path>
+                      <path d="M12 20V4"></path>
+                      <path d="M19 20v-7"></path>
+                    </svg>
+                  </div>
+                  <div class="metric-copy">
+                    <span class="metric-title">Usage remaining</span>
+                  </div>
+                  <span class="metric-value" id="usage-percent">--%</span>
+                </div>
+                <div class="metric-bar" aria-hidden="true">
+                  <div class="metric-bar-fill" id="usage-bar"></div>
+                </div>
+              </div>
+
+              <div class="metric-row">
+                <div class="metric-main">
+                  <div class="metric-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img">
+                      <circle cx="12" cy="12" r="8"></circle>
+                      <path d="M12 8v5l3 2"></path>
+                    </svg>
+                  </div>
+                  <div class="metric-copy">
+                    <span class="metric-title">Time remaining</span>
+                  </div>
+                  <span class="metric-value" id="time-percent">--%</span>
+                </div>
+                <div class="metric-bar" aria-hidden="true">
+                  <div class="metric-bar-fill" id="time-bar"></div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              class="reset-card reset-window-card"
+              data-window-key="weekly"
+              aria-label="Reset timing"
+            >
+              <div class="reset-window">
+                <dl class="reset-details">
+                  <div class="reset-detail">
+                    <div class="reset-detail-copy">
+                      <dt id="prior-reset-label">Last Reset</dt>
+                      <dd>
+                        <span class="reset-date-value" id="prior-reset-date"
+                          >--</span
+                        >
+                        <span id="prior-reset-time"></span>
+                      </dd>
+                    </div>
+                  </div>
+                  <div class="reset-detail">
+                    <div class="reset-detail-copy">
+                      <dt id="scheduled-reset-label">Next Reset</dt>
+                      <dd>
+                        <span class="reset-date-value" id="scheduled-reset-date"
+                          >--</span
+                        >
+                        <span id="scheduled-reset-time"></span>
+                      </dd>
+                    </div>
+                  </div>
+                  <div class="reset-progress" aria-hidden="true">
+                    <span
+                      class="reset-progress-dot reset-progress-dot-start"
+                    ></span>
+                    <span class="reset-progress-track">
+                      <span
+                        class="reset-progress-fill"
+                        id="reset-progress-fill"
+                      ></span>
+                    </span>
+                    <span
+                      class="reset-progress-dot reset-progress-dot-end"
+                    ></span>
+                  </div>
+                </dl>
+              </div>
+            </section>
+
+            <section
+              class="reset-card reset-countdown-card"
+              aria-label="Reset countdown"
+            >
+              <div class="reset-countdown-group">
+                <div class="reset-summary">
+                  <div class="reset-summary-copy">
+                    <span class="reset-label reset-label-with-icon">
+                      <svg
+                        class="reset-label-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M10 2h4"></path>
+                        <path d="M12 14l3-3"></path>
+                        <circle cx="12" cy="14" r="8"></circle>
+                      </svg>
+                      <span>Resets in</span>
+                    </span>
+                    <strong id="resets-in">--</strong>
+                    <span class="reset-note">
+                      Click for early reset:
+                      <span class="early-reset-action">
+                        <button
+                          class="early-reset-button"
+                          id="early-reset-button"
+                          type="button"
+                          aria-label="Try early reset"
+                          aria-describedby="early-reset-popover"
+                        >
+                          !!
+                        </button>
+                        <span
+                          class="early-reset-popover"
+                          id="early-reset-popover"
+                          role="status"
+                          hidden
+                        >
+                          <span class="early-reset-popover-text"
+                            >This button does nothing. But keep trying.</span
+                          >
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="info-overlay" id="info-overlay" hidden>
+            <section
+              class="info-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-label="About Pace Pets"
+            >
+              <header class="info-panel-header">
+                <button
+                  class="info-close"
+                  id="info-close"
+                  type="button"
+                  aria-label="Close dashboard info"
+                >
+                  <svg
+                    class="info-close-icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                  </svg>
+                </button>
+              </header>
+
+              <div class="info-panel-content">
+                <div class="info-panel-grid">
+                  <p class="info-panel-item">
+                    <span class="info-panel-label">Pace:</span> Compares usage
+                    remaining with time remaining. Usage data and reset times
+                    stay local to this device.
+                  </p>
+                  <p class="info-panel-item">
+                    <span class="info-panel-label">Source:</span> Uses your
+                    signed-in ChatGPT session in this Chrome profile to read
+                    usage status from chatgpt.com.
+                  </p>
+                  <p class="info-panel-item">
+                    <span class="info-panel-label">Affiliation:</span> Pace Pets
+                    is an independent 41 Shades utility and is not an OpenAI
+                    product. The ChatGPT usage data source may change or stop
+                    working.
+                  </p>
+                </div>
+                <div class="info-panel-meta-row">
+                  <p class="info-panel-meta">
+                    <span class="info-panel-meta-label">Publisher:</span>
+                    <a
+                      class="info-panel-meta-link"
+                      href="https://www.41-shades.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >41 Shades</a
+                    >
+                    <span class="info-panel-meta-separator">·</span>
+                    <span class="info-panel-meta-label">Code:</span>
+                    <a
+                      class="info-panel-meta-link"
+                      href="https://github.com/41-Shades"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >GitHub</a
+                    >
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <aside class="state-rail" aria-label="Pace state examples">
+          <h2>Pace range</h2>
+          <div class="state-stack" id="pace-state-stack"></div>
+
+          <h2 class="state-group-title">Special case</h2>
+          <div class="state-stack" id="pace-special-state-stack"></div>
+        </aside>
+      </div>
+    </main>
+
+    <div class="app-tooltip" id="app-tooltip" role="tooltip" hidden></div>
+
+    <script src="./runtime-manifest.js"></script>
+    <script src="./dashboard-loader.js"></script>
+  </body>
+</html>

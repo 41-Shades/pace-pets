@@ -1,0 +1,6 @@
+data/usage.json
+dist/
+node_modules/
+__pycache__/
+.DS_Store
+*.pyc
