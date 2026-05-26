@@ -22,6 +22,8 @@ The supported security posture is:
 - one current ChatGPT host permission matching runtime fetches
 - local storage of normalized safe usage fields only
 - no content scripts injected into ChatGPT pages
+- no `tabs`, `activeTab`, `scripting`, `tabCapture`, or `desktopCapture`
+- no chat-content, page-content, or screenshot collection path
 
 ## Dependency And Upstream Notes
 

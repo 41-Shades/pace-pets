@@ -39,6 +39,8 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 ## Boundaries
 
 - No extension code is injected into ChatGPT pages.
+- No chat content, page content, or screenshot collection path exists.
+- The manifest does not request `tabs`, `activeTab`, `scripting`, `tabCapture`, or `desktopCapture`.
 - No cookies, auth headers, access tokens, raw upstream responses, raw HTML, raw page text, screenshots, or account identifiers are persisted.
 - Runtime host permissions should only include origins the extension actually fetches.
 - Durable product behavior should use code constants, not environment-variable overrides.

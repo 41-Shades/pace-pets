@@ -29,6 +29,8 @@ Usage history is stored only in `chrome.storage.local` for the user's local exte
 
 Stored samples contain only normalized safe usage fields: collection timestamps, source/version markers, supported window keys, remaining/used percentages, reset timestamps, and window duration. See [Storage Schema](docs/reference/storage-schema.md).
 
+Pace Pets does not inject code into ChatGPT pages, read ChatGPT chats or page contents, or capture screenshots. The extension does not request `tabs`, `activeTab`, `scripting`, `tabCapture`, or `desktopCapture`.
+
 The selected usage window is also stored locally so the dashboard, toolbar badge, and badge-view menu stay in sync. The dashboard theme preference stays in extension-page `localStorage`.
 
 `data/usage.sample.json` is a safe fixture used by static checks and docs. Do not publish generated local usage exports such as `data/usage.json`.

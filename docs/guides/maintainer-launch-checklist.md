@@ -13,6 +13,7 @@ Use this checklist before publishing source, creating a release, or submitting P
 - Chrome Web Store visibility: start `Unlisted`, then switch to `Public` after the listing and support flow are proven.
 - Distribution posture: public-candidate repo private first, public source before Web Store submission, Web Store package from the matching public source tag.
 - Privacy posture: no telemetry, no backend, no cloud sync, no account linking, no maintainer-controlled data collection.
+- Page-access posture: no ChatGPT page injection, chat-content reading, page-content reading, screenshot capture, or `tabs`/`activeTab`/`scripting`/`tabCapture`/`desktopCapture` permission.
 - Affiliation language: describe Codex only as the product this utility works with; state that Pace Pets is unofficial and not affiliated with OpenAI.
 - Maintenance posture: maintainer-led public source. Users may inspect, copy, fork, and adapt the code under the MIT license, but the project does not promise a contributor workflow, governance process, feature request review, or pull request acceptance.
 
@@ -128,6 +129,7 @@ Do not submit the package unless the `.release.json` file says `workingTreeClean
   - `contextMenus`: lets users choose the toolbar badge view.
   - `https://chatgpt.com/*`: calls browser-visible ChatGPT/Codex usage endpoints as the signed-in user.
 - Privacy practices: no telemetry, no backend, no cloud sync, no account linking, no sale or sharing of user data.
+- Page-access practices: no ChatGPT chat reading, page-content reading, screenshot capture, content script, or `tabs`/`activeTab`/`scripting`/`tabCapture`/`desktopCapture` permission.
 - Affiliation language: state that Pace Pets is unofficial and not affiliated with OpenAI.
 
 ## 9. Submit And Verify

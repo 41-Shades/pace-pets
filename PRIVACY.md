@@ -11,6 +11,10 @@ or account-linking service.
 - During refresh, the extension may read a ChatGPT session token in memory so
   it can call the usage endpoint as the signed-in browser session.
 - The extension does not inject code into ChatGPT pages.
+- The extension does not read ChatGPT chats or page contents, and it does not
+  capture screenshots.
+- The extension does not request `tabs`, `activeTab`, `scripting`, or
+  capture-related permissions such as `tabCapture` or `desktopCapture`.
 
 ## What The Extension Stores
 
