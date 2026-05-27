@@ -105,6 +105,7 @@ assertFile("collector/extension/integration-config.js");
 assertFile("collector/extension/usage-windows.js");
 assertFile("collector/extension/usage-values.js");
 assertFile("collector/extension/refresh-status.js");
+assertFile("collector/extension/refresh-control.js");
 assertFile("collector/extension/storage-adapter.js");
 assertFile("collector/extension/usage-integration-adapters.js");
 assertFile("collector/extension/usage.js");
@@ -162,6 +163,7 @@ assert(
 );
 for (const requiredId of [
   "collection-pulse",
+  "collection-status-label",
   "pace-card",
   "pace-icon",
   "pace-title",
@@ -183,6 +185,7 @@ for (const requiredId of [
   "usage-chart",
   "chart-state",
   "last-collected",
+  "manual-refresh-button",
   "collector-version",
   "early-reset-button",
   "early-reset-popover",
@@ -318,8 +321,32 @@ assert(
 );
 assert(
   !/runtime\.sendMessage\(\s*\{\s*type:\s*"status"\s*\}/.test(dashboardJs) &&
-    !/runtime\.onMessage\.addListener/.test(backgroundJs),
-  "Dashboard status updates must use stored refresh status instead of minute service-worker messages.",
+    backgroundJs.includes("PacePetsRefreshControl.isRefreshNowMessage"),
+  "Dashboard status updates must use stored refresh status while manual checks use the refresh-now message contract.",
+);
+assert(
+  dashboardJs.includes("REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS") &&
+    dashboardJs.includes("button.hidden = !manualRefreshAvailable") &&
+    dashboardJs.includes("manualRefreshFeedback") &&
+    dashboardJs.includes("showManualRefreshFailure(response?.refreshStatus)") &&
+    dashboardJs.includes('[STATUS_TEXT.checking]: "Checking..."') &&
+    backgroundJs.includes(
+      "PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS",
+    ) &&
+    backgroundJs.includes("runScheduledRefresh()") &&
+    backgroundJs.includes("runManualRefresh"),
+  "Manual refresh must be conditional, cooldown guarded, and routed through the scheduled refresh path.",
+);
+assert(
+  dashboardJs.includes('[STATUS_TEXT.signInNotFound]: "Sign-in needed"') &&
+    !dashboardJs.includes('[STATUS_TEXT.signInNotFound]: "Check failed"') &&
+    dashboardJs.includes(
+      "Latest check failed because ChatGPT sign-in was not found.",
+    ) &&
+    dashboardJs.includes(
+      "const checkedAt = refreshStatus?.refreshedAt || latest?.collectedAt;",
+    ),
+  "Dashboard status copy must keep auth failures actionable and checked time tied to the latest refresh attempt.",
 );
 assert(
   backgroundJs.includes("let scheduledRefreshPromise = null;") &&

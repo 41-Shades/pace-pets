@@ -20,6 +20,10 @@ open the Pace Pets page. Right-click the toolbar icon to choose whether the
 badge shows the 7d or 5h view.
 
 If the toolbar badge shows `!`, confirm that Chrome is signed in to ChatGPT.
+When the dashboard shows a missing sign-in, failed check, stale check, or
+first-run waiting state, a small refresh control appears beside the status dot
+so you can check again without waiting for the next five-minute refresh. Manual
+checks are cooldown-limited.
 
 ## Custom icons
 
