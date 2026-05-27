@@ -1,6 +1,6 @@
 # Testing Guide
 
-Status: maintainer-facing reference.
+Status: development reference.
 
 ## Summary
 
@@ -8,9 +8,9 @@ Testing in this repo is intentionally light, fast, and layered. The extension is
 small enough that pure logic tests and static extension checks should carry most
 of the confidence without adding browser, DOM, or extension-runtime automation.
 
-These notes are maintainer and agent guidance. Public source, if published, is
-an inspectable release artifact rather than an invitation to run a broad
-community-contribution workflow.
+These notes document the check layers used to keep the public source
+inspectable without adding browser, DOM, or extension-runtime automation by
+default.
 
 ## Check Layers
 

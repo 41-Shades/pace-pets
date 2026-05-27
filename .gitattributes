@@ -1,6 +1,12 @@
 .codex export-ignore
 .codex/** export-ignore
+.maintainer export-ignore
+.maintainer/** export-ignore
 docs/plans export-ignore
 docs/plans/** export-ignore
+data/chrome-web-store-assets export-ignore
+data/chrome-web-store-assets/** export-ignore
+docs/guides/clean-public-export.md export-ignore
+docs/guides/ignored-maintainer-artifacts.md export-ignore
 docs/guides/maintainer-launch-checklist.md export-ignore
 security_best_practices_report.md export-ignore

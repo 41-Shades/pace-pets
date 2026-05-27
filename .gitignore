@@ -1,4 +1,12 @@
 data/usage.json
+data/chrome-web-store-assets/
+.codex/
+.maintainer/
+docs/plans/
+docs/guides/clean-public-export.md
+docs/guides/ignored-maintainer-artifacts.md
+docs/guides/maintainer-launch-checklist.md
+security_best_practices_report.md
 dist/
 node_modules/
 __pycache__/
