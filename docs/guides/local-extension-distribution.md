@@ -1,6 +1,6 @@
 # Local Extension Distribution Model
 
-Status: internal guide.
+Status: reference.
 
 ## Summary
 

@@ -1,6 +1,6 @@
 # Testing Guide
 
-Status: internal guide.
+Status: maintainer-facing reference.
 
 ## Summary
 
