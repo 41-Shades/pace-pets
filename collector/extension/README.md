@@ -4,23 +4,9 @@ This unpacked extension reads the ChatGPT/Codex web usage endpoint with your
 existing signed-in browser session, normalizes supported usage windows, and
 stores only safe usage history in `chrome.storage.local`.
 
-Stored samples contain only normalized local fields:
-
-```json
-{
-  "collectedAt": "2026-05-23T18:00:00.000Z",
-  "source": "codex-wham-extension-background",
-  "collectorVersion": "0.3.0",
-  "windows": {
-    "weekly": {
-      "remainingPercent": 75,
-      "usedPercent": 25,
-      "resetsAt": "2026-05-30T18:32:00.000Z",
-      "windowMinutes": 10080
-    }
-  }
-}
-```
+Stored samples contain only normalized local fields. See
+`../../docs/reference/storage-schema.md` for the generated storage shape,
+runtime constants, supported usage windows, and forbidden data list.
 
 ## Install
 

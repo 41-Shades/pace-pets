@@ -28,6 +28,21 @@ default.
   Vitest tests.
 - `npm run preflight` is the full local release gate and adds dependency audits.
 
+## Generated Docs
+
+`docs/reference/storage-schema.md` has a generated section sourced from the
+safe sample fixture and runtime storage contracts. After changing storage
+constants, supported usage windows, refresh status shape, history
+normalization, or `data/usage.sample.json`, refresh that section with:
+
+```sh
+npm run docs:storage
+```
+
+`npm run smoke` includes the same freshness assertion as
+`npm run docs:storage:check`, so stale generated storage docs fail during the
+normal static smoke layer.
+
 ## Vitest Scope
 
 Vitest tests should stay focused on deterministic logic that can run in Node:
