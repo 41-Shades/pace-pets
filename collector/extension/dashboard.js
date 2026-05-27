@@ -697,13 +697,16 @@
     );
 
     if (startMs === null || resetMs === null || startMs >= resetMs) {
-      elements.resetProgressFill.style.width = "0%";
+      elements.resetProgressFill.style.setProperty("--reset-progress", "0%");
       return;
     }
 
     const elapsedPercent =
       PacePetsLogic.elapsedWindowPercentAt(windowData, Date.now()) || 0;
-    elements.resetProgressFill.style.width = `${elapsedPercent}%`;
+    elements.resetProgressFill.style.setProperty(
+      "--reset-progress",
+      `${elapsedPercent}%`,
+    );
   }
 
   function resetCountdown(value) {
