@@ -92,8 +92,8 @@ Refresh status contains only check metadata and sanitized status text. It must n
 - `source`: sanitized collector/source marker.
 - `collectorVersion`: sanitized extension version marker.
 - `windows.<key>`: normalized usage window for one supported key from the generated supported-window table.
-- `remainingPercent`: bounded `0..100` percent remaining, preserving source precision.
-- `usedPercent`: derived `100 - remainingPercent`, preserving calculation precision.
+- `remainingPercent`: bounded `0..100` percent remaining, preserving source precision without derived floating-point residue.
+- `usedPercent`: derived `100 - remainingPercent`, preserving decimal-safe calculation precision.
 - `resetsAt`: ISO reset timestamp.
 - `windowMinutes`: normalized window duration in minutes.
 

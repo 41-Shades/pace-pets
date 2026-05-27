@@ -2,6 +2,7 @@
   "use strict";
 
   const MS_PER_MINUTE = 60 * 1000;
+  const MAX_PERCENT_DECIMAL_PLACES = 12;
 
   function numberFrom(value) {
     if (value === null || value === undefined || value === "") {
@@ -17,6 +18,25 @@
       return null;
     }
     return percent;
+  }
+
+  function decimalPlacesFrom(value) {
+    const [coefficient, exponentText = "0"] = String(value).trim().split(/e/i);
+    const fractionalDigits = (coefficient.split(".")[1] || "").length;
+    const exponent = Number(exponentText);
+    const decimalPlaces =
+      fractionalDigits - (Number.isFinite(exponent) ? exponent : 0);
+    return Math.max(0, Math.min(MAX_PERCENT_DECIMAL_PLACES, decimalPlaces));
+  }
+
+  function percentComplement(value) {
+    const percent = percentFrom(value);
+    if (percent === null) {
+      return null;
+    }
+
+    const scale = 10 ** decimalPlacesFrom(value);
+    return boundedPercent((100 * scale - Math.round(percent * scale)) / scale);
   }
 
   function boundedPercent(value) {
@@ -82,7 +102,7 @@
 
     return {
       remainingPercent,
-      usedPercent: 100 - remainingPercent,
+      usedPercent: percentComplement(remainingPercent),
       resetsAt,
       windowMinutes: Math.round(windowMinutes),
     };
@@ -95,6 +115,7 @@
     isoDate,
     normalizeStoredWindow,
     numberFrom,
+    percentComplement,
     percentFrom,
     timeRemainingPercentAt,
     windowStartMs,

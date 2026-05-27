@@ -177,6 +177,8 @@ describe("CodexUsageValues", () => {
     expect(values.numberFrom("42")).toBe(42);
     expect(values.percentFrom(101)).toBeNull();
     expect(values.boundedPercent(120)).toBe(100);
+    expect(values.percentComplement(99.99)).toBe(0.01);
+    expect(values.percentComplement(87.66)).toBe(12.34);
     expect(values.isoDate("2026-05-26T12:00:00.000Z")).toBe(
       "2026-05-26T12:00:00.000Z",
     );
@@ -514,6 +516,26 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
         resetsAt: "2026-05-26T12:00:00.000Z",
         windowMinutes: 10080,
       },
+    });
+  });
+
+  it("normalizes derived remaining percentages without float residue", () => {
+    const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
+      usage: {
+        windows: {
+          weekly: {
+            used_percent: 99.99,
+            reset_at: "2026-05-26T12:00:00.000Z",
+            window_duration_mins: 7 * 24 * 60,
+          },
+        },
+      },
+    });
+
+    expect(usage.windows.weekly).toMatchObject({
+      remainingPercent: 0.01,
+      resetsAt: "2026-05-26T12:00:00.000Z",
+      windowMinutes: 10080,
     });
   });
 

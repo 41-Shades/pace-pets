@@ -26,7 +26,7 @@
     USAGE_INTEGRATION_ADAPTERS.DEFAULT_USAGE_ADAPTER;
   const UNSUPPORTED_USAGE_MESSAGE =
     "ChatGPT usage response changed; Pace Pets needs an update.";
-  const { dateMs, numberFrom, percentFrom } = USAGE_VALUES;
+  const { dateMs, numberFrom, percentComplement, percentFrom } = USAGE_VALUES;
 
   function valueFrom(object, key) {
     return object && Object.prototype.hasOwnProperty.call(object, key)
@@ -116,10 +116,9 @@
       return explicitRemaining;
     }
 
-    const used = percentFrom(
+    return percentComplement(
       firstValueFromKeys(windowData, adapter.usedPercentKeys),
     );
-    return used === null ? null : Math.max(0, Math.min(100, 100 - used));
   }
 
   function displayResetTime(resetMs) {
