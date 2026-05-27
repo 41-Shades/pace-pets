@@ -12,6 +12,7 @@ const BADGE_CONTEXT_MENU_ID_PREFIX = "badge-window:";
 const BADGE_CONTEXT_MENU_CONTEXTS = ["action"];
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
+let manualRefreshCooldownUntilMs = 0;
 
 async function fetchAccessToken() {
   for (const url of PacePetsBackgroundLogic.AUTH_SESSION_URLS) {
@@ -294,6 +295,37 @@ function runScheduledRefresh() {
   return scheduledRefreshPromise;
 }
 
+function refreshNowResponse(refreshState) {
+  const refreshStatus = CodexRefreshStatus.normalizeRefreshStatus(refreshState);
+  return {
+    ok: refreshStatus?.ok === true,
+    refreshStatus,
+  };
+}
+
+function manualRefreshCooldownRemainingMs() {
+  return Math.max(0, manualRefreshCooldownUntilMs - Date.now());
+}
+
+function manualRefreshCooldownResponse(remainingMs) {
+  return {
+    ok: false,
+    refreshStatus: CodexRefreshStatus.normalizeRefreshStatus(lastRefreshState),
+    cooldownRemainingMs: remainingMs,
+  };
+}
+
+function runManualRefresh() {
+  const remainingMs = manualRefreshCooldownRemainingMs();
+  if (remainingMs > 0) {
+    return Promise.resolve(manualRefreshCooldownResponse(remainingMs));
+  }
+
+  manualRefreshCooldownUntilMs =
+    Date.now() + PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS;
+  return runScheduledRefresh().then(refreshNowResponse);
+}
+
 function scheduleRefresh() {
   chrome.alarms.create(POLL_ALARM, {
     delayInMinutes: INITIAL_REFRESH_DELAY_MINUTES,
@@ -318,6 +350,25 @@ function openDashboard() {
 chrome.runtime.onInstalled.addListener(initializeExtension);
 chrome.runtime.onStartup.addListener(initializeExtension);
 chrome.action.onClicked.addListener(openDashboard);
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (!PacePetsRefreshControl.isRefreshNowMessage(message)) {
+    return false;
+  }
+
+  runManualRefresh()
+    .then((response) => {
+      sendResponse(response);
+    })
+    .catch((error) => {
+      sendResponse({
+        ok: false,
+        refreshStatus: null,
+        message: CodexRefreshStatus.safeFailureMessage(error),
+      });
+    });
+
+  return true;
+});
 chrome.contextMenus?.onClicked?.addListener((info) => {
   if (info.menuItemId === OPEN_DASHBOARD_CONTEXT_MENU_ID) {
     openDashboard();

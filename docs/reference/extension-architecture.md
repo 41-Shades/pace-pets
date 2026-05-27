@@ -16,6 +16,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/usage-windows.js` owns supported usage-window keys, durations, labels, preference storage key, and window-key helpers shared by collection, storage, badge, and dashboard code.
 - `collector/extension/usage-values.js` owns shared primitive usage value normalization, date parsing, reset-window time math, and stored-window normalization.
 - `collector/extension/refresh-status.js` owns refresh-status construction, normalization, storage key, and safe observable failure messages.
+- `collector/extension/refresh-control.js` owns the dashboard-to-background manual refresh message contract and manual refresh cooldown constant.
 - `collector/extension/storage-adapter.js` owns Promise-based `chrome.storage.local` reads/writes, shared Chrome `lastError` callback wrapping, and local-storage change helpers shared by history, background, and dashboard code.
 - `collector/extension/usage.js` owns raw-to-safe usage normalization through the default WHAM adapter into supported usage windows.
 - `collector/extension/history-store.js` owns sample normalization, dedupe, retention, and sample caps.
@@ -35,6 +36,8 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 6. `history-store.js` appends a safe normalized sample to `chrome.storage.local`.
 7. `background.js` updates the selected toolbar badge view, toolbar badge, and refresh status through `refresh-status.js`.
 8. `dashboard.js` renders summaries, reset timing, pace state, and charts from extension-local storage, then reuses cached state for minute-by-minute countdown and pace updates until storage or view preferences change.
+
+The dashboard can also request a user-initiated refresh when the visible status is actionable, such as a missing ChatGPT sign-in, failed check, stale refresh, or first-run waiting state. Manual requests use the same guarded background refresh path as the alarm and are cooldown-limited in the dashboard and background worker.
 
 ## Boundaries
 

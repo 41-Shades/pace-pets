@@ -25,9 +25,16 @@
   if (!EXTENSION_STORAGE) {
     throw new Error("Codex storage adapter must load before dashboard.js.");
   }
+  const REFRESH_CONTROL = globalThis.PacePetsRefreshControl;
+  if (!REFRESH_CONTROL) {
+    throw new Error(
+      "Pace Pets refresh controls must load before dashboard.js.",
+    );
+  }
 
   const elements = {
     collectionPulse: document.querySelector("#collection-pulse"),
+    collectionStatusLabel: document.querySelector("#collection-status-label"),
     favicon: document.querySelector("#dynamic-favicon"),
     usageTitle: document.querySelector("#usage-title"),
     usageDescription: document.querySelector("#usage-description"),
@@ -66,6 +73,7 @@
     chartState: document.querySelector("#chart-state"),
     lastCollected: document.querySelector("#last-collected"),
     lastCollectedValue: document.querySelector("#last-collected-value"),
+    manualRefreshButton: document.querySelector("#manual-refresh-button"),
     collectorVersion: document.querySelector("#collector-version"),
     earlyResetButton: document.querySelector("#early-reset-button"),
     earlyResetPopover: document.querySelector("#early-reset-popover"),
@@ -101,10 +109,24 @@
     waiting: "Waiting",
     waitingForReading: "Waiting for reading",
     refreshNeeded: "Refresh needed",
+    checking: "Checking",
     signInNotFound: "ChatGPT sign-in not found",
     checkFailed: "Check failed",
   };
   const SIGN_IN_NOT_FOUND_COPY = "Open ChatGPT to resume checks.";
+  const SIGN_IN_NOT_FOUND_DETAIL =
+    "Latest check failed because ChatGPT sign-in was not found.";
+  const COLLECTION_STATUS_LABELS = Object.freeze({
+    [STATUS_TEXT.checkFailed]: "Check failed",
+    [STATUS_TEXT.checking]: "Checking...",
+    [STATUS_TEXT.refreshNeeded]: "Refresh needed",
+    [STATUS_TEXT.signInNotFound]: "Sign-in needed",
+    [STATUS_TEXT.waiting]: "Waiting",
+  });
+  const MANUAL_REFRESH_DEFAULT_LABEL = "Check ChatGPT usage now";
+  const MANUAL_REFRESH_CHECKING_LABEL = "Checking usage...";
+  const MANUAL_REFRESH_COOLDOWN_PREFIX = "Check again in";
+  const MANUAL_REFRESH_FAILURE_VISIBLE_MS = 1800;
   const LOW_SAMPLE_CHART_COPY =
     "Waiting for enough readings to draw the pace line.";
   const WINDOW_SPECS = USAGE_WINDOWS.WINDOW_SPECS;
@@ -161,7 +183,15 @@
   let lastCheckedText =
     elements.lastCollectedValue.textContent.trim() || "waiting";
   let collectionStatusText = STATUS_TEXT.live;
+  let collectionStatusMode = "ok";
+  let collectionStatusTitle = COLLECTION_STATUS_TITLE;
   let collectionStatusDetail = "";
+  let manualRefreshAvailable = false;
+  let manualRefreshInFlight = false;
+  let manualRefreshCooldownUntilMs = 0;
+  let manualRefreshCooldownTimer = null;
+  let manualRefreshFeedback = null;
+  let manualRefreshFeedbackTimer = null;
 
   const EARLY_RESET_POPOVER_MESSAGES = [
     "This button does nothing. But keep trying.",
@@ -823,6 +853,77 @@
     return detail ? `${title}: ${text}. ${detail}` : `${title}: ${text}`;
   }
 
+  function collectionStatusLabelText(text) {
+    return COLLECTION_STATUS_LABELS[text] || "";
+  }
+
+  function setCollectionStatusLabel(text, mode) {
+    const label = collectionStatusLabelText(text);
+    elements.collectionStatusLabel.textContent = label;
+    elements.collectionStatusLabel.hidden = !label;
+    elements.collectionStatusLabel.classList.toggle("stale", mode === "stale");
+    elements.collectionStatusLabel.classList.toggle(
+      "warning",
+      mode === "warning",
+    );
+    elements.collectionStatusLabel.classList.toggle("error", mode === "error");
+    elements.collectionStatusLabel.classList.toggle(
+      "offline",
+      mode === "offline",
+    );
+  }
+
+  function visibleCollectionStatus() {
+    if (manualRefreshInFlight) {
+      return {
+        text: STATUS_TEXT.checking,
+        mode: "warning",
+        title: COLLECTION_STATUS_TITLE,
+        detail: "Checking ChatGPT usage now.",
+      };
+    }
+
+    if (manualRefreshFeedback) {
+      return manualRefreshFeedback;
+    }
+
+    return {
+      text: collectionStatusText,
+      mode: collectionStatusMode,
+      title: collectionStatusTitle,
+      detail: collectionStatusDetail,
+    };
+  }
+
+  function renderCollectionStatus() {
+    const state = visibleCollectionStatus();
+    elements.collectionPulse.classList.toggle("live", state.mode === "live");
+    elements.collectionPulse.classList.toggle("stale", state.mode === "stale");
+    elements.collectionPulse.classList.toggle(
+      "offline",
+      state.mode === "offline",
+    );
+    elements.collectionPulse.classList.toggle("error", state.mode === "error");
+    elements.collectionPulse.classList.toggle(
+      "warning",
+      state.mode === "warning",
+    );
+    setCollectionStatusLabel(state.text, state.mode);
+
+    const statusText = state.detail
+      ? `${state.text}. ${state.detail}`
+      : state.text;
+    const title = state.title || COLLECTION_STATUS_TITLE;
+    const label = `Checked: ${lastCheckedText}. Status: ${statusText}`;
+    setAppTooltipText(
+      elements.collectionPulse,
+      statusTooltipText(title, state.text, state.detail),
+    );
+    elements.lastCollected.setAttribute("aria-label", label);
+    setAppTooltipText(elements.lastCollected, `Status: ${statusText}`);
+    updateManualRefreshButton();
+  }
+
   function statusCodeText(refreshStatus) {
     return refreshStatus?.statusCode ? `HTTP ${refreshStatus.statusCode}` : "";
   }
@@ -834,9 +935,9 @@
   }
 
   function refreshFailureDetail(refreshStatus, latest = null) {
-    const message = String(
-      refreshStatus?.message || "Latest usage check failed.",
-    ).trim();
+    const message = isSignInNotFoundStatus(refreshStatus)
+      ? SIGN_IN_NOT_FOUND_DETAIL
+      : String(refreshStatus?.message || "Latest usage check failed.").trim();
     const statusCode = statusCodeText(refreshStatus);
     const attemptText = refreshAttemptText(refreshStatus);
     const latestText = latest?.collectedAt
@@ -856,20 +957,206 @@
     mode = "ok",
     title = COLLECTION_STATUS_TITLE,
     detail = "",
+    { manualRefresh = false } = {},
   ) {
     collectionStatusText = text;
+    collectionStatusMode = mode;
+    collectionStatusTitle = title;
     collectionStatusDetail = detail;
+    manualRefreshAvailable = manualRefresh;
+    renderCollectionStatus();
+  }
 
-    elements.collectionPulse.classList.toggle("live", mode === "live");
-    elements.collectionPulse.classList.toggle("stale", mode === "stale");
-    elements.collectionPulse.classList.toggle("offline", mode === "offline");
-    elements.collectionPulse.classList.toggle("error", mode === "error");
-    elements.collectionPulse.classList.toggle("warning", mode === "warning");
-    setAppTooltipText(
-      elements.collectionPulse,
-      statusTooltipText(title, text, detail),
+  function manualRefreshCooldownRemainingMs() {
+    return Math.max(0, manualRefreshCooldownUntilMs - Date.now());
+  }
+
+  function clearManualRefreshCooldownTimer() {
+    window.clearTimeout(manualRefreshCooldownTimer);
+    manualRefreshCooldownTimer = null;
+  }
+
+  function clearManualRefreshFeedback() {
+    window.clearTimeout(manualRefreshFeedbackTimer);
+    manualRefreshFeedbackTimer = null;
+    manualRefreshFeedback = null;
+  }
+
+  function latestCurrentSample() {
+    return currentHistory
+      ? CodexUsageHistory.latestSample(currentHistory)
+      : null;
+  }
+
+  function manualRefreshFailureDetail(refreshStatus, error = null) {
+    if (refreshStatus) {
+      return refreshFailureDetail(refreshStatus, latestCurrentSample());
+    }
+
+    return error?.message || "Could not request a usage check.";
+  }
+
+  function showManualRefreshFailure(refreshStatus, error = null) {
+    clearManualRefreshFeedback();
+    manualRefreshFeedback = {
+      text: STATUS_TEXT.checkFailed,
+      mode: "error",
+      title: COLLECTION_STATUS_TITLE,
+      detail: manualRefreshFailureDetail(refreshStatus, error),
+    };
+    manualRefreshFeedbackTimer = window.setTimeout(() => {
+      manualRefreshFeedback = null;
+      manualRefreshFeedbackTimer = null;
+      renderCollectionStatus();
+    }, MANUAL_REFRESH_FAILURE_VISIBLE_MS);
+    renderCollectionStatus();
+  }
+
+  function scheduleManualRefreshCooldownTimer() {
+    clearManualRefreshCooldownTimer();
+    const remainingMs = manualRefreshCooldownRemainingMs();
+    if (remainingMs <= 0) {
+      return;
+    }
+
+    manualRefreshCooldownTimer = window.setTimeout(
+      () => {
+        updateManualRefreshButton();
+        scheduleManualRefreshCooldownTimer();
+      },
+      Math.min(1000, remainingMs),
     );
-    updateLastCollectedLabel();
+  }
+
+  function manualRefreshTooltipText() {
+    if (manualRefreshInFlight) {
+      return MANUAL_REFRESH_CHECKING_LABEL;
+    }
+
+    const remainingMs = manualRefreshCooldownRemainingMs();
+    if (remainingMs > 0) {
+      return `${MANUAL_REFRESH_COOLDOWN_PREFIX} ${Math.ceil(
+        remainingMs / 1000,
+      )}s`;
+    }
+
+    return MANUAL_REFRESH_DEFAULT_LABEL;
+  }
+
+  function updateManualRefreshButton() {
+    const button = elements.manualRefreshButton;
+    if (!button) {
+      return;
+    }
+
+    const remainingMs = manualRefreshCooldownRemainingMs();
+    const disabled = manualRefreshInFlight || remainingMs > 0;
+    button.hidden = !manualRefreshAvailable;
+    button.setAttribute("aria-disabled", String(disabled));
+    button.classList.toggle("is-checking", manualRefreshInFlight);
+    button.setAttribute("aria-label", manualRefreshTooltipText());
+    setAppTooltipText(button, manualRefreshTooltipText());
+
+    if (manualRefreshAvailable && remainingMs > 0) {
+      scheduleManualRefreshCooldownTimer();
+    } else {
+      clearManualRefreshCooldownTimer();
+    }
+  }
+
+  function sendManualRefreshMessage() {
+    return EXTENSION_STORAGE.callbackWithLastError((done) => {
+      chrome.runtime.sendMessage(
+        {
+          type: REFRESH_CONTROL.REFRESH_NOW_MESSAGE_TYPE,
+        },
+        done,
+      );
+    });
+  }
+
+  function canRunManualRefresh() {
+    return (
+      manualRefreshAvailable &&
+      !manualRefreshInFlight &&
+      manualRefreshCooldownRemainingMs() <= 0
+    );
+  }
+
+  function startManualRefreshAttempt() {
+    manualRefreshInFlight = true;
+    manualRefreshCooldownUntilMs =
+      Date.now() + REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS;
+    clearManualRefreshFeedback();
+    renderCollectionStatus();
+  }
+
+  function finishManualRefreshAttempt() {
+    manualRefreshInFlight = false;
+    renderCollectionStatus();
+  }
+
+  function applyManualRefreshCooldown(response) {
+    if (!Number.isFinite(response?.cooldownRemainingMs)) {
+      return;
+    }
+
+    manualRefreshCooldownUntilMs =
+      Date.now() + Math.max(0, response.cooldownRemainingMs);
+  }
+
+  function manualRefreshResponseFailed(response) {
+    return (
+      response?.refreshStatus?.ok === false ||
+      (response?.ok === false &&
+        !Number.isFinite(response?.cooldownRemainingMs))
+    );
+  }
+
+  async function applyManualRefreshResponse(response) {
+    const refreshFailed = manualRefreshResponseFailed(response);
+    applyManualRefreshCooldown(response);
+
+    if (response?.refreshStatus) {
+      currentRefreshStatus = response.refreshStatus;
+    }
+
+    await loadDashboard({ refreshWindowPreference: false });
+
+    if (refreshFailed) {
+      showManualRefreshFailure(response?.refreshStatus);
+      return;
+    }
+
+    clearManualRefreshFeedback();
+  }
+
+  function handleManualRefreshError(error) {
+    setStatus(
+      STATUS_TEXT.checkFailed,
+      "error",
+      COLLECTION_STATUS_TITLE,
+      error?.message || "Could not request a usage check.",
+      { manualRefresh: true },
+    );
+    showManualRefreshFailure(null, error);
+  }
+
+  async function runManualRefresh() {
+    if (!canRunManualRefresh()) {
+      return;
+    }
+
+    startManualRefreshAttempt();
+
+    try {
+      const response = await sendManualRefreshMessage();
+      await applyManualRefreshResponse(response);
+    } catch (error) {
+      handleManualRefreshError(error);
+    } finally {
+      finishManualRefreshAttempt();
+    }
   }
 
   function isSignInNotFoundStatus(refreshStatus) {
@@ -1310,10 +1597,7 @@
   }
 
   function setLatestMetadata(latest, refreshStatus = null) {
-    const checkedAt =
-      refreshStatus?.ok === true
-        ? refreshStatus.refreshedAt || latest?.collectedAt
-        : latest?.collectedAt || refreshStatus?.refreshedAt;
+    const checkedAt = refreshStatus?.refreshedAt || latest?.collectedAt;
     const checkedValue = checkedAt ? formatClockTime(checkedAt) : "waiting";
     setLastCollected(checkedValue);
   }
@@ -1323,12 +1607,7 @@
   }
 
   function updateLastCollectedLabel() {
-    const statusText = collectionStatusDetail
-      ? `${collectionStatusText}. ${collectionStatusDetail}`
-      : collectionStatusText;
-    const label = `Checked: ${lastCheckedText}. Status: ${statusText}`;
-    elements.lastCollected.setAttribute("aria-label", label);
-    setAppTooltipText(elements.lastCollected, `Status: ${statusText}`);
+    renderCollectionStatus();
   }
 
   function setLastCollected(value) {
@@ -1661,6 +1940,7 @@
       state.statusMode,
       COLLECTION_STATUS_TITLE,
       state.statusDetail,
+      { manualRefresh: true },
     );
     renderWindowControls(windowKey);
     elements.priorResetLabel.textContent = spec.priorResetLabel;
@@ -1715,6 +1995,7 @@
         text: STATUS_TEXT.signInNotFound,
         mode: "warning",
         detail: refreshFailureDetail(refreshStatus, latest),
+        manualRefresh: true,
       };
     }
 
@@ -1723,11 +2004,17 @@
         text: STATUS_TEXT.checkFailed,
         mode: "error",
         detail: refreshFailureDetail(refreshStatus, latest),
+        manualRefresh: true,
       };
     }
 
     if (refreshStatus?.ok === true && !isRecentRefreshStatus(refreshStatus)) {
-      return { text: STATUS_TEXT.refreshNeeded, mode: "stale", detail: "" };
+      return {
+        text: STATUS_TEXT.refreshNeeded,
+        mode: "stale",
+        detail: "",
+        manualRefresh: true,
+      };
     }
 
     if (
@@ -1735,7 +2022,12 @@
       !summaryWindow ||
       !summaryState.hasResetTiming
     ) {
-      return { text: STATUS_TEXT.waiting, mode: "warning", detail: "" };
+      return {
+        text: STATUS_TEXT.waiting,
+        mode: "warning",
+        detail: "",
+        manualRefresh: true,
+      };
     }
 
     if (summaryState.staleWindow) {
@@ -1747,14 +2039,21 @@
         };
       }
 
-      return { text: STATUS_TEXT.refreshNeeded, mode: "stale", detail: "" };
+      return {
+        text: STATUS_TEXT.refreshNeeded,
+        mode: "stale",
+        detail: "",
+        manualRefresh: true,
+      };
     }
 
     return { text: STATUS_TEXT.live, mode: "live", detail: "" };
   }
 
   function applyHistoryStatus(state) {
-    setStatus(state.text, state.mode, COLLECTION_STATUS_TITLE, state.detail);
+    setStatus(state.text, state.mode, COLLECTION_STATUS_TITLE, state.detail, {
+      manualRefresh: state.manualRefresh === true,
+    });
   }
 
   function renderHistoryChart(
@@ -1909,6 +2208,12 @@
 
   elements.themeToggle.addEventListener("click", () => {
     toggleTheme();
+  });
+
+  elements.manualRefreshButton.addEventListener("click", () => {
+    runManualRefresh().catch((error) => {
+      console.warn("Codex usage manual refresh failed:", error);
+    });
   });
 
   elements.infoToggle.addEventListener("click", () => {
