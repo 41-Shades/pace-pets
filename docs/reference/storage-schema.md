@@ -92,8 +92,8 @@ Refresh status contains only check metadata and sanitized status text. It must n
 - `source`: sanitized collector/source marker.
 - `collectorVersion`: sanitized extension version marker.
 - `windows.<key>`: normalized usage window for one supported key from the generated supported-window table.
-- `remainingPercent`: bounded `0..100` percent remaining.
-- `usedPercent`: derived `100 - remainingPercent`.
+- `remainingPercent`: bounded `0..100` percent remaining, preserving source precision.
+- `usedPercent`: derived `100 - remainingPercent`, preserving calculation precision.
 - `resetsAt`: ISO reset timestamp.
 - `windowMinutes`: normalized window duration in minutes.
 
@@ -102,7 +102,7 @@ Refresh status contains only check metadata and sanitized status text. It must n
 - Samples without a valid collection timestamp are discarded.
 - Windows without valid `remainingPercent`, `resetsAt`, and `windowMinutes` are discarded.
 - Windows whose `windowMinutes` do not match the canonical duration for their supported key are discarded.
-- Percent values are bounded to `0..100` and rounded to one decimal.
+- Percent values are bounded to `0..100`; display surfaces choose their own rounding.
 - Text markers are whitespace-normalized and capped at 80 characters.
 - Stored history is deduped by sample `id`, sorted by `collectedAt`, pruned to retention, compacted for unchanged plateaus, and capped at the newest 500 samples.
 

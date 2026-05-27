@@ -11,10 +11,6 @@
     return Number.isFinite(parsed) ? parsed : null;
   }
 
-  function roundToTenth(value) {
-    return Math.round(value * 10) / 10;
-  }
-
   function percentFrom(value) {
     const percent = numberFrom(value);
     if (percent === null || percent < 0 || percent > 100) {
@@ -23,13 +19,12 @@
     return percent;
   }
 
-  function boundedPercent(value, { round = false } = {}) {
+  function boundedPercent(value) {
     const percent = numberFrom(value);
     if (percent === null) {
       return null;
     }
-    const bounded = Math.max(0, Math.min(100, percent));
-    return round ? roundToTenth(bounded) : bounded;
+    return Math.max(0, Math.min(100, percent));
   }
 
   function dateMs(value) {
@@ -78,9 +73,7 @@
   }
 
   function normalizeStoredWindow(windowData) {
-    const remainingPercent = boundedPercent(windowData?.remainingPercent, {
-      round: true,
-    });
+    const remainingPercent = boundedPercent(windowData?.remainingPercent);
     const windowMinutes = numberFrom(windowData?.windowMinutes);
     const resetsAt = isoDate(windowData?.resetsAt);
     if (remainingPercent === null || windowMinutes === null || !resetsAt) {
@@ -89,7 +82,7 @@
 
     return {
       remainingPercent,
-      usedPercent: roundToTenth(100 - remainingPercent),
+      usedPercent: 100 - remainingPercent,
       resetsAt,
       windowMinutes: Math.round(windowMinutes),
     };
@@ -103,7 +96,6 @@
     normalizeStoredWindow,
     numberFrom,
     percentFrom,
-    roundToTenth,
     timeRemainingPercentAt,
     windowStartMs,
   });

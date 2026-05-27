@@ -26,7 +26,7 @@
     USAGE_INTEGRATION_ADAPTERS.DEFAULT_USAGE_ADAPTER;
   const UNSUPPORTED_USAGE_MESSAGE =
     "ChatGPT usage response changed; Pace Pets needs an update.";
-  const { dateMs, numberFrom, percentFrom, roundToTenth } = USAGE_VALUES;
+  const { dateMs, numberFrom, percentFrom } = USAGE_VALUES;
 
   function valueFrom(object, key) {
     return object && Object.prototype.hasOwnProperty.call(object, key)
@@ -131,7 +131,7 @@
 
   function normalizedWindow(windowData, spec) {
     return {
-      remainingPercent: roundToTenth(windowData.remainingPercent),
+      remainingPercent: windowData.remainingPercent,
       resetsAt: new Date(windowData.resetMs).toISOString(),
       resetsAtText: displayResetTime(windowData.resetMs),
       windowMinutes: spec.durationMinutes,

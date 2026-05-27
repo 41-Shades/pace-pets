@@ -176,7 +176,7 @@ describe("CodexUsageValues", () => {
 
     expect(values.numberFrom("42")).toBe(42);
     expect(values.percentFrom(101)).toBeNull();
-    expect(values.boundedPercent(120, { round: true })).toBe(100);
+    expect(values.boundedPercent(120)).toBe(100);
     expect(values.isoDate("2026-05-26T12:00:00.000Z")).toBe(
       "2026-05-26T12:00:00.000Z",
     );
@@ -187,9 +187,9 @@ describe("CodexUsageValues", () => {
         windowMinutes: "300.4",
       }),
     ).toEqual({
-      remainingPercent: 12.3,
+      remainingPercent: 12.34,
       resetsAt: "2026-05-26T12:00:00.000Z",
-      usedPercent: 87.7,
+      usedPercent: 87.66,
       windowMinutes: 300,
     });
   });
@@ -469,12 +469,12 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
       source: globalThis.CodexIntegrationConfig.SOURCE_MARKERS.normalizedUsage,
       windows: {
         fiveHour: {
-          remainingPercent: 42.3,
+          remainingPercent: 42.25,
           resetsAt: "2026-05-25T13:00:00.000Z",
           windowMinutes: 300,
         },
         weekly: {
-          remainingPercent: 87.7,
+          remainingPercent: 87.66,
           resetsAt: "2026-05-26T12:00:00.000Z",
           windowMinutes: 10080,
         },
@@ -505,12 +505,12 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
 
     expect(usage.windows).toMatchObject({
       fiveHour: {
-        remainingPercent: 42.3,
+        remainingPercent: 42.25,
         resetsAt: "2026-05-25T13:00:00.000Z",
         windowMinutes: 300,
       },
       weekly: {
-        remainingPercent: 87.7,
+        remainingPercent: 87.66,
         resetsAt: "2026-05-26T12:00:00.000Z",
         windowMinutes: 10080,
       },
@@ -537,12 +537,12 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
 
     expect(usage.windows).toMatchObject({
       fiveHour: {
-        remainingPercent: 42.3,
+        remainingPercent: 42.25,
         resetsAt: "2026-05-25T13:00:00.000Z",
         windowMinutes: 300,
       },
       weekly: {
-        remainingPercent: 87.7,
+        remainingPercent: 87.66,
         resetsAt: "2026-05-26T12:00:00.000Z",
         windowMinutes: 10080,
       },
@@ -567,12 +567,12 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
 
     expect(usage.windows).toMatchObject({
       fiveHour: {
-        remainingPercent: 42.3,
+        remainingPercent: 42.25,
         resetsAt: "2026-05-25T13:00:00.000Z",
         windowMinutes: 300,
       },
       weekly: {
-        remainingPercent: 87.7,
+        remainingPercent: 87.66,
         resetsAt: "2026-05-26T12:00:00.000Z",
         windowMinutes: 10080,
       },
@@ -599,12 +599,12 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
 
     expect(usage.windows).toMatchObject({
       fiveHour: {
-        remainingPercent: 42.3,
+        remainingPercent: 42.25,
         resetsAt: "2026-05-25T13:00:00.000Z",
         windowMinutes: 300,
       },
       weekly: {
-        remainingPercent: 87.7,
+        remainingPercent: 87.66,
         resetsAt: "2026-05-26T12:00:00.000Z",
         windowMinutes: 10080,
       },
@@ -636,7 +636,7 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
 
     expect(usage.windows).toMatchObject({
       fiveHour: {
-        remainingPercent: 42.3,
+        remainingPercent: 42.25,
         resetsAt: "2026-05-25T13:00:00.000Z",
         windowMinutes: 300,
       },
@@ -789,8 +789,8 @@ describe("CodexUsageHistory.normalizeHistory", () => {
               windowMinutes: 10080,
             },
             fiveHour: {
-              remainingPercent: 12.3,
-              usedPercent: 87.7,
+              remainingPercent: 12.34,
+              usedPercent: 87.66,
               resetsAt: "2026-05-25T15:00:00.000Z",
               windowMinutes: 300,
             },
