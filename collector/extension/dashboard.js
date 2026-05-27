@@ -485,6 +485,19 @@
     return Date.now() < suppressAppTooltipUntilMs;
   }
 
+  function isPointerClick(event) {
+    return event.detail > 0;
+  }
+
+  function releasePointerClickFocus(event, element) {
+    if (!isPointerClick(event) || document.activeElement !== element) {
+      return;
+    }
+
+    element.blur();
+    hideAppTooltip();
+  }
+
   function isInfoPanelOpen() {
     return Boolean(elements.infoOverlay && !elements.infoOverlay.hidden);
   }
@@ -532,6 +545,11 @@
 
     if (restoreFocus && infoPanelReturnFocus?.isConnected) {
       infoPanelReturnFocus.focus();
+    } else if (
+      document.activeElement instanceof HTMLElement &&
+      elements.infoOverlay.contains(document.activeElement)
+    ) {
+      document.activeElement.blur();
     }
     infoPanelReturnFocus = null;
   }
@@ -2200,33 +2218,35 @@
 
   elements.windowToggle.addEventListener("click", (event) => {
     const toggled = toggleUsageWindow();
-    if (toggled && event.detail > 0) {
-      elements.windowToggle.blur();
-      hideAppTooltip();
+    if (toggled) {
+      releasePointerClickFocus(event, elements.windowToggle);
     }
   });
 
-  elements.themeToggle.addEventListener("click", () => {
+  elements.themeToggle.addEventListener("click", (event) => {
     toggleTheme();
+    releasePointerClickFocus(event, elements.themeToggle);
   });
 
-  elements.manualRefreshButton.addEventListener("click", () => {
+  elements.manualRefreshButton.addEventListener("click", (event) => {
     runManualRefresh().catch((error) => {
       console.warn("Codex usage manual refresh failed:", error);
     });
+    releasePointerClickFocus(event, elements.manualRefreshButton);
   });
 
-  elements.infoToggle.addEventListener("click", () => {
+  elements.infoToggle.addEventListener("click", (event) => {
     toggleInfoPanel();
+    releasePointerClickFocus(event, elements.infoToggle);
   });
 
-  elements.infoClose.addEventListener("click", () => {
-    hideInfoPanel();
+  elements.infoClose.addEventListener("click", (event) => {
+    hideInfoPanel({ restoreFocus: !isPointerClick(event) });
   });
 
   elements.infoOverlay.addEventListener("click", (event) => {
     if (event.target === elements.infoOverlay) {
-      hideInfoPanel();
+      hideInfoPanel({ restoreFocus: !isPointerClick(event) });
     }
   });
 
