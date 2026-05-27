@@ -88,6 +88,5 @@ MIT. See [LICENSE](LICENSE).
 - [Local Extension Distribution Model](docs/guides/local-extension-distribution.md)
 - [Custom Icons](docs/guides/custom-icons.md)
 - [Testing Guide](docs/guides/testing.md)
-- [Clean Public Export Workflow](docs/guides/clean-public-export.md)
 - [Extension Architecture](docs/reference/extension-architecture.md)
 - [Storage Schema](docs/reference/storage-schema.md)

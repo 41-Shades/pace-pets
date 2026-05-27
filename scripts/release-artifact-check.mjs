@@ -46,7 +46,15 @@ const publicSurfaceExclusions = [
   /^collector\/extension\/.*\.png$/,
 ];
 const disallowedTrackedPathPatterns = [
+  /^\.codex(?:\/|$)/i,
+  /^\.maintainer(?:\/|$)/i,
+  /^data\/chrome-web-store-assets(?:\/|$)/i,
   /^data\/usage\.json$/i,
+  /^docs\/plans(?:\/|$)/i,
+  /^docs\/guides\/clean-public-export\.md$/i,
+  /^docs\/guides\/ignored-maintainer-artifacts\.md$/i,
+  /^docs\/guides\/maintainer-launch-checklist\.md$/i,
+  /^security_best_practices_report\.md$/i,
   /(^|\/)cookies?([._-]|$)/i,
   /(^|\/)tokens?([._-]|$)/i,
   /(^|\/)sessions?([._-]|$)/i,
@@ -65,9 +73,13 @@ const disallowedTrackedContentPatterns = [
     message: "tracked text must not contain private key material",
   },
 ];
+const internalPlansPathPattern = ["docs", "plans"].join("\\/");
 const disallowedPublicContentPatterns = [
   {
-    pattern: /docs\/plans\//i,
+    pattern: new RegExp(
+      `\\]\\([^)]*${internalPlansPathPattern}\\/|href=["'][^"']*${internalPlansPathPattern}\\/`,
+      "i",
+    ),
     message: "public release surface must not link to internal planning docs",
   },
   {
@@ -83,8 +95,25 @@ const disallowedPublicContentPatterns = [
 const requiredExportIgnorePaths = [
   ".codex",
   ".codex/**",
+  ".maintainer",
+  ".maintainer/**",
   ["docs", "plans"].join("/"),
   `${["docs", "plans"].join("/")}/**`,
+  "data/chrome-web-store-assets",
+  "data/chrome-web-store-assets/**",
+  "docs/guides/clean-public-export.md",
+  "docs/guides/ignored-maintainer-artifacts.md",
+  "docs/guides/maintainer-launch-checklist.md",
+  "security_best_practices_report.md",
+];
+const requiredGitignorePaths = [
+  "data/usage.json",
+  "data/chrome-web-store-assets/",
+  ".codex/",
+  ".maintainer/",
+  `${["docs", "plans"].join("/")}/`,
+  "docs/guides/clean-public-export.md",
+  "docs/guides/ignored-maintainer-artifacts.md",
   "docs/guides/maintainer-launch-checklist.md",
   "security_best_practices_report.md",
 ];
@@ -107,7 +136,8 @@ function trackedFiles() {
     encoding: "utf8",
   })
     .split("\0")
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)));
 }
 
 function readFileBuffer(relativePath) {
@@ -165,12 +195,33 @@ function exportIgnoreEntries() {
     .filter((line) => line && !line.startsWith("#"));
 }
 
+function gitignoreEntries() {
+  const gitignorePath = path.join(projectRoot, ".gitignore");
+  assert(fs.existsSync(gitignorePath), "Missing .gitignore.");
+
+  return fs
+    .readFileSync(gitignorePath, "utf8")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+}
+
 function assertPublicArtifactExportIgnores() {
   const entries = exportIgnoreEntries();
   for (const ignoredPath of requiredExportIgnorePaths) {
     assert(
       entries.includes(`${ignoredPath} export-ignore`),
       `Public artifact must export-ignore internal path: ${ignoredPath}`,
+    );
+  }
+}
+
+function assertPublicArtifactGitignores() {
+  const entries = gitignoreEntries();
+  for (const ignoredPath of requiredGitignorePaths) {
+    assert(
+      entries.includes(ignoredPath),
+      `Local maintainer artifact must be gitignored: ${ignoredPath}`,
     );
   }
 }
@@ -204,5 +255,6 @@ for (const relativePath of trackedTextFiles.filter(isPublicSurface)) {
 
 assertVersionConsistency();
 assertPublicArtifactExportIgnores();
+assertPublicArtifactGitignores();
 
 console.log("Release artifact checks passed.");

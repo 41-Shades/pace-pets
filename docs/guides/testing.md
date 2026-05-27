@@ -1,6 +1,6 @@
 # Testing Guide
 
-Status: maintainer-facing reference.
+Status: development reference.
 
 ## Summary
 
@@ -8,9 +8,9 @@ Testing in this repo is intentionally light, fast, and layered. The extension is
 small enough that pure logic tests and static extension checks should carry most
 of the confidence without adding browser, DOM, or extension-runtime automation.
 
-These notes are maintainer and agent guidance. Public source, if published, is
-an inspectable release artifact rather than an invitation to run a broad
-community-contribution workflow.
+These notes document the check layers used to keep the public source
+inspectable without adding browser, DOM, or extension-runtime automation by
+default.
 
 ## Check Layers
 
@@ -27,6 +27,21 @@ community-contribution workflow.
 - `npm run check` runs format check, lint, extension checks, smoke checks, and
   Vitest tests.
 - `npm run preflight` is the full local release gate and adds dependency audits.
+
+## Generated Docs
+
+`docs/reference/storage-schema.md` has a generated section sourced from the
+safe sample fixture and runtime storage contracts. After changing storage
+constants, supported usage windows, refresh status shape, history
+normalization, or `data/usage.sample.json`, refresh that section with:
+
+```sh
+npm run docs:storage
+```
+
+`npm run smoke` includes the same freshness assertion as
+`npm run docs:storage:check`, so stale generated storage docs fail during the
+normal static smoke layer.
 
 ## Vitest Scope
 
