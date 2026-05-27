@@ -47,7 +47,7 @@ Keep the current `chatgpt.com` host permission aligned with real runtime fetches
 
 Pace Pets is a maintainer-led public source project. The source is published so users can inspect it, copy it, fork it, and adapt it under the MIT license.
 
-It is not currently run as a community contribution project. There is no contributor workflow, governance process, or promise that feature requests or pull requests will be reviewed or accepted. Maintenance is best-effort and focused on keeping the local extension usable and privacy-readable.
+This is not run as a community contribution project. Issues and pull requests may be reviewed at the maintainer's discretion, but there is no contributor workflow, governance process, review timeline, or promise that feature requests or pull requests will be accepted. Maintenance is best-effort and focused on keeping the local extension usable and privacy-readable.
 
 ## Development
 
