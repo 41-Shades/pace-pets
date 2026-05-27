@@ -1899,8 +1899,12 @@
     return true;
   }
 
-  elements.windowToggle.addEventListener("click", () => {
-    toggleUsageWindow();
+  elements.windowToggle.addEventListener("click", (event) => {
+    const toggled = toggleUsageWindow();
+    if (toggled && event.detail > 0) {
+      elements.windowToggle.blur();
+      hideAppTooltip();
+    }
   });
 
   elements.themeToggle.addEventListener("click", () => {
