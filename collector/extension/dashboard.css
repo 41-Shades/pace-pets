@@ -40,7 +40,6 @@
   --reset-dot-end: #72a7ff;
   --reset-dot-end-border: #ecf2ff;
   --reset-track-dot: #9aa8bb;
-  --reset-fill: #82d0c7;
   --theme-icon-disc: color-mix(in srgb, var(--track) 72%, var(--surface-mix));
   --theme-icon-hover: color-mix(in srgb, var(--track) 84%, var(--surface-mix));
   --theme-icon-crescent: #526173;
@@ -997,7 +996,6 @@ h1 {
   --reset-dot-end: #8eb6ef;
   --reset-dot-end-border: #273344;
   --reset-track-dot: #62706e;
-  --reset-fill: #70c8bd;
   --theme-icon-disc: color-mix(in srgb, var(--track) 72%, var(--surface-mix));
   --theme-icon-hover: color-mix(in srgb, var(--track) 84%, var(--surface-mix));
   --theme-icon-crescent: #bdc9c6;
@@ -1844,14 +1842,19 @@ dd {
 }
 
 .reset-progress-fill {
-  background: var(--reset-fill);
+  background: linear-gradient(
+    90deg,
+    var(--reset-dot-start) 0%,
+    var(--reset-dot-end) 100%
+  );
   border-radius: 999px;
+  clip-path: inset(0 calc(100% - var(--reset-progress, 0%)) 0 0 round 999px);
   display: block;
   height: 100%;
   left: 0;
   position: absolute;
   top: 0;
-  width: 0%;
+  width: 100%;
 }
 
 @media (width <= 760px) {
