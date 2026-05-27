@@ -83,7 +83,7 @@ and scope.
 
 MIT. See [LICENSE](LICENSE).
 
-## Internal Docs
+## Project Docs
 
 - [Local Extension Distribution Model](docs/guides/local-extension-distribution.md)
 - [Custom Icons](docs/guides/custom-icons.md)
