@@ -1335,8 +1335,11 @@
     remainingPercent,
     timePercent,
     comparisonPaceText = "",
+    { paceRatioDisplayOverride = null } = {},
   ) {
     const paceRatio = paceRatioForValues(remainingPercent, timePercent);
+    const paceRatioForDisplay =
+      paceRatioDisplayOverride === null ? paceRatio : paceRatioDisplayOverride;
 
     setPaceLevel(level);
     elements.paceTitle.textContent = title;
@@ -1344,10 +1347,12 @@
     elements.paceStats.hidden = paceRatio === null;
     elements.paceRatioStat.hidden = paceRatio === null;
     elements.paceRatioValue.textContent =
-      paceRatio === null ? "--" : formatPaceRatioValue(paceRatio);
+      paceRatioForDisplay === null
+        ? "--"
+        : formatPaceRatioValue(paceRatioForDisplay);
     elements.paceAltRatio.textContent = comparisonPaceText;
     elements.paceAltRatio.hidden = !comparisonPaceText;
-    updateTabTitle(title, paceRatio);
+    updateTabTitle(title, paceRatioForDisplay);
   }
 
   function renderPaceSummary(
@@ -1417,6 +1422,7 @@
         remainingPercent,
         timePercent,
         comparisonPaceText,
+        { paceRatioDisplayOverride: PERFECT_PACE_RATIO },
       );
     } else {
       const state = PacePetsLogic.paceStateForRatio(paceRatio);
