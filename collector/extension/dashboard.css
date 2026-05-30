@@ -201,7 +201,7 @@ body,
 
 .state-stack {
   display: grid;
-  gap: 12px 18px;
+  gap: 6px 36px;
   grid-template-columns: repeat(3, minmax(0, var(--state-chip-width)));
   justify-content: center;
 }
@@ -211,17 +211,51 @@ body,
   --state-image-size: 44px;
 
   align-items: center;
+  appearance: none;
   background: color-mix(in srgb, var(--pace-bg) 24%, var(--surface-mix));
   border: 1px solid color-mix(in srgb, var(--pace-border) 22%, var(--line));
   border-left: 3px solid color-mix(in srgb, var(--pace-border) 58%, var(--line));
   border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
   display: flex;
+  font: inherit;
   gap: 10px;
   max-width: 100%;
   min-height: 62px;
   min-width: 0;
   padding: 3px 22px 3px 20px;
+  text-align: left;
+  transform: translateY(0);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 120ms ease;
   width: 100%;
+}
+
+.state-chip:hover,
+.state-chip:focus-visible,
+.state-chip.is-previewing {
+  background: color-mix(in srgb, var(--pace-bg) 42%, var(--surface-mix));
+  border-color: color-mix(in srgb, var(--pace-border) 52%, var(--line));
+  box-shadow: 0 10px 24px rgb(var(--shadow-color) / 8%);
+}
+
+.state-chip:focus-visible {
+  outline: 2px solid
+    color-mix(in srgb, var(--pace-border) 72%, var(--accent-line));
+  outline-offset: 2px;
+}
+
+.state-chip:active {
+  transform: translateY(1px);
+}
+
+.state-copy {
+  min-width: 0;
 }
 
 .state-icon {
@@ -829,6 +863,12 @@ h1 {
   height: var(--dashboard-card-height);
   margin-top: 22px;
   padding: 24px var(--dashboard-card-padding-x);
+}
+
+.pace-card.is-previewing {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--pace-border) 36%, transparent),
+    0 14px 32px rgb(var(--shadow-color) / 8%);
 }
 
 .pace-icon,

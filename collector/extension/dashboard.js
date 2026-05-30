@@ -146,6 +146,18 @@
   const colorSchemeMedia = window.matchMedia(COLOR_SCHEME_QUERY);
   const DEFAULT_CHART_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
   const PERFECT_PACE_RATIO = PacePetsLogic.PERFECT_PACE_RATIO;
+  const PACE_STATE_PREVIEW_DURATION_MS = 1800;
+  const PACE_STATE_PREVIEW_RATIOS = Object.freeze({
+    [PACE_STATES.criticalBehind.key]: 0.45,
+    [PACE_STATES.wellBehind.key]: 0.65,
+    [PACE_STATES.behind.key]: 0.82,
+    [PACE_STATES.on.key]: PERFECT_PACE_RATIO,
+    [PACE_STATES.sync.key]: PERFECT_PACE_RATIO,
+    [PACE_STATES.perfectZero.key]: 0,
+    [PACE_STATES.ahead.key]: 1.16,
+    [PACE_STATES.strongAhead.key]: 1.4,
+    [PACE_STATES.wellAhead.key]: 1.8,
+  });
   const PACE_RATIO_CHART_MIN = 0;
   const PACE_RATIO_CHART_MAX = PacePetsLogic.PACE_RATIO_CHART_MAX;
   const PACE_RATIO_CHART_DETAIL_STEP = 0.05;
@@ -190,6 +202,9 @@
   let manualRefreshCooldownTimer = null;
   let manualRefreshFeedback = null;
   let manualRefreshFeedbackTimer = null;
+  let activePacePreviewKey = null;
+  let pacePreviewRestoreSnapshot = null;
+  let pacePreviewRestoreTimer = null;
 
   const EARLY_RESET_POPOVER_MESSAGES = [
     "This button does nothing. But keep trying.",
@@ -1217,11 +1232,13 @@
     bar.style.width = `${bounded}%`;
   }
 
-  function setPaceLevel(level) {
+  function setPaceLevel(level, { updateTabIcon = true } = {}) {
     elements.paceCard.classList.remove(...PACE_CLASSES);
     elements.paceCard.classList.add(level);
     renderPaceIcon(elements.paceIcon, level);
-    updateFavicon(level);
+    if (updateTabIcon) {
+      updateFavicon(level);
+    }
   }
 
   function paceStateForClassName(className) {
@@ -1261,14 +1278,20 @@
 
   function renderStateChip(stateKey) {
     const state = PACE_STATES[stateKey] || PACE_STATES.muted;
-    const chip = document.createElement("article");
+    const chip = document.createElement("button");
     chip.className = `state-chip ${state.className}`;
+    chip.type = "button";
+    chip.dataset.paceStateKey = state.key;
+    chip.dataset.tooltip = `Preview mock ${state.title} status`;
+    chip.setAttribute("aria-controls", "pace-card");
 
     const icon = document.createElement("div");
     icon.className = "state-icon";
+    icon.setAttribute("aria-hidden", "true");
     renderPaceIcon(icon, state.className);
 
     const copy = document.createElement("div");
+    copy.className = "state-copy";
     const title = document.createElement("strong");
     title.textContent = state.title;
     if (
@@ -1300,6 +1323,138 @@
 
   function renderStateRail() {
     renderStateStack(elements.paceStateStack, PACE_LEGEND_STATE_KEYS);
+  }
+
+  function currentPaceLevel() {
+    return (
+      PACE_CLASSES.find((className) =>
+        elements.paceCard.classList.contains(className),
+      ) || MUTED_PACE_CLASS
+    );
+  }
+
+  function paceCardSnapshot() {
+    return {
+      level: currentPaceLevel(),
+      title: elements.paceTitle.textContent,
+      copy: elements.paceCopy.textContent,
+      statsHidden: elements.paceStats.hidden,
+      ratioStatHidden: elements.paceRatioStat.hidden,
+      ratioValue: elements.paceRatioValue.textContent,
+      altRatio: elements.paceAltRatio.textContent,
+      altRatioHidden: elements.paceAltRatio.hidden,
+    };
+  }
+
+  function restorePaceCardSnapshot(snapshot) {
+    if (!snapshot) {
+      return;
+    }
+
+    setPaceLevel(snapshot.level, { updateTabIcon: false });
+    elements.paceTitle.textContent = snapshot.title;
+    elements.paceCopy.textContent = snapshot.copy;
+    elements.paceStats.hidden = snapshot.statsHidden;
+    elements.paceRatioStat.hidden = snapshot.ratioStatHidden;
+    elements.paceRatioValue.textContent = snapshot.ratioValue;
+    elements.paceAltRatio.textContent = snapshot.altRatio;
+    elements.paceAltRatio.hidden = snapshot.altRatioHidden;
+  }
+
+  function clearPacePreviewRestoreTimer() {
+    window.clearTimeout(pacePreviewRestoreTimer);
+    pacePreviewRestoreTimer = null;
+  }
+
+  function updateStateRailPreviewSelection(activeKey) {
+    if (!elements.paceStateStack) {
+      return;
+    }
+
+    elements.paceStateStack
+      .querySelectorAll(".state-chip[data-pace-state-key]")
+      .forEach((chip) => {
+        chip.classList.toggle(
+          "is-previewing",
+          chip.dataset.paceStateKey === activeKey,
+        );
+      });
+  }
+
+  function restorePacePreview() {
+    if (!activePacePreviewKey) {
+      return;
+    }
+
+    const snapshot = pacePreviewRestoreSnapshot;
+    activePacePreviewKey = null;
+    pacePreviewRestoreSnapshot = null;
+    clearPacePreviewRestoreTimer();
+    elements.paceCard.classList.remove("is-previewing");
+    updateStateRailPreviewSelection(null);
+
+    if (currentHistory) {
+      renderHistory(currentHistory, currentRefreshStatus, {
+        refreshChart: false,
+      });
+      return;
+    }
+
+    restorePaceCardSnapshot(snapshot);
+  }
+
+  function schedulePacePreviewRestore() {
+    clearPacePreviewRestoreTimer();
+    pacePreviewRestoreTimer = window.setTimeout(
+      restorePacePreview,
+      PACE_STATE_PREVIEW_DURATION_MS,
+    );
+  }
+
+  function renderPacePreviewState(state) {
+    setPaceLevel(state.className, { updateTabIcon: false });
+    elements.paceCard.classList.add("is-previewing");
+    elements.paceTitle.textContent = state.title;
+    elements.paceCopy.textContent = state.copy;
+    elements.paceStats.hidden = false;
+    elements.paceRatioStat.hidden = false;
+    elements.paceRatioValue.textContent = formatPaceRatioValue(
+      PACE_STATE_PREVIEW_RATIOS[state.key],
+    );
+    elements.paceAltRatio.textContent = state.ratioLabel;
+    elements.paceAltRatio.hidden = !state.ratioLabel;
+    updateStateRailPreviewSelection(state.key);
+  }
+
+  function showPacePreview(stateKey) {
+    const state = PACE_STATES[stateKey];
+    if (!state) {
+      return;
+    }
+
+    if (!activePacePreviewKey) {
+      pacePreviewRestoreSnapshot = paceCardSnapshot();
+    }
+
+    activePacePreviewKey = state.key;
+    clearPacePreviewRestoreTimer();
+    renderPacePreviewState(state);
+  }
+
+  function refreshActivePacePreview() {
+    const state = PACE_STATES[activePacePreviewKey];
+    if (!state) {
+      return;
+    }
+
+    pacePreviewRestoreSnapshot = paceCardSnapshot();
+    renderPacePreviewState(state);
+  }
+
+  function stateChipFromEvent(event) {
+    const target = event.target instanceof Element ? event.target : null;
+    const chip = target?.closest(".state-chip[data-pace-state-key]");
+    return chip && elements.paceStateStack.contains(chip) ? chip : null;
   }
 
   function svgAttributes(attrs) {
@@ -2016,6 +2171,7 @@
     );
     setChartEmpty(state.chartCopy);
     setLatestMetadata(null, refreshStatus);
+    refreshActivePacePreview();
   }
 
   function renderHistoryLoadFailure() {
@@ -2038,6 +2194,7 @@
       null,
     );
     setChartEmpty("Could not read local history.");
+    refreshActivePacePreview();
   }
 
   function historyStatusState({
@@ -2198,6 +2355,7 @@
       );
     }
     setLatestMetadata(latest, refreshStatus);
+    refreshActivePacePreview();
   }
 
   async function readRefreshStatus() {
@@ -2255,6 +2413,48 @@
     );
     return true;
   }
+
+  elements.paceStateStack.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    const chip = stateChipFromEvent(event);
+    if (!chip) {
+      return;
+    }
+
+    showPacePreview(chip.dataset.paceStateKey);
+    hideAppTooltip();
+
+    try {
+      chip.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is best-effort; click still provides timed restore.
+    }
+  });
+
+  elements.paceStateStack.addEventListener("pointercancel", restorePacePreview);
+
+  elements.paceStateStack.addEventListener("pointerup", (event) => {
+    const chip = stateChipFromEvent(event);
+    if (!chip || chip.dataset.paceStateKey !== activePacePreviewKey) {
+      return;
+    }
+
+    schedulePacePreviewRestore();
+  });
+
+  elements.paceStateStack.addEventListener("click", (event) => {
+    const chip = stateChipFromEvent(event);
+    if (!chip) {
+      return;
+    }
+
+    showPacePreview(chip.dataset.paceStateKey);
+    schedulePacePreviewRestore();
+    releasePointerClickFocus(event, chip);
+  });
 
   elements.windowToggle.addEventListener("click", (event) => {
     const toggled = toggleUsageWindow();
@@ -2370,6 +2570,12 @@
     if (event.key === "Escape") {
       if (isInfoPanelOpen()) {
         hideInfoPanel();
+        event.preventDefault();
+        return;
+      }
+
+      if (activePacePreviewKey) {
+        restorePacePreview();
         event.preventDefault();
         return;
       }
