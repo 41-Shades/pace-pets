@@ -21,6 +21,7 @@ collector/extension/themes/default/
     slow-down.png
     brake-hard.png
     perfect-sync.png
+    perfect-zero.png
 ```
 
 ## Replace Existing Files
@@ -64,3 +65,4 @@ icons directly from its manifest, so those paths have to stay aligned.
 - `wellBehind`: slow down
 - `criticalBehind`: brake hard
 - `sync`: perfect sync
+- `perfectZero`: perfect zero

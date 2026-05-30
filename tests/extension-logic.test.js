@@ -166,6 +166,9 @@ describe("CodexThemeAssets", () => {
     expect(assets.paceIconPathForState("wellAhead")).toBe(
       `${assets.THEME_BASE_PATH}/${assets.PACE_ICON_FILES_BY_STATE.wellAhead}`,
     );
+    expect(assets.paceIconPathForState("perfectZero")).toBe(
+      `${assets.THEME_BASE_PATH}/${assets.PACE_ICON_FILES_BY_STATE.perfectZero}`,
+    );
     expect(assets.paceIconPathForState("muted")).toBe("");
   });
 });
@@ -375,6 +378,63 @@ describe("PacePetsLogic", () => {
     ).toBe(0.625);
   });
 
+  it("detects displayed perfect sync percent pairs including zero-zero", () => {
+    expect(globalThis.PacePetsLogic.paceRatioForValues(0, 0)).toBeNull();
+    expect(globalThis.PacePetsLogic.isPerfectSyncPercentPair(0, 0)).toBe(true);
+    expect(globalThis.PacePetsLogic.isPerfectZeroPercentPair(0, 0)).toBe(true);
+    expect(globalThis.PacePetsLogic.isPerfectSyncPercentPair(0.4, 0)).toBe(
+      true,
+    );
+    expect(globalThis.PacePetsLogic.isPerfectZeroPercentPair(0.4, 0)).toBe(
+      true,
+    );
+    expect(globalThis.PacePetsLogic.isPerfectSyncPercentPair(0.6, 0)).toBe(
+      false,
+    );
+    expect(globalThis.PacePetsLogic.isPerfectZeroPercentPair(0.6, 0)).toBe(
+      false,
+    );
+    expect(globalThis.PacePetsLogic.isPerfectSyncPercentPair(50.4, 49.6)).toBe(
+      true,
+    );
+    expect(globalThis.PacePetsLogic.isPerfectZeroPercentPair(50.4, 49.6)).toBe(
+      false,
+    );
+    expect(globalThis.PacePetsLogic.isPerfectSyncPercentPair(null, 0)).toBe(
+      false,
+    );
+    expect(globalThis.PacePetsLogic.isPerfectZeroPercentPair(null, 0)).toBe(
+      false,
+    );
+  });
+
+  it("detects usage that reached displayed zero before the final time band", () => {
+    const windowData = {
+      remainingPercent: 0.4,
+      resetsAt: "2026-05-25T15:00:00.000Z",
+      windowMinutes: 300,
+    };
+
+    expect(
+      globalThis.PacePetsLogic.usageZeroedBeforeFinalTimeBand(
+        windowData,
+        Date.parse("2026-05-25T14:58:00.000Z"),
+      ),
+    ).toBe(true);
+    expect(
+      globalThis.PacePetsLogic.usageZeroedBeforeFinalTimeBand(
+        windowData,
+        Date.parse("2026-05-25T14:59:00.000Z"),
+      ),
+    ).toBe(false);
+    expect(
+      globalThis.PacePetsLogic.usageZeroedBeforeFinalTimeBand(
+        { ...windowData, remainingPercent: 0.6 },
+        Date.parse("2026-05-25T14:58:00.000Z"),
+      ),
+    ).toBe(false);
+  });
+
   it("formats dashboard and badge pace ratios with their existing caps", () => {
     expect(globalThis.PacePetsLogic.formatPaceRatioValue(0.005)).toBe("<0.01");
     expect(
@@ -438,6 +498,20 @@ describe("PacePetsLogic", () => {
     expect(states.wellAhead.playfulImage).toBe(
       globalThis.CodexThemeAssets.paceIconPathForState("wellAhead"),
     );
+    expect(states.perfectZero.playfulImage).toBe(
+      globalThis.CodexThemeAssets.paceIconPathForState("perfectZero"),
+    );
+    expect(globalThis.PacePetsLogic.PACE_LEGEND_STATE_KEYS).toEqual([
+      "wellAhead",
+      "on",
+      "behind",
+      "strongAhead",
+      "sync",
+      "wellBehind",
+      "ahead",
+      "perfectZero",
+      "criticalBehind",
+    ]);
   });
 
   it("clamps chart pace points to the configured y bounds", () => {

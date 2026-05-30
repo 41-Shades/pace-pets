@@ -297,6 +297,7 @@ assertExactStringSet(
     "wellBehind",
     "criticalBehind",
     "sync",
+    "perfectZero",
   ],
   "Theme pace icon states",
 );

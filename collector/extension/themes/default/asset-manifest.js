@@ -20,6 +20,7 @@
     wellBehind: "pace-icons/slow-down.png",
     criticalBehind: "pace-icons/brake-hard.png",
     sync: "pace-icons/perfect-sync.png",
+    perfectZero: "pace-icons/perfect-zero.png",
   });
 
   const APP_ICON_FILES = Object.freeze(Object.values(APP_ICON_FILES_BY_SIZE));
