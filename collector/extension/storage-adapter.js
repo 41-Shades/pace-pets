@@ -34,6 +34,12 @@
     });
   }
 
+  function removeLocal(keys) {
+    return callbackWithLastError((done) => {
+      chrome.storage.local.remove(keys, done);
+    });
+  }
+
   function isLocalArea(areaName) {
     return areaName === LOCAL_AREA;
   }
@@ -53,6 +59,7 @@
     hasAnyChange,
     hasChange,
     isLocalArea,
+    removeLocal,
     setLocal,
   });
 })(globalThis);
