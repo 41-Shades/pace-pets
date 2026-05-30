@@ -157,16 +157,19 @@
   const DEFAULT_CHART_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
   const PERFECT_PACE_RATIO = PacePetsLogic.PERFECT_PACE_RATIO;
   const PACE_STATE_PREVIEW_DURATION_MS = 1800;
-  const PACE_STATE_PREVIEW_RATIOS = Object.freeze({
-    [PACE_STATES.criticalBehind.key]: 0.45,
-    [PACE_STATES.wellBehind.key]: 0.65,
-    [PACE_STATES.behind.key]: 0.82,
-    [PACE_STATES.on.key]: PERFECT_PACE_RATIO,
-    [PACE_STATES.sync.key]: PERFECT_PACE_RATIO,
-    [PACE_STATES.perfectZero.key]: 0,
-    [PACE_STATES.ahead.key]: 1.16,
-    [PACE_STATES.strongAhead.key]: 1.4,
-    [PACE_STATES.wellAhead.key]: 1.8,
+  const DEFAULT_PACE_STATE_PREVIEW_TIME_PERCENT = 50;
+  const PACE_STATE_PREVIEW_PERCENT_PAIRS = Object.freeze({
+    [PACE_STATES.criticalBehind.key]: pacePreviewPercentPair(0.45),
+    [PACE_STATES.wellBehind.key]: pacePreviewPercentPair(0.65),
+    [PACE_STATES.behind.key]: pacePreviewPercentPair(0.82),
+    [PACE_STATES.on.key]: pacePreviewPercentPair(1.02),
+    [PACE_STATES.sync.key]: pacePreviewPercentPair(PERFECT_PACE_RATIO),
+    [PACE_STATES.perfectZero.key]: pacePreviewPercentPair(0, {
+      timePercent: 0,
+    }),
+    [PACE_STATES.ahead.key]: pacePreviewPercentPair(1.16),
+    [PACE_STATES.strongAhead.key]: pacePreviewPercentPair(1.4),
+    [PACE_STATES.wellAhead.key]: pacePreviewPercentPair(1.8),
   });
   const PACE_RATIO_CHART_MIN = 0;
   const PACE_RATIO_CHART_MAX = PacePetsLogic.PACE_RATIO_CHART_MAX;
@@ -826,6 +829,10 @@
     );
   }
 
+  function perfectSyncDisplayRatio(state) {
+    return state.key === PACE_STATES.perfectZero.key ? 0 : PERFECT_PACE_RATIO;
+  }
+
   function formatPaceRatioValue(value, { suffix = "" } = {}) {
     return PacePetsLogic.formatPaceRatioValue(value, { suffix });
   }
@@ -1243,6 +1250,47 @@
     bar.style.width = `${bounded}%`;
   }
 
+  function pacePreviewPercentPair(
+    paceRatio,
+    { timePercent = DEFAULT_PACE_STATE_PREVIEW_TIME_PERCENT } = {},
+  ) {
+    return Object.freeze({
+      remainingPercent: paceRatio * timePercent,
+      timePercent,
+    });
+  }
+
+  function setPreviewPercentPair(percentPair) {
+    if (!percentPair) {
+      setPercent(elements.usagePercent, elements.usageBar, null);
+      setPercent(elements.timePercent, elements.timeBar, null);
+      return;
+    }
+
+    setPercent(
+      elements.usagePercent,
+      elements.usageBar,
+      percentPair.remainingPercent,
+    );
+    setPercent(elements.timePercent, elements.timeBar, percentPair.timePercent);
+  }
+
+  function previewPaceRatioForState(stateKey) {
+    const percentPair = PACE_STATE_PREVIEW_PERCENT_PAIRS[stateKey];
+    if (!percentPair) {
+      return null;
+    }
+
+    if (stateKey === PACE_STATES.perfectZero.key) {
+      return 0;
+    }
+
+    return paceRatioForValues(
+      percentPair.remainingPercent,
+      percentPair.timePercent,
+    );
+  }
+
   function setPaceLevel(level, { updateTabIcon = true } = {}) {
     elements.paceCard.classList.remove(...PACE_CLASSES);
     elements.paceCard.classList.add(level);
@@ -1405,10 +1453,31 @@
     elements.favicon.removeAttribute("href");
   }
 
+  function percentSummarySnapshot() {
+    return {
+      usageText: elements.usagePercent.textContent,
+      usageBarWidth: elements.usageBar.style.width,
+      timeText: elements.timePercent.textContent,
+      timeBarWidth: elements.timeBar.style.width,
+    };
+  }
+
+  function restorePercentSummarySnapshot(snapshot) {
+    if (!snapshot) {
+      return;
+    }
+
+    elements.usagePercent.textContent = snapshot.usageText;
+    elements.usageBar.style.width = snapshot.usageBarWidth;
+    elements.timePercent.textContent = snapshot.timeText;
+    elements.timeBar.style.width = snapshot.timeBarWidth;
+  }
+
   function paceCardSnapshot() {
     return {
       level: currentPaceLevel(),
       favicon: faviconSnapshot(),
+      percentSummary: percentSummarySnapshot(),
       title: elements.paceTitle.textContent,
       copy: elements.paceCopy.textContent,
       statsHidden: elements.paceStats.hidden,
@@ -1433,6 +1502,7 @@
     elements.paceAltRatio.textContent = snapshot.altRatio;
     elements.paceAltRatio.hidden = snapshot.altRatioHidden;
     restoreFaviconSnapshot(snapshot.favicon);
+    restorePercentSummarySnapshot(snapshot.percentSummary);
   }
 
   function clearPacePreviewRestoreTimer() {
@@ -1467,6 +1537,7 @@
     elements.paceCard.classList.remove("is-previewing");
     updateStateRailPreviewSelection(null);
     restoreFaviconSnapshot(snapshot?.favicon);
+    restorePercentSummarySnapshot(snapshot?.percentSummary);
 
     if (currentHistory) {
       renderHistory(currentHistory, currentRefreshStatus, {
@@ -1494,8 +1565,9 @@
     elements.paceStats.hidden = false;
     elements.paceRatioStat.hidden = false;
     elements.paceRatioValue.textContent = formatPaceRatioValue(
-      PACE_STATE_PREVIEW_RATIOS[state.key],
+      previewPaceRatioForState(state.key),
     );
+    setPreviewPercentPair(PACE_STATE_PREVIEW_PERCENT_PAIRS[state.key]);
     elements.paceAltRatio.textContent = state.ratioLabel;
     elements.paceAltRatio.hidden = !state.ratioLabel;
     updateStateRailPreviewSelection(state.key);
@@ -1650,7 +1722,7 @@
         remainingPercent,
         timePercent,
         comparisonPaceText,
-        { paceRatioDisplayOverride: PERFECT_PACE_RATIO },
+        { paceRatioDisplayOverride: perfectSyncDisplayRatio(state) },
       );
     } else if (!hasTime || paceRatio === null) {
       setPaceSummary(
