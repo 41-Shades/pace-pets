@@ -817,6 +817,10 @@
     return PacePetsLogic.timeRemainingPercentAt(windowData, atMs);
   }
 
+  function isResetWindowStale(windowData, atMs = Date.now()) {
+    return PacePetsLogic.isResetWindowStale(windowData, atMs);
+  }
+
   function paceRatioForValues(remainingPercent, timePercent) {
     return PacePetsLogic.paceRatioForValues(remainingPercent, timePercent);
   }
@@ -1641,7 +1645,7 @@
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
     <rect width="64" height="64" rx="16" fill="${state.favicon.bg}"/>
     <g transform="translate(8 8) scale(2)" fill="none" stroke="${state.favicon.color}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-      ${svgMarkupForIconParts(state.iconParts)}
+      ${svgMarkupForIconParts(state.favicon.iconParts)}
     </g>
   </svg>`;
     elements.favicon.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
@@ -2198,7 +2202,7 @@
     const timePercent = timeRemainingPercent(windowData);
     const hasResetTiming =
       resetMs !== null && windowStartMs(windowData) !== null;
-    const staleWindow = resetMs !== null && resetMs <= Date.now();
+    const staleWindow = isResetWindowStale(windowData);
 
     elements.priorResetLabel.textContent = spec.priorResetLabel;
     elements.scheduledResetLabel.textContent = spec.scheduledResetLabel;
