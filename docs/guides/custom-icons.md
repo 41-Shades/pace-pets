@@ -22,6 +22,7 @@ collector/extension/themes/default/
     brake-hard.png
     perfect-sync.png
     perfect-zero.png
+    perfect-zero-glow.png
 ```
 
 ## Replace Existing Files
@@ -66,3 +67,7 @@ icons directly from its manifest, so those paths have to stay aligned.
 - `criticalBehind`: brake hard
 - `sync`: perfect sync
 - `perfectZero`: perfect zero
+
+`perfect-zero-glow.png` is a dashboard-only variant used when the main
+`PERFECT ZERO` status card renders its animated space background. The normal
+`perfect-zero.png` asset remains the state icon used by the legend rail.

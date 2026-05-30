@@ -22,6 +22,9 @@
     sync: "pace-icons/perfect-sync.png",
     perfectZero: "pace-icons/perfect-zero.png",
   });
+  const PACE_ICON_VARIANT_FILES = Object.freeze({
+    perfectZeroGlow: "pace-icons/perfect-zero-glow.png",
+  });
 
   const APP_ICON_FILES = Object.freeze(Object.values(APP_ICON_FILES_BY_SIZE));
   const PACE_ICON_FILES = Object.freeze(
@@ -48,6 +51,14 @@
     return themedPath(paceIconFileForState(stateKey));
   }
 
+  function paceIconVariantFile(variantKey) {
+    return PACE_ICON_VARIANT_FILES[variantKey] || "";
+  }
+
+  function paceIconVariantPath(variantKey) {
+    return themedPath(paceIconVariantFile(variantKey));
+  }
+
   root.CodexThemeAssets = Object.freeze({
     THEME_ID,
     THEME_BASE_PATH,
@@ -55,8 +66,11 @@
     APP_ICON_FILES_BY_SIZE,
     PACE_ICON_FILES,
     PACE_ICON_FILES_BY_STATE,
+    PACE_ICON_VARIANT_FILES,
     appIconFileForSize,
     appIconPathForSize,
+    paceIconVariantFile,
+    paceIconVariantPath,
     paceIconFileForState,
     paceIconPathForState,
   });
