@@ -29,10 +29,14 @@
   }
 
   function paceState(state) {
+    const stateIconParts = iconParts(state.iconParts);
     return Object.freeze({
       ...state,
-      favicon: Object.freeze(state.favicon),
-      iconParts: iconParts(state.iconParts),
+      favicon: Object.freeze({
+        ...state.favicon,
+        iconParts: iconParts(state.favicon.iconParts || state.iconParts),
+      }),
+      iconParts: stateIconParts,
     });
   }
 
@@ -131,7 +135,16 @@
       copy: "A beautiful, unreasonable zero.",
       ratioLabel: "Time = Usage = 0",
       badgeColor: "#6b7280",
-      favicon: { bg: "#020617", color: "#e5e7eb" },
+      favicon: {
+        bg: "#020617",
+        color: "#e5e7eb",
+        iconParts: [
+          {
+            tag: "ellipse",
+            attrs: { cx: "12", cy: "12", rx: "5.5", ry: "8" },
+          },
+        ],
+      },
       playfulImage: THEME_ASSETS.paceIconPathForState("perfectZero"),
       iconParts: [
         {
@@ -305,11 +318,20 @@
     windowData,
     { allowPerfectZero = true, atMs = Date.now() } = {},
   ) {
+    if (isResetWindowStale(windowData, atMs)) {
+      return null;
+    }
+
     return controlledPacePresentationForValues(
       windowData?.remainingPercent,
       timeRemainingPercentAt(windowData, atMs),
       { allowPerfectZero },
     );
+  }
+
+  function isResetWindowStale(windowData, atMs = Date.now()) {
+    const resetMs = dateMs(windowData?.resetsAt);
+    return resetMs !== null && resetMs <= atMs;
   }
 
   function usageZeroedBeforeFinalTimeBand(windowData, atMs) {
@@ -472,6 +494,7 @@
     formatPaceRatioValue,
     isPerfectSyncPercentPair,
     isPerfectZeroPercentPair,
+    isResetWindowStale,
     paceStateForClassName,
     paceStateForRatio,
     paceRatioForValues,

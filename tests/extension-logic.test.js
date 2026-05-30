@@ -441,6 +441,43 @@ describe("PacePetsLogic", () => {
     expect(zeroPresentation.displayRatio).toBe(0);
     expect(zeroPresentation.paceRatio).toBeNull();
 
+    const activeZeroWindow = {
+      remainingPercent: 0.4,
+      resetsAt: "2026-05-25T12:01:00.000Z",
+      windowMinutes: 300,
+    };
+    const activeZeroPresentation =
+      globalThis.PacePetsLogic.controlledPacePresentationForWindow(
+        activeZeroWindow,
+        { atMs: Date.parse("2026-05-25T12:00:00.000Z") },
+      );
+    expect(activeZeroPresentation.state.key).toBe("perfectZero");
+    expect(activeZeroPresentation.displayRatio).toBe(0);
+
+    expect(
+      globalThis.PacePetsLogic.controlledPacePresentationForWindow(
+        {
+          remainingPercent: 0,
+          resetsAt: "2026-05-25T12:00:00.000Z",
+          windowMinutes: 300,
+        },
+        { atMs: Date.parse("2026-05-25T12:00:00.000Z") },
+      ),
+    ).toBeNull();
+    expect(globalThis.PacePetsLogic.isResetWindowStale(activeZeroWindow)).toBe(
+      false,
+    );
+    expect(
+      globalThis.PacePetsLogic.isResetWindowStale(
+        {
+          remainingPercent: 0,
+          resetsAt: "2026-05-25T12:00:00.000Z",
+          windowMinutes: 300,
+        },
+        Date.parse("2026-05-25T12:00:00.000Z"),
+      ),
+    ).toBe(true);
+
     expect(
       globalThis.PacePetsLogic.controlledPacePresentationForValues(0.4, 0, {
         allowPerfectZero: false,
