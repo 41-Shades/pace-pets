@@ -1333,9 +1333,34 @@
     );
   }
 
+  function faviconSnapshot() {
+    if (!elements.favicon) {
+      return null;
+    }
+
+    return {
+      hadHref: elements.favicon.hasAttribute("href"),
+      href: elements.favicon.getAttribute("href"),
+    };
+  }
+
+  function restoreFaviconSnapshot(snapshot) {
+    if (!elements.favicon || !snapshot) {
+      return;
+    }
+
+    if (snapshot.hadHref) {
+      elements.favicon.setAttribute("href", snapshot.href ?? "");
+      return;
+    }
+
+    elements.favicon.removeAttribute("href");
+  }
+
   function paceCardSnapshot() {
     return {
       level: currentPaceLevel(),
+      favicon: faviconSnapshot(),
       title: elements.paceTitle.textContent,
       copy: elements.paceCopy.textContent,
       statsHidden: elements.paceStats.hidden,
@@ -1359,6 +1384,7 @@
     elements.paceRatioValue.textContent = snapshot.ratioValue;
     elements.paceAltRatio.textContent = snapshot.altRatio;
     elements.paceAltRatio.hidden = snapshot.altRatioHidden;
+    restoreFaviconSnapshot(snapshot.favicon);
   }
 
   function clearPacePreviewRestoreTimer() {
@@ -1392,6 +1418,7 @@
     clearPacePreviewRestoreTimer();
     elements.paceCard.classList.remove("is-previewing");
     updateStateRailPreviewSelection(null);
+    restoreFaviconSnapshot(snapshot?.favicon);
 
     if (currentHistory) {
       renderHistory(currentHistory, currentRefreshStatus, {
@@ -1412,7 +1439,7 @@
   }
 
   function renderPacePreviewState(state) {
-    setPaceLevel(state.className, { updateTabIcon: false });
+    setPaceLevel(state.className);
     elements.paceCard.classList.add("is-previewing");
     elements.paceTitle.textContent = state.title;
     elements.paceCopy.textContent = state.copy;
