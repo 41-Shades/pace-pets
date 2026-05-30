@@ -23,7 +23,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/themes/default/asset-manifest.js` owns the packaged theme asset manifest for app icons and pace icons shared by runtime code and asset checks.
 - `collector/extension/themes/default/` contains the default replaceable extension artwork.
 - `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, inline icon geometry, and legend metadata.
-- `collector/extension/dashboard.html`, `dashboard.css`, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker.
+- `collector/extension/dashboard.html`, `dashboard.css`, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and pace legend previews, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker.
 - `collector/extension/vendor/chart.umd.min.js` is the optional vendored Chart.js runtime used by the dashboard chart; the rest of the dashboard still renders if the chart asset cannot load.
 
 ## Collection Flow
