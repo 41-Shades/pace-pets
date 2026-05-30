@@ -31,6 +31,16 @@
       "Pace Pets refresh controls must load before dashboard.js.",
     );
   }
+  const THEME_ASSETS = globalThis.CodexThemeAssets;
+  if (!THEME_ASSETS) {
+    throw new Error("Codex theme assets must load before dashboard.js.");
+  }
+  const PERFECT_ZERO_SPACE = globalThis.PacePetsPerfectZeroSpace;
+  if (!PERFECT_ZERO_SPACE) {
+    throw new Error(
+      "Pace Pets perfect-zero space scene must load before dashboard.js.",
+    );
+  }
 
   const elements = {
     collectionPulse: document.querySelector("#collection-pulse"),
@@ -205,6 +215,7 @@
   let activePacePreviewKey = null;
   let pacePreviewRestoreSnapshot = null;
   let pacePreviewRestoreTimer = null;
+  let perfectZeroSpaceScene = null;
 
   const EARLY_RESET_POPOVER_MESSAGES = [
     "This button does nothing. But keep trying.",
@@ -1245,15 +1256,52 @@
     return PacePetsLogic.paceStateForClassName(className);
   }
 
+  function stopPerfectZeroSpaceScene() {
+    perfectZeroSpaceScene?.stop();
+    perfectZeroSpaceScene = null;
+  }
+
   function renderPaceIcon(container, level) {
     const state = paceStateForClassName(level);
     const src = state.playfulImage;
+    const shouldRenderPerfectZeroSpace =
+      container === elements.paceIcon &&
+      state.key === PACE_STATES.perfectZero.key &&
+      USE_PLAYFUL_PACE_ICONS &&
+      src;
+
+    if (container === elements.paceIcon) {
+      stopPerfectZeroSpaceScene();
+    }
+
     container.replaceChildren();
+    container.classList.toggle(
+      "has-perfect-zero-space",
+      Boolean(shouldRenderPerfectZeroSpace),
+    );
+
     if (USE_PLAYFUL_PACE_ICONS && src) {
       container.classList.add("is-playful");
+
+      if (shouldRenderPerfectZeroSpace) {
+        const canvas = document.createElement("canvas");
+        canvas.className = "perfect-zero-space-canvas";
+        canvas.setAttribute("aria-hidden", "true");
+
+        const image = document.createElement("img");
+        image.src = THEME_ASSETS.paceIconVariantPath("perfectZeroGlow") || src;
+        image.alt = "";
+        image.decoding = "async";
+        image.loading = "lazy";
+        container.append(canvas, image);
+        perfectZeroSpaceScene = PERFECT_ZERO_SPACE.create(container, canvas);
+        return;
+      }
+
       const image = document.createElement("img");
       image.src = src;
       image.alt = "";
+      image.decoding = "async";
       image.loading = "lazy";
       container.append(image);
       return;

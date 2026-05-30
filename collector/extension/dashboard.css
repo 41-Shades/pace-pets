@@ -172,8 +172,8 @@ body,
   flex-direction: column;
   gap: 32px;
   justify-content: center;
-  max-width: 100%;
-  width: fit-content;
+  max-width: 820px;
+  width: 100%;
 }
 
 .usage-panel {
@@ -189,7 +189,9 @@ body,
 }
 
 .state-rail {
+  --state-chip-gap-x: 36px;
   --state-chip-width: 238px;
+  --state-stack-max-width: 786px;
 
   align-self: center;
   display: block;
@@ -201,9 +203,15 @@ body,
 
 .state-stack {
   display: grid;
-  gap: 6px 36px;
-  grid-template-columns: repeat(3, minmax(0, var(--state-chip-width)));
+  gap: 6px var(--state-chip-gap-x);
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(var(--state-chip-width), var(--state-chip-width))
+  );
   justify-content: center;
+  margin-inline: auto;
+  max-width: min(100%, var(--state-stack-max-width));
+  width: 100%;
 }
 
 .state-chip {
@@ -887,14 +895,36 @@ h1 {
   flex: 0 0 96px;
   height: 96px;
   overflow: visible;
+  position: relative;
   width: 96px;
+}
+
+.pace-icon.has-perfect-zero-space {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.perfect-zero-space-canvas {
+  display: block;
+  height: 112%;
+  inset: -6%;
+  pointer-events: none;
+  position: absolute;
+  width: 112%;
+  z-index: 0;
 }
 
 .pace-icon img {
   display: block;
   height: 106%;
   object-fit: contain;
+  position: relative;
   width: 106%;
+  z-index: 1;
+}
+
+.pace-icon.has-perfect-zero-space img {
+  transform: translate(-3px, 5px);
 }
 
 .pace-card.pace-sync .pace-icon {

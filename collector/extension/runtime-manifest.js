@@ -31,6 +31,7 @@
     "./themes/default/asset-manifest.js",
     "./pace-logic.js",
     "./vendor/chart.umd.min.js",
+    "./perfect-zero-space-scene.js",
     "./dashboard.js",
   ]);
 
