@@ -79,6 +79,8 @@ The selected usage window is stored in `chrome.storage.local` under the generate
 
 The dashboard theme is stored in extension-page `localStorage` under `codex-usage-theme`. These preferences are not usage history and do not contain account identifiers.
 
+Temporary toolbar badge previews store `pacePetsBadgePreviewExpiresAtMs` in `chrome.storage.local` while a preview is active. The value is a local numeric expiry timestamp paired with the `restore-pace-preview-badge` Chrome alarm, and it is removed when the badge is restored. It does not contain usage content or account identifiers.
+
 ## Refresh Status
 
 The generated refresh status shape above tracks the latest background check outcome so the dashboard can distinguish a recent check from the latest stored chart sample.

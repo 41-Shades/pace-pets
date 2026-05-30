@@ -356,6 +356,18 @@ assert(
   "Background alarm refreshes must be guarded against same-worker overlap.",
 );
 assert(
+  !backgroundJs.includes("badgePreviewRestoreTimer") &&
+    backgroundJs.includes(
+      "PacePetsPreviewControl.BADGE_PREVIEW_RESTORE_ALARM",
+    ) &&
+    backgroundJs.includes(
+      "PacePetsPreviewControl.BADGE_PREVIEW_EXPIRES_STORAGE_KEY",
+    ) &&
+    backgroundJs.includes("restoreExpiredPaceBadgePreview") &&
+    backgroundJs.includes("chrome.alarms.create(alarmName, alarmInfo, done)"),
+  "Toolbar badge previews must use persistent alarm-backed restore state.",
+);
+assert(
   !/candidateDurationMatches|candidatePathConflicts/.test(
     `${usageJs}\n${usageIntegrationAdaptersJs}`,
   ) &&

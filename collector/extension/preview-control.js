@@ -3,6 +3,8 @@
 
   const PREVIEW_BADGE_MESSAGE_TYPE = "pacePets.previewBadge";
   const RESTORE_BADGE_MESSAGE_TYPE = "pacePets.restoreBadge";
+  const BADGE_PREVIEW_RESTORE_ALARM = "restore-pace-preview-badge";
+  const BADGE_PREVIEW_EXPIRES_STORAGE_KEY = "pacePetsBadgePreviewExpiresAtMs";
   const PACE_STATE_PREVIEW_DURATION_MS = 1800;
   const BADGE_PREVIEW_STALE_TIMEOUT_MS = 60 * 1000;
   const DEFAULT_PACE_STATE_PREVIEW_TIME_PERCENT = 50;
@@ -104,14 +106,31 @@
     return message?.type === RESTORE_BADGE_MESSAGE_TYPE;
   }
 
+  function badgePreviewExpiresAtMs(atMs = Date.now()) {
+    return atMs + BADGE_PREVIEW_STALE_TIMEOUT_MS;
+  }
+
+  function normalizeBadgePreviewExpiresAtMs(value) {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+
+    const expiresAtMs = Number(value);
+    return Number.isFinite(expiresAtMs) ? expiresAtMs : null;
+  }
+
   root.PacePetsPreviewControl = Object.freeze({
+    BADGE_PREVIEW_EXPIRES_STORAGE_KEY,
+    BADGE_PREVIEW_RESTORE_ALARM,
     BADGE_PREVIEW_STALE_TIMEOUT_MS,
     PACE_STATE_PREVIEW_DURATION_MS,
     PACE_STATE_PREVIEW_PERCENT_PAIRS,
     PREVIEW_BADGE_MESSAGE_TYPE,
     RESTORE_BADGE_MESSAGE_TYPE,
+    badgePreviewExpiresAtMs,
     isPreviewBadgeMessage,
     isRestoreBadgeMessage,
+    normalizeBadgePreviewExpiresAtMs,
     normalizePreviewStateKey,
     previewBadgeMessage,
     previewBadgeState,

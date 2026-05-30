@@ -17,7 +17,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/usage-values.js` owns shared primitive usage value normalization, date parsing, reset-window time math, and stored-window normalization.
 - `collector/extension/refresh-status.js` owns refresh-status construction, normalization, storage key, and safe observable failure messages.
 - `collector/extension/refresh-control.js` owns the dashboard-to-background manual refresh message contract and manual refresh cooldown constant.
-- `collector/extension/preview-control.js` owns pace-state preview ratios, preview timing, and the dashboard-to-background toolbar badge preview message contract.
+- `collector/extension/preview-control.js` owns pace-state preview ratios, preview timing, toolbar badge preview expiry state, and the dashboard-to-background toolbar badge preview message contract.
 - `collector/extension/storage-adapter.js` owns Promise-based `chrome.storage.local` reads/writes, shared Chrome `lastError` callback wrapping, and local-storage change helpers shared by history, background, and dashboard code.
 - `collector/extension/usage.js` owns raw-to-safe usage normalization through the default WHAM adapter into supported usage windows.
 - `collector/extension/history-store.js` owns sample normalization, dedupe, retention, and sample caps.
@@ -25,7 +25,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/themes/default/` contains the default replaceable extension artwork.
 - `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, inline icon geometry, and legend metadata.
 - `collector/extension/perfect-zero-space-scene.js` owns the main-dashboard `PERFECT ZERO` canvas background animation.
-- `collector/extension/dashboard.html`, `dashboard.css`, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and pace legend previews, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Pace legend previews update the dashboard card, browser tab, and temporary toolbar badge presentation.
+- `collector/extension/dashboard.html`, `dashboard.css`, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and pace legend previews, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Pace legend previews update the dashboard card, browser tab, and temporary toolbar badge presentation; the background worker restores the badge through a stored expiry and Chrome alarm.
 - `collector/extension/vendor/chart.umd.min.js` is the optional vendored Chart.js runtime used by the dashboard chart; the rest of the dashboard still renders if the chart asset cannot load.
 
 ## Collection Flow

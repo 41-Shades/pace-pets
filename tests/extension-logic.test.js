@@ -29,6 +29,7 @@ beforeAll(async () => {
     storage: {
       local: {
         get: vi.fn(),
+        remove: vi.fn(),
         set: vi.fn(),
       },
     },
@@ -74,6 +75,11 @@ describe("CodexExtensionStorage", () => {
         callback();
       },
     );
+    globalThis.chrome.storage.local.remove.mockImplementation(
+      (_keys, callback) => {
+        callback();
+      },
+    );
 
     await expect(
       globalThis.CodexExtensionStorage.getLocal("codex-test-key"),
@@ -83,6 +89,9 @@ describe("CodexExtensionStorage", () => {
         "codex-test-key": "next-value",
       }),
     ).resolves.toBeUndefined();
+    await expect(
+      globalThis.CodexExtensionStorage.removeLocal("codex-test-key"),
+    ).resolves.toBeUndefined();
 
     expect(globalThis.chrome.storage.local.get).toHaveBeenCalledWith(
       "codex-test-key",
@@ -90,6 +99,10 @@ describe("CodexExtensionStorage", () => {
     );
     expect(globalThis.chrome.storage.local.set).toHaveBeenCalledWith(
       { "codex-test-key": "next-value" },
+      expect.any(Function),
+    );
+    expect(globalThis.chrome.storage.local.remove).toHaveBeenCalledWith(
+      "codex-test-key",
       expect.any(Function),
     );
   });
@@ -620,6 +633,22 @@ describe("PacePetsPreviewControl", () => {
     expect(preview.isRestoreBadgeMessage(preview.restoreBadgeMessage())).toBe(
       true,
     );
+    expect(preview.BADGE_PREVIEW_RESTORE_ALARM).toBe(
+      "restore-pace-preview-badge",
+    );
+    expect(preview.BADGE_PREVIEW_EXPIRES_STORAGE_KEY).toBe(
+      "pacePetsBadgePreviewExpiresAtMs",
+    );
+    expect(preview.badgePreviewExpiresAtMs()).toBe(
+      Date.parse("2026-05-25T12:01:00.000Z"),
+    );
+    expect(
+      preview.normalizeBadgePreviewExpiresAtMs(
+        Date.parse("2026-05-25T12:01:00.000Z"),
+      ),
+    ).toBe(Date.parse("2026-05-25T12:01:00.000Z"));
+    expect(preview.normalizeBadgePreviewExpiresAtMs(null)).toBeNull();
+    expect(preview.normalizeBadgePreviewExpiresAtMs("not-a-date")).toBeNull();
   });
 });
 
