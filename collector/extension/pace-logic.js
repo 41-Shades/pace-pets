@@ -131,15 +131,20 @@
       copy: "A beautiful, unreasonable zero.",
       ratioLabel: "Time = Usage = 0",
       badgeColor: "#6b7280",
-      favicon: { bg: "#f8fafc", color: "#6b7280" },
+      favicon: { bg: "#020617", color: "#e5e7eb" },
       playfulImage: THEME_ASSETS.paceIconPathForState("perfectZero"),
       iconParts: [
-        { tag: "circle", attrs: { cx: "12", cy: "12", r: "8" } },
-        { tag: "circle", attrs: { cx: "12", cy: "12", r: "3" } },
-        { tag: "path", attrs: { d: "M12 2v3" } },
-        { tag: "path", attrs: { d: "M12 19v3" } },
-        { tag: "path", attrs: { d: "M2 12h3" } },
-        { tag: "path", attrs: { d: "M19 12h3" } },
+        {
+          tag: "ellipse",
+          attrs: { cx: "12", cy: "12", rx: "5.5", ry: "8" },
+        },
+        {
+          tag: "path",
+          attrs: {
+            d: "M9 8.5c1.5-1.3 4.3-1.5 6-.2",
+            "stroke-width": "2.2",
+          },
+        },
       ],
     }),
     ahead: paceState({
