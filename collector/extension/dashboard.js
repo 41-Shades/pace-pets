@@ -365,6 +365,10 @@
     return target?.dataset?.tooltip?.trim() || "";
   }
 
+  function appTooltipHint(target) {
+    return target?.dataset?.tooltipHint?.trim() || "";
+  }
+
   function clampNumber(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -446,6 +450,7 @@
   function showAppTooltip(target) {
     const tooltip = elements.appTooltip;
     const text = appTooltipText(target);
+    const hint = appTooltipHint(target);
     if (!tooltip || !text) {
       hideAppTooltip();
       return;
@@ -453,6 +458,12 @@
 
     activeTooltipTarget = target;
     tooltip.textContent = text;
+    if (hint) {
+      const hintElement = document.createElement("span");
+      hintElement.className = "app-tooltip-hint";
+      hintElement.textContent = hint;
+      tooltip.append(hintElement);
+    }
     tooltip.hidden = false;
     tooltip.classList.remove("is-visible");
     positionAppTooltip(target);
@@ -1378,7 +1389,15 @@
     chip.className = `state-chip ${state.className}`;
     chip.type = "button";
     chip.dataset.paceStateKey = state.key;
-    chip.dataset.tooltip = `Preview mock ${state.title} status`;
+    if (state.key === PACE_STATES.sync.key) {
+      chip.dataset.tooltip = "Displayed usage and time are perfectly matched.";
+      chip.dataset.tooltipHint = "Click to preview";
+    } else if (state.key === PACE_STATES.perfectZero.key) {
+      chip.dataset.tooltip = "Displayed usage and time both show a perfect 0%.";
+      chip.dataset.tooltipHint = "Click to preview";
+    } else {
+      chip.dataset.tooltip = `Preview mock ${state.title} status`;
+    }
     chip.setAttribute("aria-controls", "pace-card");
 
     const icon = document.createElement("div");

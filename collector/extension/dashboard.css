@@ -134,6 +134,14 @@ body,
   display: none;
 }
 
+.app-tooltip-hint {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  margin-top: 4px;
+  opacity: 0.68;
+}
+
 .app-tooltip::before {
   background: var(--tooltip-bg);
   border: 1px solid var(--tooltip-border);
