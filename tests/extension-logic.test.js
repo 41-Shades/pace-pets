@@ -47,6 +47,7 @@ beforeAll(async () => {
     "collector/extension/themes/default/asset-manifest.js",
   );
   await importExtensionScript("collector/extension/pace-logic.js");
+  await importExtensionScript("collector/extension/preview-control.js");
   await importExtensionScript("collector/extension/usage.js");
   await importExtensionScript("collector/extension/history-store.js");
 });
@@ -147,6 +148,12 @@ describe("CodexProductMetadata", () => {
     expect(metadata.badgeTitle({ badgeText: "0.83", label: "7d" })).toBe(
       "Pace Pets - 7d pace 0.83",
     );
+    expect(
+      metadata.previewBadgeTitle({
+        badgeText: "1.00",
+        title: "PERFECT SYNC",
+      }),
+    ).toBe("Pace Pets - PERFECT SYNC preview 1.00");
     expect(metadata.badgeTitle()).toBe("Pace Pets");
   });
 });
@@ -408,6 +415,29 @@ describe("PacePetsLogic", () => {
     );
   });
 
+  it("builds controlled pace presentations for badge and dashboard sync states", () => {
+    const syncPresentation =
+      globalThis.PacePetsLogic.controlledPacePresentationForValues(50.4, 49.6);
+    expect(syncPresentation.state.key).toBe("sync");
+    expect(syncPresentation.displayRatio).toBe(1);
+    expect(syncPresentation.paceRatio).toBeCloseTo(50.4 / 49.6);
+
+    const zeroPresentation =
+      globalThis.PacePetsLogic.controlledPacePresentationForValues(0.4, 0);
+    expect(zeroPresentation.state.key).toBe("perfectZero");
+    expect(zeroPresentation.displayRatio).toBe(0);
+    expect(zeroPresentation.paceRatio).toBeNull();
+
+    expect(
+      globalThis.PacePetsLogic.controlledPacePresentationForValues(0.4, 0, {
+        allowPerfectZero: false,
+      }),
+    ).toBeNull();
+    expect(
+      globalThis.PacePetsLogic.controlledPacePresentationForValues(50.6, 49.4),
+    ).toBeNull();
+  });
+
   it("detects usage that reached displayed zero before the final time band", () => {
     const windowData = {
       remainingPercent: 0.4,
@@ -433,6 +463,43 @@ describe("PacePetsLogic", () => {
         Date.parse("2026-05-25T14:58:00.000Z"),
       ),
     ).toBe(false);
+  });
+
+  it("shares reset-window history checks for perfect-zero presentation control", () => {
+    const windowData = {
+      remainingPercent: 0,
+      resetsAt: "2026-05-25T15:00:00.000Z",
+      windowMinutes: 300,
+    };
+    const history = {
+      samples: [
+        {
+          collectedAt: "2026-05-25T14:58:00.000Z",
+          windows: {
+            weekly: {
+              remainingPercent: 0.4,
+              resetsAt: "2026-05-25T15:00:00.000Z",
+              windowMinutes: 300,
+            },
+          },
+        },
+      ],
+    };
+
+    expect(
+      globalThis.PacePetsLogic.allowsPerfectZeroForWindow(
+        history,
+        "weekly",
+        windowData,
+      ),
+    ).toBe(false);
+    expect(
+      globalThis.PacePetsLogic.allowsPerfectZeroForWindow(
+        { samples: [] },
+        "weekly",
+        windowData,
+      ),
+    ).toBe(true);
   });
 
   it("formats dashboard and badge pace ratios with their existing caps", () => {
@@ -521,6 +588,38 @@ describe("PacePetsLogic", () => {
       globalThis.PacePetsLogic.chartPaceRatio(12, { min: 0.5, max: 2 }),
     ).toBe(2);
     expect(globalThis.PacePetsLogic.chartPaceRatio("nope")).toBeNull();
+  });
+});
+
+describe("PacePetsPreviewControl", () => {
+  it("shares preview ratios and badge messages for dashboard and toolbar state previews", () => {
+    const preview = globalThis.PacePetsPreviewControl;
+
+    expect(preview.previewPaceRatioForState("sync")).toBe(1);
+    expect(preview.previewPaceRatioForState("perfectZero")).toBe(0);
+    expect(preview.previewPaceRatioForState("wellAhead")).toBe(1.8);
+    expect(preview.previewPaceRatioForState("unsupported")).toBeNull();
+
+    expect(preview.previewBadgeState("sync")).toMatchObject({
+      badgeText: "1.00",
+      stateKey: "sync",
+    });
+    expect(preview.previewBadgeState("perfectZero")).toMatchObject({
+      badgeText: "0.00",
+      stateKey: "perfectZero",
+    });
+    expect(preview.previewBadgeState("unsupported")).toBeNull();
+    expect(preview.previewBadgeMessage("ahead")).toEqual({
+      stateKey: "ahead",
+      type: preview.PREVIEW_BADGE_MESSAGE_TYPE,
+    });
+    expect(
+      preview.isPreviewBadgeMessage(preview.previewBadgeMessage("ahead")),
+    ).toBe(true);
+    expect(preview.isPreviewBadgeMessage({ type: "unknown" })).toBe(false);
+    expect(preview.isRestoreBadgeMessage(preview.restoreBadgeMessage())).toBe(
+      true,
+    );
   });
 });
 

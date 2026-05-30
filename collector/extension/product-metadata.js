@@ -12,6 +12,12 @@
     return badgeText && label ? `${NAME} - ${label} pace ${badgeText}` : NAME;
   }
 
+  function previewBadgeTitle({ badgeText, title } = {}) {
+    return badgeText && title
+      ? `${NAME} - ${title} preview ${badgeText}`
+      : NAME;
+  }
+
   root.CodexProductMetadata = Object.freeze({
     ACTION_DEFAULT_TITLE,
     DASHBOARD_DESCRIPTION,
@@ -20,5 +26,6 @@
     OPEN_DASHBOARD_MENU_TITLE,
     REFRESH_FAILED_TITLE,
     badgeTitle,
+    previewBadgeTitle,
   });
 })(globalThis);

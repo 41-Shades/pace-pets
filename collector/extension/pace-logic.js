@@ -273,6 +273,45 @@
     );
   }
 
+  function controlledPaceDisplayRatio(state) {
+    return state.key === PACE_STATES.perfectZero.key ? 0 : PERFECT_PACE_RATIO;
+  }
+
+  function controlledPacePresentationForValues(
+    remainingPercent,
+    timePercent,
+    { allowPerfectZero = true } = {},
+  ) {
+    const perfectZero = isPerfectZeroPercentPair(remainingPercent, timePercent);
+    if (perfectZero && !allowPerfectZero) {
+      return null;
+    }
+    if (
+      !perfectZero &&
+      !isPerfectSyncPercentPair(remainingPercent, timePercent)
+    ) {
+      return null;
+    }
+
+    const state = perfectZero ? PACE_STATES.perfectZero : PACE_STATES.sync;
+    return {
+      displayRatio: controlledPaceDisplayRatio(state),
+      paceRatio: paceRatioForValues(remainingPercent, timePercent),
+      state,
+    };
+  }
+
+  function controlledPacePresentationForWindow(
+    windowData,
+    { allowPerfectZero = true, atMs = Date.now() } = {},
+  ) {
+    return controlledPacePresentationForValues(
+      windowData?.remainingPercent,
+      timeRemainingPercentAt(windowData, atMs),
+      { allowPerfectZero },
+    );
+  }
+
   function usageZeroedBeforeFinalTimeBand(windowData, atMs) {
     const remainingDisplayPercent = roundedDisplayPercent(
       windowData?.remainingPercent,
@@ -284,6 +323,46 @@
       remainingDisplayPercent === 0 &&
       timeDisplayPercent !== null &&
       timeDisplayPercent > 0
+    );
+  }
+
+  function resetWindowBounds(windowData) {
+    const min = windowStartMs(windowData);
+    const max = dateMs(windowData?.resetsAt);
+    if (min === null || max === null || min >= max) {
+      return null;
+    }
+    return { min, max };
+  }
+
+  function resetWindowSamples(history, windowKey, windowData) {
+    const bounds = resetWindowBounds(windowData);
+    if (!bounds || !Array.isArray(history?.samples)) {
+      return [];
+    }
+
+    return history.samples
+      .filter((sample) => {
+        const collectedMs = dateMs(sample?.collectedAt);
+        return (
+          sample?.windows?.[windowKey] &&
+          collectedMs !== null &&
+          collectedMs >= bounds.min &&
+          collectedMs <= bounds.max
+        );
+      })
+      .sort((a, b) => dateMs(a.collectedAt) - dateMs(b.collectedAt));
+  }
+
+  function allowsPerfectZeroForWindow(history, windowKey, windowData) {
+    return !resetWindowSamples(history, windowKey, windowData).some(
+      (sample) => {
+        const collectedMs = dateMs(sample.collectedAt);
+        return (
+          collectedMs !== null &&
+          usageZeroedBeforeFinalTimeBand(sample.windows[windowKey], collectedMs)
+        );
+      },
     );
   }
 
@@ -380,10 +459,14 @@
     PACE_RATIO_DISPLAY_MAX,
     PACE_STATES,
     PERFECT_PACE_RATIO,
+    allowsPerfectZeroForWindow,
     badgeColorForPaceRatio,
     badgeTextForPaceRatio,
     boundedPercent,
     chartPaceRatio,
+    controlledPaceDisplayRatio,
+    controlledPacePresentationForValues,
+    controlledPacePresentationForWindow,
     dateMs,
     elapsedWindowPercentAt,
     formatPaceRatioValue,
@@ -393,6 +476,9 @@
     paceStateForRatio,
     paceRatioForValues,
     paceRatioForWindow,
+    resetWindowBounds,
+    resetWindowSamples,
+    roundedDisplayPercent,
     timeRemainingPercent,
     timeRemainingPercentAt,
     usageZeroedBeforeFinalTimeBand,
