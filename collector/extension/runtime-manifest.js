@@ -14,6 +14,7 @@
     "history-store.js",
     "themes/default/asset-manifest.js",
     "pace-logic.js",
+    "preview-control.js",
     "background-logic.js",
   ]);
 
@@ -30,6 +31,7 @@
     "./history-store.js",
     "./themes/default/asset-manifest.js",
     "./pace-logic.js",
+    "./preview-control.js",
     "./vendor/chart.umd.min.js",
     "./perfect-zero-space-scene.js",
     "./dashboard.js",

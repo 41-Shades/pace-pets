@@ -82,8 +82,9 @@ export default [
         GM_xmlhttpRequest: "readonly",
         importScripts: "readonly",
         PacePetsBackgroundLogic: "readonly",
-        PacePetsRefreshControl: "readonly",
         PacePetsLogic: "readonly",
+        PacePetsPreviewControl: "readonly",
+        PacePetsRefreshControl: "readonly",
       },
     },
     rules: {
