@@ -124,6 +124,24 @@
         { tag: "path", attrs: { d: "M19 12h3" } },
       ],
     }),
+    perfectZero: paceState({
+      key: "perfectZero",
+      className: "pace-perfect-zero",
+      title: "PERFECT ZERO",
+      copy: "A beautiful, unreasonable zero.",
+      ratioLabel: "Time = Usage = 0",
+      badgeColor: "#6b7280",
+      favicon: { bg: "#f8fafc", color: "#6b7280" },
+      playfulImage: THEME_ASSETS.paceIconPathForState("perfectZero"),
+      iconParts: [
+        { tag: "circle", attrs: { cx: "12", cy: "12", r: "8" } },
+        { tag: "circle", attrs: { cx: "12", cy: "12", r: "3" } },
+        { tag: "path", attrs: { d: "M12 2v3" } },
+        { tag: "path", attrs: { d: "M12 19v3" } },
+        { tag: "path", attrs: { d: "M2 12h3" } },
+        { tag: "path", attrs: { d: "M19 12h3" } },
+      ],
+    }),
     ahead: paceState({
       key: "ahead",
       className: "pace-ahead",
@@ -189,16 +207,17 @@
     ),
   );
   const PACE_CLASS_NAMES = Object.freeze(Object.keys(PACE_STATES_BY_CLASS));
-  const PACE_RAIL_STATE_KEYS = Object.freeze([
+  const PACE_LEGEND_STATE_KEYS = Object.freeze([
     "wellAhead",
-    "strongAhead",
-    "ahead",
     "on",
     "behind",
+    "strongAhead",
+    "sync",
     "wellBehind",
+    "ahead",
+    "perfectZero",
     "criticalBehind",
   ]);
-  const PACE_SPECIAL_STATE_KEYS = Object.freeze(["sync"]);
   const DEFAULT_BADGE_COLORS = Object.freeze(
     Object.fromEntries(
       Object.values(PACE_STATES).map((state) => [state.key, state.badgeColor]),
@@ -225,6 +244,42 @@
       boundedTimePercent > 0
       ? boundedRemainingPercent / boundedTimePercent
       : null;
+  }
+
+  function roundedDisplayPercent(value) {
+    const bounded = boundedPercent(value);
+    return bounded === null ? null : Math.round(bounded);
+  }
+
+  function isPerfectSyncPercentPair(remainingPercent, timePercent) {
+    const displayRemainingPercent = roundedDisplayPercent(remainingPercent);
+    const displayTimePercent = roundedDisplayPercent(timePercent);
+    return (
+      displayRemainingPercent !== null &&
+      displayTimePercent !== null &&
+      displayRemainingPercent === displayTimePercent
+    );
+  }
+
+  function isPerfectZeroPercentPair(remainingPercent, timePercent) {
+    return (
+      isPerfectSyncPercentPair(remainingPercent, timePercent) &&
+      roundedDisplayPercent(remainingPercent) === 0
+    );
+  }
+
+  function usageZeroedBeforeFinalTimeBand(windowData, atMs) {
+    const remainingDisplayPercent = roundedDisplayPercent(
+      windowData?.remainingPercent,
+    );
+    const timeDisplayPercent = roundedDisplayPercent(
+      timeRemainingPercentAt(windowData, atMs),
+    );
+    return (
+      remainingDisplayPercent === 0 &&
+      timeDisplayPercent !== null &&
+      timeDisplayPercent > 0
+    );
   }
 
   function paceRatioForWindow(windowData, atMs = Date.now()) {
@@ -314,11 +369,10 @@
     BADGE_PACE_RATIO_DISPLAY_MAX,
     DEFAULT_BADGE_COLORS,
     PACE_CLASS_NAMES,
+    PACE_LEGEND_STATE_KEYS,
     PACE_RATIO_CHART_MAX,
     PACE_RATIO_CHART_MIN,
     PACE_RATIO_DISPLAY_MAX,
-    PACE_RAIL_STATE_KEYS,
-    PACE_SPECIAL_STATE_KEYS,
     PACE_STATES,
     PERFECT_PACE_RATIO,
     badgeColorForPaceRatio,
@@ -328,12 +382,15 @@
     dateMs,
     elapsedWindowPercentAt,
     formatPaceRatioValue,
+    isPerfectSyncPercentPair,
+    isPerfectZeroPercentPair,
     paceStateForClassName,
     paceStateForRatio,
     paceRatioForValues,
     paceRatioForWindow,
     timeRemainingPercent,
     timeRemainingPercentAt,
+    usageZeroedBeforeFinalTimeBand,
     windowStartMs,
   };
 })(globalThis);

@@ -190,7 +190,6 @@ for (const requiredId of [
   "early-reset-button",
   "early-reset-popover",
   "pace-state-stack",
-  "pace-special-state-stack",
 ]) {
   assertIncludes(
     dashboardHtml,

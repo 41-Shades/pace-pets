@@ -81,7 +81,6 @@
       "#early-reset-popover .early-reset-popover-text",
     ),
     paceStateStack: document.querySelector("#pace-state-stack"),
-    paceSpecialStateStack: document.querySelector("#pace-special-state-stack"),
     appTooltip: document.querySelector("#app-tooltip"),
   };
 
@@ -132,8 +131,7 @@
   const WINDOW_SPECS = USAGE_WINDOWS.WINDOW_SPECS;
   const PACE_STATES = PacePetsLogic.PACE_STATES;
   const PACE_CLASSES = PacePetsLogic.PACE_CLASS_NAMES;
-  const PACE_RAIL_STATE_KEYS = PacePetsLogic.PACE_RAIL_STATE_KEYS;
-  const PACE_SPECIAL_STATE_KEYS = PacePetsLogic.PACE_SPECIAL_STATE_KEYS;
+  const PACE_LEGEND_STATE_KEYS = PacePetsLogic.PACE_LEGEND_STATE_KEYS;
   const MUTED_PACE_CLASS = PACE_STATES.muted.className;
 
   const CHART_COLOR_FALLBACKS = {
@@ -784,12 +782,22 @@
     return PacePetsLogic.timeRemainingPercentAt(windowData, atMs);
   }
 
-  function boundedPercent(value) {
-    return PacePetsLogic.boundedPercent(value);
-  }
-
   function paceRatioForValues(remainingPercent, timePercent) {
     return PacePetsLogic.paceRatioForValues(remainingPercent, timePercent);
+  }
+
+  function isPerfectSyncPercentPair(remainingPercent, timePercent) {
+    return PacePetsLogic.isPerfectSyncPercentPair(
+      remainingPercent,
+      timePercent,
+    );
+  }
+
+  function isPerfectZeroPercentPair(remainingPercent, timePercent) {
+    return PacePetsLogic.isPerfectZeroPercentPair(
+      remainingPercent,
+      timePercent,
+    );
   }
 
   function formatPaceRatioValue(value, { suffix = "" } = {}) {
@@ -1263,7 +1271,10 @@
     const copy = document.createElement("div");
     const title = document.createElement("strong");
     title.textContent = state.title;
-    if (state.key === PACE_STATES.sync.key) {
+    if (
+      state.key === PACE_STATES.sync.key ||
+      state.key === PACE_STATES.perfectZero.key
+    ) {
       title.classList.add("state-special-title");
     }
 
@@ -1288,8 +1299,7 @@
   }
 
   function renderStateRail() {
-    renderStateStack(elements.paceStateStack, PACE_RAIL_STATE_KEYS);
-    renderStateStack(elements.paceSpecialStateStack, PACE_SPECIAL_STATE_KEYS);
+    renderStateStack(elements.paceStateStack, PACE_LEGEND_STATE_KEYS);
   }
 
   function svgAttributes(attrs) {
@@ -1344,8 +1354,8 @@
     setPaceLevel(level);
     elements.paceTitle.textContent = title;
     elements.paceCopy.textContent = copy;
-    elements.paceStats.hidden = paceRatio === null;
-    elements.paceRatioStat.hidden = paceRatio === null;
+    elements.paceStats.hidden = paceRatioForDisplay === null;
+    elements.paceRatioStat.hidden = paceRatioForDisplay === null;
     elements.paceRatioValue.textContent =
       paceRatioForDisplay === null
         ? "--"
@@ -1360,6 +1370,7 @@
     timePercent,
     staleWindow,
     comparisonPaceText = "",
+    { allowPerfectZero = true } = {},
   ) {
     const remainingPercent = windowData?.remainingPercent;
     const hasTime = Number.isFinite(timePercent) && timePercent > 0;
@@ -1375,6 +1386,7 @@
       return;
     }
 
+    const paceRatio = paceRatioForValues(remainingPercent, timePercent);
     if (staleWindow) {
       setPaceSummary(
         MUTED_PACE_CLASS,
@@ -1384,37 +1396,23 @@
         timePercent,
         comparisonPaceText,
       );
-      return;
-    }
-
-    if (!hasTime) {
-      setPaceSummary(
-        MUTED_PACE_CLASS,
-        "Reset time missing",
-        "Reset timing is unavailable.",
-        remainingPercent,
-        timePercent,
-        comparisonPaceText,
-      );
-      return;
-    }
-
-    const boundedRemainingPercent = boundedPercent(remainingPercent);
-    const boundedTimePercent = boundedPercent(timePercent);
-    const paceRatio = paceRatioForValues(remainingPercent, timePercent);
-    if (paceRatio === null) {
-      setPaceSummary(
-        MUTED_PACE_CLASS,
-        "Reset time missing",
-        "Reset timing is unavailable.",
-        remainingPercent,
-        timePercent,
-        comparisonPaceText,
-      );
     } else if (
-      Math.round(boundedRemainingPercent) === Math.round(boundedTimePercent)
+      isPerfectZeroPercentPair(remainingPercent, timePercent) &&
+      !allowPerfectZero
     ) {
-      const state = PACE_STATES.sync;
+      const state = PACE_STATES.criticalBehind;
+      setPaceSummary(
+        state.className,
+        state.title,
+        state.copy,
+        remainingPercent,
+        timePercent,
+        comparisonPaceText,
+      );
+    } else if (isPerfectSyncPercentPair(remainingPercent, timePercent)) {
+      const state = isPerfectZeroPercentPair(remainingPercent, timePercent)
+        ? PACE_STATES.perfectZero
+        : PACE_STATES.sync;
       setPaceSummary(
         state.className,
         state.title,
@@ -1423,6 +1421,15 @@
         timePercent,
         comparisonPaceText,
         { paceRatioDisplayOverride: PERFECT_PACE_RATIO },
+      );
+    } else if (!hasTime || paceRatio === null) {
+      setPaceSummary(
+        MUTED_PACE_CLASS,
+        "Reset time missing",
+        "Reset timing is unavailable.",
+        remainingPercent,
+        timePercent,
+        comparisonPaceText,
       );
     } else {
       const state = PacePetsLogic.paceStateForRatio(paceRatio);
@@ -1454,7 +1461,7 @@
 
   function resetWindowSamples(history, windowKey, windowData) {
     const bounds = chartWindowBounds(windowData);
-    if (!bounds) {
+    if (!bounds || !history?.samples) {
       return [];
     }
 
@@ -1466,6 +1473,25 @@
         collectedMs <= bounds.max
       );
     });
+  }
+
+  function usageZeroedBeforeFinalTimeBand(sample, windowKey) {
+    const collectedMs = dateMs(sample.collectedAt);
+    const windowData = sample.windows[windowKey];
+    if (collectedMs === null) {
+      return false;
+    }
+
+    return PacePetsLogic.usageZeroedBeforeFinalTimeBand(
+      windowData,
+      collectedMs,
+    );
+  }
+
+  function allowsPerfectZeroForWindow(history, windowKey, windowData) {
+    return !resetWindowSamples(history, windowKey, windowData).some((sample) =>
+      usageZeroedBeforeFinalTimeBand(sample, windowKey),
+    );
   }
 
   function chartSamplesWithLivePoint(samples, windowKey, windowData) {
@@ -1879,7 +1905,7 @@
     usageChart.update();
   }
 
-  function renderSummaryWindow(windowKey, windowData, windows = {}) {
+  function renderSummaryWindow(windowKey, windowData, windows = {}, history) {
     const spec = WINDOW_SPECS[windowKey];
     const resetMs = dateMs(windowData?.resetsAt);
     const timePercent = timeRemainingPercent(windowData);
@@ -1903,6 +1929,13 @@
       timePercent,
       staleWindow,
       alternatePaceRatioText(windows, windowKey),
+      {
+        allowPerfectZero: allowsPerfectZeroForWindow(
+          history,
+          windowKey,
+          windowData,
+        ),
+      },
     );
 
     return {
@@ -2136,6 +2169,7 @@
       summaryWindowKey,
       summaryWindow,
       windows,
+      history,
     );
 
     const resetMs = dateMs(summaryWindow?.resetsAt);

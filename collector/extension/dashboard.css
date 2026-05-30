@@ -169,7 +169,8 @@ body,
 .content-grid {
   align-items: center;
   display: flex;
-  gap: 80px;
+  flex-direction: column;
+  gap: 32px;
   justify-content: center;
   max-width: 100%;
   width: fit-content;
@@ -180,58 +181,47 @@ body,
   border: 1px solid var(--line-strong);
   border-radius: 14px;
   box-shadow: 0 20px 60px rgb(var(--shadow-color) / 8%);
-  flex: 0 0 clamp(760px, 50vw, 820px);
+  flex: 0 1 auto;
   max-width: calc(100vw - 24px);
   padding: 26px;
   position: relative;
-  width: 100%;
+  width: clamp(760px, 50vw, 820px);
 }
 
 .state-rail {
-  display: inline-grid;
+  --state-chip-width: 238px;
+
   align-self: center;
-  flex: 0 0 auto;
-  grid-template-columns: max-content;
-  justify-items: stretch;
+  display: block;
+  max-width: 100%;
   padding-top: 0;
   position: static;
-}
-
-.state-rail h2 {
-  color: var(--subhead);
-  font-size: 0.78rem;
-  font-weight: 450;
-  letter-spacing: 0.04em;
-  line-height: 1.1;
-  margin: 0 0 12px;
-  text-transform: uppercase;
-}
-
-.state-rail .state-group-title {
-  border-top: 0;
-  margin: 22px 0 12px;
-  padding-top: 0;
+  width: 100%;
 }
 
 .state-stack {
   display: grid;
-  gap: 8px;
+  gap: 12px 18px;
+  grid-template-columns: repeat(3, minmax(0, var(--state-chip-width)));
+  justify-content: center;
 }
 
 .state-chip {
-  --state-icon-size: 52px;
-  --state-image-size: 48px;
+  --state-icon-size: 47px;
+  --state-image-size: 44px;
 
   align-items: center;
   background: color-mix(in srgb, var(--pace-bg) 24%, var(--surface-mix));
-  border: 1px solid color-mix(in srgb, var(--pace-border) 34%, var(--line));
-  border-left: 4px solid var(--pace-border);
+  border: 1px solid color-mix(in srgb, var(--pace-border) 22%, var(--line));
+  border-left: 3px solid color-mix(in srgb, var(--pace-border) 58%, var(--line));
   border-radius: 8px;
   display: flex;
   gap: 10px;
   max-width: 100%;
+  min-height: 62px;
   min-width: 0;
-  padding: 5px 22px 5px 20px;
+  padding: 3px 22px 3px 20px;
+  width: 100%;
 }
 
 .state-icon {
@@ -998,6 +988,13 @@ h1 {
   --pace-icon-bg: #ccfbf1;
 }
 
+.pace-perfect-zero {
+  --pace-color: #4b5563;
+  --pace-bg: #f8fafc;
+  --pace-border: #cbd5e1;
+  --pace-icon-bg: #e5e7eb;
+}
+
 .pace-ahead {
   --pace-color: #15803d;
   --pace-bg: #f0fdf4;
@@ -1117,6 +1114,13 @@ h1 {
   --pace-bg: #173432;
   --pace-border: #4f9187;
   --pace-icon-bg: #1b423e;
+}
+
+[data-theme="dark"] .pace-perfect-zero {
+  --pace-color: #d1d5db;
+  --pace-bg: #24272c;
+  --pace-border: #9ca3af;
+  --pace-icon-bg: #374151;
 }
 
 [data-theme="dark"] .pace-ahead {
@@ -1937,7 +1941,6 @@ dd {
 
   .content-grid {
     align-items: stretch;
-    flex-direction: column;
     width: 100%;
   }
 
@@ -1947,6 +1950,11 @@ dd {
 
   .state-rail {
     position: static;
+    width: 100%;
+  }
+
+  .state-stack {
+    grid-template-columns: 1fr;
   }
 
   .panel-header,
@@ -2101,11 +2109,11 @@ dd {
 
 @media (width <= 1320px) and (width >= 761px) {
   .content-grid {
-    gap: 48px;
+    gap: 32px;
   }
 
   .usage-panel {
-    flex-basis: 760px;
+    width: 760px;
   }
 
   .pace-stat {
