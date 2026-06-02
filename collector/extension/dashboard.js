@@ -49,6 +49,10 @@
   }
 
   const elements = {
+    shell: document.querySelector(".shell"),
+    perfectZeroPageBackground: document.querySelector(
+      "#perfect-zero-page-background",
+    ),
     collectionPulse: document.querySelector("#collection-pulse"),
     collectionStatusLabel: document.querySelector("#collection-status-label"),
     favicon: document.querySelector("#dynamic-favicon"),
@@ -110,6 +114,8 @@
   const APP_TOOLTIP_SHOW_DELAY_MS = 180;
   const APP_TOOLTIP_OFFSET_PX = 8;
   const APP_TOOLTIP_VIEWPORT_MARGIN_PX = 8;
+  const APP_TOOLTIP_SLOW_FADE_MS = 1600;
+  const APP_TOOLTIP_SLOW_AUTO_HIDE_DELAY_MS = APP_TOOLTIP_SLOW_FADE_MS + 500;
   const APP_TOOLTIP_SUPPRESS_AFTER_INFO_CLOSE_MS = 360;
   const INFO_PANEL_FOCUSABLE_SELECTOR = [
     "a[href]",
@@ -147,7 +153,146 @@
   const WINDOW_SPECS = USAGE_WINDOWS.WINDOW_SPECS;
   const PACE_STATES = PacePetsLogic.PACE_STATES;
   const PACE_CLASSES = PacePetsLogic.PACE_CLASS_NAMES;
-  const PACE_LEGEND_STATE_KEYS = PacePetsLogic.PACE_LEGEND_STATE_KEYS;
+  const PACE_LEVEL_LEGEND_STATE_KEYS = Object.freeze([
+    PACE_STATES.wellAhead.key,
+    PACE_STATES.strongAhead.key,
+    PACE_STATES.ahead.key,
+    PACE_STATES.on.key,
+    PACE_STATES.behind.key,
+    PACE_STATES.wellBehind.key,
+    PACE_STATES.criticalBehind.key,
+  ]);
+  const PACE_PERFECT_LEGEND_STATE_KEYS = Object.freeze([
+    PACE_STATES.sync.key,
+    PACE_STATES.perfectZero.key,
+    "singularity",
+  ]);
+  const SINGULARITY_ICON_DATA_URL = `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+      <defs>
+        <radialGradient id="core" cx="50%" cy="45%" r="62%">
+          <stop offset="0%" stop-color="#111827"/>
+          <stop offset="62%" stop-color="#020617"/>
+          <stop offset="100%" stop-color="#000000"/>
+        </radialGradient>
+        <linearGradient id="ring" x1="7" y1="28" x2="57" y2="36" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#67e8f9"/>
+          <stop offset="48%" stop-color="#f8fafc"/>
+          <stop offset="100%" stop-color="#fbbf24"/>
+        </linearGradient>
+        <filter id="glow" x="-30%" y="-45%" width="160%" height="190%">
+          <feGaussianBlur stdDeviation="2.1" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <circle cx="48" cy="15" r="1.8" fill="#fbbf24"/>
+      <circle cx="15" cy="21" r="1.5" fill="#67e8f9"/>
+      <circle cx="48.5" cy="49" r="1.2" fill="#f8fafc"/>
+      <ellipse cx="32" cy="32" rx="25" ry="9.5" fill="none" stroke="url(#ring)" stroke-width="5.5" stroke-linecap="round" filter="url(#glow)" transform="rotate(-18 32 32)"/>
+      <circle cx="32" cy="32" r="13.5" fill="url(#core)" stroke="#f8fafc" stroke-opacity="0.88" stroke-width="2.6"/>
+      <path d="M13.2 35.8c8.6 8 28.4 9.2 39.1.1" fill="none" stroke="#67e8f9" stroke-width="3.6" stroke-linecap="round" opacity="0.92" transform="rotate(-18 32 32)"/>
+    </svg>`,
+  )}`;
+  const DASHBOARD_RAIL_STATES = Object.freeze({
+    singularity: Object.freeze({
+      key: "singularity",
+      className: "pace-singularity",
+      title: "Singularity",
+      copy: "It all ends in nothingness. Maybe.",
+      ratioLabel: "Time = Usage = Resets In = 0",
+      previewRatioLabel: "The black hole of zero",
+      badgeColor: "#000000",
+      favicon: Object.freeze({
+        bg: "#111827",
+        color: "#f8fafc",
+        iconParts: Object.freeze([
+          Object.freeze({
+            tag: "ellipse",
+            attrs: Object.freeze({
+              cx: "12",
+              cy: "12",
+              rx: "9.3",
+              ry: "3.7",
+              stroke: "#67e8f9",
+              "stroke-width": "2",
+              transform: "rotate(-18 12 12)",
+            }),
+          }),
+          Object.freeze({
+            tag: "circle",
+            attrs: Object.freeze({
+              fill: "#000000",
+              cx: "12",
+              cy: "12",
+              r: "5",
+              stroke: "#f8fafc",
+              "stroke-width": "1.35",
+            }),
+          }),
+          Object.freeze({
+            tag: "circle",
+            attrs: Object.freeze({
+              cx: "18.8",
+              cy: "5.7",
+              fill: "#fbbf24",
+              r: "1",
+              stroke: "none",
+            }),
+          }),
+        ]),
+      }),
+      iconParts: Object.freeze([
+        Object.freeze({
+          tag: "ellipse",
+          attrs: Object.freeze({
+            cx: "12",
+            cy: "12",
+            rx: "9.5",
+            ry: "3.8",
+            stroke: "#67e8f9",
+            "stroke-width": "2",
+            transform: "rotate(-18 12 12)",
+          }),
+        }),
+        Object.freeze({
+          tag: "circle",
+          attrs: Object.freeze({
+            cx: "12",
+            cy: "12",
+            r: "5.4",
+            fill: "#000000",
+            stroke: "#f8fafc",
+            "stroke-width": "1.35",
+          }),
+        }),
+        Object.freeze({
+          tag: "circle",
+          attrs: Object.freeze({
+            cx: "18.8",
+            cy: "5.7",
+            fill: "#fbbf24",
+            r: "1.1",
+            stroke: "none",
+          }),
+        }),
+      ]),
+      playfulImage: SINGULARITY_ICON_DATA_URL,
+    }),
+  });
+  const DASHBOARD_RAIL_STATES_BY_CLASS = Object.freeze(
+    Object.fromEntries(
+      Object.values(DASHBOARD_RAIL_STATES).map((state) => [
+        state.className,
+        state,
+      ]),
+    ),
+  );
+  const DASHBOARD_RAIL_PACE_CLASSES = Object.freeze(
+    Object.values(DASHBOARD_RAIL_STATES).map((state) => state.className),
+  );
   const MUTED_PACE_CLASS = PACE_STATES.muted.className;
 
   const CHART_COLOR_FALLBACKS = {
@@ -185,6 +330,8 @@
   let explicitTheme = storedThemePreference();
   let activeTooltipTarget = null;
   let tooltipShowTimer = null;
+  let tooltipHideTimer = null;
+  let tooltipAutoHideTimer = null;
   let infoPanelReturnFocus = null;
   let suppressAppTooltipUntilMs = 0;
   applyResolvedTheme();
@@ -213,7 +360,7 @@
   let activePacePreviewKey = null;
   let pacePreviewRestoreSnapshot = null;
   let pacePreviewRestoreTimer = null;
-  let perfectZeroSpaceScene = null;
+  let perfectZeroPageBackgroundScene = null;
 
   const EARLY_RESET_POPOVER_MESSAGES = [
     "This button does nothing. But keep trying.",
@@ -410,6 +557,39 @@
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const margin = APP_TOOLTIP_VIEWPORT_MARGIN_PX;
+    const preferredPlacement = target.dataset.tooltipPlacement;
+
+    if (preferredPlacement === "right") {
+      let placement = "right";
+      let left = targetRect.right + APP_TOOLTIP_OFFSET_PX;
+      if (left + tooltipRect.width > viewportWidth - margin) {
+        placement = "left";
+        left = targetRect.left - tooltipRect.width - APP_TOOLTIP_OFFSET_PX;
+      }
+
+      left = clampNumber(
+        left,
+        margin,
+        viewportWidth - tooltipRect.width - margin,
+      );
+      const top = clampNumber(
+        targetRect.top + targetRect.height / 2 - tooltipRect.height / 2,
+        margin,
+        viewportHeight - tooltipRect.height - margin,
+      );
+      const arrowTop = clampNumber(
+        targetRect.top + targetRect.height / 2 - top,
+        12,
+        tooltipRect.height - 12,
+      );
+
+      tooltip.dataset.placement = placement;
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+      tooltip.style.setProperty("--tooltip-arrow-top", `${arrowTop}px`);
+      return;
+    }
+
     let placement = "top";
     let top = targetRect.top - tooltipRect.height - APP_TOOLTIP_OFFSET_PX;
 
@@ -451,7 +631,23 @@
       return;
     }
 
+    window.clearTimeout(tooltipHideTimer);
+    tooltipHideTimer = null;
+    window.clearTimeout(tooltipAutoHideTimer);
+    tooltipAutoHideTimer = null;
     activeTooltipTarget = target;
+    const motion = target.dataset.tooltipMotion?.trim() || "";
+    if (motion) {
+      tooltip.dataset.motion = motion;
+    } else {
+      delete tooltip.dataset.motion;
+    }
+    const variant = target.dataset.tooltipVariant?.trim() || "";
+    if (variant) {
+      tooltip.dataset.variant = variant;
+    } else {
+      delete tooltip.dataset.variant;
+    }
     tooltip.textContent = text;
     if (hint) {
       const hintElement = document.createElement("span");
@@ -467,6 +663,13 @@
     window.requestAnimationFrame(() => {
       if (activeTooltipTarget === target) {
         tooltip.classList.add("is-visible");
+        if (target.dataset.tooltipAutoHide === "true") {
+          tooltipAutoHideTimer = window.setTimeout(() => {
+            if (activeTooltipTarget === target) {
+              hideAppTooltip();
+            }
+          }, APP_TOOLTIP_SLOW_AUTO_HIDE_DELAY_MS);
+        }
       }
     });
   }
@@ -479,17 +682,35 @@
     }, APP_TOOLTIP_SHOW_DELAY_MS);
   }
 
-  function hideAppTooltip() {
+  function hideAppTooltip({ immediate = false } = {}) {
     window.clearTimeout(tooltipShowTimer);
     tooltipShowTimer = null;
+    window.clearTimeout(tooltipAutoHideTimer);
+    tooltipAutoHideTimer = null;
     if (activeTooltipTarget) {
       removeAppTooltipDescription(activeTooltipTarget);
     }
     activeTooltipTarget = null;
 
     if (elements.appTooltip) {
+      const hasSlowFade =
+        elements.appTooltip.dataset.motion === "slow" &&
+        !elements.appTooltip.hidden;
+      window.clearTimeout(tooltipHideTimer);
+      tooltipHideTimer = null;
       elements.appTooltip.classList.remove("is-visible");
-      elements.appTooltip.hidden = true;
+      if (hasSlowFade && !immediate) {
+        tooltipHideTimer = window.setTimeout(() => {
+          elements.appTooltip.hidden = true;
+          delete elements.appTooltip.dataset.motion;
+          delete elements.appTooltip.dataset.variant;
+          tooltipHideTimer = null;
+        }, APP_TOOLTIP_SLOW_FADE_MS);
+      } else {
+        elements.appTooltip.hidden = true;
+        delete elements.appTooltip.dataset.motion;
+        delete elements.appTooltip.dataset.variant;
+      }
     }
   }
 
@@ -1295,64 +1516,148 @@
   }
 
   function previewPaceRatioForState(stateKey) {
+    if (stateKey === DASHBOARD_RAIL_STATES.singularity.key) {
+      return 0;
+    }
+
     return PREVIEW_CONTROL.previewPaceRatioForState(stateKey);
   }
 
   function setPaceLevel(level, { updateTabIcon = true } = {}) {
-    elements.paceCard.classList.remove(...PACE_CLASSES);
+    const state = paceStateForClassName(level);
+    elements.paceCard.classList.remove(
+      ...PACE_CLASSES,
+      ...DASHBOARD_RAIL_PACE_CLASSES,
+    );
     elements.paceCard.classList.add(level);
-    renderPaceIcon(elements.paceIcon, level);
+    const pageBackgroundActive = setPerfectZeroPageBackgroundActive(
+      state.key === PACE_STATES.perfectZero.key,
+    );
+    renderPaceIcon(elements.paceIcon, level, {
+      usePerfectZeroPageAperture: pageBackgroundActive,
+    });
     if (updateTabIcon) {
       updateFavicon(level);
     }
   }
 
   function paceStateForClassName(className) {
-    return PacePetsLogic.paceStateForClassName(className);
+    return (
+      DASHBOARD_RAIL_STATES_BY_CLASS[className] ||
+      PacePetsLogic.paceStateForClassName(className)
+    );
   }
 
-  function stopPerfectZeroSpaceScene() {
-    perfectZeroSpaceScene?.stop();
-    perfectZeroSpaceScene = null;
+  function paceStateForKey(stateKey) {
+    return DASHBOARD_RAIL_STATES[stateKey] || PACE_STATES[stateKey] || null;
   }
 
-  function renderPaceIcon(container, level) {
+  function stopPerfectZeroPageBackgroundScene() {
+    perfectZeroPageBackgroundScene?.stop();
+    perfectZeroPageBackgroundScene = null;
+    if (elements.perfectZeroPageBackground) {
+      elements.perfectZeroPageBackground.hidden = true;
+    }
+    document.body.classList.remove("has-perfect-zero-page-background");
+  }
+
+  function perfectZeroPageFeaturedPlanets() {
+    if (!elements.paceIcon || !elements.perfectZeroPageBackground) {
+      return [];
+    }
+
+    const iconRect = elements.paceIcon.getBoundingClientRect();
+    const canvasRect =
+      elements.perfectZeroPageBackground.getBoundingClientRect();
+    if (
+      iconRect.width <= 0 ||
+      iconRect.height <= 0 ||
+      canvasRect.width <= 0 ||
+      canvasRect.height <= 0
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        minSize: 15,
+        originX: iconRect.left + iconRect.width / 2 - canvasRect.left,
+        originY: iconRect.top + iconRect.height / 2 - canvasRect.top,
+        type: "ringedPlanet",
+      },
+    ];
+  }
+
+  function setPerfectZeroPageBackgroundActive(active) {
+    if (!elements.shell || !elements.perfectZeroPageBackground) {
+      return false;
+    }
+
+    if (!active) {
+      stopPerfectZeroPageBackgroundScene();
+      return false;
+    }
+
+    if (perfectZeroPageBackgroundScene) {
+      return true;
+    }
+
+    elements.perfectZeroPageBackground.hidden = false;
+    document.body.classList.add("has-perfect-zero-page-background");
+    const scene = PERFECT_ZERO_SPACE.create(
+      elements.shell,
+      elements.perfectZeroPageBackground,
+      {
+        profile: PERFECT_ZERO_SPACE.profiles.fullBleed,
+        scene: {
+          featuredPlanets: perfectZeroPageFeaturedPlanets(),
+        },
+      },
+    );
+    if (!scene) {
+      stopPerfectZeroPageBackgroundScene();
+      return false;
+    }
+
+    perfectZeroPageBackgroundScene = scene;
+    return true;
+  }
+
+  function renderPaceIcon(
+    container,
+    level,
+    { usePerfectZeroPageAperture = false } = {},
+  ) {
     const state = paceStateForClassName(level);
     const src = state.playfulImage;
-    const shouldRenderPerfectZeroSpace =
+    const shouldRenderPerfectZeroPageAperture =
       container === elements.paceIcon &&
       state.key === PACE_STATES.perfectZero.key &&
-      USE_PLAYFUL_PACE_ICONS &&
-      src;
-
-    if (container === elements.paceIcon) {
-      stopPerfectZeroSpaceScene();
-    }
+      usePerfectZeroPageAperture;
 
     container.replaceChildren();
     container.classList.toggle(
-      "has-perfect-zero-space",
-      Boolean(shouldRenderPerfectZeroSpace),
+      "is-perfect-zero-aperture",
+      Boolean(shouldRenderPerfectZeroPageAperture),
     );
 
-    if (USE_PLAYFUL_PACE_ICONS && src) {
-      container.classList.add("is-playful");
-
-      if (shouldRenderPerfectZeroSpace) {
-        const canvas = document.createElement("canvas");
-        canvas.className = "perfect-zero-space-canvas";
-        canvas.setAttribute("aria-hidden", "true");
-
+    if (shouldRenderPerfectZeroPageAperture) {
+      container.classList.remove("is-playful");
+      if (src) {
         const image = document.createElement("img");
-        image.src = THEME_ASSETS.paceIconVariantPath("perfectZeroGlow") || src;
+        image.className = "perfect-zero-cameo";
+        image.src = src;
         image.alt = "";
         image.decoding = "async";
         image.loading = "lazy";
-        container.append(canvas, image);
-        perfectZeroSpaceScene = PERFECT_ZERO_SPACE.create(container, canvas);
-        return;
+        image.setAttribute("aria-hidden", "true");
+        container.append(image);
       }
+      return;
+    }
 
+    if (USE_PLAYFUL_PACE_ICONS && src) {
+      container.classList.add("is-playful");
       const image = document.createElement("img");
       image.src = src;
       image.alt = "";
@@ -1380,7 +1685,7 @@
   }
 
   function renderStateChip(stateKey) {
-    const state = PACE_STATES[stateKey] || PACE_STATES.muted;
+    const state = paceStateForKey(stateKey) || PACE_STATES.muted;
     const chip = document.createElement("button");
     chip.className = `state-chip ${state.className}`;
     chip.type = "button";
@@ -1390,6 +1695,9 @@
       chip.dataset.tooltipHint = "Click to preview";
     } else if (state.key === PACE_STATES.perfectZero.key) {
       chip.dataset.tooltip = "The window sticks a perfect landing at zero.";
+      chip.dataset.tooltipHint = "Click to preview";
+    } else if (state.key === DASHBOARD_RAIL_STATES.singularity.key) {
+      chip.dataset.tooltip = "Preview mock Singularity status";
       chip.dataset.tooltipHint = "Click to preview";
     } else {
       chip.dataset.tooltip = `Preview mock ${state.title} status`;
@@ -1405,12 +1713,6 @@
     copy.className = "state-copy";
     const title = document.createElement("strong");
     title.textContent = state.title;
-    if (
-      state.key === PACE_STATES.sync.key ||
-      state.key === PACE_STATES.perfectZero.key
-    ) {
-      title.classList.add("state-special-title");
-    }
 
     const meta = document.createElement("span");
     meta.className = "state-meta";
@@ -1424,16 +1726,33 @@
     return chip;
   }
 
-  function renderStateStack(container, stateKeys) {
-    if (!container) {
-      return;
-    }
-
-    container.replaceChildren(...stateKeys.map(renderStateChip));
+  function renderStateColumn(className, titleText, stateKeys) {
+    const column = document.createElement("div");
+    column.className = `state-column ${className}`;
+    const title = document.createElement("h2");
+    title.className = "state-column-title";
+    title.textContent = titleText;
+    column.replaceChildren(title, ...stateKeys.map(renderStateChip));
+    return column;
   }
 
   function renderStateRail() {
-    renderStateStack(elements.paceStateStack, PACE_LEGEND_STATE_KEYS);
+    if (!elements.paceStateStack) {
+      return;
+    }
+
+    elements.paceStateStack.replaceChildren(
+      renderStateColumn(
+        "state-column-levels",
+        "Pace levels",
+        PACE_LEVEL_LEGEND_STATE_KEYS,
+      ),
+      renderStateColumn(
+        "state-column-perfects",
+        "Perfect states",
+        PACE_PERFECT_LEGEND_STATE_KEYS,
+      ),
+    );
   }
 
   function currentPaceLevel() {
@@ -1585,16 +1904,22 @@
     elements.paceRatioStat.hidden = false;
     elements.paceRatioValue.textContent =
       formatPaceRatioValue(previewPaceRatio);
-    setPreviewPercentPair(PACE_STATE_PREVIEW_PERCENT_PAIRS[state.key]);
-    elements.paceAltRatio.textContent = state.ratioLabel;
-    elements.paceAltRatio.hidden = !state.ratioLabel;
+    setPreviewPercentPair(
+      PACE_STATE_PREVIEW_PERCENT_PAIRS[state.key] || {
+        remainingPercent: 0,
+        timePercent: 0,
+      },
+    );
+    const previewRatioLabel = state.previewRatioLabel || state.ratioLabel;
+    elements.paceAltRatio.textContent = previewRatioLabel;
+    elements.paceAltRatio.hidden = !previewRatioLabel;
     updateTabTitle(state.title, previewPaceRatio);
     updateStateRailPreviewSelection(state.key);
     updateToolbarPreviewBadge(state.key);
   }
 
   function showPacePreview(stateKey) {
-    const state = PACE_STATES[stateKey];
+    const state = paceStateForKey(stateKey);
     if (!state) {
       return;
     }
@@ -2679,6 +3004,7 @@
 
   elements.earlyResetButton.addEventListener("click", (event) => {
     event.stopPropagation();
+    hideAppTooltip({ immediate: true });
 
     if (earlyResetIsPopping) {
       return;

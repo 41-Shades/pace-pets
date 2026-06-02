@@ -107,27 +107,61 @@ body,
   border-radius: 6px;
   box-shadow: 0 14px 34px rgb(var(--tooltip-shadow) / 16%);
   color: var(--tooltip-text);
-  font-size: 0.72rem;
-  font-weight: 560;
+  font-size: 0.6rem;
+  font-weight: 360;
   left: 0;
-  line-height: 1.25;
+  line-height: 1.18;
   max-width: min(220px, calc(100vw - 24px));
   opacity: 0;
-  padding: 7px 10px;
+  padding: 5px 7px;
   pointer-events: none;
   position: fixed;
   top: 0;
+  text-align: center;
   transform: translateY(2px);
   transition:
     opacity 120ms ease,
     transform 120ms ease;
-  white-space: normal;
+  white-space: pre-line;
+  width: max-content;
   z-index: 1000;
 }
 
 .app-tooltip.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.app-tooltip[data-motion="slow"] {
+  transition:
+    opacity 1600ms ease,
+    transform 1600ms ease;
+}
+
+.app-tooltip[data-variant="speech"] {
+  --speech-bubble-bg: rgb(255 255 255 / 96%);
+  --speech-bubble-outline: #c5cbd3;
+  --speech-bubble-soft-edge: rgb(226 232 240 / 74%);
+
+  background:
+    radial-gradient(
+      ellipse at 38% 22%,
+      rgb(255 255 255 / 92%) 0 58%,
+      transparent 72%
+    ),
+    var(--speech-bubble-bg);
+  border: 1.5px solid var(--speech-bubble-outline);
+  border-radius: 56% 44% 48% 52% / 55% 52% 48% 45%;
+  box-shadow:
+    inset 2px 2px 0 var(--speech-bubble-soft-edge),
+    0 4px 10px rgb(var(--tooltip-shadow) / 8%);
+  color: #7b828c;
+  display: grid;
+  line-height: 1.1;
+  min-height: 42px;
+  min-width: 78px;
+  padding: 8px 16px 9px;
+  place-items: center;
 }
 
 .app-tooltip[hidden] {
@@ -165,23 +199,66 @@ body,
   top: -5px;
 }
 
+.app-tooltip[data-placement="right"]::before,
+.app-tooltip[data-placement="left"]::before {
+  top: var(--tooltip-arrow-top, 50%);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.app-tooltip[data-placement="right"]::before {
+  border-right: 0;
+  border-top: 0;
+  left: -5px;
+}
+
+.app-tooltip[data-placement="left"]::before {
+  border-bottom: 0;
+  border-left: 0;
+  left: auto;
+  right: -5px;
+}
+
+.app-tooltip[data-variant="speech"]::before,
+.app-tooltip[data-variant="speech"]::after {
+  display: none;
+}
+
 .shell {
   align-items: center;
   display: flex;
+  isolation: isolate;
   justify-content: center;
   min-height: 100vh;
   min-height: 100dvh;
   padding: 12px;
+  position: relative;
+}
+
+.perfect-zero-page-background {
+  display: block;
+  height: 100vh;
+  height: 100dvh;
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  width: 100vw;
+  z-index: 0;
+}
+
+.perfect-zero-page-background[hidden] {
+  display: none;
 }
 
 .content-grid {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
-  flex-direction: column;
-  gap: 32px;
+  flex-direction: row;
+  gap: 82px;
   justify-content: center;
-  max-width: 820px;
+  max-width: 1360px;
+  position: relative;
   width: 100%;
+  z-index: 1;
 }
 
 .usage-panel {
@@ -197,34 +274,54 @@ body,
 }
 
 .state-rail {
-  --state-chip-gap-x: 36px;
-  --state-chip-width: 238px;
-  --state-stack-max-width: 786px;
+  --state-chip-gap-x: 28px;
+  --state-chip-gap-y: 10px;
+  --state-chip-width: 228px;
+  --state-rail-top-inset: 28px;
+  --state-stack-max-width: calc(
+    (var(--state-chip-width) * 2) + var(--state-chip-gap-x)
+  );
 
-  align-self: center;
+  align-self: flex-start;
+  flex: 0 0 auto;
   display: block;
-  max-width: 100%;
-  padding-top: 0;
+  max-width: var(--state-stack-max-width);
+  padding-top: var(--state-rail-top-inset);
   position: static;
-  width: 100%;
+  width: auto;
 }
 
 .state-stack {
   display: grid;
-  gap: 6px var(--state-chip-gap-x);
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(var(--state-chip-width), var(--state-chip-width))
-  );
+  gap: var(--state-chip-gap-y) var(--state-chip-gap-x);
+  grid-template-columns: repeat(2, var(--state-chip-width));
   justify-content: center;
   margin-inline: auto;
   max-width: min(100%, var(--state-stack-max-width));
-  width: 100%;
+  width: auto;
+}
+
+.state-column {
+  align-content: start;
+  display: grid;
+  gap: var(--state-chip-gap-y);
+}
+
+.state-column-title {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 620;
+  line-height: 1.1;
+  margin: 0 0 2px;
+  padding-left: 6px;
 }
 
 .state-chip {
-  --state-icon-size: 47px;
-  --state-image-size: 44px;
+  --state-icon-size: 38px;
+  --state-image-size: 35px;
+  --state-meta-font-size: 0.72rem;
+  --state-ratio-font-size: 0.7rem;
+  --state-title-font-size: 1rem;
 
   align-items: center;
   appearance: none;
@@ -236,11 +333,11 @@ body,
   cursor: pointer;
   display: flex;
   font: inherit;
-  gap: 10px;
+  gap: 9px;
   max-width: 100%;
-  min-height: 62px;
+  min-height: 56px;
   min-width: 0;
-  padding: 3px 22px 3px 20px;
+  padding: 7px 15px 7px 12px;
   text-align: left;
   transform: translateY(0);
   transition:
@@ -257,7 +354,7 @@ body,
 .state-chip.is-previewing {
   background: color-mix(in srgb, var(--pace-bg) 42%, var(--surface-mix));
   border-color: color-mix(in srgb, var(--pace-border) 52%, var(--line));
-  box-shadow: 0 10px 24px rgb(var(--shadow-color) / 8%);
+  box-shadow: 0 8px 18px rgb(var(--shadow-color) / 8%);
 }
 
 .state-chip:focus-visible {
@@ -276,7 +373,7 @@ body,
 
 .state-icon {
   align-items: center;
-  border-radius: 12px;
+  border-radius: 8px;
   color: var(--pace-color);
   display: inline-flex;
   height: var(--state-icon-size);
@@ -296,8 +393,8 @@ svg {
 }
 
 .state-icon svg {
-  height: 24px;
-  width: 24px;
+  height: 25px;
+  width: 25px;
 }
 
 .state-icon img {
@@ -311,9 +408,9 @@ svg {
 .state-chip strong {
   color: var(--pace-color);
   display: block;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: var(--state-title-font-size);
+  font-weight: 680;
+  line-height: 1.08;
 }
 
 .state-chip .state-meta {
@@ -321,17 +418,11 @@ svg {
   color: var(--subhead);
   display: flex;
   flex-wrap: wrap;
-  font-size: 0.72rem;
-  gap: 2px 7px;
-  line-height: 1.2;
-  margin-top: 5px;
+  font-size: var(--state-meta-font-size);
+  gap: 1px 5px;
+  line-height: 1.1;
+  margin-top: 2px;
   min-width: 0;
-}
-
-.state-chip .state-special-title {
-  font-size: 0.94rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .state-chip .state-meta span {
@@ -340,7 +431,7 @@ svg {
 
 .state-chip .state-ratio {
   color: var(--pace-color);
-  font-size: 0.74rem;
+  font-size: var(--state-ratio-font-size);
   font-weight: 800;
   letter-spacing: 0;
   opacity: 0.76;
@@ -862,6 +953,43 @@ h1 {
   }
 }
 
+@keyframes perfect-zero-cameo-fade {
+  0%,
+  42% {
+    filter: blur(1px);
+    opacity: 0;
+  }
+
+  100% {
+    filter: blur(0);
+    opacity: 0.78;
+  }
+}
+
+@keyframes perfect-zero-cameo-ground-fade {
+  0%,
+  42% {
+    filter: blur(1px);
+    opacity: 0;
+  }
+
+  100% {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes perfect-zero-cameo-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.8deg);
+  }
+
+  50% {
+    transform: translate3d(0, -2px, 0) rotate(0.8deg);
+  }
+}
+
 .pace-card,
 .metrics,
 .reset-card {
@@ -907,19 +1035,46 @@ h1 {
   width: 96px;
 }
 
-.pace-icon.has-perfect-zero-space {
-  isolation: isolate;
-  overflow: hidden;
+.pace-icon.is-perfect-zero-aperture {
+  background: transparent;
+  border-color: rgb(238 244 242 / 12%);
 }
 
-.perfect-zero-space-canvas {
-  display: block;
-  height: 112%;
-  inset: -6%;
+.pace-icon.is-perfect-zero-aperture::after {
+  animation: perfect-zero-cameo-ground-fade 9s ease-out both;
+  background: radial-gradient(
+    ellipse at center top,
+    rgb(238 244 242 / 14%),
+    rgb(238 244 242 / 6%) 54%,
+    transparent 72%
+  );
+  border-radius: 50%;
+  border-top: 1px solid rgb(238 244 242 / 18%);
+  bottom: 7px;
+  box-shadow: 0 -2px 10px rgb(238 244 242 / 8%);
+  content: "";
+  height: 18px;
+  left: 14px;
   pointer-events: none;
   position: absolute;
-  width: 112%;
+  right: 14px;
+  transform: rotate(-2deg);
   z-index: 0;
+}
+
+.pace-icon.is-perfect-zero-aperture .perfect-zero-cameo {
+  animation:
+    perfect-zero-cameo-fade 9s ease-out both,
+    perfect-zero-cameo-float 7.5s ease-in-out 9s infinite;
+  height: calc(100% - 12px);
+  inset: 6px;
+  object-fit: contain;
+  opacity: 0.78;
+  pointer-events: none;
+  position: absolute;
+  transform: translate3d(0, 0, 0);
+  width: calc(100% - 12px);
+  z-index: 1;
 }
 
 .pace-icon img {
@@ -929,10 +1084,6 @@ h1 {
   position: relative;
   width: 106%;
   z-index: 1;
-}
-
-.pace-icon.has-perfect-zero-space img {
-  transform: translate(-3px, 5px);
 }
 
 .pace-card.pace-sync .pace-icon {
@@ -1073,6 +1224,42 @@ h1 {
   --pace-icon-bg: #e5e7eb;
 }
 
+.pace-singularity {
+  --pace-color: #000000;
+  --pace-bg: #f8fafc;
+  --pace-border: #2f3339;
+  --pace-copy-color: #2f3339;
+  --pace-icon-bg: #000000;
+}
+
+.state-chip.pace-singularity {
+  --state-ratio-font-size: 0.64rem;
+
+  color: var(--pace-color);
+}
+
+.state-chip.pace-singularity:hover,
+.state-chip.pace-singularity:focus-visible,
+.state-chip.pace-singularity.is-previewing {
+  background: color-mix(in srgb, var(--pace-bg) 46%, var(--surface-mix));
+  border-color: var(--pace-color);
+}
+
+.state-chip.pace-singularity strong {
+  color: var(--pace-color);
+}
+
+.state-chip.pace-singularity .state-ratio {
+  color: var(--pace-copy-color);
+  line-height: 1;
+}
+
+.state-chip.pace-singularity .state-meta,
+.pace-card.pace-singularity .pace-copy p,
+.pace-card.pace-singularity .pace-alt-ratio {
+  color: var(--pace-copy-color);
+}
+
 .pace-ahead {
   --pace-color: #15803d;
   --pace-bg: #f0fdf4;
@@ -1199,6 +1386,14 @@ h1 {
   --pace-bg: #24272c;
   --pace-border: #9ca3af;
   --pace-icon-bg: #374151;
+}
+
+[data-theme="dark"] .pace-singularity {
+  --pace-color: #eef4f2;
+  --pace-bg: #080b10;
+  --pace-border: #9ca3af;
+  --pace-copy-color: #a8b7b4;
+  --pace-icon-bg: #000000;
 }
 
 [data-theme="dark"] .pace-ahead {
@@ -1849,6 +2044,8 @@ h1 {
   }
 
   .pace-card.pace-sync .pace-icon,
+  .pace-icon.is-perfect-zero-aperture::after,
+  .pace-icon.is-perfect-zero-aperture .perfect-zero-cameo,
   .early-reset-popover[data-early-reset-stage="5"],
   .early-reset-popover.is-popping,
   .early-reset-popover.is-popping::before {
@@ -2028,11 +2225,11 @@ dd {
 
   .state-rail {
     position: static;
-    width: 100%;
+    width: auto;
   }
 
   .state-stack {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, var(--state-chip-width));
   }
 
   .panel-header,
@@ -2187,7 +2384,7 @@ dd {
 
 @media (width <= 1320px) and (width >= 761px) {
   .content-grid {
-    gap: 32px;
+    gap: 82px;
   }
 
   .usage-panel {
@@ -2298,7 +2495,7 @@ dd {
   width: 32px;
 }
 
-@media (width <= 1180px) {
+@media (width <= 1360px) {
   .shell {
     align-items: flex-start;
     padding: 28px 18px;
@@ -2317,10 +2514,17 @@ dd {
 
   .state-rail {
     align-self: center;
+    padding-top: 0;
   }
 
   .dashboard-lower-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (width <= 520px) {
+  .state-stack {
+    grid-template-columns: var(--state-chip-width);
   }
 }
 
@@ -2339,4 +2543,189 @@ dd {
     min-height: 132px;
     padding: 14px;
   }
+}
+
+body.has-perfect-zero-page-background {
+  --text: #eef4f2;
+  --muted: #cbd5e1;
+  --subhead: #94a3b8;
+  --line: rgb(238 244 242 / 18%);
+  --line-strong: rgb(238 244 242 / 28%);
+  --panel: transparent;
+  --surface-mix: transparent;
+  --track: rgb(238 244 242 / 18%);
+  --metric-icon-bg: transparent;
+  --metric-icon-border: rgb(238 244 242 / 20%);
+  --chart-plot-bg: transparent;
+  --control-icon: #cbd5e1;
+  --control-icon-disc: transparent;
+  --control-icon-hover: rgb(238 244 242 / 8%);
+  --theme-icon-disc: transparent;
+  --theme-icon-hover: rgb(238 244 242 / 8%);
+  --theme-icon-crescent: #cbd5e1;
+  --perfect-zero-space-panel-line: rgb(238 244 242 / 16%);
+  --perfect-zero-space-line: rgb(238 244 242 / 24%);
+  --perfect-zero-space-line-soft: rgb(238 244 242 / 14%);
+
+  background: #020617;
+}
+
+body.has-perfect-zero-page-background .usage-panel {
+  background: transparent;
+  border-color: var(--perfect-zero-space-panel-line);
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .pace-card,
+body.has-perfect-zero-page-background .metrics,
+body.has-perfect-zero-page-background .reset-card,
+body.has-perfect-zero-page-background .chart-panel {
+  background: transparent;
+  border-color: var(--perfect-zero-space-line-soft);
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .pace-card.is-previewing {
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .chart-frame.empty {
+  background: transparent;
+  border-color: var(--perfect-zero-space-line-soft);
+}
+
+body.has-perfect-zero-page-background .metric-icon,
+body.has-perfect-zero-page-background .metric-bar,
+body.has-perfect-zero-page-background .window-toggle,
+body.has-perfect-zero-page-background .window-toggle-option.active,
+body.has-perfect-zero-page-background .theme-toggle {
+  background: transparent;
+  border-color: var(--perfect-zero-space-line-soft);
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .state-chip {
+  background: transparent;
+  border-color: color-mix(
+    in srgb,
+    var(--pace-border) 42%,
+    var(--perfect-zero-space-line-soft)
+  );
+  border-left-color: color-mix(
+    in srgb,
+    var(--pace-border) 76%,
+    var(--perfect-zero-space-line)
+  );
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .state-chip:hover,
+body.has-perfect-zero-page-background .state-chip:focus-visible,
+body.has-perfect-zero-page-background .state-chip.is-previewing {
+  background: transparent;
+  border-color: color-mix(
+    in srgb,
+    var(--pace-border) 66%,
+    var(--perfect-zero-space-line)
+  );
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .theme-toggle:hover,
+body.has-perfect-zero-page-background
+  .manual-refresh-button:hover:not([aria-disabled="true"]) {
+  background: transparent;
+}
+
+body.has-perfect-zero-page-background .pace-critical-behind {
+  --pace-color: #f0a0a0;
+  --pace-border: #9e5961;
+  --pace-icon-bg: #442229;
+}
+
+body.has-perfect-zero-page-background .pace-well-behind {
+  --pace-color: #e6ae75;
+  --pace-border: #a3663b;
+  --pace-icon-bg: #432b18;
+}
+
+body.has-perfect-zero-page-background .pace-behind {
+  --pace-color: #dec55d;
+  --pace-border: #9b812d;
+  --pace-icon-bg: #40351b;
+}
+
+body.has-perfect-zero-page-background .pace-on {
+  --pace-color: #66cfc0;
+  --pace-border: #477f78;
+  --pace-icon-bg: #173633;
+}
+
+body.has-perfect-zero-page-background .pace-sync {
+  --pace-color: #79d8ca;
+  --pace-border: #4f9187;
+  --pace-icon-bg: #1b423e;
+}
+
+body.has-perfect-zero-page-background .pace-perfect-zero {
+  --pace-color: #d1d5db;
+  --pace-border: #9ca3af;
+  --pace-icon-bg: #374151;
+}
+
+body.has-perfect-zero-page-background .pace-singularity {
+  --pace-color: #eef4f2;
+  --pace-border: #9ca3af;
+  --pace-copy-color: var(--subhead);
+  --pace-icon-bg: #000000;
+}
+
+body.has-perfect-zero-page-background .pace-ahead {
+  --pace-color: #91d9a6;
+  --pace-border: #529d69;
+  --pace-icon-bg: #1f3a27;
+}
+
+body.has-perfect-zero-page-background .pace-strong-ahead,
+body.has-perfect-zero-page-background .pace-well-ahead {
+  --pace-color: #95e2aa;
+  --pace-border: #65b578;
+  --pace-icon-bg: #21432a;
+}
+
+body.has-perfect-zero-page-background .pace-muted {
+  --pace-color: #9dadac;
+  --pace-border: #3b494a;
+  --pace-icon-bg: #263132;
+}
+
+body.has-perfect-zero-page-background .state-chip.pace-singularity {
+  color: var(--text);
+}
+
+body.has-perfect-zero-page-background .state-chip.pace-singularity:hover,
+body.has-perfect-zero-page-background
+  .state-chip.pace-singularity:focus-visible,
+body.has-perfect-zero-page-background
+  .state-chip.pace-singularity.is-previewing {
+  background: transparent;
+  border-color: var(--pace-border);
+}
+
+body.has-perfect-zero-page-background .state-chip.pace-singularity strong {
+  color: var(--pace-color);
+}
+
+body.has-perfect-zero-page-background
+  .state-chip.pace-singularity
+  .state-ratio {
+  color: var(--subhead);
+}
+
+body.has-perfect-zero-page-background .state-chip.pace-singularity .state-meta,
+body.has-perfect-zero-page-background .pace-card.pace-singularity .pace-copy p,
+body.has-perfect-zero-page-background
+  .pace-card.pace-singularity
+  .pace-alt-ratio {
+  color: var(--subhead);
 }

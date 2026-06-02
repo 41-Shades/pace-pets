@@ -113,7 +113,7 @@
     sync: paceState({
       key: "sync",
       className: "pace-sync",
-      title: "PERFECT SYNC",
+      title: "Perfect sync",
       copy: "Time and pace are in harmony. Ascendent.",
       ratioLabel: "Time = Usage",
       badgeColor: "#0f766e",
@@ -131,7 +131,7 @@
     perfectZero: paceState({
       key: "perfectZero",
       className: "pace-perfect-zero",
-      title: "PERFECT ZERO",
+      title: "Perfect zero",
       copy: "A beautiful, unreasonable zero.",
       ratioLabel: "Time = Usage = 0",
       badgeColor: "#6b7280",

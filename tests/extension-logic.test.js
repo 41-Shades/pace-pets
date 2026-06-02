@@ -164,9 +164,9 @@ describe("CodexProductMetadata", () => {
     expect(
       metadata.previewBadgeTitle({
         badgeText: "1.00",
-        title: "PERFECT SYNC",
+        title: "Perfect sync",
       }),
-    ).toBe("Pace Pets - PERFECT SYNC preview 1.00");
+    ).toBe("Pace Pets - Perfect sync preview 1.00");
     expect(metadata.badgeTitle()).toBe("Pace Pets");
   });
 });
