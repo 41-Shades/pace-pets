@@ -1,0 +1,184 @@
+body.has-perfect-zero-page-background {
+  --text: #eef4f2;
+  --muted: #cbd5e1;
+  --subhead: #94a3b8;
+  --line: rgb(238 244 242 / 18%);
+  --line-strong: rgb(238 244 242 / 28%);
+  --panel: transparent;
+  --surface-mix: transparent;
+  --track: rgb(238 244 242 / 18%);
+  --metric-icon-bg: transparent;
+  --metric-icon-border: rgb(238 244 242 / 20%);
+  --chart-plot-bg: transparent;
+  --control-icon: #cbd5e1;
+  --control-icon-disc: transparent;
+  --control-icon-hover: rgb(238 244 242 / 8%);
+  --theme-icon-disc: transparent;
+  --theme-icon-hover: rgb(238 244 242 / 8%);
+  --theme-icon-crescent: #cbd5e1;
+  --perfect-zero-space-panel-line: rgb(238 244 242 / 16%);
+  --perfect-zero-space-line: rgb(238 244 242 / 24%);
+  --perfect-zero-space-line-soft: rgb(238 244 242 / 14%);
+
+  background: #020617;
+}
+
+body.has-perfect-zero-page-background .usage-panel {
+  background: transparent;
+  border-color: var(--perfect-zero-space-panel-line);
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .pace-card,
+body.has-perfect-zero-page-background .metrics,
+body.has-perfect-zero-page-background .reset-card,
+body.has-perfect-zero-page-background .chart-panel {
+  background: transparent;
+  border-color: var(--perfect-zero-space-line-soft);
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .pace-card.is-previewing {
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .chart-frame.empty {
+  background: transparent;
+  border-color: var(--perfect-zero-space-line-soft);
+}
+
+body.has-perfect-zero-page-background .metric-icon,
+body.has-perfect-zero-page-background .metric-bar,
+body.has-perfect-zero-page-background .window-toggle,
+body.has-perfect-zero-page-background .window-toggle-option.active,
+body.has-perfect-zero-page-background .theme-toggle {
+  background: transparent;
+  border-color: var(--perfect-zero-space-line-soft);
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .state-chip {
+  background: transparent;
+  border-color: color-mix(
+    in srgb,
+    var(--pace-border) 42%,
+    var(--perfect-zero-space-line-soft)
+  );
+  border-left-color: color-mix(
+    in srgb,
+    var(--pace-border) 76%,
+    var(--perfect-zero-space-line)
+  );
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .state-chip:hover,
+body.has-perfect-zero-page-background .state-chip:focus-visible,
+body.has-perfect-zero-page-background .state-chip.is-previewing {
+  background: transparent;
+  border-color: color-mix(
+    in srgb,
+    var(--pace-border) 66%,
+    var(--perfect-zero-space-line)
+  );
+  box-shadow: none;
+}
+
+body.has-perfect-zero-page-background .theme-toggle:hover,
+body.has-perfect-zero-page-background
+  .manual-refresh-button:hover:not([aria-disabled="true"]) {
+  background: transparent;
+}
+
+body.has-perfect-zero-page-background .pace-critical-behind {
+  --pace-color: #f0a0a0;
+  --pace-border: #9e5961;
+  --pace-icon-bg: #442229;
+}
+
+body.has-perfect-zero-page-background .pace-well-behind {
+  --pace-color: #e6ae75;
+  --pace-border: #a3663b;
+  --pace-icon-bg: #432b18;
+}
+
+body.has-perfect-zero-page-background .pace-behind {
+  --pace-color: #dec55d;
+  --pace-border: #9b812d;
+  --pace-icon-bg: #40351b;
+}
+
+body.has-perfect-zero-page-background .pace-on {
+  --pace-color: #66cfc0;
+  --pace-border: #477f78;
+  --pace-icon-bg: #173633;
+}
+
+body.has-perfect-zero-page-background .pace-sync {
+  --pace-color: #79d8ca;
+  --pace-border: #4f9187;
+  --pace-icon-bg: #1b423e;
+}
+
+body.has-perfect-zero-page-background .pace-perfect-zero {
+  --pace-color: #d1d5db;
+  --pace-border: #9ca3af;
+  --pace-icon-bg: #374151;
+}
+
+body.has-perfect-zero-page-background .pace-singularity {
+  --pace-color: #eef4f2;
+  --pace-border: #9ca3af;
+  --pace-copy-color: var(--subhead);
+  --pace-icon-bg: #000000;
+}
+
+body.has-perfect-zero-page-background .pace-ahead {
+  --pace-color: #91d9a6;
+  --pace-border: #529d69;
+  --pace-icon-bg: #1f3a27;
+}
+
+body.has-perfect-zero-page-background .pace-strong-ahead,
+body.has-perfect-zero-page-background .pace-well-ahead {
+  --pace-color: #95e2aa;
+  --pace-border: #65b578;
+  --pace-icon-bg: #21432a;
+}
+
+body.has-perfect-zero-page-background .pace-muted {
+  --pace-color: #9dadac;
+  --pace-border: #3b494a;
+  --pace-icon-bg: #263132;
+}
+
+body.has-perfect-zero-page-background .state-chip.pace-singularity {
+  color: var(--text);
+}
+
+body.has-perfect-zero-page-background .state-chip.pace-singularity:hover,
+body.has-perfect-zero-page-background
+  .state-chip.pace-singularity:focus-visible,
+body.has-perfect-zero-page-background
+  .state-chip.pace-singularity.is-previewing {
+  background: transparent;
+  border-color: var(--pace-border);
+}
+
+body.has-perfect-zero-page-background .state-chip.pace-singularity strong {
+  color: var(--pace-color);
+}
+
+body.has-perfect-zero-page-background
+  .state-chip.pace-singularity
+  .state-ratio {
+  color: var(--subhead);
+}
+
+body.has-perfect-zero-page-background .state-chip.pace-singularity .state-meta,
+body.has-perfect-zero-page-background .pace-card.pace-singularity .pace-copy p,
+body.has-perfect-zero-page-background
+  .pace-card.pace-singularity
+  .pace-alt-ratio {
+  color: var(--subhead);
+}

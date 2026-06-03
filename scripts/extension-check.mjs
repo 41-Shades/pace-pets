@@ -95,9 +95,7 @@ await import(pathToFileURL(path.join(extensionRoot, "integration-config.js")));
 const integrationConfig = globalThis.CodexIntegrationConfig;
 assert(integrationConfig, "Integration config must be importable by checks.");
 await import(
-  pathToFileURL(
-    path.join(extensionRoot, "themes/default/asset-manifest.js"),
-  )
+  pathToFileURL(path.join(extensionRoot, "themes/default/asset-manifest.js"))
 );
 const themeAssets = globalThis.CodexThemeAssets;
 assert(themeAssets, "Theme asset manifest must be importable by checks.");
@@ -318,6 +316,26 @@ for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
 }
 
 const dashboardHtml = readExtensionText("dashboard.html");
+const expectedDashboardStylesheetSources = Object.freeze([
+  "./dashboard.css",
+  "./dashboard-rail.css",
+  "./dashboard-header.css",
+  "./dashboard-overlays.css",
+  "./dashboard-pace-card.css",
+  "./dashboard-pace-states.css",
+  "./dashboard-cards.css",
+  "./dashboard-early-reset-stages.css",
+  "./dashboard-reset.css",
+  "./dashboard-responsive.css",
+  "./dashboard-perfect-zero.css",
+]);
+const linkTags = dashboardHtml.match(/<link\b[^>]*>/gi) || [];
+const stylesheetTags = linkTags.filter((linkTag) =>
+  /\bstylesheet\b/i.test(attributeValue(linkTag, "rel") || ""),
+);
+const dashboardStylesheetSources = stylesheetTags.map((linkTag) =>
+  attributeValue(linkTag, "href"),
+);
 const scriptTags = dashboardHtml.match(/<script\b[\s\S]*?<\/script>/gi) || [];
 assert(scriptTags.length > 0, "Dashboard must load local script assets.");
 assert(
@@ -351,6 +369,20 @@ for (const scriptTag of scriptTags) {
     "Dashboard script tags must not contain inline code.",
   );
   assertExtensionFile(src.slice(2));
+}
+assert(
+  dashboardStylesheetSources.length ===
+    expectedDashboardStylesheetSources.length &&
+    dashboardStylesheetSources.every(
+      (src, index) => src === expectedDashboardStylesheetSources[index],
+    ),
+  `Dashboard stylesheet links must be exactly: ${expectedDashboardStylesheetSources.join(", ")}.`,
+);
+for (const href of dashboardStylesheetSources) {
+  assert(href, "Dashboard stylesheet href is required.");
+  assertExtensionFile(
+    extensionPathFromExtensionPageUrl(href, "Dashboard stylesheet"),
+  );
 }
 const dashboardScriptSources = scriptTags.map((scriptTag) =>
   attributeValue(scriptTag, "src"),
@@ -463,12 +495,21 @@ for (const src of optionalDashboardRuntimeScripts) {
   assertExtensionFile(extensionPathFromDashboardScript(src));
 }
 
-const dashboardCss = readExtensionText("dashboard.css");
-assert(!/@import\b/i.test(dashboardCss), "Dashboard CSS must not use imports.");
-assert(
-  !/url\(\s*["']?(?:https?:|\/\/)/i.test(dashboardCss),
-  "Dashboard CSS must not load remote resources.",
-);
+for (const href of dashboardStylesheetSources) {
+  const stylesheetPath = extensionPathFromExtensionPageUrl(
+    href,
+    "Dashboard stylesheet",
+  );
+  const stylesheetText = readExtensionText(stylesheetPath);
+  assert(
+    !/@import\b/i.test(stylesheetText),
+    `Dashboard CSS must not use imports: ${href}`,
+  );
+  assert(
+    !/url\(\s*["']?(?:https?:|\/\/)/i.test(stylesheetText),
+    `Dashboard CSS must not load remote resources: ${href}`,
+  );
+}
 
 const disallowedPackagedArtifactPatterns = [
   /(^|\/)usage\.json$/i,

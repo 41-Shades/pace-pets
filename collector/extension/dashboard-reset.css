@@ -1,0 +1,138 @@
+.reset-details {
+  align-items: stretch;
+  column-gap: clamp(8px, 1.4vw, 18px);
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.reset-detail {
+  align-content: center;
+  display: grid;
+  min-width: 0;
+}
+
+.reset-detail-copy {
+  justify-self: start;
+  max-width: 100%;
+  text-align: left;
+  width: 100%;
+}
+
+.reset-detail:nth-child(2) .reset-detail-copy {
+  justify-self: end;
+  text-align: right;
+}
+
+#resets-in {
+  display: block;
+  line-height: 1;
+  white-space: nowrap;
+  font-size: 2.45rem;
+  font-weight: 850;
+}
+
+.reset-note {
+  align-items: center;
+  color: color-mix(in srgb, var(--subhead) 78%, var(--surface-mix));
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  font-weight: 200;
+  gap: 4px;
+  justify-content: flex-start;
+  margin: 12px 0 0;
+  max-width: 100%;
+}
+
+dd {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  margin: 10px 0 0;
+}
+
+.reset-date-value,
+#prior-reset-time,
+#scheduled-reset-time {
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.reset-date-value {
+  font-weight: 760;
+}
+
+#prior-reset-time,
+#scheduled-reset-time {
+  font-weight: 600;
+}
+
+.reset-window-card[data-window-key="fiveHour"] .reset-date-value {
+  font-weight: 600;
+}
+
+.reset-window-card[data-window-key="fiveHour"] #prior-reset-time,
+.reset-window-card[data-window-key="fiveHour"] #scheduled-reset-time {
+  font-weight: 760;
+}
+
+.reset-progress {
+  align-items: center;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: auto 1fr auto;
+  margin-top: 12px;
+  min-width: 0;
+  padding-inline: 0;
+}
+
+.reset-progress-dot {
+  border: 3px solid var(--reset-dot-border);
+  border-radius: 999px;
+  height: 16px;
+  position: relative;
+  width: 16px;
+  z-index: 1;
+}
+
+.reset-progress-dot-start {
+  background: var(--reset-dot-start);
+}
+
+.reset-progress-dot-end {
+  background: var(--reset-dot-end);
+  border-color: var(--reset-dot-end-border);
+}
+
+.reset-progress-track {
+  background: radial-gradient(
+      circle at 1.5px 50%,
+      var(--reset-track-dot) 1.2px,
+      transparent 1.35px
+    )
+    0 50% / 7px 3px repeat-x;
+  height: 3px;
+  margin: 0 -1px;
+  overflow: hidden;
+  position: relative;
+}
+
+.reset-progress-fill {
+  background: linear-gradient(
+    90deg,
+    var(--reset-dot-start) 0%,
+    var(--reset-dot-end) 100%
+  );
+  border-radius: 999px;
+  clip-path: inset(0 calc(100% - var(--reset-progress, 0%)) 0 0 round 999px);
+  display: block;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}

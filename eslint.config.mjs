@@ -103,7 +103,7 @@ export default [
     },
   },
   {
-    files: ["tests/**/*.test.js"],
+    files: ["tests/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",

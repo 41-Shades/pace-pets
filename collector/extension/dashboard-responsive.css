@@ -1,0 +1,339 @@
+@media (width <= 760px) {
+  :root {
+    --dashboard-card-padding-x: 22px;
+  }
+
+  .shell {
+    padding: 0;
+  }
+
+  .content-grid {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .usage-panel {
+    padding: 28px 22px;
+  }
+
+  .state-rail {
+    position: static;
+    width: auto;
+  }
+
+  .state-stack {
+    grid-template-columns: repeat(2, var(--state-chip-width));
+  }
+
+  .panel-header,
+  .metric-main,
+  .reset-timing-row,
+  .reset-window,
+  .reset-countdown-group,
+  .reset-summary {
+    align-items: flex-start;
+    grid-template-columns: 1fr;
+  }
+
+  .panel-header {
+    flex-direction: column;
+  }
+
+  .panel-actions {
+    align-items: center;
+    column-gap: 12px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .panel-controls {
+    flex-wrap: nowrap;
+  }
+
+  .collection-meta {
+    justify-content: flex-end;
+    justify-self: end;
+    min-width: 0;
+  }
+
+  .pace-card,
+  .metrics,
+  .reset-card,
+  .chart-panel {
+    height: auto;
+  }
+
+  .pace-card {
+    align-items: flex-start;
+    column-gap: 18px;
+  }
+
+  .pace-stats strong {
+    font-size: 1.5rem;
+  }
+
+  .pace-stats {
+    flex-basis: 112px;
+    width: 112px;
+  }
+
+  .pace-stat {
+    flex-basis: auto;
+  }
+
+  .pace-stat-label {
+    font-size: 0.68rem;
+  }
+
+  .metric-row {
+    padding: 28px var(--dashboard-card-padding-x);
+  }
+
+  .metric-main {
+    align-items: center;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .metric-value {
+    text-align: right;
+  }
+
+  .reset-window {
+    padding-right: 0;
+    width: 100%;
+  }
+
+  .reset-details {
+    grid-column: auto;
+    grid-row: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+    padding: 0;
+    width: 100%;
+  }
+
+  .reset-detail:nth-child(2) .reset-detail-copy {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .reset-countdown-group {
+    border-left: 0;
+    border-top: 0;
+    flex-direction: column;
+    grid-column: auto;
+    grid-row: auto;
+    padding-top: 0;
+    width: 100%;
+  }
+
+  .reset-summary {
+    border-left: 0;
+    border-top: 0;
+    flex: 0 1 auto;
+    grid-area: auto;
+    grid-column: auto;
+    grid-row: auto;
+    min-height: 0;
+    padding: 0;
+    place-content: start stretch;
+    width: 100%;
+  }
+
+  .reset-summary-copy {
+    display: grid;
+    grid-template-rows: auto auto auto;
+    justify-items: start;
+    width: 100%;
+  }
+
+  .reset-note {
+    justify-content: flex-start;
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  .reset-detail {
+    border-left: 0;
+    border-top: 0;
+    padding: 0;
+  }
+
+  .reset-progress {
+    grid-row: auto;
+    margin-top: 16px;
+  }
+
+  .info-overlay {
+    align-items: flex-start;
+    padding: 18px;
+  }
+
+  .info-panel {
+    max-height: calc(100dvh - 36px);
+  }
+}
+
+@media (width <= 1320px) and (width >= 761px) {
+  .content-grid {
+    gap: 82px;
+  }
+
+  .usage-panel {
+    width: 760px;
+  }
+
+  .pace-stat {
+    flex-basis: auto;
+  }
+}
+
+@media (width <= 620px) {
+  .pace-card {
+    align-items: center;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 24px;
+  }
+
+  .pace-stats {
+    grid-column: 2;
+    grid-row: 1;
+    margin-left: 0;
+    place-self: center end;
+    width: 100%;
+  }
+
+  .pace-copy {
+    gap: 12px;
+    grid-column: 1 / -1;
+  }
+
+  .pace-stats strong {
+    font-size: clamp(2.2rem, 14vw, 2.85rem);
+  }
+
+  .pace-stat {
+    flex: 1 1 0;
+  }
+
+  .pace-ratio-stat {
+    padding-right: 0;
+  }
+}
+
+.chart-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: none;
+  display: grid;
+  gap: 10px;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: var(--dashboard-card-height);
+  min-width: 0;
+  padding: 16px var(--dashboard-card-padding-x);
+}
+
+.panel-title {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: flex-start;
+}
+
+.panel-title h2 {
+  margin: 0;
+}
+
+.chart-frame {
+  background: var(--chart-plot-bg);
+  border: 0;
+  border-radius: 8px;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  padding: 4px 2px 0;
+  position: relative;
+  width: 100%;
+}
+
+.chart-frame.empty {
+  align-items: center;
+  background: color-mix(in srgb, var(--track) 28%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--line-strong) 68%, transparent);
+  display: flex;
+  justify-content: center;
+  padding: 18px 16px;
+}
+
+#usage-chart {
+  height: 100%;
+  width: 100%;
+}
+
+.chart-state {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.35;
+  margin: 0;
+  max-width: 18rem;
+  text-align: center;
+}
+
+.pace-icon svg {
+  height: 32px;
+  width: 32px;
+}
+
+@media (width <= 1360px) {
+  .shell {
+    align-items: flex-start;
+    padding: 28px 18px;
+  }
+
+  .content-grid {
+    align-items: center;
+    flex-direction: column;
+    max-width: 960px;
+  }
+
+  .usage-panel {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .state-rail {
+    align-self: center;
+    padding-top: 0;
+  }
+
+  .dashboard-lower-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (width <= 520px) {
+  .state-stack {
+    grid-template-columns: var(--state-chip-width);
+  }
+}
+
+@media (width <= 760px) {
+  .chart-panel {
+    height: auto;
+    padding: 18px var(--dashboard-card-padding-x);
+  }
+
+  .panel-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .chart-frame {
+    min-height: 132px;
+    padding: 14px;
+  }
+}
