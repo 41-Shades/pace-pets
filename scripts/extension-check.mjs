@@ -233,8 +233,8 @@ assertScriptBefore(
 );
 assertScriptBefore(
   backgroundImports,
-  "feature-flags.js",
-  "pace-logic.js",
+  "developer-options.js",
+  "background-logic.js",
   "Background runtime manifest",
 );
 for (const src of backgroundImports) {
@@ -285,7 +285,7 @@ assertExtensionFile("storage-adapter.js");
 assertExtensionFile("usage-integration-adapters.js");
 assertExtensionFile("history-store.js");
 assertExtensionFile("themes/default/asset-manifest.js");
-assertExtensionFile("feature-flags.js");
+assertExtensionFile("developer-options.js");
 assertExtensionFile("pace-logic.js");
 assertExtensionFile("background-logic.js");
 assertExtensionFile("dashboard.html");
@@ -448,8 +448,8 @@ assertScriptBefore(
 );
 assertScriptBefore(
   dashboardRuntimeScripts,
-  "./feature-flags.js",
-  "./pace-logic.js",
+  "./developer-options.js",
+  "./dashboard.js",
   "Dashboard runtime manifest",
 );
 for (const src of dashboardRuntimeScripts) {

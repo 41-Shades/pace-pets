@@ -16,11 +16,6 @@
       "Codex usage value helpers must load before pace-logic.js.",
     );
   }
-  const FEATURE_FLAGS = root.PacePetsFeatureFlags;
-  if (!FEATURE_FLAGS) {
-    throw new Error("Pace Pets feature flags must load before pace-logic.js.");
-  }
-
   function iconPart(part) {
     return Object.freeze({
       tag: part.tag,
@@ -307,22 +302,15 @@
   function controlledPacePresentationForValues(
     remainingPercent,
     timePercent,
-    { allowPerfectZero = true, featureFlags = null } = {},
+    { allowPerfectZero = true } = {},
   ) {
-    const effectiveFeatureFlags =
-      FEATURE_FLAGS.normalizeFeatureFlags(featureFlags);
     const perfectZero = isPerfectZeroPercentPair(remainingPercent, timePercent);
-    if (
-      perfectZero &&
-      (!allowPerfectZero || !effectiveFeatureFlags.perfectZeroState)
-    ) {
+    if (perfectZero && !allowPerfectZero) {
       return null;
     }
     if (
-      (!perfectZero &&
-        (!effectiveFeatureFlags.perfectSyncState ||
-          !isPerfectSyncPercentPair(remainingPercent, timePercent))) ||
-      (perfectZero && !effectiveFeatureFlags.perfectZeroState)
+      !perfectZero &&
+      !isPerfectSyncPercentPair(remainingPercent, timePercent)
     ) {
       return null;
     }
@@ -337,7 +325,7 @@
 
   function controlledPacePresentationForWindow(
     windowData,
-    { allowPerfectZero = true, atMs = Date.now(), featureFlags = null } = {},
+    { allowPerfectZero = true, atMs = Date.now() } = {},
   ) {
     if (isResetWindowStale(windowData, atMs)) {
       return null;
@@ -346,7 +334,7 @@
     return controlledPacePresentationForValues(
       windowData?.remainingPercent,
       timeRemainingPercentAt(windowData, atMs),
-      { allowPerfectZero, featureFlags },
+      { allowPerfectZero },
     );
   }
 
@@ -474,11 +462,7 @@
     return PACE_STATES.wellAhead;
   }
 
-  function paceStatePresentationForRatio(paceRatio, featureFlags = null) {
-    if (!FEATURE_FLAGS.featureFlagValue(featureFlags, "paceLevelStates")) {
-      return PACE_STATES.muted;
-    }
-
+  function paceStatePresentationForRatio(paceRatio) {
     return paceStateForRatio(paceRatio);
   }
 
@@ -486,12 +470,8 @@
     return PACE_STATES_BY_CLASS[className] || PACE_STATES.muted;
   }
 
-  function badgeColorForPaceRatio(
-    paceRatio,
-    colors = DEFAULT_BADGE_COLORS,
-    featureFlags = null,
-  ) {
-    const state = paceStatePresentationForRatio(paceRatio, featureFlags);
+  function badgeColorForPaceRatio(paceRatio, colors = DEFAULT_BADGE_COLORS) {
+    const state = paceStatePresentationForRatio(paceRatio);
     return colors[state.key] || colors.muted;
   }
 

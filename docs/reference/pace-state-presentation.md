@@ -6,13 +6,10 @@ Pace presentation is owned by `collector/extension/pace-logic.js`. The
 dashboard, toolbar badge, chart, favicon, and preview controls reuse that shared
 state model instead of each surface defining its own thresholds.
 
-Feature defaults are owned by `collector/extension/feature-flags.js`. Flags gate
-presentation states and previews only; raw usage normalization, stored history,
-and pace-ratio math stay unchanged.
-
-When running the unpacked extension, local developer settings can also force one
-pace state for the dashboard card and toolbar badge. That display override is
-separate from feature availability flags and remains active until cleared.
+When running the unpacked extension, local developer settings can force one pace
+state for the dashboard card and toolbar badge. That display override is owned by
+`collector/extension/developer-options.js`, reuses the preview-control synthetic
+ratios and percent pairs, and remains active until cleared.
 
 ## Pace Ratio
 
@@ -49,10 +46,6 @@ Perfect Sync and Perfect Zero are controlled presentation states, not threshold
 states. They can override the displayed state when the rounded usage and time
 percentages match.
 
-The `perfectSyncState` and `perfectZeroState` feature flags can suppress those
-controlled presentation overrides. When suppressed, the dashboard and toolbar
-badge fall back to the normal pace-ratio presentation path.
-
 ## Controlled States
 
 Perfect Sync applies when the rounded remaining-usage percent and rounded
@@ -82,9 +75,8 @@ Perfect Zero, which previews `0%` usage and `0%` time. The toolbar badge preview
 uses the same preview state and restores through the alarm-backed badge-preview
 contract.
 
-The `statePreviews`, `paceLevelStates`, `perfectSyncState`, and
-`perfectZeroState` feature flags also gate which preview chips and temporary
-toolbar badge previews are available.
+The dashboard-only Singularity state previews and forced developer overrides
+also set the reset countdown presentation to `0d 0h 0m`.
 
 ## Display Caps
 
@@ -105,6 +97,4 @@ Each shipped pace state gets its image path from
 `collector/extension/themes/default/asset-manifest.js`. The muted state has no
 playful image. Perfect Zero also uses the dedicated canvas scene in
 `collector/extension/perfect-zero-space-scene.js` when the main dashboard card
-enters the Perfect Zero presentation. The `perfectZeroScene` feature flag can
-suppress that canvas scene while leaving the Perfect Zero state itself
-available.
+enters the Perfect Zero presentation.

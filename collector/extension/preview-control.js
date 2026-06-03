@@ -14,14 +14,14 @@
       "Pace Pets pace logic must load before preview-control.js.",
     );
   }
-  const FEATURE_FLAGS = root.PacePetsFeatureFlags;
-  if (!FEATURE_FLAGS) {
-    throw new Error(
-      "Pace Pets feature flags must load before preview-control.js.",
-    );
-  }
   const PACE_STATES = PACE_LOGIC.PACE_STATES;
-  const PACE_LEVEL_STATE_KEYS = new Set(PACE_LOGIC.PACE_LEVEL_STATE_KEYS);
+  const DASHBOARD_ONLY_FORCED_STATES = Object.freeze({
+    singularity: Object.freeze({
+      badgeColor: "#000000",
+      key: "singularity",
+      title: "Singularity",
+    }),
+  });
 
   function pacePreviewPercentPair(
     paceRatio,
@@ -48,52 +48,59 @@
     [PACE_STATES.strongAhead.key]: pacePreviewPercentPair(1.4),
     [PACE_STATES.wellAhead.key]: pacePreviewPercentPair(1.8),
   });
+  const ZERO_PERCENT_PAIR = Object.freeze({
+    remainingPercent: 0,
+    timePercent: 0,
+  });
 
   function normalizePreviewStateKey(stateKey) {
-    return PACE_STATES[stateKey]?.key || null;
+    return (
+      PACE_STATES[stateKey]?.key ||
+      DASHBOARD_ONLY_FORCED_STATES[stateKey]?.key ||
+      null
+    );
   }
 
-  function previewStateKeyEnabled(stateKey, featureFlags = null) {
+  function previewStateKeyEnabled(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
     if (!normalizedStateKey) {
       return false;
     }
 
-    const effectiveFeatureFlags =
-      FEATURE_FLAGS.normalizeFeatureFlags(featureFlags);
-    if (!effectiveFeatureFlags.statePreviews) {
-      return false;
-    }
-    if (PACE_LEVEL_STATE_KEYS.has(normalizedStateKey)) {
-      return effectiveFeatureFlags.paceLevelStates;
-    }
-    if (normalizedStateKey === PACE_STATES.sync.key) {
-      return effectiveFeatureFlags.perfectSyncState;
-    }
-    if (normalizedStateKey === PACE_STATES.perfectZero.key) {
-      return effectiveFeatureFlags.perfectZeroState;
-    }
-
-    return false;
+    return Object.hasOwn(PACE_STATE_PREVIEW_PERCENT_PAIRS, normalizedStateKey);
   }
 
-  function previewPaceRatioForState(stateKey, featureFlags = null) {
+  function previewPaceRatioForState(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    if (!previewStateKeyEnabled(normalizedStateKey, featureFlags)) {
+    if (!previewStateKeyEnabled(normalizedStateKey)) {
       return null;
     }
 
     return forcedPaceRatioForState(normalizedStateKey);
   }
 
+  function forcedPercentPairForState(stateKey) {
+    const normalizedStateKey = normalizePreviewStateKey(stateKey);
+    if (PACE_STATE_PREVIEW_PERCENT_PAIRS[normalizedStateKey]) {
+      return PACE_STATE_PREVIEW_PERCENT_PAIRS[normalizedStateKey];
+    }
+    if (normalizedStateKey === DASHBOARD_ONLY_FORCED_STATES.singularity.key) {
+      return ZERO_PERCENT_PAIR;
+    }
+    return null;
+  }
+
   function forcedPaceRatioForState(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    const percentPair = PACE_STATE_PREVIEW_PERCENT_PAIRS[normalizedStateKey];
+    const percentPair = forcedPercentPairForState(normalizedStateKey);
     if (!percentPair) {
       return null;
     }
 
-    if (normalizedStateKey === PACE_STATES.perfectZero.key) {
+    if (
+      normalizedStateKey === PACE_STATES.perfectZero.key ||
+      normalizedStateKey === DASHBOARD_ONLY_FORCED_STATES.singularity.key
+    ) {
       return 0;
     }
 
@@ -105,7 +112,9 @@
 
   function forcedBadgeState(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    const state = PACE_STATES[normalizedStateKey];
+    const state =
+      PACE_STATES[normalizedStateKey] ||
+      DASHBOARD_ONLY_FORCED_STATES[normalizedStateKey];
     if (!state) {
       return null;
     }
@@ -124,9 +133,9 @@
     });
   }
 
-  function previewBadgeState(stateKey, featureFlags = null) {
+  function previewBadgeState(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    if (!previewStateKeyEnabled(normalizedStateKey, featureFlags)) {
+    if (!previewStateKeyEnabled(normalizedStateKey)) {
       return null;
     }
 
@@ -135,10 +144,7 @@
       return null;
     }
 
-    const paceRatio = previewPaceRatioForState(
-      normalizedStateKey,
-      featureFlags,
-    );
+    const paceRatio = previewPaceRatioForState(normalizedStateKey);
     if (paceRatio === null) {
       return null;
     }
@@ -152,9 +158,9 @@
     });
   }
 
-  function previewBadgeMessage(stateKey, featureFlags = null) {
+  function previewBadgeMessage(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    return previewStateKeyEnabled(normalizedStateKey, featureFlags)
+    return previewStateKeyEnabled(normalizedStateKey)
       ? { stateKey: normalizedStateKey, type: PREVIEW_BADGE_MESSAGE_TYPE }
       : null;
   }
@@ -166,7 +172,7 @@
   function isPreviewBadgeMessage(message) {
     return (
       message?.type === PREVIEW_BADGE_MESSAGE_TYPE &&
-      normalizePreviewStateKey(message.stateKey) !== null
+      previewStateKeyEnabled(message.stateKey)
     );
   }
 
@@ -199,6 +205,7 @@
     isPreviewBadgeMessage,
     isRestoreBadgeMessage,
     forcedBadgeState,
+    forcedPercentPairForState,
     forcedPaceRatioForState,
     normalizeBadgePreviewExpiresAtMs,
     normalizePreviewStateKey,

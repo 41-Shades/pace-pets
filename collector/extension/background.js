@@ -6,7 +6,7 @@ const POLL_MINUTES = 5;
 const INITIAL_REFRESH_DELAY_MINUTES = 1;
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.WINDOW_STORAGE_KEY;
-const FEATURE_FLAGS_STORAGE_KEY = PacePetsFeatureFlags.STORAGE_KEY;
+const DEVELOPER_OPTIONS_STORAGE_KEY = PacePetsDeveloperOptions.STORAGE_KEY;
 const BADGE_PREVIEW_EXPIRES_STORAGE_KEY =
   PacePetsPreviewControl.BADGE_PREVIEW_EXPIRES_STORAGE_KEY;
 const BADGE_PREVIEW_RESTORE_ALARM =
@@ -18,7 +18,6 @@ const BADGE_CONTEXT_MENU_CONTEXTS = ["action"];
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
-let currentFeatureFlags = PacePetsFeatureFlags.DEFAULT_FEATURE_FLAGS;
 let currentForcedPaceStateKey = null;
 
 async function fetchAccessToken() {
@@ -119,16 +118,22 @@ function badgeTextForPaceRatio(paceRatio) {
   return PacePetsLogic.badgeTextForPaceRatio(paceRatio);
 }
 
-function badgeColorForPaceRatio(paceRatio, featureFlags) {
+function badgeColorForPaceRatio(paceRatio) {
   return PacePetsLogic.badgeColorForPaceRatio(
     paceRatio,
     PacePetsLogic.DEFAULT_BADGE_COLORS,
-    featureFlags,
   );
 }
 
 function controlledPacePresentationForWindow(windowData, options) {
   return PacePetsLogic.controlledPacePresentationForWindow(windowData, options);
+}
+
+function stateOverrideBadgeTitle(forcedBadgeState) {
+  return CodexProductMetadata.stateOverrideBadgeTitle({
+    badgeText: forcedBadgeState.badgeText,
+    title: forcedBadgeState.state.title,
+  });
 }
 
 function allowsPerfectZeroForWindow(history, windowKey, windowData) {
@@ -169,21 +174,18 @@ async function selectedBadgeWindowKey() {
 async function readDeveloperOptions() {
   try {
     const items = await CodexExtensionStorage.getLocal(
-      FEATURE_FLAGS_STORAGE_KEY,
+      DEVELOPER_OPTIONS_STORAGE_KEY,
     );
-    const options = PacePetsFeatureFlags.normalizeDeveloperOptions(
-      items?.[FEATURE_FLAGS_STORAGE_KEY],
+    const options = PacePetsDeveloperOptions.normalizeDeveloperOptions(
+      items?.[DEVELOPER_OPTIONS_STORAGE_KEY],
     );
-    currentFeatureFlags = options.featureFlags;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
   } catch (error) {
-    console.warn("Could not read developer feature flags:", error);
-    currentFeatureFlags = PacePetsFeatureFlags.DEFAULT_FEATURE_FLAGS;
+    console.warn("Could not read developer options:", error);
     currentForcedPaceStateKey = null;
   }
 
   return {
-    featureFlags: currentFeatureFlags,
     forcedPaceStateKey: currentForcedPaceStateKey,
   };
 }
@@ -273,7 +275,9 @@ async function syncBadgeContextMenuSelection() {
 }
 
 async function updatePaceBadge(windows, history = null) {
-  const { featureFlags, forcedPaceStateKey } = await readDeveloperOptions();
+  const { forcedPaceStateKey } = await readDeveloperOptions();
+  const forcedBadgeState =
+    PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey);
   const preferredWindowKey = await selectedBadgeWindowKey();
   const windowKey = PacePetsBackgroundLogic.badgeWindowKey(
     windows,
@@ -288,11 +292,9 @@ async function updatePaceBadge(windows, history = null) {
   );
   const controlledPresentation = controlledPacePresentationForWindow(
     windowData,
-    { allowPerfectZero, atMs, featureFlags },
+    { allowPerfectZero, atMs },
   );
   const paceRatio = paceRatioForWindow(windowData, atMs);
-  const forcedBadgeState =
-    PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey);
   const badgePaceRatio = forcedBadgeState
     ? forcedBadgeState.paceRatio
     : controlledPresentation
@@ -304,10 +306,12 @@ async function updatePaceBadge(windows, history = null) {
     ? forcedBadgeState.badgeColor
     : controlledPresentation
       ? controlledPresentation.state.badgeColor
-      : badgeColorForPaceRatio(paceRatio, featureFlags);
-  const title = CodexProductMetadata.badgeTitle(
-    badgePaceRatio === null ? null : { badgeText, label },
-  );
+      : badgeColorForPaceRatio(paceRatio);
+  const title = forcedBadgeState
+    ? stateOverrideBadgeTitle(forcedBadgeState)
+    : CodexProductMetadata.badgeTitle(
+        badgePaceRatio === null ? null : { badgeText, label },
+      );
 
   await setBadge(badgeText, badgeColor, title);
   return { badgePaceRatio, paceRatio, windowKey };
@@ -317,6 +321,18 @@ async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
   const history = await CodexUsageHistory.readHistory();
   const sample = CodexUsageHistory.latestSample(history);
   if (!sample) {
+    const { forcedPaceStateKey } = await readDeveloperOptions();
+    const forcedBadgeState =
+      PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey);
+    if (forcedBadgeState) {
+      await setBadge(
+        forcedBadgeState.badgeText,
+        forcedBadgeState.badgeColor,
+        stateOverrideBadgeTitle(forcedBadgeState),
+      );
+      return;
+    }
+
     if (clearWhenEmpty) {
       await setBadge(
         "",
@@ -361,11 +377,7 @@ async function clearBadgePreviewRestoreSchedule() {
 }
 
 async function previewPaceBadge(stateKey) {
-  const { featureFlags } = await readDeveloperOptions();
-  const preview = PacePetsPreviewControl.previewBadgeState(
-    stateKey,
-    featureFlags,
-  );
+  const preview = PacePetsPreviewControl.previewBadgeState(stateKey);
   if (!preview) {
     return { ok: false };
   }
@@ -588,13 +600,15 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     changes,
     BADGE_WINDOW_STORAGE_KEY,
   );
-  const featureFlagsChanged =
-    PacePetsFeatureFlags.hasFeatureFlagsChange(changes);
-  if (!badgeWindowChanged && !featureFlagsChanged) {
+  const developerOptionsChanged =
+    PacePetsDeveloperOptions.hasDeveloperOptionsChange(changes);
+  if (!badgeWindowChanged && !developerOptionsChanged) {
     return;
   }
 
-  updatePaceBadgeFromHistory().catch((error) => {
+  updatePaceBadgeFromHistory({
+    clearWhenEmpty: developerOptionsChanged,
+  }).catch((error) => {
     console.warn("Codex usage badge update failed:", error);
   });
   if (badgeWindowChanged) {

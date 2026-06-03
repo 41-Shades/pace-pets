@@ -47,7 +47,7 @@ beforeAll(async () => {
   await importExtensionScript(
     "collector/extension/themes/default/asset-manifest.js",
   );
-  await importExtensionScript("collector/extension/feature-flags.js");
+  await importExtensionScript("collector/extension/developer-options.js");
   await importExtensionScript("collector/extension/pace-logic.js");
   await importExtensionScript("collector/extension/preview-control.js");
   await importExtensionScript("collector/extension/usage.js");
@@ -168,54 +168,37 @@ describe("CodexProductMetadata", () => {
         title: "Perfect sync",
       }),
     ).toBe("Pace Pets - Perfect sync preview 1.00");
+    expect(
+      metadata.stateOverrideBadgeTitle({
+        badgeText: "1.00",
+        title: "Perfect sync",
+      }),
+    ).toBe("Pace Pets - Perfect sync override 1.00");
     expect(metadata.badgeTitle()).toBe("Pace Pets");
   });
 });
 
-describe("PacePetsFeatureFlags", () => {
-  it("normalizes developer feature flag overrides over code defaults", () => {
-    const flags = globalThis.PacePetsFeatureFlags;
+describe("PacePetsDeveloperOptions", () => {
+  it("normalizes local developer state overrides", () => {
+    const options = globalThis.PacePetsDeveloperOptions;
 
-    expect(flags.STORAGE_KEY).toBe("pacePetsDeveloperFeatureFlags");
-    expect(flags.DEFAULT_FEATURE_FLAGS).toMatchObject({
-      paceLevelStates: true,
-      perfectSyncState: true,
-      perfectZeroScene: true,
-      perfectZeroState: true,
-      statePreviews: true,
-    });
+    expect(options.STORAGE_KEY).toBe("pacePetsDeveloperOptions");
+    expect(options.normalizeForcedPaceStateKey("sync")).toBe("sync");
+    expect(options.normalizeForcedPaceStateKey("unsupported")).toBeNull();
     expect(
-      flags.normalizeFeatureFlagOverrides({
-        paceLevelStates: false,
-        unsupported: false,
-        statePreviews: "false",
-      }),
-    ).toEqual({ paceLevelStates: false });
-    expect(
-      flags.normalizeFeatureFlags({
-        paceLevelStates: false,
-        statePreviews: false,
-      }),
-    ).toMatchObject({
-      paceLevelStates: false,
-      perfectSyncState: true,
-      statePreviews: false,
-    });
-    expect(flags.normalizeForcedPaceStateKey("sync")).toBe("sync");
-    expect(flags.normalizeForcedPaceStateKey("unsupported")).toBeNull();
-    expect(
-      flags.normalizeDeveloperOptions({
+      options.normalizeDeveloperOptions({
         forcedPaceState: "perfectZero",
-        perfectSyncState: false,
+        unsupported: false,
       }),
     ).toMatchObject({
       forcedPaceStateKey: "perfectZero",
-      featureFlags: expect.objectContaining({ perfectSyncState: false }),
-      featureFlagOverrides: { perfectSyncState: false },
+    });
+    expect(options.normalizeDeveloperOptions(null)).toMatchObject({
+      forcedPaceStateKey: null,
     });
     expect(
-      flags.hasFeatureFlagsChange({
-        pacePetsDeveloperFeatureFlags: { newValue: {} },
+      options.hasDeveloperOptionsChange({
+        pacePetsDeveloperOptions: { newValue: {} },
       }),
     ).toBe(true);
   });
@@ -534,16 +517,6 @@ describe("PacePetsLogic", () => {
       }),
     ).toBeNull();
     expect(
-      globalThis.PacePetsLogic.controlledPacePresentationForValues(50.4, 49.6, {
-        featureFlags: { perfectSyncState: false },
-      }),
-    ).toBeNull();
-    expect(
-      globalThis.PacePetsLogic.controlledPacePresentationForValues(0.4, 0, {
-        featureFlags: { perfectZeroState: false },
-      }),
-    ).toBeNull();
-    expect(
       globalThis.PacePetsLogic.controlledPacePresentationForValues(50.6, 49.4),
     ).toBeNull();
   });
@@ -672,11 +645,6 @@ describe("PacePetsLogic", () => {
     expect(globalThis.PacePetsLogic.paceStateForRatio(1.56)).toBe(
       states.wellAhead,
     );
-    expect(
-      globalThis.PacePetsLogic.paceStatePresentationForRatio(1.56, {
-        paceLevelStates: false,
-      }),
-    ).toBe(states.muted);
     expect(states.wellAhead.playfulImage).toBe(
       globalThis.CodexThemeAssets.paceIconPathForState("wellAhead"),
     );
@@ -724,24 +692,19 @@ describe("PacePetsPreviewControl", () => {
       stateKey: "perfectZero",
     });
     expect(preview.previewBadgeState("unsupported")).toBeNull();
-    expect(
-      preview.previewBadgeState("perfectZero", {
-        perfectZeroState: false,
-      }),
-    ).toBeNull();
     expect(preview.forcedPaceRatioForState("sync")).toBe(1);
     expect(preview.forcedBadgeState("perfectZero")).toMatchObject({
       badgeText: "0.00",
       stateKey: "perfectZero",
     });
-    expect(
-      preview.previewPaceRatioForState("wellAhead", {
-        paceLevelStates: false,
-      }),
-    ).toBeNull();
-    expect(preview.previewBadgeMessage("ahead", { statePreviews: false })).toBe(
-      null,
-    );
+    expect(preview.forcedPercentPairForState("wellAhead")).toEqual({
+      remainingPercent: 90,
+      timePercent: 50,
+    });
+    expect(preview.forcedPercentPairForState("singularity")).toEqual({
+      remainingPercent: 0,
+      timePercent: 0,
+    });
     expect(preview.previewBadgeMessage("ahead")).toEqual({
       stateKey: "ahead",
       type: preview.PREVIEW_BADGE_MESSAGE_TYPE,

@@ -23,7 +23,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/history-store.js` owns sample normalization, dedupe, retention, and sample caps.
 - `collector/extension/themes/default/asset-manifest.js` owns the packaged theme asset manifest for app icons and pace icons shared by runtime code and asset checks.
 - `collector/extension/themes/default/` contains the default replaceable extension artwork.
-- `collector/extension/feature-flags.js` owns code-default feature flags and local developer override normalization. `collector/extension/dev-flags.html` is unpacked-extension tooling only and is excluded from Chrome Web Store release packages.
+- `collector/extension/developer-options.js` owns local developer state-override normalization. `collector/extension/dev-flags.html` is unpacked-extension tooling only and is excluded from Chrome Web Store release packages.
 - `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, inline icon geometry, legend metadata, controlled Perfect Sync/Perfect Zero presentation, and stale-reset guards.
 - `collector/extension/perfect-zero-space-scene.js` owns the `PERFECT ZERO` canvas scene, including icon and full-bleed profiles, reduced-motion handling, page-visibility pause/resume behavior, and scene teardown.
 - `collector/extension/dashboard.html`, `dashboard.css`, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and pace legend previews, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Pace legend previews update the dashboard card, browser tab, and temporary toolbar badge presentation; the background worker restores the badge through a stored expiry and Chrome alarm. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture.
@@ -41,6 +41,25 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 8. `dashboard.js` renders summaries, reset timing, pace state, and charts from extension-local storage, then reuses cached state for minute-by-minute countdown and pace updates until storage or view preferences change.
 
 The dashboard can also request a user-initiated refresh when the visible status is actionable, such as a missing ChatGPT sign-in, failed check, stale refresh, or first-run waiting state. Manual requests use the same guarded background refresh path as the alarm and are cooldown-limited in the dashboard and background worker.
+
+## Developer Controls
+
+The unpacked extension includes `collector/extension/dev-flags.html` as a
+local-only developer control surface. Open it from the installed unpacked
+extension origin, for example
+`chrome-extension://<local-extension-id>/dev-flags.html`.
+
+The page controls only display state overrides. It does not gate shipped product
+features. The state choices are grouped the same way as the dashboard preview
+rail: Pace Levels and Perfect States. Choosing a state stores `forcedPaceState`
+under `pacePetsDeveloperOptions` in `chrome.storage.local`; returning to live
+data removes that override.
+
+Forced states reuse the preview-control synthetic ratios and percent pairs so
+the dashboard card, usage/time bars, tab title, toolbar badge, and state rail
+match temporary preview behavior until the override is cleared. This setting is
+profile-local for development and is excluded from Chrome Web Store release
+packages.
 
 ## Boundaries
 

@@ -1,12 +1,14 @@
 :root {
   color-scheme: light dark;
 
-  --bg: #f6f8fb;
-  --border: #d5dde7;
-  --border-strong: #bec9d7;
-  --muted: #64748b;
+  --bg: #f5f7fb;
+  --border: #d7dee8;
+  --border-strong: #bcc7d6;
+  --muted: #66758a;
   --panel: #ffffff;
+  --panel-soft: #f8fafc;
   --primary: #0f766e;
+  --primary-border: #5bb7aa;
   --primary-soft: #e6f4f1;
   --text: #172033;
 }
@@ -19,7 +21,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font:
-    13px/1.4 system-ui,
+    15px/1.4 system-ui,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -34,167 +36,186 @@ input {
 
 .dev-flags-shell {
   margin: 0 auto;
-  max-width: 900px;
-  padding: 28px 18px;
+  max-width: 1060px;
+  padding: 42px 28px;
 }
 
 .dev-flags-header {
-  align-items: baseline;
-  display: flex;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.dev-flags-header h1 {
-  font-size: 1.45rem;
-  line-height: 1.1;
-  margin: 0;
+  margin-bottom: 36px;
 }
 
 .eyebrow {
+  background: var(--primary-soft);
+  border: 1px solid rgb(15 118 110 / 18%);
+  border-radius: 7px;
   color: var(--primary);
-  font-size: 0.72rem;
-  font-weight: 700;
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 750;
   letter-spacing: 0;
-  margin: 0;
+  margin: 0 0 12px;
+  padding: 5px 10px;
   text-transform: uppercase;
 }
 
-.settings-panel {
+.dev-flags-header h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  margin: 0;
+}
+
+.dev-controls-layout {
+  align-items: start;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+}
+
+.current-mode-panel,
+.state-column {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 8px;
-  overflow-x: auto;
+  overflow: hidden;
 }
 
-.settings-table {
-  border-collapse: collapse;
-  min-width: 760px;
-  width: 100%;
-}
-
-.settings-table th,
-.settings-table td {
+.current-mode-panel h2,
+.state-column h2 {
+  background: var(--panel-soft);
   border-bottom: 1px solid var(--border);
-  padding: 10px 12px;
-  text-align: left;
-  vertical-align: middle;
-}
-
-.settings-table th {
   color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.settings-table tr:last-child td {
-  border-bottom: 0;
-}
-
-.setting-name {
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.muted {
-  color: var(--muted);
-}
-
-.radio-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.radio-pill {
-  align-items: center;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  cursor: pointer;
-  display: inline-flex;
-  gap: 6px;
-  padding: 5px 8px;
-  white-space: nowrap;
-}
-
-.radio-pill:has(input:checked) {
-  background: var(--primary-soft);
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.radio-pill input,
-.flag-toggle input {
-  accent-color: var(--primary);
-  height: 16px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0;
   margin: 0;
-  width: 16px;
+  padding: 13px 18px;
+  text-transform: uppercase;
 }
 
-.flag-toggle {
+.current-mode-summary {
+  border-left: 4px solid var(--primary);
+  padding: 22px 20px 22px 24px;
+}
+
+.current-mode-label {
+  color: var(--primary);
+  font-size: 1.35rem;
+  font-weight: 750;
+  line-height: 1.15;
+}
+
+.current-mode-detail {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 650;
+  margin-top: 7px;
+}
+
+.live-data-button {
   align-items: center;
-  display: inline-flex;
-  gap: 7px;
-  white-space: nowrap;
-}
-
-.secondary-button {
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  color: var(--text);
+  border: 1px solid var(--primary-border);
+  border-radius: 8px;
+  color: var(--primary);
   cursor: pointer;
-  padding: 6px 9px;
-  white-space: nowrap;
+  display: flex;
+  font-weight: 750;
+  justify-content: center;
+  margin: 24px 18px 18px;
+  min-height: 46px;
+  padding: 10px 14px;
+  width: calc(100% - 36px);
 }
 
-.secondary-button:disabled {
+.live-data-button:disabled {
+  border-color: var(--border);
   color: var(--muted);
   cursor: default;
 }
 
-.secondary-button:not(:disabled):hover,
-.secondary-button:not(:disabled):focus-visible {
-  border-color: var(--primary);
+.live-data-button:not(:disabled):hover,
+.live-data-button:not(:disabled):focus-visible {
+  background: var(--primary-soft);
   outline: none;
 }
 
-.dev-flags-actions {
-  align-items: center;
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-  margin-top: 12px;
+.state-columns {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
-#status-message {
+.option-list {
+  display: grid;
+}
+
+.option-row {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  min-height: 56px;
+  padding: 13px 18px;
+}
+
+.option-row:last-child {
+  border-bottom: 0;
+}
+
+.option-row:hover,
+.option-row:focus-within {
+  background: rgb(15 118 110 / 6%);
+}
+
+.option-label {
+  font-size: 1.08rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.option-row input {
+  accent-color: var(--primary);
+  flex: 0 0 auto;
+  height: 20px;
+  margin: 0;
+  width: 20px;
+}
+
+.option-row:has(input:checked) {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.dev-controls-status {
   color: var(--muted);
   min-height: 1.4em;
+  padding-top: 14px;
   text-align: right;
+}
+
+@media (width <= 820px) {
+  .dev-flags-shell {
+    padding: 28px 18px;
+  }
+
+  .dev-controls-layout,
+  .state-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #111827;
     --border: #344054;
-    --border-strong: #526174;
+    --border-strong: #475467;
     --muted: #a6b4c7;
     --panel: #1f2937;
+    --panel-soft: #182230;
     --primary: #5eead4;
+    --primary-border: #2dd4bf;
     --primary-soft: #103b39;
     --text: #eef2f7;
-  }
-}
-
-@media (width <= 620px) {
-  .dev-flags-header,
-  .dev-flags-actions {
-    align-items: stretch;
-    display: grid;
-  }
-
-  #status-message {
-    text-align: left;
   }
 }

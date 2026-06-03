@@ -1,19 +1,36 @@
 (() => {
   "use strict";
 
-  const FEATURE_FLAGS = globalThis.PacePetsFeatureFlags;
+  const DEVELOPER_OPTIONS = globalThis.PacePetsDeveloperOptions;
   const STORAGE = globalThis.CodexExtensionStorage;
-  if (!FEATURE_FLAGS || !STORAGE) {
-    throw new Error("Dev flags dependencies did not load.");
+  if (!DEVELOPER_OPTIONS || !STORAGE) {
+    throw new Error("Dev controls dependencies did not load.");
   }
 
   const elements = {
+    currentModePanel: document.querySelector(".current-mode-panel"),
+    currentModeSummary: document.querySelector("#current-mode-summary"),
+    paceLevelList: document.querySelector("#pace-level-list"),
+    perfectStateList: document.querySelector("#perfect-state-list"),
     resetAll: document.querySelector("#reset-all"),
     statusMessage: document.querySelector("#status-message"),
-    tableBody: document.querySelector("#settings-table-body"),
   };
 
-  let currentOverrides = {};
+  const PACE_LEVEL_STATE_KEYS = Object.freeze([
+    "wellAhead",
+    "strongAhead",
+    "ahead",
+    "on",
+    "behind",
+    "wellBehind",
+    "criticalBehind",
+  ]);
+  const PERFECT_STATE_KEYS = Object.freeze([
+    "sync",
+    "perfectZero",
+    "singularity",
+  ]);
+
   let currentForcedPaceStateKey = null;
   let statusTimer = null;
 
@@ -22,236 +39,145 @@
     elements.statusMessage.textContent = message;
     statusTimer = window.setTimeout(() => {
       elements.statusMessage.textContent = "";
-    }, 2400);
+    }, 2200);
   }
 
-  function defaultValueFor(key) {
-    return FEATURE_FLAGS.DEFAULT_FEATURE_FLAGS[key] === true;
-  }
-
-  function activeOverrideCount(overrides, forcedPaceStateKey) {
-    return Object.keys(overrides).length + (forcedPaceStateKey ? 1 : 0);
-  }
-
-  function storageValue(overrides, forcedPaceStateKey) {
-    const value = {
-      ...FEATURE_FLAGS.normalizeFeatureFlagOverrides(overrides),
-    };
+  function storageValue(forcedPaceStateKey) {
     const normalizedForcedPaceStateKey =
-      FEATURE_FLAGS.normalizeForcedPaceStateKey(forcedPaceStateKey);
-    if (normalizedForcedPaceStateKey) {
-      value[FEATURE_FLAGS.FORCED_PACE_STATE_KEY] = normalizedForcedPaceStateKey;
+      DEVELOPER_OPTIONS.normalizeForcedPaceStateKey(forcedPaceStateKey);
+    if (!normalizedForcedPaceStateKey) {
+      return {};
     }
-    return value;
+    return {
+      [DEVELOPER_OPTIONS.FORCED_PACE_STATE_KEY]: normalizedForcedPaceStateKey,
+    };
   }
 
   function developerOptionsFromStorage(value) {
-    const options = FEATURE_FLAGS.normalizeDeveloperOptions(value);
+    const options = DEVELOPER_OPTIONS.normalizeDeveloperOptions(value);
     return {
       forcedPaceStateKey: options.forcedPaceStateKey,
-      overrides: options.featureFlagOverrides,
     };
   }
 
   async function readDeveloperOptions() {
-    const items = await STORAGE.getLocal(FEATURE_FLAGS.STORAGE_KEY);
-    return developerOptionsFromStorage(items?.[FEATURE_FLAGS.STORAGE_KEY]);
+    const items = await STORAGE.getLocal(DEVELOPER_OPTIONS.STORAGE_KEY);
+    return developerOptionsFromStorage(items?.[DEVELOPER_OPTIONS.STORAGE_KEY]);
   }
 
-  async function writeDeveloperOptions(overrides, forcedPaceStateKey) {
-    const normalizedValue = storageValue(overrides, forcedPaceStateKey);
-    if (activeOverrideCount(overrides, forcedPaceStateKey) === 0) {
-      await STORAGE.removeLocal(FEATURE_FLAGS.STORAGE_KEY);
+  async function writeDeveloperOptions(forcedPaceStateKey) {
+    const normalizedValue = storageValue(forcedPaceStateKey);
+    if (Object.keys(normalizedValue).length === 0) {
+      await STORAGE.removeLocal(DEVELOPER_OPTIONS.STORAGE_KEY);
       return developerOptionsFromStorage(null);
     }
 
-    await STORAGE.setLocal({ [FEATURE_FLAGS.STORAGE_KEY]: normalizedValue });
+    await STORAGE.setLocal({
+      [DEVELOPER_OPTIONS.STORAGE_KEY]: normalizedValue,
+    });
     return developerOptionsFromStorage(normalizedValue);
   }
 
-  async function persistDeveloperOptions(overrides, forcedPaceStateKey) {
-    const options = await writeDeveloperOptions(overrides, forcedPaceStateKey);
-    currentOverrides = options.overrides;
+  async function persistDeveloperOptions(forcedPaceStateKey) {
+    const options = await writeDeveloperOptions(forcedPaceStateKey);
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     render();
   }
 
-  async function setFlagOverride(key, enabled) {
-    const nextOverrides = { ...currentOverrides };
-    if (enabled === defaultValueFor(key)) {
-      delete nextOverrides[key];
-    } else {
-      nextOverrides[key] = enabled;
-    }
-
-    await persistDeveloperOptions(nextOverrides, currentForcedPaceStateKey);
-    setStatus(`${FEATURE_FLAGS.FEATURE_FLAG_DEFINITIONS[key].label} updated.`);
-  }
-
-  async function resetFlag(key) {
-    const nextOverrides = { ...currentOverrides };
-    delete nextOverrides[key];
-    await persistDeveloperOptions(nextOverrides, currentForcedPaceStateKey);
-    setStatus(
-      `${FEATURE_FLAGS.FEATURE_FLAG_DEFINITIONS[key].label} reset to default.`,
-    );
-  }
-
-  async function setForcedPaceState(value) {
-    const nextForcedPaceStateKey =
-      FEATURE_FLAGS.normalizeForcedPaceStateKey(value);
-    await persistDeveloperOptions(currentOverrides, nextForcedPaceStateKey);
-    setStatus(
-      nextForcedPaceStateKey
-        ? `Forced state set to ${labelForForcedState(nextForcedPaceStateKey)}.`
-        : "Display override cleared.",
-    );
-  }
-
-  function labelForForcedState(stateKey) {
+  function stateOptionByKey(stateKey) {
     return (
-      FEATURE_FLAGS.FORCEABLE_PACE_STATE_OPTIONS.find(
+      DEVELOPER_OPTIONS.FORCEABLE_PACE_STATE_OPTIONS.find(
         (option) => option.key === stateKey,
-      )?.label || stateKey
+      ) || null
     );
   }
 
-  function cell(...children) {
-    const td = document.createElement("td");
-    td.append(...children);
-    return td;
+  function currentModeLabel() {
+    return currentForcedPaceStateKey
+      ? stateOptionByKey(currentForcedPaceStateKey)?.label || "Unknown state"
+      : "Live data";
   }
 
-  function textCell(text, className = "") {
-    const td = document.createElement("td");
-    td.textContent = text;
-    if (className) {
-      td.className = className;
-    }
-    return td;
+  function currentModeDetail() {
+    return currentForcedPaceStateKey ? "Dev override active" : "No override";
   }
 
-  function resetButton({ disabled, onClick }) {
-    const button = document.createElement("button");
-    button.className = "secondary-button";
-    button.disabled = disabled;
-    button.textContent = "Reset";
-    button.type = "button";
-    button.addEventListener("click", () => {
-      onClick().catch((error) => {
-        setStatus(error.message || "Could not reset.");
-      });
-    });
-    return button;
-  }
-
-  function forcedStateRadio(value, labelText) {
+  function optionRow({ checked, labelText, onChange, value }) {
     const label = document.createElement("label");
-    label.className = "radio-pill";
-    const radio = document.createElement("input");
-    radio.checked = (currentForcedPaceStateKey || "") === value;
-    radio.name = "forced-pace-state";
-    radio.type = "radio";
-    radio.value = value;
-    radio.addEventListener("change", () => {
-      if (!radio.checked) {
+    label.className = "option-row";
+    const input = document.createElement("input");
+    input.checked = checked;
+    input.name = "state-override";
+    input.type = "radio";
+    input.value = value;
+    input.addEventListener("change", () => {
+      if (!input.checked) {
         return;
       }
-      setForcedPaceState(value).catch((error) => {
-        setStatus(error.message || "Could not update display override.");
+      onChange(input).catch((error) => {
+        setStatus(error.message || "Could not update.");
         render();
       });
     });
     const text = document.createElement("span");
+    text.className = "option-label";
     text.textContent = labelText;
-    label.append(radio, text);
+    label.append(input, text);
     return label;
   }
 
-  function forcedStateRow() {
-    const row = document.createElement("tr");
-    const group = document.createElement("div");
-    group.className = "radio-group";
-    group.append(
-      forcedStateRadio("", "Live data"),
-      ...FEATURE_FLAGS.FORCEABLE_PACE_STATE_OPTIONS.map((state) =>
-        forcedStateRadio(state.key, state.label),
-      ),
-    );
-
-    row.append(
-      textCell("Display override", "setting-name"),
-      textCell("Live data", "muted"),
-      cell(group),
-      textCell(
-        currentForcedPaceStateKey
-          ? labelForForcedState(currentForcedPaceStateKey)
-          : "Live data",
-      ),
-      cell(
-        resetButton({
-          disabled: !currentForcedPaceStateKey,
-          onClick: () => persistDeveloperOptions(currentOverrides, null),
+  function optionRowsForKeys(stateKeys) {
+    return stateKeys
+      .map(stateOptionByKey)
+      .filter(Boolean)
+      .map((state) =>
+        optionRow({
+          checked: currentForcedPaceStateKey === state.key,
+          labelText: state.label,
+          value: state.key,
+          onChange: async () => {
+            await persistDeveloperOptions(state.key);
+            setStatus(`State override: ${state.label}.`);
+          },
         }),
-      ),
-    );
-    return row;
+      );
   }
 
-  function flagRow(definition, flags) {
-    const row = document.createElement("tr");
-    const checkbox = document.createElement("input");
-    checkbox.checked = flags[definition.key] === true;
-    checkbox.type = "checkbox";
-    checkbox.addEventListener("change", () => {
-      setFlagOverride(definition.key, checkbox.checked).catch((error) => {
-        setStatus(error.message || "Could not update flag.");
-        render();
-      });
-    });
-
-    const label = document.createElement("label");
-    label.className = "flag-toggle";
-    const labelText = document.createElement("span");
-    labelText.textContent = "Allowed";
-    label.append(checkbox, labelText);
-
-    row.append(
-      textCell(definition.label, "setting-name"),
-      textCell(defaultValueFor(definition.key) ? "On" : "Off", "muted"),
-      cell(label),
-      textCell(flags[definition.key] ? "On" : "Off"),
-      cell(
-        resetButton({
-          disabled: !Object.hasOwn(currentOverrides, definition.key),
-          onClick: () => resetFlag(definition.key),
-        }),
-      ),
+  function renderCurrentMode() {
+    elements.currentModePanel.classList.toggle(
+      "has-override",
+      Boolean(currentForcedPaceStateKey),
     );
-    return row;
+
+    const label = document.createElement("div");
+    label.className = "current-mode-label";
+    label.textContent = currentModeLabel();
+
+    const detail = document.createElement("div");
+    detail.className = "current-mode-detail";
+    detail.textContent = currentModeDetail();
+
+    elements.currentModeSummary.replaceChildren(label, detail);
+  }
+
+  function renderStateOverrideColumns() {
+    elements.paceLevelList.replaceChildren(
+      ...optionRowsForKeys(PACE_LEVEL_STATE_KEYS),
+    );
+    elements.perfectStateList.replaceChildren(
+      ...optionRowsForKeys(PERFECT_STATE_KEYS),
+    );
   }
 
   function render() {
-    const flags = FEATURE_FLAGS.normalizeFeatureFlags(currentOverrides);
-    elements.tableBody.replaceChildren(
-      forcedStateRow(),
-      ...FEATURE_FLAGS.FEATURE_FLAG_KEYS.map((key) =>
-        flagRow(FEATURE_FLAGS.FEATURE_FLAG_DEFINITIONS[key], flags),
-      ),
-    );
-
-    const count = activeOverrideCount(
-      currentOverrides,
-      currentForcedPaceStateKey,
-    );
-    elements.resetAll.disabled = count === 0;
-    elements.resetAll.textContent =
-      count === 0 ? "No active overrides" : `Reset ${count} override(s)`;
+    renderCurrentMode();
+    renderStateOverrideColumns();
+    elements.resetAll.disabled = !currentForcedPaceStateKey;
   }
 
   async function resetAllOverrides() {
-    await persistDeveloperOptions({}, null);
-    setStatus("All overrides reset.");
+    await persistDeveloperOptions(null);
+    setStatus("State override reset.");
   }
 
   elements.resetAll.addEventListener("click", () => {
@@ -263,26 +189,24 @@
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (
       !STORAGE.isLocalArea(areaName) ||
-      !FEATURE_FLAGS.hasFeatureFlagsChange(changes)
+      !DEVELOPER_OPTIONS.hasDeveloperOptionsChange(changes)
     ) {
       return;
     }
 
     const options = developerOptionsFromStorage(
-      changes[FEATURE_FLAGS.STORAGE_KEY]?.newValue,
+      changes[DEVELOPER_OPTIONS.STORAGE_KEY]?.newValue,
     );
-    currentOverrides = options.overrides;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     render();
   });
 
   readDeveloperOptions()
     .then((options) => {
-      currentOverrides = options.overrides;
       currentForcedPaceStateKey = options.forcedPaceStateKey;
       render();
     })
     .catch((error) => {
-      setStatus(error.message || "Could not load developer flags.");
+      setStatus(error.message || "Could not load developer controls.");
     });
 })();

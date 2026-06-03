@@ -37,9 +37,11 @@
       "Pace Pets preview controls must load before dashboard.js.",
     );
   }
-  const FEATURE_FLAGS = globalThis.PacePetsFeatureFlags;
-  if (!FEATURE_FLAGS) {
-    throw new Error("Pace Pets feature flags must load before dashboard.js.");
+  const DEVELOPER_OPTIONS = globalThis.PacePetsDeveloperOptions;
+  if (!DEVELOPER_OPTIONS) {
+    throw new Error(
+      "Pace Pets developer options must load before dashboard.js.",
+    );
   }
   const THEME_ASSETS = globalThis.CodexThemeAssets;
   if (!THEME_ASSETS) {
@@ -110,7 +112,7 @@
 
   const DEFAULT_WINDOW_KEY = USAGE_WINDOWS.DEFAULT_WINDOW_KEY;
   const WINDOW_STORAGE_KEY = USAGE_WINDOWS.WINDOW_STORAGE_KEY;
-  const FEATURE_FLAGS_STORAGE_KEY = FEATURE_FLAGS.STORAGE_KEY;
+  const DEVELOPER_OPTIONS_STORAGE_KEY = DEVELOPER_OPTIONS.STORAGE_KEY;
   const THEME_STORAGE_KEY = "codex-usage-theme";
   const USE_PLAYFUL_PACE_ICONS = true;
   const COLLECTION_STATUS_TITLE = "Usage collection status";
@@ -122,6 +124,7 @@
   const APP_TOOLTIP_SLOW_FADE_MS = 1600;
   const APP_TOOLTIP_SLOW_AUTO_HIDE_DELAY_MS = APP_TOOLTIP_SLOW_FADE_MS + 500;
   const APP_TOOLTIP_SUPPRESS_AFTER_INFO_CLOSE_MS = 360;
+  const SINGULARITY_RESET_COUNTDOWN_TEXT = "0d 0h 0m";
   const INFO_PANEL_FOCUSABLE_SELECTOR = [
     "a[href]",
     "button:not([disabled])",
@@ -317,8 +320,6 @@
   const PERFECT_PACE_RATIO = PacePetsLogic.PERFECT_PACE_RATIO;
   const PACE_STATE_PREVIEW_DURATION_MS =
     PREVIEW_CONTROL.PACE_STATE_PREVIEW_DURATION_MS;
-  const PACE_STATE_PREVIEW_PERCENT_PAIRS =
-    PREVIEW_CONTROL.PACE_STATE_PREVIEW_PERCENT_PAIRS;
   const PACE_RATIO_CHART_MIN = 0;
   const PACE_RATIO_CHART_MAX = PacePetsLogic.PACE_RATIO_CHART_MAX;
   const PACE_RATIO_CHART_DETAIL_STEP = 0.05;
@@ -334,7 +335,6 @@
   let usageChart = null;
   let currentHistory = null;
   let currentRefreshStatus = null;
-  let currentFeatureFlags = FEATURE_FLAGS.DEFAULT_FEATURE_FLAGS;
   let currentForcedPaceStateKey = null;
   let selectedWindowKey = DEFAULT_WINDOW_KEY;
   let explicitTheme = storedThemePreference();
@@ -400,18 +400,16 @@
 
   async function readDeveloperOptions() {
     try {
-      const items = await EXTENSION_STORAGE.getLocal(FEATURE_FLAGS_STORAGE_KEY);
-      return FEATURE_FLAGS.normalizeDeveloperOptions(
-        items?.[FEATURE_FLAGS_STORAGE_KEY],
+      const items = await EXTENSION_STORAGE.getLocal(
+        DEVELOPER_OPTIONS_STORAGE_KEY,
+      );
+      return DEVELOPER_OPTIONS.normalizeDeveloperOptions(
+        items?.[DEVELOPER_OPTIONS_STORAGE_KEY],
       );
     } catch (error) {
-      console.warn("Could not read developer feature flags:", error.message);
-      return FEATURE_FLAGS.normalizeDeveloperOptions(null);
+      console.warn("Could not read developer options:", error.message);
+      return DEVELOPER_OPTIONS.normalizeDeveloperOptions(null);
     }
-  }
-
-  function featureFlagValue(key) {
-    return FEATURE_FLAGS.featureFlagValue(currentFeatureFlags, key);
   }
 
   function storedThemePreference() {
@@ -1408,10 +1406,7 @@
   }
 
   function updateToolbarPreviewBadge(stateKey) {
-    const message = PREVIEW_CONTROL.previewBadgeMessage(
-      stateKey,
-      currentFeatureFlags,
-    );
+    const message = PREVIEW_CONTROL.previewBadgeMessage(stateKey);
     if (!message) {
       return;
     }
@@ -1565,31 +1560,19 @@
   }
 
   function previewPaceRatioForState(stateKey) {
-    if (!featureFlagValue("statePreviews")) {
-      return null;
-    }
     if (stateKey === DASHBOARD_RAIL_STATES.singularity.key) {
-      return featureFlagValue("perfectZeroState") ? 0 : null;
+      return 0;
     }
 
-    return PREVIEW_CONTROL.previewPaceRatioForState(
-      stateKey,
-      currentFeatureFlags,
-    );
+    return PREVIEW_CONTROL.previewPaceRatioForState(stateKey);
   }
 
   function previewStateKeyEnabled(stateKey) {
     if (stateKey === DASHBOARD_RAIL_STATES.singularity.key) {
-      return (
-        featureFlagValue("statePreviews") &&
-        featureFlagValue("perfectZeroState")
-      );
+      return true;
     }
 
-    return PREVIEW_CONTROL.previewStateKeyEnabled(
-      stateKey,
-      currentFeatureFlags,
-    );
+    return PREVIEW_CONTROL.previewStateKeyEnabled(stateKey);
   }
 
   function setPaceLevel(
@@ -1603,8 +1586,7 @@
     );
     elements.paceCard.classList.add(level);
     const pageBackgroundActive = setPerfectZeroPageBackgroundActive(
-      state.key === PACE_STATES.perfectZero.key &&
-        featureFlagValue("perfectZeroScene"),
+      state.key === PACE_STATES.perfectZero.key,
     );
     renderPaceIcon(elements.paceIcon, level, {
       usePerfectZeroPageAperture: pageBackgroundActive,
@@ -1632,6 +1614,14 @@
     return currentForcedPaceStateKey
       ? paceStateForKey(currentForcedPaceStateKey)
       : null;
+  }
+
+  function clearActivePacePreviewState() {
+    activePacePreviewKey = null;
+    pacePreviewRestoreSnapshot = null;
+    clearPacePreviewRestoreTimer();
+    elements.paceCard.classList.remove("is-previewing");
+    updateStateRailPreviewSelection(null);
   }
 
   function stopPerfectZeroPageBackgroundScene() {
@@ -1675,7 +1665,7 @@
       return false;
     }
 
-    if (!active || !featureFlagValue("perfectZeroScene")) {
+    if (!active) {
       stopPerfectZeroPageBackgroundScene();
       return false;
     }
@@ -1935,11 +1925,41 @@
     elements.timeBar.style.width = snapshot.timeBarWidth;
   }
 
+  function resetCountdownSnapshot() {
+    return {
+      progress:
+        elements.resetProgressFill.style.getPropertyValue("--reset-progress"),
+      text: elements.resetsIn.textContent,
+    };
+  }
+
+  function restoreResetCountdownSnapshot(snapshot) {
+    if (!snapshot) {
+      return;
+    }
+
+    elements.resetsIn.textContent = snapshot.text;
+    elements.resetProgressFill.style.setProperty(
+      "--reset-progress",
+      snapshot.progress,
+    );
+  }
+
+  function applyStateResetCountdown(state) {
+    if (state.key !== DASHBOARD_RAIL_STATES.singularity.key) {
+      return;
+    }
+
+    elements.resetsIn.textContent = SINGULARITY_RESET_COUNTDOWN_TEXT;
+    elements.resetProgressFill.style.setProperty("--reset-progress", "100%");
+  }
+
   function paceCardSnapshot() {
     return {
       level: currentPaceLevel(),
       favicon: faviconSnapshot(),
       percentSummary: percentSummarySnapshot(),
+      resetCountdown: resetCountdownSnapshot(),
       title: elements.paceTitle.textContent,
       copy: elements.paceCopy.textContent,
       statsHidden: elements.paceStats.hidden,
@@ -1966,6 +1986,7 @@
     elements.paceAltRatio.hidden = snapshot.altRatioHidden;
     restoreFaviconSnapshot(snapshot.favicon);
     restorePercentSummarySnapshot(snapshot.percentSummary);
+    restoreResetCountdownSnapshot(snapshot.resetCountdown);
     document.title = snapshot.tabTitle;
   }
 
@@ -2007,6 +2028,7 @@
     updateStateRailPreviewSelection(null);
     restoreFaviconSnapshot(snapshot?.favicon);
     restorePercentSummarySnapshot(snapshot?.percentSummary);
+    restoreResetCountdownSnapshot(snapshot?.resetCountdown);
 
     if (currentHistory) {
       renderHistory(currentHistory, currentRefreshStatus, {
@@ -2040,12 +2062,8 @@
     elements.paceRatioStat.hidden = false;
     elements.paceRatioValue.textContent =
       formatPaceRatioValue(previewPaceRatio);
-    setPreviewPercentPair(
-      PACE_STATE_PREVIEW_PERCENT_PAIRS[state.key] || {
-        remainingPercent: 0,
-        timePercent: 0,
-      },
-    );
+    setPreviewPercentPair(PREVIEW_CONTROL.forcedPercentPairForState(state.key));
+    applyStateResetCountdown(state);
     const previewRatioLabel = state.previewRatioLabel || state.ratioLabel;
     elements.paceAltRatio.textContent = previewRatioLabel;
     elements.paceAltRatio.hidden = !previewRatioLabel;
@@ -2067,6 +2085,42 @@
     activePacePreviewKey = state.key;
     clearPacePreviewRestoreTimer();
     renderPacePreviewState(state);
+  }
+
+  function renderForcedPaceStateOverride() {
+    const state = forcedPaceState();
+    if (!state || !previewStateKeyEnabled(state.key)) {
+      return false;
+    }
+
+    const previewPaceRatio = previewPaceRatioForState(state.key);
+    if (previewPaceRatio === null) {
+      return false;
+    }
+
+    clearActivePacePreviewState();
+    setPaceLevel(state.className);
+    elements.paceTitle.textContent = state.title;
+    elements.paceCopy.textContent = state.copy;
+    elements.paceStats.hidden = false;
+    elements.paceRatioStat.hidden = false;
+    elements.paceRatioValue.textContent =
+      formatPaceRatioValue(previewPaceRatio);
+    setPreviewPercentPair(PREVIEW_CONTROL.forcedPercentPairForState(state.key));
+    applyStateResetCountdown(state);
+    const previewRatioLabel = state.previewRatioLabel || state.ratioLabel;
+    elements.paceAltRatio.textContent = previewRatioLabel;
+    elements.paceAltRatio.hidden = !previewRatioLabel;
+    updateTabTitle(state.title, previewPaceRatio);
+    return true;
+  }
+
+  function refreshForcedOverrideOrActivePacePreview() {
+    if (renderForcedPaceStateOverride()) {
+      return;
+    }
+
+    refreshActivePacePreview();
   }
 
   function refreshActivePacePreview() {
@@ -2158,24 +2212,6 @@
   ) {
     const remainingPercent = windowData?.remainingPercent;
     const hasTime = Number.isFinite(timePercent) && timePercent > 0;
-    const forcedState = forcedPaceState();
-
-    if (forcedState) {
-      setPaceSummary(
-        forcedState.className,
-        forcedState.title,
-        forcedState.copy,
-        remainingPercent,
-        timePercent,
-        "Dev override",
-        {
-          paceRatioDisplayOverride: PREVIEW_CONTROL.forcedPaceRatioForState(
-            forcedState.key,
-          ),
-        },
-      );
-      return;
-    }
 
     if (!Number.isFinite(remainingPercent)) {
       setPaceSummary(
@@ -2192,7 +2228,7 @@
     const controlledPresentation = controlledPacePresentationForValues(
       remainingPercent,
       timePercent,
-      { allowPerfectZero, featureFlags: currentFeatureFlags },
+      { allowPerfectZero },
     );
     if (staleWindow) {
       setPaceSummary(
@@ -2237,10 +2273,7 @@
         comparisonPaceText,
       );
     } else {
-      const state = PacePetsLogic.paceStatePresentationForRatio(
-        paceRatio,
-        currentFeatureFlags,
-      );
+      const state = PacePetsLogic.paceStatePresentationForRatio(paceRatio);
       setPaceSummary(
         state.className,
         state.title,
@@ -2790,7 +2823,7 @@
     );
     setChartEmpty(state.chartCopy);
     setLatestMetadata(null, refreshStatus);
-    refreshActivePacePreview();
+    refreshForcedOverrideOrActivePacePreview();
   }
 
   function renderHistoryLoadFailure() {
@@ -2813,7 +2846,7 @@
       null,
     );
     setChartEmpty("Could not read local history.");
-    refreshActivePacePreview();
+    refreshForcedOverrideOrActivePacePreview();
   }
 
   function historyStatusState({
@@ -2974,7 +3007,7 @@
       );
     }
     setLatestMetadata(latest, refreshStatus);
-    refreshActivePacePreview();
+    refreshForcedOverrideOrActivePacePreview();
   }
 
   async function readRefreshStatus() {
@@ -2992,7 +3025,6 @@
     if (refreshWindowPreference) {
       selectedWindowKey = storedWindowKeyValue;
     }
-    currentFeatureFlags = developerOptions.featureFlags;
     currentForcedPaceStateKey = developerOptions.forcedPaceStateKey;
     currentHistory = history;
     currentRefreshStatus = refreshStatus;
@@ -3232,7 +3264,7 @@
         CodexUsageHistory.HISTORY_STORAGE_KEY,
         CodexUsageHistory.REFRESH_STATUS_STORAGE_KEY,
         WINDOW_STORAGE_KEY,
-        FEATURE_FLAGS_STORAGE_KEY,
+        DEVELOPER_OPTIONS_STORAGE_KEY,
       ])
     ) {
       loadDashboard().catch(() => {
