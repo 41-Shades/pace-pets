@@ -111,6 +111,7 @@ assertFile("collector/extension/usage-integration-adapters.js");
 assertFile("collector/extension/usage.js");
 assertFile("collector/extension/history-store.js");
 assertFile("collector/extension/themes/default/asset-manifest.js");
+assertFile("collector/extension/developer-options.js");
 assertFile("collector/extension/pace-logic.js");
 assertFile("collector/extension/dashboard.html");
 assertFile("collector/extension/dashboard.css");
@@ -237,9 +238,12 @@ assert(
 assert(
   runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes("./dashboard.js") &&
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
+      "./developer-options.js",
+    ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
       "./vendor/chart.umd.min.js",
     ),
-  "Dashboard runtime manifest must include dashboard and Chart.js scripts.",
+  "Dashboard runtime manifest must include developer options, dashboard, and Chart.js scripts.",
 );
 assert(
   runtimeManifest.OPTIONAL_DASHBOARD_SCRIPT_SOURCES?.includes(
@@ -277,7 +281,10 @@ assert(
     ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage.js") &&
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
       "./themes/default/asset-manifest.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js"),
+    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./developer-options.js",
+    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js"),
   "Dashboard runtime manifest must load shared contracts before dependent scripts.",
 );
 assert(

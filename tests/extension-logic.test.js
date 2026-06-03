@@ -47,6 +47,7 @@ beforeAll(async () => {
   await importExtensionScript(
     "collector/extension/themes/default/asset-manifest.js",
   );
+  await importExtensionScript("collector/extension/developer-options.js");
   await importExtensionScript("collector/extension/pace-logic.js");
   await importExtensionScript("collector/extension/preview-control.js");
   await importExtensionScript("collector/extension/usage.js");
@@ -167,7 +168,39 @@ describe("CodexProductMetadata", () => {
         title: "Perfect sync",
       }),
     ).toBe("Pace Pets - Perfect sync preview 1.00");
+    expect(
+      metadata.stateOverrideBadgeTitle({
+        badgeText: "1.00",
+        title: "Perfect sync",
+      }),
+    ).toBe("Pace Pets - Perfect sync override 1.00");
     expect(metadata.badgeTitle()).toBe("Pace Pets");
+  });
+});
+
+describe("PacePetsDeveloperOptions", () => {
+  it("normalizes local developer state overrides", () => {
+    const options = globalThis.PacePetsDeveloperOptions;
+
+    expect(options.STORAGE_KEY).toBe("pacePetsDeveloperOptions");
+    expect(options.normalizeForcedPaceStateKey("sync")).toBe("sync");
+    expect(options.normalizeForcedPaceStateKey("unsupported")).toBeNull();
+    expect(
+      options.normalizeDeveloperOptions({
+        forcedPaceState: "perfectZero",
+        unsupported: false,
+      }),
+    ).toMatchObject({
+      forcedPaceStateKey: "perfectZero",
+    });
+    expect(options.normalizeDeveloperOptions(null)).toMatchObject({
+      forcedPaceStateKey: null,
+    });
+    expect(
+      options.hasDeveloperOptionsChange({
+        pacePetsDeveloperOptions: { newValue: {} },
+      }),
+    ).toBe(true);
   });
 });
 
@@ -659,6 +692,19 @@ describe("PacePetsPreviewControl", () => {
       stateKey: "perfectZero",
     });
     expect(preview.previewBadgeState("unsupported")).toBeNull();
+    expect(preview.forcedPaceRatioForState("sync")).toBe(1);
+    expect(preview.forcedBadgeState("perfectZero")).toMatchObject({
+      badgeText: "0.00",
+      stateKey: "perfectZero",
+    });
+    expect(preview.forcedPercentPairForState("wellAhead")).toEqual({
+      remainingPercent: 90,
+      timePercent: 50,
+    });
+    expect(preview.forcedPercentPairForState("singularity")).toEqual({
+      remainingPercent: 0,
+      timePercent: 0,
+    });
     expect(preview.previewBadgeMessage("ahead")).toEqual({
       stateKey: "ahead",
       type: preview.PREVIEW_BADGE_MESSAGE_TYPE,

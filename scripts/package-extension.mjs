@@ -18,7 +18,12 @@ const outputPath = path.join(distDir, `${packageBaseName}.zip`);
 const metadataPath = path.join(distDir, `${packageBaseName}.release.json`);
 const checksumPath = path.join(distDir, `${packageBaseName}.zip.sha256`);
 const fixedZipDate = new Date(Date.UTC(2024, 0, 1, 0, 0, 0));
-const sourceOnlyFiles = new Set(["README.md"]);
+const sourceOnlyFiles = new Set([
+  "README.md",
+  "dev-flags.css",
+  "dev-flags.html",
+  "dev-flags.js",
+]);
 const allowedPackagedExtensions = new Set([
   ".css",
   ".html",

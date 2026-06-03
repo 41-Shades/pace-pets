@@ -1,0 +1,221 @@
+:root {
+  color-scheme: light dark;
+
+  --bg: #f5f7fb;
+  --border: #d7dee8;
+  --border-strong: #bcc7d6;
+  --muted: #66758a;
+  --panel: #ffffff;
+  --panel-soft: #f8fafc;
+  --primary: #0f766e;
+  --primary-border: #5bb7aa;
+  --primary-soft: #e6f4f1;
+  --text: #172033;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font:
+    15px/1.4 system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.dev-flags-shell {
+  margin: 0 auto;
+  max-width: 1060px;
+  padding: 42px 28px;
+}
+
+.dev-flags-header {
+  margin-bottom: 36px;
+}
+
+.eyebrow {
+  background: var(--primary-soft);
+  border: 1px solid rgb(15 118 110 / 18%);
+  border-radius: 7px;
+  color: var(--primary);
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  margin: 0 0 12px;
+  padding: 5px 10px;
+  text-transform: uppercase;
+}
+
+.dev-flags-header h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  margin: 0;
+}
+
+.dev-controls-layout {
+  align-items: start;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+}
+
+.current-mode-panel,
+.state-column {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.current-mode-panel h2,
+.state-column h2 {
+  background: var(--panel-soft);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  margin: 0;
+  padding: 13px 18px;
+  text-transform: uppercase;
+}
+
+.current-mode-summary {
+  border-left: 4px solid var(--primary);
+  padding: 22px 20px 22px 24px;
+}
+
+.current-mode-label {
+  color: var(--primary);
+  font-size: 1.35rem;
+  font-weight: 750;
+  line-height: 1.15;
+}
+
+.current-mode-detail {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 650;
+  margin-top: 7px;
+}
+
+.live-data-button {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--primary-border);
+  border-radius: 8px;
+  color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  font-weight: 750;
+  justify-content: center;
+  margin: 24px 18px 18px;
+  min-height: 46px;
+  padding: 10px 14px;
+  width: calc(100% - 36px);
+}
+
+.live-data-button:disabled {
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: default;
+}
+
+.live-data-button:not(:disabled):hover,
+.live-data-button:not(:disabled):focus-visible {
+  background: var(--primary-soft);
+  outline: none;
+}
+
+.state-columns {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.option-list {
+  display: grid;
+}
+
+.option-row {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  min-height: 56px;
+  padding: 13px 18px;
+}
+
+.option-row:last-child {
+  border-bottom: 0;
+}
+
+.option-row:hover,
+.option-row:focus-within {
+  background: rgb(15 118 110 / 6%);
+}
+
+.option-label {
+  font-size: 1.08rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.option-row input {
+  accent-color: var(--primary);
+  flex: 0 0 auto;
+  height: 20px;
+  margin: 0;
+  width: 20px;
+}
+
+.option-row:has(input:checked) {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.dev-controls-status {
+  color: var(--muted);
+  min-height: 1.4em;
+  padding-top: 14px;
+  text-align: right;
+}
+
+@media (width <= 820px) {
+  .dev-flags-shell {
+    padding: 28px 18px;
+  }
+
+  .dev-controls-layout,
+  .state-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --border: #344054;
+    --border-strong: #475467;
+    --muted: #a6b4c7;
+    --panel: #1f2937;
+    --panel-soft: #182230;
+    --primary: #5eead4;
+    --primary-border: #2dd4bf;
+    --primary-soft: #103b39;
+    --text: #eef2f7;
+  }
+}

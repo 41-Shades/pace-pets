@@ -81,6 +81,8 @@ The dashboard theme is stored in extension-page `localStorage` under `codex-usag
 
 Temporary toolbar badge previews store `pacePetsBadgePreviewExpiresAtMs` in `chrome.storage.local` while a preview is active. The value is a local numeric expiry timestamp paired with the `restore-pace-preview-badge` Chrome alarm, and it is removed when the badge is restored. It does not contain usage content or account identifiers.
 
+Local developer display overrides can be stored under `pacePetsDeveloperOptions` when running the unpacked extension. The settings object can include `forcedPaceState` to force a dashboard and toolbar badge state until cleared. The release packager excludes the dev controls page from Chrome Web Store artifacts; packaged releases use live usage data unless local storage is manually edited by the profile owner.
+
 ## Refresh Status
 
 The generated refresh status shape above tracks the latest background check outcome so the dashboard can distinguish a recent check from the latest stored chart sample.

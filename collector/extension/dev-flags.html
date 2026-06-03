@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pace Pets Dev Controls</title>
+    <link rel="stylesheet" href="./dev-flags.css" />
+  </head>
+  <body>
+    <main class="dev-flags-shell">
+      <header class="dev-flags-header">
+        <p class="eyebrow">Local unpacked extension</p>
+        <h1>Pace Pets Dev Controls</h1>
+      </header>
+
+      <div class="dev-controls-layout">
+        <aside class="current-mode-panel" aria-labelledby="current-mode-title">
+          <h2 id="current-mode-title">Current Mode</h2>
+          <div class="current-mode-summary" id="current-mode-summary"></div>
+          <button class="live-data-button" id="reset-all" type="button">
+            Return to live data
+          </button>
+        </aside>
+
+        <section class="state-columns" aria-label="State override">
+          <section class="state-column" aria-labelledby="pace-levels-title">
+            <h2 id="pace-levels-title">Pace Levels</h2>
+            <div class="option-list" id="pace-level-list"></div>
+          </section>
+
+          <section class="state-column" aria-labelledby="perfect-states-title">
+            <h2 id="perfect-states-title">Perfect States</h2>
+            <div class="option-list" id="perfect-state-list"></div>
+          </section>
+        </section>
+      </div>
+
+      <footer class="dev-controls-status">
+        <output id="status-message" role="status"></output>
+      </footer>
+    </main>
+
+    <script src="./developer-options.js"></script>
+    <script src="./storage-adapter.js"></script>
+    <script src="./dev-flags.js"></script>
+  </body>
+</html>

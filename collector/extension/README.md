@@ -1,14 +1,19 @@
 # Pace Pets Extension
 
-This unpacked extension reads the ChatGPT/Codex web usage endpoint with your
-existing signed-in browser session, normalizes supported usage windows, and
-stores only safe usage history in `chrome.storage.local`.
+This is the source folder for the Pace Pets Chrome extension. Public installs
+can use the Chrome Web Store listing:
+https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk
+
+Source installs can load this folder as an unpacked extension. The extension
+reads the ChatGPT/Codex web usage endpoint with your existing signed-in browser
+session, normalizes supported usage windows, and stores only safe usage history
+in `chrome.storage.local`.
 
 Stored samples contain only normalized local fields. See
 `../../docs/reference/storage-schema.md` for the generated storage shape,
 runtime constants, supported usage windows, and forbidden data list.
 
-## Install
+## Source Install
 
 1. Open `chrome://extensions`.
 2. Enable Developer Mode.

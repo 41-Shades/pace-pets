@@ -15,6 +15,13 @@
     );
   }
   const PACE_STATES = PACE_LOGIC.PACE_STATES;
+  const DASHBOARD_ONLY_FORCED_STATES = Object.freeze({
+    singularity: Object.freeze({
+      badgeColor: "#000000",
+      key: "singularity",
+      title: "Singularity",
+    }),
+  });
 
   function pacePreviewPercentPair(
     paceRatio,
@@ -41,19 +48,59 @@
     [PACE_STATES.strongAhead.key]: pacePreviewPercentPair(1.4),
     [PACE_STATES.wellAhead.key]: pacePreviewPercentPair(1.8),
   });
+  const ZERO_PERCENT_PAIR = Object.freeze({
+    remainingPercent: 0,
+    timePercent: 0,
+  });
 
   function normalizePreviewStateKey(stateKey) {
-    return PACE_STATES[stateKey]?.key || null;
+    return (
+      PACE_STATES[stateKey]?.key ||
+      DASHBOARD_ONLY_FORCED_STATES[stateKey]?.key ||
+      null
+    );
+  }
+
+  function previewStateKeyEnabled(stateKey) {
+    const normalizedStateKey = normalizePreviewStateKey(stateKey);
+    if (!normalizedStateKey) {
+      return false;
+    }
+
+    return Object.hasOwn(PACE_STATE_PREVIEW_PERCENT_PAIRS, normalizedStateKey);
   }
 
   function previewPaceRatioForState(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    const percentPair = PACE_STATE_PREVIEW_PERCENT_PAIRS[normalizedStateKey];
+    if (!previewStateKeyEnabled(normalizedStateKey)) {
+      return null;
+    }
+
+    return forcedPaceRatioForState(normalizedStateKey);
+  }
+
+  function forcedPercentPairForState(stateKey) {
+    const normalizedStateKey = normalizePreviewStateKey(stateKey);
+    if (PACE_STATE_PREVIEW_PERCENT_PAIRS[normalizedStateKey]) {
+      return PACE_STATE_PREVIEW_PERCENT_PAIRS[normalizedStateKey];
+    }
+    if (normalizedStateKey === DASHBOARD_ONLY_FORCED_STATES.singularity.key) {
+      return ZERO_PERCENT_PAIR;
+    }
+    return null;
+  }
+
+  function forcedPaceRatioForState(stateKey) {
+    const normalizedStateKey = normalizePreviewStateKey(stateKey);
+    const percentPair = forcedPercentPairForState(normalizedStateKey);
     if (!percentPair) {
       return null;
     }
 
-    if (normalizedStateKey === PACE_STATES.perfectZero.key) {
+    if (
+      normalizedStateKey === PACE_STATES.perfectZero.key ||
+      normalizedStateKey === DASHBOARD_ONLY_FORCED_STATES.singularity.key
+    ) {
       return 0;
     }
 
@@ -63,8 +110,35 @@
     );
   }
 
+  function forcedBadgeState(stateKey) {
+    const normalizedStateKey = normalizePreviewStateKey(stateKey);
+    const state =
+      PACE_STATES[normalizedStateKey] ||
+      DASHBOARD_ONLY_FORCED_STATES[normalizedStateKey];
+    if (!state) {
+      return null;
+    }
+
+    const paceRatio = forcedPaceRatioForState(normalizedStateKey);
+    if (paceRatio === null) {
+      return null;
+    }
+
+    return Object.freeze({
+      badgeColor: state.badgeColor,
+      badgeText: PACE_LOGIC.badgeTextForPaceRatio(paceRatio),
+      paceRatio,
+      state,
+      stateKey: normalizedStateKey,
+    });
+  }
+
   function previewBadgeState(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
+    if (!previewStateKeyEnabled(normalizedStateKey)) {
+      return null;
+    }
+
     const state = PACE_STATES[normalizedStateKey];
     if (!state) {
       return null;
@@ -86,7 +160,7 @@
 
   function previewBadgeMessage(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    return normalizedStateKey
+    return previewStateKeyEnabled(normalizedStateKey)
       ? { stateKey: normalizedStateKey, type: PREVIEW_BADGE_MESSAGE_TYPE }
       : null;
   }
@@ -98,7 +172,7 @@
   function isPreviewBadgeMessage(message) {
     return (
       message?.type === PREVIEW_BADGE_MESSAGE_TYPE &&
-      normalizePreviewStateKey(message.stateKey) !== null
+      previewStateKeyEnabled(message.stateKey)
     );
   }
 
@@ -130,11 +204,15 @@
     badgePreviewExpiresAtMs,
     isPreviewBadgeMessage,
     isRestoreBadgeMessage,
+    forcedBadgeState,
+    forcedPercentPairForState,
+    forcedPaceRatioForState,
     normalizeBadgePreviewExpiresAtMs,
     normalizePreviewStateKey,
     previewBadgeMessage,
     previewBadgeState,
     previewPaceRatioForState,
+    previewStateKeyEnabled,
     restoreBadgeMessage,
   });
 })(globalThis);

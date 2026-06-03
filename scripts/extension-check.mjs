@@ -231,6 +231,12 @@ assertScriptBefore(
   "pace-logic.js",
   "Background runtime manifest",
 );
+assertScriptBefore(
+  backgroundImports,
+  "developer-options.js",
+  "background-logic.js",
+  "Background runtime manifest",
+);
 for (const src of backgroundImports) {
   assert(
     !/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src),
@@ -279,6 +285,7 @@ assertExtensionFile("storage-adapter.js");
 assertExtensionFile("usage-integration-adapters.js");
 assertExtensionFile("history-store.js");
 assertExtensionFile("themes/default/asset-manifest.js");
+assertExtensionFile("developer-options.js");
 assertExtensionFile("pace-logic.js");
 assertExtensionFile("background-logic.js");
 assertExtensionFile("dashboard.html");
@@ -437,6 +444,12 @@ assertScriptBefore(
   dashboardRuntimeScripts,
   "./themes/default/asset-manifest.js",
   "./pace-logic.js",
+  "Dashboard runtime manifest",
+);
+assertScriptBefore(
+  dashboardRuntimeScripts,
+  "./developer-options.js",
+  "./dashboard.js",
   "Dashboard runtime manifest",
 );
 for (const src of dashboardRuntimeScripts) {

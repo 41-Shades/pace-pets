@@ -16,7 +16,6 @@
       "Codex usage value helpers must load before pace-logic.js.",
     );
   }
-
   function iconPart(part) {
     return Object.freeze({
       tag: part.tag,
@@ -225,6 +224,16 @@
     ),
   );
   const PACE_CLASS_NAMES = Object.freeze(Object.keys(PACE_STATES_BY_CLASS));
+  const PACE_LEVEL_STATE_KEYS = Object.freeze([
+    "criticalBehind",
+    "wellBehind",
+    "behind",
+    "on",
+    "ahead",
+    "strongAhead",
+    "wellAhead",
+  ]);
+  const PACE_PERFECT_STATE_KEYS = Object.freeze(["sync", "perfectZero"]);
   const PACE_LEGEND_STATE_KEYS = Object.freeze([
     "wellAhead",
     "on",
@@ -453,12 +462,16 @@
     return PACE_STATES.wellAhead;
   }
 
+  function paceStatePresentationForRatio(paceRatio) {
+    return paceStateForRatio(paceRatio);
+  }
+
   function paceStateForClassName(className) {
     return PACE_STATES_BY_CLASS[className] || PACE_STATES.muted;
   }
 
   function badgeColorForPaceRatio(paceRatio, colors = DEFAULT_BADGE_COLORS) {
-    const state = paceStateForRatio(paceRatio);
+    const state = paceStatePresentationForRatio(paceRatio);
     return colors[state.key] || colors.muted;
   }
 
@@ -476,6 +489,8 @@
     DEFAULT_BADGE_COLORS,
     PACE_CLASS_NAMES,
     PACE_LEGEND_STATE_KEYS,
+    PACE_LEVEL_STATE_KEYS,
+    PACE_PERFECT_STATE_KEYS,
     PACE_RATIO_CHART_MAX,
     PACE_RATIO_CHART_MIN,
     PACE_RATIO_DISPLAY_MAX,
@@ -496,6 +511,7 @@
     isPerfectZeroPercentPair,
     isResetWindowStale,
     paceStateForClassName,
+    paceStatePresentationForRatio,
     paceStateForRatio,
     paceRatioForValues,
     paceRatioForWindow,

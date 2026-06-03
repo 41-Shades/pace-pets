@@ -18,6 +18,12 @@
       : NAME;
   }
 
+  function stateOverrideBadgeTitle({ badgeText, title } = {}) {
+    return badgeText && title
+      ? `${NAME} - ${title} override ${badgeText}`
+      : NAME;
+  }
+
   root.CodexProductMetadata = Object.freeze({
     ACTION_DEFAULT_TITLE,
     DASHBOARD_DESCRIPTION,
@@ -27,5 +33,6 @@
     REFRESH_FAILED_TITLE,
     badgeTitle,
     previewBadgeTitle,
+    stateOverrideBadgeTitle,
   });
 })(globalThis);

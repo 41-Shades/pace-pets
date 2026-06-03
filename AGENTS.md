@@ -24,5 +24,9 @@ Scope: whole repo.
   `collector/extension/manifest.json` when the packaged extension changes.
 - Follow `docs/guides/testing.md`. Use targeted checks while developing; run
   broad checks/preflight only when explicitly requested in the current thread.
+- Use browser verification only when diagnosing or debugging a specific issue,
+  or when a code change directly affects browser-rendered behavior that needs
+  investigation. Do not use browser confirmation as routine verification for
+  ordinary code changes.
 - Prefer runtime logs, extension storage evidence, and static checks over
   screenshot-only verification.

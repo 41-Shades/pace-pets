@@ -17,7 +17,8 @@ private maintainer channel from the place where you received the extension.
 
 The supported security posture is:
 
-- Manifest V3 Chrome extension loaded from `collector/extension/`
+- Manifest V3 Chrome extension installed from the Chrome Web Store or loaded
+  from `collector/extension/`
 - no hosted backend, telemetry, cloud sync, or account linking
 - one current ChatGPT host permission matching runtime fetches
 - local storage of normalized safe usage fields only

@@ -1,0 +1,102 @@
+# Release Packaging
+
+Status: operations reference.
+
+Pace Pets is a local-only Chrome extension with a Chrome Web Store listing and
+public-source unpacked install path. Release packaging is only for a Chrome Web
+Store or equivalent extension zip artifact; routine local development should
+load `collector/extension/` directly as an unpacked extension.
+
+## Chrome Web Store Listing
+
+Canonical listing URL:
+[https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk](https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk)
+
+Store item ID: `dgemeohjkjclceamjacmfneodafbcbdk`.
+
+Use the canonical slug URL in public docs and release notes. Do not use Chrome
+share URLs with tracking query parameters such as `utm_source=item-share-cb`.
+The ID-only URL redirects to the canonical slug URL.
+
+## Package Command
+
+`npm run package:extension` runs `scripts/package-extension.mjs`.
+
+The script creates these ignored files under `dist/`:
+
+- `pace-pets-chrome-extension-v<version>.zip`
+- `pace-pets-chrome-extension-v<version>.release.json`
+- `pace-pets-chrome-extension-v<version>.zip.sha256`
+
+The package script runs `scripts/extension-check.mjs` and
+`scripts/vendor-asset-check.mjs` before writing artifacts. It also verifies that
+`package.json` and `collector/extension/manifest.json` agree on the extension
+version.
+
+## Zip Contents
+
+The zip root is `collector/extension/` without the source-only extension
+`README.md`.
+
+Packaged files are limited to extension runtime assets with these extensions:
+
+- `.css`
+- `.html`
+- `.js`
+- `.json`
+- `.map`
+- `.png`
+
+The package script rejects private, generated, or sensitive-looking paths such
+as raw usage data, cookies, tokens, session material, screenshots, databases,
+dumps, logs, archives, hidden files, `data/`, `docs/`, `scripts/`, `tests/`,
+`node_modules/`, and `dist/`.
+
+Package text files are also scanned for local user-profile paths, concrete
+bearer headers, and private key material.
+
+## Reproducibility And Metadata
+
+The generated zip uses sorted entries, deflate compression, regular file mode,
+and a fixed zip entry timestamp of `2024-01-01T00:00:00.000Z`.
+
+The release metadata records:
+
+- package name
+- extension name
+- manifest version
+- zip filename
+- zip SHA-256
+- fixed zip entry timestamp
+- packaged file count
+- git commit
+- exact git tag when present
+- whether the working tree was clean
+
+The package script warns when the working tree has uncommitted changes or when
+`HEAD` is not tagged as `v<manifest version>`.
+
+## Public Source Guardrails
+
+`scripts/release-artifact-check.mjs` validates the public source before a
+release-facing workflow. It checks version alignment across `package.json`,
+`package-lock.json`, and `collector/extension/manifest.json`; release-safe
+tracked paths; sensitive tracked text; public-doc planning links; `.gitattributes`
+export-ignore entries; and `.gitignore` entries for private/generated local
+artifacts.
+
+Current export-ignore and gitignore policy keeps these internal or local paths
+out of public source archives or tracked source:
+
+- `.codex/`
+- `.maintainer/`
+- `docs/plans/`
+- `data/chrome-web-store-assets/`
+- `data/usage.json`
+- ignored maintainer-only guide files
+- local reports such as `security_best_practices_report.md`
+
+Do not bump the extension version for docs-only changes. Align
+`package.json`, `package-lock.json`, and `collector/extension/manifest.json`
+only when the packaged extension behavior, assets, permissions, or release
+contents change.
