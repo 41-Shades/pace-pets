@@ -11,9 +11,8 @@
       <header>
         <h1>Pace Pets Docs</h1>
         <p class="summary">
-          Setup and reference for the local-only Chrome extension dashboard that
-          stores sanitized Codex usage history in browser-local extension
-          storage.
+          Setup and reference for the Chrome extension dashboard that stores
+          sanitized Codex usage history in browser-local extension storage.
         </p>
       </header>
 
@@ -24,8 +23,8 @@
           <li>
             <a href="./extension.html">Extension Setup</a>
             <span
-              >Unpacked Chrome extension install steps, refresh behavior, and
-              stored-data boundaries.</span
+              >Chrome Web Store and unpacked extension install steps, refresh
+              behavior, and stored-data boundaries.</span
             >
           </li>
           <li>
@@ -44,7 +43,7 @@
             <a href="./guides/local-extension-distribution.md"
               >Local Extension Distribution</a
             >
-            <span>Local-only distribution model and data boundaries.</span>
+            <span>Local runtime, distribution paths, and data boundaries.</span>
           </li>
           <li>
             <a href="./guides/custom-icons.md">Custom Icons</a>
@@ -67,6 +66,25 @@
           <li>
             <a href="./reference/storage-schema.md">Storage Schema</a>
             <span>Generated storage contract and local preference fields.</span>
+          </li>
+          <li>
+            <a href="./reference/pace-state-presentation.md"
+              >Pace State Presentation</a
+            >
+            <span
+              >Ratio thresholds, controlled states, previews, and chart
+              caps.</span
+            >
+          </li>
+        </ul>
+
+        <h3>Operations</h3>
+        <ul class="doc-list">
+          <li>
+            <a href="./operations/release-packaging.md">Release Packaging</a>
+            <span
+              >Extension zip contents, metadata, and release guardrails.</span
+            >
           </li>
         </ul>
 
@@ -93,11 +111,18 @@
       <section id="quick-start">
         <h2>Quick Start</h2>
         <ol>
-          <li>Open <code>chrome://extensions</code>.</li>
-          <li>Enable Developer Mode.</li>
-          <li>Click Load unpacked.</li>
-          <li>Select <code>collector/extension</code>.</li>
+          <li>
+            Install
+            <a
+              href="https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk"
+              >Pace Pets from the Chrome Web Store</a
+            >.
+          </li>
           <li>Click the Pace Pets toolbar icon.</li>
+          <li>
+            For source installs, load <code>collector/extension</code> as an
+            unpacked extension from <code>chrome://extensions</code>.
+          </li>
         </ol>
       </section>
 
@@ -108,6 +133,13 @@
           normalizes supported usage windows, and stores only safe history
           fields in <code>chrome.storage.local</code>. The extension page is the
           product UI.
+        </p>
+        <p>
+          Public listing:
+          <a
+            href="https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk"
+            >Pace Pets on the Chrome Web Store</a
+          >.
         </p>
       </section>
 
@@ -136,6 +168,10 @@
           <li>
             <code>collector/extension/vendor/chart.umd.min.js</code>: vendored
             Chart.js runtime asset.
+          </li>
+          <li>
+            <code>scripts/package-extension.mjs</code>: release zip, metadata,
+            and checksum generator for the packaged extension.
           </li>
           <li><code>data/usage.sample.json</code>: safe sample fixture.</li>
         </ul>

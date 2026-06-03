@@ -4,16 +4,27 @@ Local-only Chrome extension for displaying sanitized Codex usage, pace, and rese
 
 This is an unofficial utility. It is not affiliated with OpenAI, and it depends on browser-visible ChatGPT/Codex usage endpoints that may change.
 
+Chrome Web Store listing:
+[Pace Pets](https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk)
+
 ## How It Works
 
-Pace Pets is loaded as an unpacked Chrome extension. Each user runs their own local copy in their own Chrome profile, and the background worker uses that user's existing signed-in ChatGPT browser session to refresh usage every five minutes.
+Pace Pets can be installed from the Chrome Web Store or loaded as an unpacked Chrome extension from this source tree. Each user runs their own local copy in their own Chrome profile, and the background worker uses that user's existing signed-in ChatGPT browser session to refresh usage every five minutes.
 
-There is no shared backend, central database, hosted account connection, or cross-user data path. See [Local Extension Distribution Model](docs/guides/local-extension-distribution.md) and [Extension Architecture](docs/reference/extension-architecture.md).
+There is no shared backend, central database, hosted account connection, or cross-user data path. See [Local Extension Runtime And Distribution Model](docs/guides/local-extension-distribution.md) and [Extension Architecture](docs/reference/extension-architecture.md).
 
 To swap the bundled artwork for a local copy, replace the PNGs under
 `collector/extension/themes/default/`. See [Custom Icons](docs/guides/custom-icons.md).
 
 ## Install / Update
+
+Chrome Web Store install:
+
+1. Open the [Pace Pets Chrome Web Store listing](https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk).
+2. Add Pace Pets to Chrome.
+3. Click the Pace Pets toolbar icon to open the dashboard.
+
+Source install:
 
 1. Open `chrome://extensions`.
 2. Enable Developer Mode.
@@ -21,7 +32,7 @@ To swap the bundled artwork for a local copy, replace the PNGs under
 4. Select `collector/extension`.
 5. Click the Pace Pets toolbar icon to open the dashboard. Right-click the toolbar icon to choose whether the badge shows the 7d or 5h view.
 
-To update after pulling or downloading new repo contents, reload the unpacked extension from `chrome://extensions`.
+To update a source install after pulling or downloading new repo contents, reload the unpacked extension from `chrome://extensions`.
 
 ## Data & Privacy
 
@@ -85,8 +96,10 @@ MIT. See [LICENSE](LICENSE).
 
 ## Project Docs
 
-- [Local Extension Distribution Model](docs/guides/local-extension-distribution.md)
+- [Local Extension Runtime And Distribution Model](docs/guides/local-extension-distribution.md)
 - [Custom Icons](docs/guides/custom-icons.md)
 - [Testing Guide](docs/guides/testing.md)
 - [Extension Architecture](docs/reference/extension-architecture.md)
+- [Pace State Presentation](docs/reference/pace-state-presentation.md)
 - [Storage Schema](docs/reference/storage-schema.md)
+- [Release Packaging](docs/operations/release-packaging.md)

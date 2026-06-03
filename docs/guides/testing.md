@@ -16,6 +16,7 @@ default.
 
 - `npm run lint:js` runs ESLint safety, style, and complexity guardrails for
   JavaScript source and repo scripts.
+- `npm run lint:css` runs Stylelint checks for CSS source.
 - `npm run test` runs Node-only Vitest tests for pure extension logic.
 - `npm run smoke` runs lightweight static and sample-data assertions.
 - `npm run lint:extension` validates manifest shape, packaged assets, CSP, local
@@ -24,7 +25,7 @@ default.
   dimensions, and transparent default pace icon assets.
 - `npm run lint:release` validates release-facing source metadata and public
   docs for private paths, sensitive artifacts, and version drift.
-- `npm run check` runs format check, lint, extension checks, smoke checks, and
+- `npm run check` runs format check, the full lint chain, smoke checks, and
   Vitest tests.
 - `npm run preflight` is the full local release gate and adds dependency audits.
 

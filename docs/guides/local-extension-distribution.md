@@ -1,14 +1,23 @@
-# Local Extension Distribution Model
+# Local Extension Runtime And Distribution Model
 
 Status: reference.
 
 ## Summary
 
-Pace Pets is distributed as a local-only Chrome extension source tree. Users clone or download this repository, load `collector/extension/` as an unpacked extension in their own Chrome profile, and use their own signed-in ChatGPT browser session to collect usage data.
+Pace Pets is a local-only Chrome extension: collection, storage, and rendering happen inside the user's own Chrome profile. Users can install the [approved Chrome Web Store listing](https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk) or clone/download this repository and load `collector/extension/` as an unpacked extension.
 
 There is no shared backend, central database, hosted account connection, or project-owned auth service in the current product model.
 
 ## User Flow
+
+Chrome Web Store install:
+
+1. User installs Pace Pets from the Chrome Web Store listing.
+2. User signs into ChatGPT/Codex in the same Chrome profile.
+3. The extension background worker refreshes usage from the browser-visible ChatGPT usage endpoint.
+4. The extension dashboard reads the user's local extension storage and renders pace, reset timing, and history.
+
+Unpacked source install:
 
 1. User clones or downloads the repository.
 2. User opens Chrome's Extensions page and enables Developer Mode.
@@ -31,11 +40,15 @@ There is no shared backend, central database, hosted account connection, or proj
 
 Users do not connect to the maintainer's machine, browser session, storage, database, API server, or account.
 
-The repo does not provide a multi-user service. Loading the unpacked extension creates an independent local copy of the collector and dashboard for that user's Chrome profile.
+The repo does not provide a multi-user service. Installing from the Chrome Web
+Store or loading the unpacked extension creates an independent local copy of the
+collector and dashboard for that user's Chrome profile.
 
 ## Updates
 
-If the extension changes, users update by pulling or downloading the latest repository contents and reloading the unpacked extension in Chrome.
+Chrome Web Store installs update through Chrome's normal extension update path.
+Unpacked source installs update by pulling or downloading the latest repository
+contents and reloading the unpacked extension in Chrome.
 
 Because the extension depends on browser-visible ChatGPT/Codex endpoints, upstream changes may require repository updates. This is expected fragility for an unofficial local utility, not a hosted compatibility contract.
 

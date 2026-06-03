@@ -37,6 +37,10 @@
       "Pace Pets preview controls must load before dashboard.js.",
     );
   }
+  const FEATURE_FLAGS = globalThis.PacePetsFeatureFlags;
+  if (!FEATURE_FLAGS) {
+    throw new Error("Pace Pets feature flags must load before dashboard.js.");
+  }
   const THEME_ASSETS = globalThis.CodexThemeAssets;
   if (!THEME_ASSETS) {
     throw new Error("Codex theme assets must load before dashboard.js.");
@@ -106,6 +110,7 @@
 
   const DEFAULT_WINDOW_KEY = USAGE_WINDOWS.DEFAULT_WINDOW_KEY;
   const WINDOW_STORAGE_KEY = USAGE_WINDOWS.WINDOW_STORAGE_KEY;
+  const FEATURE_FLAGS_STORAGE_KEY = FEATURE_FLAGS.STORAGE_KEY;
   const THEME_STORAGE_KEY = "codex-usage-theme";
   const USE_PLAYFUL_PACE_ICONS = true;
   const COLLECTION_STATUS_TITLE = "Usage collection status";
@@ -167,6 +172,9 @@
     PACE_STATES.perfectZero.key,
     "singularity",
   ]);
+  const PACE_ICON_EFFECTS_BY_STATE = Object.freeze({
+    [PACE_STATES.wellAhead.key]: "sprint-smoke",
+  });
   const SINGULARITY_ICON_DATA_URL = `data:image/svg+xml,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
       <defs>
@@ -326,6 +334,8 @@
   let usageChart = null;
   let currentHistory = null;
   let currentRefreshStatus = null;
+  let currentFeatureFlags = FEATURE_FLAGS.DEFAULT_FEATURE_FLAGS;
+  let currentForcedPaceStateKey = null;
   let selectedWindowKey = DEFAULT_WINDOW_KEY;
   let explicitTheme = storedThemePreference();
   let activeTooltipTarget = null;
@@ -386,6 +396,22 @@
       console.warn("Could not read usage window preference:", error.message);
       return DEFAULT_WINDOW_KEY;
     }
+  }
+
+  async function readDeveloperOptions() {
+    try {
+      const items = await EXTENSION_STORAGE.getLocal(FEATURE_FLAGS_STORAGE_KEY);
+      return FEATURE_FLAGS.normalizeDeveloperOptions(
+        items?.[FEATURE_FLAGS_STORAGE_KEY],
+      );
+    } catch (error) {
+      console.warn("Could not read developer feature flags:", error.message);
+      return FEATURE_FLAGS.normalizeDeveloperOptions(null);
+    }
+  }
+
+  function featureFlagValue(key) {
+    return FEATURE_FLAGS.featureFlagValue(currentFeatureFlags, key);
   }
 
   function storedThemePreference() {
@@ -1361,6 +1387,20 @@
     });
   }
 
+  function isTransientRuntimeMessageError(error) {
+    return /(?:message port closed|receiving end does not exist|extension context invalidated)/i.test(
+      error?.message || "",
+    );
+  }
+
+  function warnOptionalPreviewMessageFailure(label, error) {
+    if (isTransientRuntimeMessageError(error)) {
+      return;
+    }
+
+    console.warn(label, error.message);
+  }
+
   function sendManualRefreshMessage() {
     return sendRuntimeMessage({
       type: REFRESH_CONTROL.REFRESH_NOW_MESSAGE_TYPE,
@@ -1368,19 +1408,28 @@
   }
 
   function updateToolbarPreviewBadge(stateKey) {
-    const message = PREVIEW_CONTROL.previewBadgeMessage(stateKey);
+    const message = PREVIEW_CONTROL.previewBadgeMessage(
+      stateKey,
+      currentFeatureFlags,
+    );
     if (!message) {
       return;
     }
 
     sendRuntimeMessage(message).catch((error) => {
-      console.warn("Codex usage badge preview failed:", error.message);
+      warnOptionalPreviewMessageFailure(
+        "Codex usage badge preview failed:",
+        error,
+      );
     });
   }
 
   function restoreToolbarPreviewBadge() {
     sendRuntimeMessage(PREVIEW_CONTROL.restoreBadgeMessage()).catch((error) => {
-      console.warn("Codex usage badge preview restore failed:", error.message);
+      warnOptionalPreviewMessageFailure(
+        "Codex usage badge preview restore failed:",
+        error,
+      );
     });
   }
 
@@ -1516,14 +1565,37 @@
   }
 
   function previewPaceRatioForState(stateKey) {
+    if (!featureFlagValue("statePreviews")) {
+      return null;
+    }
     if (stateKey === DASHBOARD_RAIL_STATES.singularity.key) {
-      return 0;
+      return featureFlagValue("perfectZeroState") ? 0 : null;
     }
 
-    return PREVIEW_CONTROL.previewPaceRatioForState(stateKey);
+    return PREVIEW_CONTROL.previewPaceRatioForState(
+      stateKey,
+      currentFeatureFlags,
+    );
   }
 
-  function setPaceLevel(level, { updateTabIcon = true } = {}) {
+  function previewStateKeyEnabled(stateKey) {
+    if (stateKey === DASHBOARD_RAIL_STATES.singularity.key) {
+      return (
+        featureFlagValue("statePreviews") &&
+        featureFlagValue("perfectZeroState")
+      );
+    }
+
+    return PREVIEW_CONTROL.previewStateKeyEnabled(
+      stateKey,
+      currentFeatureFlags,
+    );
+  }
+
+  function setPaceLevel(
+    level,
+    { updateTabIcon = true, updateStateRailActive = true } = {},
+  ) {
     const state = paceStateForClassName(level);
     elements.paceCard.classList.remove(
       ...PACE_CLASSES,
@@ -1531,11 +1603,15 @@
     );
     elements.paceCard.classList.add(level);
     const pageBackgroundActive = setPerfectZeroPageBackgroundActive(
-      state.key === PACE_STATES.perfectZero.key,
+      state.key === PACE_STATES.perfectZero.key &&
+        featureFlagValue("perfectZeroScene"),
     );
     renderPaceIcon(elements.paceIcon, level, {
       usePerfectZeroPageAperture: pageBackgroundActive,
     });
+    if (updateStateRailActive) {
+      updateStateRailActiveSelection(state.key);
+    }
     if (updateTabIcon) {
       updateFavicon(level);
     }
@@ -1550,6 +1626,12 @@
 
   function paceStateForKey(stateKey) {
     return DASHBOARD_RAIL_STATES[stateKey] || PACE_STATES[stateKey] || null;
+  }
+
+  function forcedPaceState() {
+    return currentForcedPaceStateKey
+      ? paceStateForKey(currentForcedPaceStateKey)
+      : null;
   }
 
   function stopPerfectZeroPageBackgroundScene() {
@@ -1593,7 +1675,7 @@
       return false;
     }
 
-    if (!active) {
+    if (!active || !featureFlagValue("perfectZeroScene")) {
       stopPerfectZeroPageBackgroundScene();
       return false;
     }
@@ -1664,6 +1746,7 @@
       image.decoding = "async";
       image.loading = "lazy";
       container.append(image);
+      renderPaceIconEffect(container, state);
       return;
     }
 
@@ -1682,6 +1765,24 @@
       svg.append(element);
     }
     container.append(svg);
+    renderPaceIconEffect(container, state);
+  }
+
+  function renderPaceIconEffect(container, state) {
+    const effect = PACE_ICON_EFFECTS_BY_STATE[state.key];
+    if (!effect) {
+      return;
+    }
+
+    const layer = document.createElement("span");
+    layer.className = `pace-icon-effect pace-icon-effect-${effect}`;
+    layer.setAttribute("aria-hidden", "true");
+    for (let puffIndex = 1; puffIndex <= 5; puffIndex += 1) {
+      const puff = document.createElement("span");
+      puff.className = `pace-smoke-puff pace-smoke-puff-${puffIndex}`;
+      layer.append(puff);
+    }
+    container.append(layer);
   }
 
   function renderStateChip(stateKey) {
@@ -1741,18 +1842,45 @@
       return;
     }
 
-    elements.paceStateStack.replaceChildren(
-      renderStateColumn(
-        "state-column-levels",
-        "Pace levels",
-        PACE_LEVEL_LEGEND_STATE_KEYS,
-      ),
-      renderStateColumn(
-        "state-column-perfects",
-        "Perfect states",
-        PACE_PERFECT_LEGEND_STATE_KEYS,
-      ),
+    const levelStateKeys = PACE_LEVEL_LEGEND_STATE_KEYS.filter(
+      previewStateKeyEnabled,
     );
+    const perfectStateKeys = PACE_PERFECT_LEGEND_STATE_KEYS.filter(
+      previewStateKeyEnabled,
+    );
+    const columns = [];
+    if (levelStateKeys.length) {
+      columns.push(
+        renderStateColumn("state-column-levels", "Pace levels", levelStateKeys),
+      );
+    }
+    if (perfectStateKeys.length) {
+      columns.push(
+        renderStateColumn(
+          "state-column-perfects",
+          "Perfect states",
+          perfectStateKeys,
+        ),
+      );
+    }
+
+    elements.paceStateStack.hidden = !columns.length;
+    elements.paceStateStack.replaceChildren(...columns);
+  }
+
+  function updateStateRailActiveSelection(activeKey) {
+    if (!elements.paceStateStack) {
+      return;
+    }
+
+    elements.paceStateStack
+      .querySelectorAll(".state-chip[data-pace-state-key]")
+      .forEach((chip) => {
+        chip.classList.toggle(
+          "is-active",
+          chip.dataset.paceStateKey === activeKey,
+        );
+      });
   }
 
   function currentPaceLevel() {
@@ -1851,6 +1979,10 @@
       return;
     }
 
+    elements.paceStateStack.classList.toggle(
+      "is-previewing-state",
+      Boolean(activeKey),
+    );
     elements.paceStateStack
       .querySelectorAll(".state-chip[data-pace-state-key]")
       .forEach((chip) => {
@@ -1896,7 +2028,11 @@
 
   function renderPacePreviewState(state) {
     const previewPaceRatio = previewPaceRatioForState(state.key);
-    setPaceLevel(state.className);
+    if (previewPaceRatio === null) {
+      return;
+    }
+
+    setPaceLevel(state.className, { updateStateRailActive: false });
     elements.paceCard.classList.add("is-previewing");
     elements.paceTitle.textContent = state.title;
     elements.paceCopy.textContent = state.copy;
@@ -1920,7 +2056,7 @@
 
   function showPacePreview(stateKey) {
     const state = paceStateForKey(stateKey);
-    if (!state) {
+    if (!state || !previewStateKeyEnabled(state.key)) {
       return;
     }
 
@@ -1934,8 +2070,9 @@
   }
 
   function refreshActivePacePreview() {
-    const state = PACE_STATES[activePacePreviewKey];
-    if (!state) {
+    const state = paceStateForKey(activePacePreviewKey);
+    if (!state || !previewStateKeyEnabled(state.key)) {
+      restorePacePreview();
       return;
     }
 
@@ -2021,6 +2158,24 @@
   ) {
     const remainingPercent = windowData?.remainingPercent;
     const hasTime = Number.isFinite(timePercent) && timePercent > 0;
+    const forcedState = forcedPaceState();
+
+    if (forcedState) {
+      setPaceSummary(
+        forcedState.className,
+        forcedState.title,
+        forcedState.copy,
+        remainingPercent,
+        timePercent,
+        "Dev override",
+        {
+          paceRatioDisplayOverride: PREVIEW_CONTROL.forcedPaceRatioForState(
+            forcedState.key,
+          ),
+        },
+      );
+      return;
+    }
 
     if (!Number.isFinite(remainingPercent)) {
       setPaceSummary(
@@ -2037,7 +2192,7 @@
     const controlledPresentation = controlledPacePresentationForValues(
       remainingPercent,
       timePercent,
-      { allowPerfectZero },
+      { allowPerfectZero, featureFlags: currentFeatureFlags },
     );
     if (staleWindow) {
       setPaceSummary(
@@ -2082,7 +2237,10 @@
         comparisonPaceText,
       );
     } else {
-      const state = PacePetsLogic.paceStateForRatio(paceRatio);
+      const state = PacePetsLogic.paceStatePresentationForRatio(
+        paceRatio,
+        currentFeatureFlags,
+      );
       setPaceSummary(
         state.className,
         state.title,
@@ -2824,16 +2982,21 @@
   }
 
   async function loadDashboard({ refreshWindowPreference = true } = {}) {
-    const [history, refreshStatus, storedWindowKeyValue] = await Promise.all([
-      CodexUsageHistory.readHistory(),
-      readRefreshStatus(),
-      refreshWindowPreference ? readStoredWindowKey() : Promise.resolve(null),
-    ]);
+    const [history, refreshStatus, storedWindowKeyValue, developerOptions] =
+      await Promise.all([
+        CodexUsageHistory.readHistory(),
+        readRefreshStatus(),
+        refreshWindowPreference ? readStoredWindowKey() : Promise.resolve(null),
+        readDeveloperOptions(),
+      ]);
     if (refreshWindowPreference) {
       selectedWindowKey = storedWindowKeyValue;
     }
+    currentFeatureFlags = developerOptions.featureFlags;
+    currentForcedPaceStateKey = developerOptions.forcedPaceStateKey;
     currentHistory = history;
     currentRefreshStatus = refreshStatus;
+    renderStateRail();
     renderHistory(currentHistory, currentRefreshStatus);
   }
 
@@ -3069,6 +3232,7 @@
         CodexUsageHistory.HISTORY_STORAGE_KEY,
         CodexUsageHistory.REFRESH_STATUS_STORAGE_KEY,
         WINDOW_STORAGE_KEY,
+        FEATURE_FLAGS_STORAGE_KEY,
       ])
     ) {
       loadDashboard().catch(() => {

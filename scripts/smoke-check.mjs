@@ -111,6 +111,7 @@ assertFile("collector/extension/usage-integration-adapters.js");
 assertFile("collector/extension/usage.js");
 assertFile("collector/extension/history-store.js");
 assertFile("collector/extension/themes/default/asset-manifest.js");
+assertFile("collector/extension/feature-flags.js");
 assertFile("collector/extension/pace-logic.js");
 assertFile("collector/extension/dashboard.html");
 assertFile("collector/extension/dashboard.css");
@@ -277,7 +278,9 @@ assert(
     ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage.js") &&
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
       "./themes/default/asset-manifest.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js"),
+    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./feature-flags.js") <
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js"),
   "Dashboard runtime manifest must load shared contracts before dependent scripts.",
 );
 assert(

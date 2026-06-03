@@ -23,17 +23,18 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/history-store.js` owns sample normalization, dedupe, retention, and sample caps.
 - `collector/extension/themes/default/asset-manifest.js` owns the packaged theme asset manifest for app icons and pace icons shared by runtime code and asset checks.
 - `collector/extension/themes/default/` contains the default replaceable extension artwork.
-- `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, inline icon geometry, and legend metadata.
-- `collector/extension/perfect-zero-space-scene.js` owns the main-dashboard `PERFECT ZERO` canvas background animation.
-- `collector/extension/dashboard.html`, `dashboard.css`, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and pace legend previews, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Pace legend previews update the dashboard card, browser tab, and temporary toolbar badge presentation; the background worker restores the badge through a stored expiry and Chrome alarm.
+- `collector/extension/feature-flags.js` owns code-default feature flags and local developer override normalization. `collector/extension/dev-flags.html` is unpacked-extension tooling only and is excluded from Chrome Web Store release packages.
+- `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, inline icon geometry, legend metadata, controlled Perfect Sync/Perfect Zero presentation, and stale-reset guards.
+- `collector/extension/perfect-zero-space-scene.js` owns the `PERFECT ZERO` canvas scene, including icon and full-bleed profiles, reduced-motion handling, page-visibility pause/resume behavior, and scene teardown.
+- `collector/extension/dashboard.html`, `dashboard.css`, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and pace legend previews, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Pace legend previews update the dashboard card, browser tab, and temporary toolbar badge presentation; the background worker restores the badge through a stored expiry and Chrome alarm. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture.
 - `collector/extension/vendor/chart.umd.min.js` is the optional vendored Chart.js runtime used by the dashboard chart; the rest of the dashboard still renders if the chart asset cannot load.
 
 ## Collection Flow
 
 1. Chrome starts or installs the extension.
 2. `background.js` bootstraps shared scripts from `runtime-manifest.js` and schedules the `refresh-codex-weekly-usage` alarm.
-3. On each alarm, `background.js` skips duplicate same-worker refresh work if a prior refresh is still in flight, then attempts to read a ChatGPT session token in memory from the signed-in browser session.
-4. `background.js` calls the shared `CodexIntegrationConfig.CHATGPT_USAGE_ENDPOINT` on `chatgpt.com`.
+3. On each alarm, `background.js` skips duplicate same-worker refresh work if a prior refresh is still in flight, then probes the configured ChatGPT auth-session endpoints with browser credentials to read a session token in memory from the signed-in browser session.
+4. `background.js` calls the shared `CodexIntegrationConfig.CHATGPT_USAGE_ENDPOINT` on `chatgpt.com` with browser credentials, JSON accept headers, the current Chrome UI language as `oai-language`, and a bearer authorization header only when a session token was found. A 401 or 403 response is retried once only when the first usage request used a token.
 5. `usage.js` normalizes the WHAM response through `usage-integration-adapters.js`, mapping adapter-declared weekly and five-hour paths first, then bounded path-matched candidates when the live WHAM shape is nested under adapter-recognized usage containers. It does not accept unrelated exact-duration quota-shaped objects as supported windows.
 6. `history-store.js` appends a safe normalized sample to `chrome.storage.local`.
 7. `background.js` updates the selected toolbar badge view, toolbar badge, and refresh status through `refresh-status.js`.

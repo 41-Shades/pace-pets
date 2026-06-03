@@ -1,0 +1,200 @@
+:root {
+  color-scheme: light dark;
+
+  --bg: #f6f8fb;
+  --border: #d5dde7;
+  --border-strong: #bec9d7;
+  --muted: #64748b;
+  --panel: #ffffff;
+  --primary: #0f766e;
+  --primary-soft: #e6f4f1;
+  --text: #172033;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font:
+    13px/1.4 system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.dev-flags-shell {
+  margin: 0 auto;
+  max-width: 900px;
+  padding: 28px 18px;
+}
+
+.dev-flags-header {
+  align-items: baseline;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dev-flags-header h1 {
+  font-size: 1.45rem;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.settings-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.settings-table {
+  border-collapse: collapse;
+  min-width: 760px;
+  width: 100%;
+}
+
+.settings-table th,
+.settings-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.settings-table th {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.settings-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.setting-name {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.radio-pill {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 6px;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.radio-pill:has(input:checked) {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.radio-pill input,
+.flag-toggle input {
+  accent-color: var(--primary);
+  height: 16px;
+  margin: 0;
+  width: 16px;
+}
+
+.flag-toggle {
+  align-items: center;
+  display: inline-flex;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.secondary-button {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px 9px;
+  white-space: nowrap;
+}
+
+.secondary-button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.secondary-button:not(:disabled):hover,
+.secondary-button:not(:disabled):focus-visible {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.dev-flags-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+#status-message {
+  color: var(--muted);
+  min-height: 1.4em;
+  text-align: right;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --border: #344054;
+    --border-strong: #526174;
+    --muted: #a6b4c7;
+    --panel: #1f2937;
+    --primary: #5eead4;
+    --primary-soft: #103b39;
+    --text: #eef2f7;
+  }
+}
+
+@media (width <= 620px) {
+  .dev-flags-header,
+  .dev-flags-actions {
+    align-items: stretch;
+    display: grid;
+  }
+
+  #status-message {
+    text-align: left;
+  }
+}

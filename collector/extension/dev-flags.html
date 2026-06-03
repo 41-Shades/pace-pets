@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pace Pets Dev Flags</title>
+    <link rel="stylesheet" href="./dev-flags.css" />
+  </head>
+  <body>
+    <main class="dev-flags-shell">
+      <header class="dev-flags-header">
+        <p class="eyebrow">Local unpacked extension</p>
+        <h1>Pace Pets Dev Flags</h1>
+      </header>
+
+      <section class="settings-panel" aria-label="Developer flags">
+        <table class="settings-table">
+          <thead>
+            <tr>
+              <th scope="col">Setting</th>
+              <th scope="col">Default</th>
+              <th scope="col">Override</th>
+              <th scope="col">Effective</th>
+              <th scope="col">Reset</th>
+            </tr>
+          </thead>
+          <tbody id="settings-table-body"></tbody>
+        </table>
+      </section>
+
+      <footer class="dev-flags-actions">
+        <button class="secondary-button" id="reset-all" type="button">
+          Reset all
+        </button>
+        <output id="status-message" role="status"></output>
+      </footer>
+    </main>
+
+    <script src="./feature-flags.js"></script>
+    <script src="./storage-adapter.js"></script>
+    <script src="./dev-flags.js"></script>
+  </body>
+</html>

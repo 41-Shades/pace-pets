@@ -6,6 +6,7 @@ const POLL_MINUTES = 5;
 const INITIAL_REFRESH_DELAY_MINUTES = 1;
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.WINDOW_STORAGE_KEY;
+const FEATURE_FLAGS_STORAGE_KEY = PacePetsFeatureFlags.STORAGE_KEY;
 const BADGE_PREVIEW_EXPIRES_STORAGE_KEY =
   PacePetsPreviewControl.BADGE_PREVIEW_EXPIRES_STORAGE_KEY;
 const BADGE_PREVIEW_RESTORE_ALARM =
@@ -17,6 +18,8 @@ const BADGE_CONTEXT_MENU_CONTEXTS = ["action"];
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
+let currentFeatureFlags = PacePetsFeatureFlags.DEFAULT_FEATURE_FLAGS;
+let currentForcedPaceStateKey = null;
 
 async function fetchAccessToken() {
   for (const url of PacePetsBackgroundLogic.AUTH_SESSION_URLS) {
@@ -116,8 +119,12 @@ function badgeTextForPaceRatio(paceRatio) {
   return PacePetsLogic.badgeTextForPaceRatio(paceRatio);
 }
 
-function badgeColorForPaceRatio(paceRatio) {
-  return PacePetsLogic.badgeColorForPaceRatio(paceRatio);
+function badgeColorForPaceRatio(paceRatio, featureFlags) {
+  return PacePetsLogic.badgeColorForPaceRatio(
+    paceRatio,
+    PacePetsLogic.DEFAULT_BADGE_COLORS,
+    featureFlags,
+  );
 }
 
 function controlledPacePresentationForWindow(windowData, options) {
@@ -157,6 +164,28 @@ async function selectedBadgeWindowKey() {
     console.warn("Could not read badge window preference:", error);
     return PacePetsBackgroundLogic.DEFAULT_BADGE_WINDOW_KEY;
   }
+}
+
+async function readDeveloperOptions() {
+  try {
+    const items = await CodexExtensionStorage.getLocal(
+      FEATURE_FLAGS_STORAGE_KEY,
+    );
+    const options = PacePetsFeatureFlags.normalizeDeveloperOptions(
+      items?.[FEATURE_FLAGS_STORAGE_KEY],
+    );
+    currentFeatureFlags = options.featureFlags;
+    currentForcedPaceStateKey = options.forcedPaceStateKey;
+  } catch (error) {
+    console.warn("Could not read developer feature flags:", error);
+    currentFeatureFlags = PacePetsFeatureFlags.DEFAULT_FEATURE_FLAGS;
+    currentForcedPaceStateKey = null;
+  }
+
+  return {
+    featureFlags: currentFeatureFlags,
+    forcedPaceStateKey: currentForcedPaceStateKey,
+  };
 }
 
 function badgeContextMenuId(windowKey) {
@@ -244,6 +273,7 @@ async function syncBadgeContextMenuSelection() {
 }
 
 async function updatePaceBadge(windows, history = null) {
+  const { featureFlags, forcedPaceStateKey } = await readDeveloperOptions();
   const preferredWindowKey = await selectedBadgeWindowKey();
   const windowKey = PacePetsBackgroundLogic.badgeWindowKey(
     windows,
@@ -258,17 +288,23 @@ async function updatePaceBadge(windows, history = null) {
   );
   const controlledPresentation = controlledPacePresentationForWindow(
     windowData,
-    { allowPerfectZero, atMs },
+    { allowPerfectZero, atMs, featureFlags },
   );
   const paceRatio = paceRatioForWindow(windowData, atMs);
-  const badgePaceRatio = controlledPresentation
-    ? controlledPresentation.displayRatio
-    : paceRatio;
+  const forcedBadgeState =
+    PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey);
+  const badgePaceRatio = forcedBadgeState
+    ? forcedBadgeState.paceRatio
+    : controlledPresentation
+      ? controlledPresentation.displayRatio
+      : paceRatio;
   const label = PacePetsBackgroundLogic.BADGE_WINDOW_LABELS[windowKey] || "";
   const badgeText = badgeTextForPaceRatio(badgePaceRatio);
-  const badgeColor = controlledPresentation
-    ? controlledPresentation.state.badgeColor
-    : badgeColorForPaceRatio(paceRatio);
+  const badgeColor = forcedBadgeState
+    ? forcedBadgeState.badgeColor
+    : controlledPresentation
+      ? controlledPresentation.state.badgeColor
+      : badgeColorForPaceRatio(paceRatio, featureFlags);
   const title = CodexProductMetadata.badgeTitle(
     badgePaceRatio === null ? null : { badgeText, label },
   );
@@ -325,7 +361,11 @@ async function clearBadgePreviewRestoreSchedule() {
 }
 
 async function previewPaceBadge(stateKey) {
-  const preview = PacePetsPreviewControl.previewBadgeState(stateKey);
+  const { featureFlags } = await readDeveloperOptions();
+  const preview = PacePetsPreviewControl.previewBadgeState(
+    stateKey,
+    featureFlags,
+  );
   if (!preview) {
     return { ok: false };
   }
@@ -540,19 +580,28 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (
-    !CodexExtensionStorage.isLocalArea(areaName) ||
-    !CodexExtensionStorage.hasChange(changes, BADGE_WINDOW_STORAGE_KEY)
-  ) {
+  if (!CodexExtensionStorage.isLocalArea(areaName)) {
+    return;
+  }
+
+  const badgeWindowChanged = CodexExtensionStorage.hasChange(
+    changes,
+    BADGE_WINDOW_STORAGE_KEY,
+  );
+  const featureFlagsChanged =
+    PacePetsFeatureFlags.hasFeatureFlagsChange(changes);
+  if (!badgeWindowChanged && !featureFlagsChanged) {
     return;
   }
 
   updatePaceBadgeFromHistory().catch((error) => {
     console.warn("Codex usage badge update failed:", error);
   });
-  syncBadgeContextMenuSelection().catch((error) => {
-    console.warn("Codex usage badge menu sync failed:", error);
-  });
+  if (badgeWindowChanged) {
+    syncBadgeContextMenuSelection().catch((error) => {
+      console.warn("Codex usage badge menu sync failed:", error);
+    });
+  }
 });
 
 restoreExpiredPaceBadgePreview().catch((error) => {
