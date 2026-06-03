@@ -1,6 +1,7 @@
 export default {
   extends: ["stylelint-config-standard"],
   ignoreFiles: ["node_modules/**"],
+  referenceFiles: ["collector/extension/dashboard*.css"],
   rules: {
     "color-hex-length": "long",
     "declaration-no-important": true,
