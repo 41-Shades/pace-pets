@@ -94,6 +94,59 @@
   z-index: 1;
 }
 
+.pace-icon.has-pace-icon-effect-brake-wobble img {
+  animation: brake-hard-idle-shake 840ms steps(1, end) infinite;
+  transform-origin: 50% 56%;
+  will-change: transform;
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble.is-brake-wobbling img {
+  animation: brake-hard-wobble-2 520ms linear both;
+  animation-timing-function: steps(1, end);
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble[data-brake-wobble-shakes="1"].is-brake-wobbling
+  img {
+  animation-duration: 320ms;
+  animation-name: brake-hard-wobble-1;
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble[data-brake-wobble-shakes="3"].is-brake-wobbling
+  img {
+  animation-duration: 720ms;
+  animation-name: brake-hard-wobble-3;
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble[data-brake-wobble-range="wide"].is-brake-wobbling
+  img {
+  animation-name: brake-hard-wobble-wide-2;
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble[data-brake-wobble-range="escape"].is-brake-wobbling
+  img {
+  animation-name: brake-hard-wobble-escape-2;
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble[data-brake-wobble-range="wide"][data-brake-wobble-shakes="1"].is-brake-wobbling
+  img {
+  animation-name: brake-hard-wobble-wide-1;
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble[data-brake-wobble-range="wide"][data-brake-wobble-shakes="3"].is-brake-wobbling
+  img {
+  animation-name: brake-hard-wobble-wide-3;
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble[data-brake-wobble-range="escape"][data-brake-wobble-shakes="1"].is-brake-wobbling
+  img {
+  animation-name: brake-hard-wobble-escape-1;
+}
+
+.pace-icon.has-pace-icon-effect-brake-wobble[data-brake-wobble-range="escape"][data-brake-wobble-shakes="3"].is-brake-wobbling
+  img {
+  animation-name: brake-hard-wobble-escape-3;
+}
+
 .pace-card.pace-sync .pace-icon {
   animation: pace-sync-float 5.2s ease-in-out infinite;
   will-change: transform;

@@ -237,9 +237,15 @@
     transition: none;
   }
 
+  .pace-icon.has-pace-icon-effect-brake-wobble img {
+    will-change: auto;
+  }
+
   .pace-card.pace-sync .pace-icon,
   .pace-icon.is-perfect-zero-aperture::after,
   .pace-icon.is-perfect-zero-aperture .perfect-zero-cameo,
+  .pace-icon.has-pace-icon-effect-brake-wobble img,
+  .pace-icon.has-pace-icon-effect-brake-wobble.is-brake-wobbling img,
   .pace-smoke-puff,
   .early-reset-popover[data-early-reset-stage="5"],
   .early-reset-popover.is-popping,

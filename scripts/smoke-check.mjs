@@ -119,6 +119,10 @@ assertFile("collector/extension/dashboard-tooltips.js");
 assertFile("collector/extension/dashboard-early-reset.js");
 assertFile("collector/extension/dashboard-chart-data.js");
 assertFile("collector/extension/dashboard-chart.js");
+assertFile("collector/extension/dashboard-time.js");
+assertFile("collector/extension/dashboard-shell-controls.js");
+assertFile("collector/extension/dashboard-status-controller.js");
+assertFile("collector/extension/dashboard-pace-controller.js");
 assertFile("collector/extension/dashboard.js");
 assertFile("collector/extension/vendor/chart.umd.min.js");
 assertFile("collector/extension/vendor/chart.umd.min.js.map");
@@ -142,6 +146,9 @@ for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
 const dashboardHtml = readText("collector/extension/dashboard.html");
 const backgroundJs = readText("collector/extension/background.js");
 const dashboardJs = readText("collector/extension/dashboard.js");
+const dashboardStatusControllerJs = readText(
+  "collector/extension/dashboard-status-controller.js",
+);
 const usageJs = readText("collector/extension/usage.js");
 const usageIntegrationAdaptersJs = readText(
   "collector/extension/usage-integration-adapters.js",
@@ -254,6 +261,16 @@ assert(
       "./dashboard-chart-data.js",
     ) &&
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes("./dashboard-chart.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes("./dashboard-time.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
+      "./dashboard-shell-controls.js",
+    ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
+      "./dashboard-status-controller.js",
+    ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
+      "./dashboard-pace-controller.js",
+    ) &&
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
       "./vendor/chart.umd.min.js",
     ),
@@ -325,7 +342,18 @@ assert(
       "./dashboard-early-reset.js",
     ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-chart.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js"),
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-time.js") <
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-shell-controls.js",
+    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-status-controller.js",
+    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-pace-controller.js",
+    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js"),
   "Dashboard runtime manifest must load shared contracts before dependent scripts.",
 );
 assert(
@@ -367,16 +395,25 @@ assert(
   "Dashboard minute refresh must not reread full storage state.",
 );
 assert(
-  !/runtime\.sendMessage\(\s*\{\s*type:\s*"status"\s*\}/.test(dashboardJs) &&
-    backgroundJs.includes("PacePetsRefreshControl.isRefreshNowMessage"),
+  !/runtime\.sendMessage\(\s*\{\s*type:\s*"status"\s*\}/.test(
+    `${dashboardJs}\n${dashboardStatusControllerJs}`,
+  ) && backgroundJs.includes("PacePetsRefreshControl.isRefreshNowMessage"),
   "Dashboard status updates must use stored refresh status while manual checks use the refresh-now message contract.",
 );
 assert(
-  dashboardJs.includes("REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS") &&
-    dashboardJs.includes("button.hidden = !manualRefreshAvailable") &&
-    dashboardJs.includes("manualRefreshFeedback") &&
-    dashboardJs.includes("showManualRefreshFailure(response?.refreshStatus)") &&
-    dashboardJs.includes('[STATUS_TEXT.checking]: "Checking..."') &&
+  dashboardStatusControllerJs.includes(
+    "REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS",
+  ) &&
+    dashboardStatusControllerJs.includes(
+      "button.hidden = !manualRefreshAvailable",
+    ) &&
+    dashboardStatusControllerJs.includes("manualRefreshFeedback") &&
+    dashboardStatusControllerJs.includes(
+      "showManualRefreshFailure(response?.refreshStatus)",
+    ) &&
+    dashboardStatusControllerJs.includes(
+      '[STATUS_TEXT.checking]: "Checking..."',
+    ) &&
     backgroundJs.includes(
       "PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS",
     ) &&
@@ -385,9 +422,13 @@ assert(
   "Manual refresh must be conditional, cooldown guarded, and routed through the scheduled refresh path.",
 );
 assert(
-  dashboardJs.includes('[STATUS_TEXT.signInNotFound]: "Sign-in needed"') &&
-    !dashboardJs.includes('[STATUS_TEXT.signInNotFound]: "Check failed"') &&
-    dashboardJs.includes(
+  dashboardStatusControllerJs.includes(
+    '[STATUS_TEXT.signInNotFound]: "Sign-in needed"',
+  ) &&
+    !dashboardStatusControllerJs.includes(
+      '[STATUS_TEXT.signInNotFound]: "Check failed"',
+    ) &&
+    dashboardStatusControllerJs.includes(
       "Latest check failed because ChatGPT sign-in was not found.",
     ) &&
     dashboardJs.includes(
