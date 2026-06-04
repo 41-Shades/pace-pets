@@ -38,15 +38,18 @@
     [PACE_STATES.wellBehind.key]: pacePreviewPercentPair(0.65),
     [PACE_STATES.behind.key]: pacePreviewPercentPair(0.82),
     [PACE_STATES.on.key]: pacePreviewPercentPair(1.02),
+    [PACE_STATES.ahead.key]: pacePreviewPercentPair(1.16),
+    [PACE_STATES.strongAhead.key]: pacePreviewPercentPair(1.4),
+    [PACE_STATES.wellAhead.key]: pacePreviewPercentPair(1.8),
+  });
+  const FORCED_PACE_STATE_PERCENT_PAIRS = Object.freeze({
+    ...PACE_STATE_PREVIEW_PERCENT_PAIRS,
     [PACE_STATES.sync.key]: pacePreviewPercentPair(
       PACE_LOGIC.PERFECT_PACE_RATIO,
     ),
     [PACE_STATES.perfectZero.key]: pacePreviewPercentPair(0, {
       timePercent: 0,
     }),
-    [PACE_STATES.ahead.key]: pacePreviewPercentPair(1.16),
-    [PACE_STATES.strongAhead.key]: pacePreviewPercentPair(1.4),
-    [PACE_STATES.wellAhead.key]: pacePreviewPercentPair(1.8),
   });
   const ZERO_PERCENT_PAIR = Object.freeze({
     remainingPercent: 0,
@@ -81,8 +84,8 @@
 
   function forcedPercentPairForState(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    if (PACE_STATE_PREVIEW_PERCENT_PAIRS[normalizedStateKey]) {
-      return PACE_STATE_PREVIEW_PERCENT_PAIRS[normalizedStateKey];
+    if (FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey]) {
+      return FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey];
     }
     if (normalizedStateKey === DASHBOARD_ONLY_FORCED_STATES.singularity.key) {
       return ZERO_PERCENT_PAIR;

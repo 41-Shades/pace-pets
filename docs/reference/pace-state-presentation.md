@@ -69,18 +69,19 @@ The dashboard legend uses `PACE_LEGEND_STATE_KEYS` from `pace-logic.js`:
 wellAhead, on, behind, strongAhead, sync, wellBehind, ahead, perfectZero, criticalBehind
 ```
 
-Preview controls are owned by `collector/extension/preview-control.js`. Preview
-ratios are synthetic examples based on a default `50%` time remaining, except
-Perfect Zero, which previews `0%` usage and `0%` time. The toolbar badge preview
-uses the same preview state and restores through the alarm-backed badge-preview
-contract.
+Preview controls are owned by `collector/extension/preview-control.js`. Only
+regular pace levels are previewable. Their preview ratios are synthetic examples
+based on a default `50%` time remaining. Perfect Sync, Perfect Zero, and
+dashboard-only special states remain visible as legend context, but they are not
+previewable. The toolbar badge preview uses the same preview state and restores
+through the alarm-backed badge-preview contract.
 
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects, but legend rail icons stay static even when their state
 is active or being previewed.
 
-The dashboard-only Singularity state previews and forced developer overrides
-also set the reset countdown presentation to `0d 0h 0m`.
+When Singularity is active through a forced developer override, it also sets the
+reset countdown presentation to `0d 0h 0m`.
 
 ## Display Caps
 
@@ -90,8 +91,13 @@ cap of `100+`. Positive values below `0.01` display as `<0.01`.
 The dashboard's inactive-window ratio keeps the window label neutral and tints
 only the numeric value with that inactive window's pace state color.
 
-Toolbar badge text uses the same formatter with a cap of `10+`; tiny positive
-values round to `0.01` rather than using the `<0.01` display form.
+Toolbar badge text normally uses the same formatter with a cap of `10+`; tiny
+positive values round to `0.01` rather than using the `<0.01` display form. If
+any supported window is `criticalBehind`, the badge uses attention mode instead:
+it shows the worst critical window's compact label (`7d` or `5h`) on that
+state's badge color, while the tooltip carries the exact critical pace value.
+When both windows are critical, the lower pace ratio wins; equal ratios prefer
+the stored badge window.
 
 The chart clamps plotted pace values to `0..50` through
 `PacePetsLogic.chartPaceRatio()`. `dashboard.js` narrows the visible y-axis for

@@ -144,6 +144,119 @@ function allowsPerfectZeroForWindow(history, windowKey, windowData) {
   );
 }
 
+function badgeWindowKeys(windows, preferredWindowKey) {
+  const availableWindowKeys = CodexUsageWindows.WINDOW_KEYS.filter(
+    (windowKey) => windows?.[windowKey],
+  );
+  if (availableWindowKeys.length > 0) {
+    return availableWindowKeys;
+  }
+
+  return [PacePetsBackgroundLogic.badgeWindowKey(windows, preferredWindowKey)];
+}
+
+function badgeCandidateForWindow(windows, history, windowKey, atMs) {
+  const windowData = windows?.[windowKey];
+  const allowPerfectZero = allowsPerfectZeroForWindow(
+    history,
+    windowKey,
+    windowData,
+  );
+  const controlledPresentation = controlledPacePresentationForWindow(
+    windowData,
+    { allowPerfectZero, atMs },
+  );
+  const paceRatio = paceRatioForWindow(windowData, atMs);
+  const badgePaceRatio = controlledPresentation
+    ? controlledPresentation.displayRatio
+    : paceRatio;
+  const state = controlledPresentation
+    ? controlledPresentation.state
+    : PacePetsLogic.paceStatePresentationForRatio(paceRatio);
+  const label = PacePetsBackgroundLogic.BADGE_WINDOW_LABELS[windowKey] || "";
+  const ratioBadgeText = badgeTextForPaceRatio(badgePaceRatio);
+  const isAttentionBadge = PacePetsBackgroundLogic.isAttentionBadgeStateKey(
+    state.key,
+  );
+
+  return {
+    badgeColor: controlledPresentation
+      ? state.badgeColor
+      : badgeColorForPaceRatio(paceRatio),
+    badgePaceRatio,
+    badgeText: isAttentionBadge ? label : ratioBadgeText,
+    isAttentionBadge,
+    label,
+    paceRatio,
+    ratioBadgeText,
+    stateKey: state.key,
+    stateTitle: state.title,
+    windowKey,
+  };
+}
+
+function badgeCandidatesForWindows(windows, history, preferredWindowKey, atMs) {
+  return badgeWindowKeys(windows, preferredWindowKey).map((windowKey) =>
+    badgeCandidateForWindow(windows, history, windowKey, atMs),
+  );
+}
+
+function attentionBadgeTitleItems(attentionCandidates) {
+  return attentionCandidates.map((candidate) => ({
+    label: candidate.label,
+    paceText: candidate.ratioBadgeText,
+    title: candidate.stateTitle,
+  }));
+}
+
+function badgeTitleForCandidate(candidate, attentionCandidates) {
+  if (!candidate) {
+    return CodexProductMetadata.ACTION_DEFAULT_TITLE;
+  }
+  if (candidate.isAttentionBadge) {
+    return CodexProductMetadata.attentionBadgeTitle({
+      items: attentionBadgeTitleItems(attentionCandidates),
+    });
+  }
+
+  return CodexProductMetadata.badgeTitle(
+    candidate.badgePaceRatio === null
+      ? null
+      : { badgeText: candidate.badgeText, label: candidate.label },
+  );
+}
+
+function badgeDisplayForSelection({
+  attentionCandidates,
+  candidate,
+  forcedBadgeState,
+  preferredWindowKey,
+}) {
+  const paceRatio = candidate?.paceRatio ?? null;
+  const windowKey = candidate?.windowKey || preferredWindowKey;
+
+  if (forcedBadgeState) {
+    return {
+      badgeColor: forcedBadgeState.badgeColor,
+      badgePaceRatio: forcedBadgeState.paceRatio,
+      badgeText: forcedBadgeState.badgeText,
+      paceRatio,
+      title: stateOverrideBadgeTitle(forcedBadgeState),
+      windowKey,
+    };
+  }
+
+  return {
+    badgeColor:
+      candidate?.badgeColor || PacePetsLogic.DEFAULT_BADGE_COLORS.muted,
+    badgePaceRatio: candidate?.badgePaceRatio ?? null,
+    badgeText: candidate?.badgeText || "",
+    paceRatio,
+    title: badgeTitleForCandidate(candidate, attentionCandidates),
+    windowKey,
+  };
+}
+
 function createAlarm(alarmName, alarmInfo) {
   return CodexExtensionStorage.callbackWithLastError((done) => {
     chrome.alarms.create(alarmName, alarmInfo, done);
@@ -279,42 +392,35 @@ async function updatePaceBadge(windows, history = null) {
   const forcedBadgeState =
     PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey);
   const preferredWindowKey = await selectedBadgeWindowKey();
-  const windowKey = PacePetsBackgroundLogic.badgeWindowKey(
-    windows,
-    preferredWindowKey,
-  );
-  const windowData = windows?.[windowKey];
   const atMs = Date.now();
-  const allowPerfectZero = allowsPerfectZeroForWindow(
+  const badgeCandidates = badgeCandidatesForWindows(
+    windows,
     history,
-    windowKey,
-    windowData,
+    preferredWindowKey,
+    atMs,
   );
-  const controlledPresentation = controlledPacePresentationForWindow(
-    windowData,
-    { allowPerfectZero, atMs },
-  );
-  const paceRatio = paceRatioForWindow(windowData, atMs);
-  const badgePaceRatio = forcedBadgeState
-    ? forcedBadgeState.paceRatio
-    : controlledPresentation
-      ? controlledPresentation.displayRatio
-      : paceRatio;
-  const label = PacePetsBackgroundLogic.BADGE_WINDOW_LABELS[windowKey] || "";
-  const badgeText = badgeTextForPaceRatio(badgePaceRatio);
-  const badgeColor = forcedBadgeState
-    ? forcedBadgeState.badgeColor
-    : controlledPresentation
-      ? controlledPresentation.state.badgeColor
-      : badgeColorForPaceRatio(paceRatio);
-  const title = forcedBadgeState
-    ? stateOverrideBadgeTitle(forcedBadgeState)
-    : CodexProductMetadata.badgeTitle(
-        badgePaceRatio === null ? null : { badgeText, label },
-      );
+  const { attentionCandidates, candidate } =
+    PacePetsBackgroundLogic.prioritizedBadgeSelection(
+      badgeCandidates,
+      preferredWindowKey,
+    );
+  const badgeDisplay = badgeDisplayForSelection({
+    attentionCandidates,
+    candidate,
+    forcedBadgeState,
+    preferredWindowKey,
+  });
 
-  await setBadge(badgeText, badgeColor, title);
-  return { badgePaceRatio, paceRatio, windowKey };
+  await setBadge(
+    badgeDisplay.badgeText,
+    badgeDisplay.badgeColor,
+    badgeDisplay.title,
+  );
+  return {
+    badgePaceRatio: badgeDisplay.badgePaceRatio,
+    paceRatio: badgeDisplay.paceRatio,
+    windowKey: badgeDisplay.windowKey,
+  };
 }
 
 async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
