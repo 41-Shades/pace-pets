@@ -1223,6 +1223,32 @@
     setPercent(elements.timePercent, elements.timeBar, percentPair.timePercent);
   }
 
+  function selectedSummaryWindowForChartPreview() {
+    const latest = CodexUsageHistory.latestSample(currentHistory);
+    const windows = windowsForSample(latest);
+    return windows[selectedSupportedWindowKey()] || null;
+  }
+
+  function previewChartPaceRatioForState(stateKey, paceRatio) {
+    return stateKey === PACE_STATES.perfectZero.key ||
+      stateKey === DASHBOARD_RAIL_STATES.singularity.key
+      ? PacePetsLogic.PERFECT_PACE_RATIO
+      : paceRatio;
+  }
+
+  function renderPreviewChart(stateKey, paceRatio, percentPair) {
+    if (!percentPair || paceRatio === null) {
+      return;
+    }
+
+    usageChartView.renderPreview({
+      paceRatio: previewChartPaceRatioForState(stateKey, paceRatio),
+      percentPair,
+      summaryWindow: selectedSummaryWindowForChartPreview(),
+      summaryWindowKey: selectedSupportedWindowKey(),
+    });
+  }
+
   function previewPaceRatioForState(stateKey) {
     if (stateKey === DASHBOARD_RAIL_STATES.singularity.key) {
       return 0;
@@ -1698,9 +1724,7 @@
     restoreResetCountdownSnapshot(snapshot?.resetCountdown);
 
     if (currentHistory) {
-      renderHistory(currentHistory, currentRefreshStatus, {
-        refreshChart: false,
-      });
+      renderHistory(currentHistory, currentRefreshStatus);
       return;
     }
 
@@ -1729,7 +1753,9 @@
     elements.paceRatioStat.hidden = false;
     elements.paceRatioValue.textContent =
       formatPaceRatioValue(previewPaceRatio);
-    setPreviewPercentPair(PREVIEW_CONTROL.forcedPercentPairForState(state.key));
+    const percentPair = PREVIEW_CONTROL.forcedPercentPairForState(state.key);
+    setPreviewPercentPair(percentPair);
+    renderPreviewChart(state.key, previewPaceRatio, percentPair);
     applyStateResetCountdown(state);
     const previewRatioLabel = state.previewRatioLabel || state.ratioLabel;
     renderPaceAltRatio(previewRatioLabel);
@@ -1772,7 +1798,9 @@
     elements.paceRatioStat.hidden = false;
     elements.paceRatioValue.textContent =
       formatPaceRatioValue(previewPaceRatio);
-    setPreviewPercentPair(PREVIEW_CONTROL.forcedPercentPairForState(state.key));
+    const percentPair = PREVIEW_CONTROL.forcedPercentPairForState(state.key);
+    setPreviewPercentPair(percentPair);
+    renderPreviewChart(state.key, previewPaceRatio, percentPair);
     applyStateResetCountdown(state);
     const previewRatioLabel = state.previewRatioLabel || state.ratioLabel;
     renderPaceAltRatio(previewRatioLabel);
