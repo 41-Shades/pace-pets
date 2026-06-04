@@ -40,6 +40,10 @@
     "./dashboard-early-reset.js",
     "./dashboard-chart-data.js",
     "./dashboard-chart.js",
+    "./dashboard-time.js",
+    "./dashboard-shell-controls.js",
+    "./dashboard-status-controller.js",
+    "./dashboard-pace-controller.js",
     "./dashboard.js",
   ]);
 
