@@ -75,6 +75,10 @@ Perfect Zero, which previews `0%` usage and `0%` time. The toolbar badge preview
 uses the same preview state and restores through the alarm-backed badge-preview
 contract.
 
+Pace icon motion is status-card-only. The active dashboard status icon may render
+state-specific effects, but legend rail icons stay static even when their state
+is active or being previewed.
+
 The dashboard-only Singularity state previews and forced developer overrides
 also set the reset countdown presentation to `0d 0h 0m`.
 
@@ -82,6 +86,9 @@ also set the reset countdown presentation to `0d 0h 0m`.
 
 Dashboard pace text uses `PacePetsLogic.formatPaceRatioValue()` with a display
 cap of `100+`. Positive values below `0.01` display as `<0.01`.
+
+The dashboard's inactive-window ratio keeps the window label neutral and tints
+only the numeric value with that inactive window's pace state color.
 
 Toolbar badge text uses the same formatter with a cap of `10+`; tiny positive
 values round to `0.01` rather than using the `<0.01` display form.

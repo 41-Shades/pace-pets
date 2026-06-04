@@ -84,9 +84,17 @@
   letter-spacing: 0.04em;
   line-height: 1.1;
   margin-top: 8px;
-  opacity: 0.86;
   padding-right: 4px;
   white-space: nowrap;
+}
+
+.pace-alt-ratio-label {
+  opacity: 0.86;
+}
+
+.pace-alt-ratio-value.is-tinted {
+  color: var(--pace-color);
+  font-weight: 720;
 }
 
 .pace-critical-behind {

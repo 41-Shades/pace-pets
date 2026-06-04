@@ -36,6 +36,10 @@
     "./preview-control.js",
     "./vendor/chart.umd.min.js",
     "./perfect-zero-space-scene.js",
+    "./dashboard-tooltips.js",
+    "./dashboard-early-reset.js",
+    "./dashboard-chart-data.js",
+    "./dashboard-chart.js",
     "./dashboard.js",
   ]);
 

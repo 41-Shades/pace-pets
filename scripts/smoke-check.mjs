@@ -115,6 +115,10 @@ assertFile("collector/extension/developer-options.js");
 assertFile("collector/extension/pace-logic.js");
 assertFile("collector/extension/dashboard.html");
 assertFile("collector/extension/dashboard.css");
+assertFile("collector/extension/dashboard-tooltips.js");
+assertFile("collector/extension/dashboard-early-reset.js");
+assertFile("collector/extension/dashboard-chart-data.js");
+assertFile("collector/extension/dashboard-chart.js");
 assertFile("collector/extension/dashboard.js");
 assertFile("collector/extension/vendor/chart.umd.min.js");
 assertFile("collector/extension/vendor/chart.umd.min.js.map");
@@ -241,9 +245,19 @@ assert(
       "./developer-options.js",
     ) &&
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
+      "./dashboard-tooltips.js",
+    ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
+      "./dashboard-early-reset.js",
+    ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
+      "./dashboard-chart-data.js",
+    ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes("./dashboard-chart.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
       "./vendor/chart.umd.min.js",
     ),
-  "Dashboard runtime manifest must include developer options, dashboard, and Chart.js scripts.",
+  "Dashboard runtime manifest must include developer options, dashboard helpers, dashboard, and Chart.js scripts.",
 );
 assert(
   runtimeManifest.OPTIONAL_DASHBOARD_SCRIPT_SOURCES?.includes(
@@ -283,8 +297,35 @@ assert(
       "./themes/default/asset-manifest.js",
     ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") &&
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./developer-options.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js"),
+      "./integration-config.js",
+    ) <
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-chart-data.js",
+      ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") <
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-chart-data.js",
+      ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-chart-data.js",
+    ) <
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-chart.js",
+      ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") <
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-chart.js",
+      ) &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./developer-options.js") <
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-tooltips.js",
+    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-early-reset.js",
+    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-chart.js") <
+      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js"),
   "Dashboard runtime manifest must load shared contracts before dependent scripts.",
 );
 assert(

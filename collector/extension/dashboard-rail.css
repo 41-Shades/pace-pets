@@ -116,23 +116,6 @@
   transform: translateY(1px);
 }
 
-.state-chip.pace-well-ahead.is-active,
-.state-chip.pace-well-ahead:hover,
-.state-chip.pace-well-ahead:focus-visible,
-.state-chip.pace-well-ahead.is-previewing {
-  z-index: 3;
-}
-
-.state-chip.pace-well-ahead.is-previewing,
-.state-stack:not(.is-previewing-state) .state-chip.pace-well-ahead.is-active {
-  overflow: visible;
-  position: relative;
-}
-
-.state-stack:not(.is-previewing-state) .state-chip.pace-well-ahead.is-active {
-  z-index: 1;
-}
-
 .state-copy {
   min-width: 0;
 }
@@ -147,10 +130,6 @@
   overflow: hidden;
   position: relative;
   width: var(--state-icon-size);
-}
-
-.state-chip.pace-well-ahead .state-icon {
-  overflow: visible;
 }
 
 svg {

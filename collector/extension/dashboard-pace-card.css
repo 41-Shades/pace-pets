@@ -122,29 +122,6 @@
   z-index: 2;
 }
 
-.state-icon .pace-icon-effect-sprint-smoke {
-  --smoke-drift-x: -36px;
-  --smoke-drift-y: -5px;
-  --smoke-origin-left: -1px;
-  --smoke-origin-top: 24px;
-  --smoke-mid-opacity: 0.68;
-  --smoke-peak-opacity: 0.86;
-  --smoke-size-1: 12px;
-  --smoke-size-2: 9px;
-  --smoke-size-3: 11px;
-  --smoke-size-4: 8px;
-  --smoke-size-5: 10px;
-
-  display: none;
-}
-
-.state-chip.pace-well-ahead.is-previewing .pace-icon-effect-sprint-smoke,
-.state-stack:not(.is-previewing-state)
-  .state-chip.pace-well-ahead.is-active
-  .pace-icon-effect-sprint-smoke {
-  display: block;
-}
-
 .pace-smoke-puff {
   --smoke-end-scale: 1.58;
   --smoke-y-offset: 0px;
