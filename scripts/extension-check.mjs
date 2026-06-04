@@ -288,6 +288,10 @@ assertExtensionFile("pace-logic.js");
 assertExtensionFile("background-logic.js");
 assertExtensionFile("dashboard.html");
 assertExtensionFile("dashboard.css");
+assertExtensionFile("dashboard-tooltips.js");
+assertExtensionFile("dashboard-early-reset.js");
+assertExtensionFile("dashboard-chart-data.js");
+assertExtensionFile("dashboard-chart.js");
 assertExtensionFile("dashboard.js");
 assertExtensionFile("vendor/chart.umd.min.js");
 assertExtensionFile("vendor/chart.umd.min.js.map");
@@ -481,6 +485,48 @@ assertScriptBefore(
 assertScriptBefore(
   dashboardRuntimeScripts,
   "./developer-options.js",
+  "./dashboard.js",
+  "Dashboard runtime manifest",
+);
+assertScriptBefore(
+  dashboardRuntimeScripts,
+  "./integration-config.js",
+  "./dashboard-chart-data.js",
+  "Dashboard runtime manifest",
+);
+assertScriptBefore(
+  dashboardRuntimeScripts,
+  "./pace-logic.js",
+  "./dashboard-chart-data.js",
+  "Dashboard runtime manifest",
+);
+assertScriptBefore(
+  dashboardRuntimeScripts,
+  "./dashboard-chart-data.js",
+  "./dashboard-chart.js",
+  "Dashboard runtime manifest",
+);
+assertScriptBefore(
+  dashboardRuntimeScripts,
+  "./pace-logic.js",
+  "./dashboard-chart.js",
+  "Dashboard runtime manifest",
+);
+assertScriptBefore(
+  dashboardRuntimeScripts,
+  "./dashboard-tooltips.js",
+  "./dashboard.js",
+  "Dashboard runtime manifest",
+);
+assertScriptBefore(
+  dashboardRuntimeScripts,
+  "./dashboard-early-reset.js",
+  "./dashboard.js",
+  "Dashboard runtime manifest",
+);
+assertScriptBefore(
+  dashboardRuntimeScripts,
+  "./dashboard-chart.js",
   "./dashboard.js",
   "Dashboard runtime manifest",
 );

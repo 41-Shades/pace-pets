@@ -17,10 +17,6 @@
   if (!PRODUCT_METADATA) {
     throw new Error("Codex product metadata must load before dashboard.js.");
   }
-  const INTEGRATION_CONFIG = globalThis.CodexIntegrationConfig;
-  if (!INTEGRATION_CONFIG) {
-    throw new Error("Codex integration config must load before dashboard.js.");
-  }
   const EXTENSION_STORAGE = globalThis.CodexExtensionStorage;
   if (!EXTENSION_STORAGE) {
     throw new Error("Codex storage adapter must load before dashboard.js.");
@@ -52,6 +48,18 @@
     throw new Error(
       "Pace Pets perfect-zero space scene must load before dashboard.js.",
     );
+  }
+  const APP_TOOLTIPS = globalThis.PacePetsAppTooltips;
+  if (!APP_TOOLTIPS) {
+    throw new Error("Pace Pets app tooltips must load before dashboard.js.");
+  }
+  const EARLY_RESET = globalThis.PacePetsEarlyReset;
+  if (!EARLY_RESET) {
+    throw new Error("Pace Pets early reset must load before dashboard.js.");
+  }
+  const DASHBOARD_CHART = globalThis.PacePetsDashboardChart;
+  if (!DASHBOARD_CHART) {
+    throw new Error("Pace Pets dashboard chart must load before dashboard.js.");
   }
 
   const elements = {
@@ -109,6 +117,21 @@
     paceStateStack: document.querySelector("#pace-state-stack"),
     appTooltip: document.querySelector("#app-tooltip"),
   };
+  const appTooltips = APP_TOOLTIPS.createController({
+    tooltipElement: elements.appTooltip,
+  });
+  const earlyReset = EARLY_RESET.createController({
+    button: elements.earlyResetButton,
+    hideTooltip: appTooltips.hide,
+    popover: elements.earlyResetPopover,
+    popoverText: elements.earlyResetPopoverText,
+  });
+  const usageChartView = DASHBOARD_CHART.createRenderer({
+    chartCanvas: elements.chartCanvas,
+    chartFrame: elements.chartFrame,
+    chartState: elements.chartState,
+    windowSpecs: USAGE_WINDOWS.WINDOW_SPECS,
+  });
 
   const DEFAULT_WINDOW_KEY = USAGE_WINDOWS.DEFAULT_WINDOW_KEY;
   const WINDOW_STORAGE_KEY = USAGE_WINDOWS.WINDOW_STORAGE_KEY;
@@ -116,14 +139,6 @@
   const THEME_STORAGE_KEY = "codex-usage-theme";
   const USE_PLAYFUL_PACE_ICONS = true;
   const COLLECTION_STATUS_TITLE = "Usage collection status";
-  const APP_TOOLTIP_ID = "app-tooltip";
-  const APP_TOOLTIP_SELECTOR = "[data-tooltip]";
-  const APP_TOOLTIP_SHOW_DELAY_MS = 180;
-  const APP_TOOLTIP_OFFSET_PX = 8;
-  const APP_TOOLTIP_VIEWPORT_MARGIN_PX = 8;
-  const APP_TOOLTIP_SLOW_FADE_MS = 1600;
-  const APP_TOOLTIP_SLOW_AUTO_HIDE_DELAY_MS = APP_TOOLTIP_SLOW_FADE_MS + 500;
-  const APP_TOOLTIP_SUPPRESS_AFTER_INFO_CLOSE_MS = 360;
   const SINGULARITY_RESET_COUNTDOWN_TEXT = "0d 0h 0m";
   const INFO_PANEL_FOCUSABLE_SELECTOR = [
     "a[href]",
@@ -156,8 +171,6 @@
   const MANUAL_REFRESH_CHECKING_LABEL = "Checking usage...";
   const MANUAL_REFRESH_COOLDOWN_PREFIX = "Check again in";
   const MANUAL_REFRESH_FAILURE_VISIBLE_MS = 1800;
-  const LOW_SAMPLE_CHART_COPY =
-    "Waiting for enough readings to draw the pace line.";
   const WINDOW_SPECS = USAGE_WINDOWS.WINDOW_SPECS;
   const PACE_STATES = PacePetsLogic.PACE_STATES;
   const PACE_CLASSES = PacePetsLogic.PACE_CLASS_NAMES;
@@ -306,44 +319,20 @@
   );
   const MUTED_PACE_CLASS = PACE_STATES.muted.className;
 
-  const CHART_COLOR_FALLBACKS = {
-    line: "rgba(112, 124, 138, 0.72)",
-    aboveLine: "rgba(34, 139, 126, 0.74)",
-    belowLine: "rgba(184, 94, 86, 0.74)",
-    aboveFill: "rgba(20, 184, 166, 0.18)",
-    belowFill: "rgba(248, 113, 113, 0.22)",
-    perfectLine: "rgba(20, 184, 166, 0.48)",
-  };
   const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
   const colorSchemeMedia = window.matchMedia(COLOR_SCHEME_QUERY);
-  const DEFAULT_CHART_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-  const PERFECT_PACE_RATIO = PacePetsLogic.PERFECT_PACE_RATIO;
   const PACE_STATE_PREVIEW_DURATION_MS =
     PREVIEW_CONTROL.PACE_STATE_PREVIEW_DURATION_MS;
-  const PACE_RATIO_CHART_MIN = 0;
-  const PACE_RATIO_CHART_MAX = PacePetsLogic.PACE_RATIO_CHART_MAX;
-  const PACE_RATIO_CHART_DETAIL_STEP = 0.05;
-  const PACE_RATIO_CHART_HIGH_STEP = 0.25;
-  const PACE_RATIO_CHART_MIN_SPAN = 0.3;
-  const PACE_RATIO_CHART_MIN_PADDING = 0.04;
-  const PACE_RATIO_CHART_PADDING_RATIO = 0.2;
-  const PACE_RATIO_CHART_HIGH_THRESHOLD = 2;
   const COLLECTION_STATUS_STALE_AFTER_MS = 15 * 60 * 1000;
   const DASHBOARD_STATUS_REFRESH_INTERVAL_MS = 60 * 1000;
   const THEME_VALUES = new Set(["light", "dark"]);
 
-  let usageChart = null;
   let currentHistory = null;
   let currentRefreshStatus = null;
   let currentForcedPaceStateKey = null;
   let selectedWindowKey = DEFAULT_WINDOW_KEY;
   let explicitTheme = storedThemePreference();
-  let activeTooltipTarget = null;
-  let tooltipShowTimer = null;
-  let tooltipHideTimer = null;
-  let tooltipAutoHideTimer = null;
   let infoPanelReturnFocus = null;
-  let suppressAppTooltipUntilMs = 0;
   applyResolvedTheme();
 
   const manifest = chrome.runtime.getManifest();
@@ -352,9 +341,6 @@
   elements.usageDescription.textContent =
     PRODUCT_METADATA.DASHBOARD_DESCRIPTION;
   elements.collectorVersion.textContent = `v${manifest.version}`;
-  let earlyResetPopoverTimer = null;
-  let earlyResetClickCount = 0;
-  let earlyResetIsPopping = false;
   let lastCheckedText =
     elements.lastCollectedValue.textContent.trim() || "waiting";
   let collectionStatusText = STATUS_TEXT.live;
@@ -371,18 +357,6 @@
   let pacePreviewRestoreSnapshot = null;
   let pacePreviewRestoreTimer = null;
   let perfectZeroPageBackgroundScene = null;
-
-  const EARLY_RESET_POPOVER_MESSAGES = [
-    "This button does nothing. But keep trying.",
-    "Still nothing. It did get bigger.",
-    "Persistent click detected.",
-    "Reset pressure rising.",
-    "Early reset request submitted to balloon.",
-    "Reset looks close.\nSurely one more click.",
-  ];
-
-  const EARLY_RESET_POPOVER_HIDE_DELAY_MS = 3600;
-  const EARLY_RESET_POPOVER_POP_DELAY_MS = 1000;
 
   function normalizedWindowKey(value) {
     return USAGE_WINDOWS.normalizeWindowKey(value);
@@ -450,7 +424,7 @@
     const label = `Switch to ${nextTheme} theme`;
     elements.themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
     elements.themeToggle.setAttribute("aria-label", label);
-    setAppTooltipText(elements.themeToggle, label);
+    appTooltips.setText(elements.themeToggle, label);
   }
 
   function applyResolvedTheme({ refresh = false } = {}) {
@@ -461,36 +435,6 @@
     if (refresh) {
       refreshThemeSensitiveViews();
     }
-  }
-
-  function cssCustomProperty(name) {
-    return getComputedStyle(document.documentElement)
-      .getPropertyValue(name)
-      .trim();
-  }
-
-  function chartColors() {
-    return {
-      line: cssCustomProperty("--chart-line") || CHART_COLOR_FALLBACKS.line,
-      aboveLine:
-        cssCustomProperty("--chart-line-above") ||
-        CHART_COLOR_FALLBACKS.aboveLine,
-      belowLine:
-        cssCustomProperty("--chart-line-below") ||
-        CHART_COLOR_FALLBACKS.belowLine,
-      aboveFill:
-        cssCustomProperty("--chart-above-fill") ||
-        CHART_COLOR_FALLBACKS.aboveFill,
-      belowFill:
-        cssCustomProperty("--chart-below-fill") ||
-        CHART_COLOR_FALLBACKS.belowFill,
-      perfectLine:
-        cssCustomProperty("--chart-perfect-line") ||
-        CHART_COLOR_FALLBACKS.perfectLine,
-      tooltipBg: cssCustomProperty("--tooltip-bg") || "#ffffff",
-      tooltipText: cssCustomProperty("--tooltip-text") || "#24313d",
-      tooltipBorder: cssCustomProperty("--tooltip-border") || "#cfd8e2",
-    };
   }
 
   function storeWindowKey(windowKey) {
@@ -521,261 +465,6 @@
     );
   }
 
-  function appTooltipTarget(event) {
-    return event.target instanceof Element
-      ? event.target.closest(APP_TOOLTIP_SELECTOR)
-      : null;
-  }
-
-  function appTooltipText(target) {
-    return target?.dataset?.tooltip?.trim() || "";
-  }
-
-  function appTooltipHint(target) {
-    return target?.dataset?.tooltipHint?.trim() || "";
-  }
-
-  function clampNumber(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-  }
-
-  function addAppTooltipDescription(target) {
-    if (target.getAttribute("aria-hidden") === "true") {
-      return;
-    }
-
-    const describedBy = target.getAttribute("aria-describedby") || "";
-    const ids = describedBy.split(/\s+/).filter(Boolean);
-    if (ids.includes(APP_TOOLTIP_ID)) {
-      return;
-    }
-
-    target.dataset.appTooltipDescribed = "true";
-    target.setAttribute("aria-describedby", [...ids, APP_TOOLTIP_ID].join(" "));
-  }
-
-  function removeAppTooltipDescription(target) {
-    if (!target?.dataset?.appTooltipDescribed) {
-      return;
-    }
-
-    const ids = (target.getAttribute("aria-describedby") || "")
-      .split(/\s+/)
-      .filter((id) => id && id !== APP_TOOLTIP_ID);
-    if (ids.length > 0) {
-      target.setAttribute("aria-describedby", ids.join(" "));
-    } else {
-      target.removeAttribute("aria-describedby");
-    }
-    delete target.dataset.appTooltipDescribed;
-  }
-
-  function positionAppTooltip(target) {
-    const tooltip = elements.appTooltip;
-    if (!tooltip) {
-      return;
-    }
-
-    const targetRect = target.getBoundingClientRect();
-    const tooltipRect = tooltip.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const margin = APP_TOOLTIP_VIEWPORT_MARGIN_PX;
-    const preferredPlacement = target.dataset.tooltipPlacement;
-
-    if (preferredPlacement === "right") {
-      let placement = "right";
-      let left = targetRect.right + APP_TOOLTIP_OFFSET_PX;
-      if (left + tooltipRect.width > viewportWidth - margin) {
-        placement = "left";
-        left = targetRect.left - tooltipRect.width - APP_TOOLTIP_OFFSET_PX;
-      }
-
-      left = clampNumber(
-        left,
-        margin,
-        viewportWidth - tooltipRect.width - margin,
-      );
-      const top = clampNumber(
-        targetRect.top + targetRect.height / 2 - tooltipRect.height / 2,
-        margin,
-        viewportHeight - tooltipRect.height - margin,
-      );
-      const arrowTop = clampNumber(
-        targetRect.top + targetRect.height / 2 - top,
-        12,
-        tooltipRect.height - 12,
-      );
-
-      tooltip.dataset.placement = placement;
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
-      tooltip.style.setProperty("--tooltip-arrow-top", `${arrowTop}px`);
-      return;
-    }
-
-    let placement = "top";
-    let top = targetRect.top - tooltipRect.height - APP_TOOLTIP_OFFSET_PX;
-
-    if (top < margin) {
-      placement = "bottom";
-      top = targetRect.bottom + APP_TOOLTIP_OFFSET_PX;
-    }
-
-    top = clampNumber(
-      top,
-      margin,
-      viewportHeight - tooltipRect.height - margin,
-    );
-    const centeredLeft =
-      targetRect.left + targetRect.width / 2 - tooltipRect.width / 2;
-    const left = clampNumber(
-      centeredLeft,
-      margin,
-      viewportWidth - tooltipRect.width - margin,
-    );
-    const arrowLeft = clampNumber(
-      targetRect.left + targetRect.width / 2 - left,
-      12,
-      tooltipRect.width - 12,
-    );
-
-    tooltip.dataset.placement = placement;
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
-    tooltip.style.setProperty("--tooltip-arrow-left", `${arrowLeft}px`);
-  }
-
-  function showAppTooltip(target) {
-    const tooltip = elements.appTooltip;
-    const text = appTooltipText(target);
-    const hint = appTooltipHint(target);
-    if (!tooltip || !text) {
-      hideAppTooltip();
-      return;
-    }
-
-    window.clearTimeout(tooltipHideTimer);
-    tooltipHideTimer = null;
-    window.clearTimeout(tooltipAutoHideTimer);
-    tooltipAutoHideTimer = null;
-    activeTooltipTarget = target;
-    const motion = target.dataset.tooltipMotion?.trim() || "";
-    if (motion) {
-      tooltip.dataset.motion = motion;
-    } else {
-      delete tooltip.dataset.motion;
-    }
-    const variant = target.dataset.tooltipVariant?.trim() || "";
-    if (variant) {
-      tooltip.dataset.variant = variant;
-    } else {
-      delete tooltip.dataset.variant;
-    }
-    tooltip.textContent = text;
-    if (hint) {
-      const hintElement = document.createElement("span");
-      hintElement.className = "app-tooltip-hint";
-      hintElement.textContent = hint;
-      tooltip.append(hintElement);
-    }
-    tooltip.hidden = false;
-    tooltip.classList.remove("is-visible");
-    positionAppTooltip(target);
-    addAppTooltipDescription(target);
-
-    window.requestAnimationFrame(() => {
-      if (activeTooltipTarget === target) {
-        tooltip.classList.add("is-visible");
-        if (target.dataset.tooltipAutoHide === "true") {
-          tooltipAutoHideTimer = window.setTimeout(() => {
-            if (activeTooltipTarget === target) {
-              hideAppTooltip();
-            }
-          }, APP_TOOLTIP_SLOW_AUTO_HIDE_DELAY_MS);
-        }
-      }
-    });
-  }
-
-  function scheduleAppTooltip(target) {
-    window.clearTimeout(tooltipShowTimer);
-    tooltipShowTimer = window.setTimeout(() => {
-      tooltipShowTimer = null;
-      showAppTooltip(target);
-    }, APP_TOOLTIP_SHOW_DELAY_MS);
-  }
-
-  function hideAppTooltip({ immediate = false } = {}) {
-    window.clearTimeout(tooltipShowTimer);
-    tooltipShowTimer = null;
-    window.clearTimeout(tooltipAutoHideTimer);
-    tooltipAutoHideTimer = null;
-    if (activeTooltipTarget) {
-      removeAppTooltipDescription(activeTooltipTarget);
-    }
-    activeTooltipTarget = null;
-
-    if (elements.appTooltip) {
-      const hasSlowFade =
-        elements.appTooltip.dataset.motion === "slow" &&
-        !elements.appTooltip.hidden;
-      window.clearTimeout(tooltipHideTimer);
-      tooltipHideTimer = null;
-      elements.appTooltip.classList.remove("is-visible");
-      if (hasSlowFade && !immediate) {
-        tooltipHideTimer = window.setTimeout(() => {
-          elements.appTooltip.hidden = true;
-          delete elements.appTooltip.dataset.motion;
-          delete elements.appTooltip.dataset.variant;
-          tooltipHideTimer = null;
-        }, APP_TOOLTIP_SLOW_FADE_MS);
-      } else {
-        elements.appTooltip.hidden = true;
-        delete elements.appTooltip.dataset.motion;
-        delete elements.appTooltip.dataset.variant;
-      }
-    }
-  }
-
-  function setAppTooltipText(element, text) {
-    if (!element) {
-      return;
-    }
-
-    const nextText = String(text || "").trim();
-    if (nextText) {
-      element.dataset.tooltip = nextText;
-    } else {
-      element.removeAttribute("data-tooltip");
-    }
-
-    if (element === activeTooltipTarget) {
-      if (nextText) {
-        showAppTooltip(element);
-      } else {
-        hideAppTooltip();
-      }
-    }
-  }
-
-  function isAppTooltipSuppressed() {
-    return Date.now() < suppressAppTooltipUntilMs;
-  }
-
-  function isPointerClick(event) {
-    return event.detail > 0;
-  }
-
-  function releasePointerClickFocus(event, element) {
-    if (!isPointerClick(event) || document.activeElement !== element) {
-      return;
-    }
-
-    element.blur();
-    hideAppTooltip();
-  }
-
   function isInfoPanelOpen() {
     return Boolean(elements.infoOverlay && !elements.infoOverlay.hidden);
   }
@@ -799,8 +488,8 @@
       document.activeElement instanceof HTMLElement
         ? document.activeElement
         : null;
-    hideAppTooltip();
-    hideEarlyResetPopover();
+    appTooltips.hide();
+    earlyReset.hide();
     elements.infoOverlay.hidden = false;
     elements.infoToggle?.setAttribute("aria-expanded", "true");
 
@@ -817,9 +506,8 @@
 
     elements.infoOverlay.hidden = true;
     elements.infoToggle?.setAttribute("aria-expanded", "false");
-    suppressAppTooltipUntilMs =
-      Date.now() + APP_TOOLTIP_SUPPRESS_AFTER_INFO_CLOSE_MS;
-    hideAppTooltip();
+    appTooltips.suppressTemporarily();
+    appTooltips.hide();
 
     if (restoreFocus && infoPanelReturnFocus?.isConnected) {
       infoPanelReturnFocus.focus();
@@ -866,81 +554,8 @@
     }
   }
 
-  function setEarlyResetPopoverMessage(message) {
-    const lines = message.split("\n");
-    const fragment = document.createDocumentFragment();
-
-    elements.earlyResetPopover.setAttribute(
-      "aria-label",
-      message.replace(/\n/g, " "),
-    );
-
-    lines.forEach((line) => {
-      const lineElement = document.createElement("span");
-      lineElement.className = "early-reset-popover-line";
-
-      line.split(" ").forEach((word) => {
-        const wordElement = document.createElement("span");
-        wordElement.className = "early-reset-popover-word";
-        wordElement.setAttribute("aria-hidden", "true");
-        wordElement.textContent = word;
-        lineElement.append(wordElement);
-      });
-
-      fragment.append(lineElement);
-    });
-
-    elements.earlyResetPopoverText.replaceChildren(fragment);
-  }
-
-  function restoreEarlyResetPopover() {
-    earlyResetClickCount = 0;
-    earlyResetIsPopping = false;
-    elements.earlyResetPopover.classList.remove("is-popping");
-    elements.earlyResetPopover.removeAttribute("data-early-reset-stage");
-    setEarlyResetPopoverMessage(EARLY_RESET_POPOVER_MESSAGES[0]);
-  }
-
-  function hideEarlyResetPopover() {
-    window.clearTimeout(earlyResetPopoverTimer);
-    earlyResetPopoverTimer = null;
-    elements.earlyResetPopover.hidden = true;
-    restoreEarlyResetPopover();
-  }
-
-  function scheduleEarlyResetPopoverHide(
-    delay = EARLY_RESET_POPOVER_HIDE_DELAY_MS,
-  ) {
-    window.clearTimeout(earlyResetPopoverTimer);
-    earlyResetPopoverTimer = window.setTimeout(hideEarlyResetPopover, delay);
-  }
-
-  function setEarlyResetPopoverStage(stageIndex) {
-    setEarlyResetPopoverMessage(EARLY_RESET_POPOVER_MESSAGES[stageIndex]);
-    elements.earlyResetPopover.dataset.earlyResetStage = String(stageIndex);
-  }
-
-  function popEarlyResetPopover() {
-    earlyResetIsPopping = true;
-    setEarlyResetPopoverMessage("RESET\nDENIED!");
-    elements.earlyResetPopover.dataset.earlyResetStage = "pop";
-    elements.earlyResetPopover.classList.add("is-popping");
-    scheduleEarlyResetPopoverHide(EARLY_RESET_POPOVER_POP_DELAY_MS);
-  }
-
   function dateMs(value) {
     return PacePetsLogic.dateMs(value);
-  }
-
-  function formatTime(value) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return "Unknown";
-    }
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(date);
   }
 
   function formatClockTime(value) {
@@ -1058,10 +673,6 @@
     return PacePetsLogic.timeRemainingPercent(windowData);
   }
 
-  function timeRemainingPercentAt(windowData, atMs) {
-    return PacePetsLogic.timeRemainingPercentAt(windowData, atMs);
-  }
-
   function isResetWindowStale(windowData, atMs = Date.now()) {
     return PacePetsLogic.isResetWindowStale(windowData, atMs);
   }
@@ -1093,10 +704,6 @@
     return PacePetsLogic.formatPaceRatioValue(value, { suffix });
   }
 
-  function chartPaceRatio(value, bounds = null) {
-    return PacePetsLogic.chartPaceRatio(value, bounds);
-  }
-
   function windowsForSample(sample) {
     return sample?.windows && typeof sample.windows === "object"
       ? sample.windows
@@ -1117,7 +724,7 @@
     const nextKey = alternateWindowKey(activeKey);
     elements.windowToggle.disabled = !nextKey;
     elements.windowToggle.dataset.nextWindowKey = nextKey || "";
-    setAppTooltipText(
+    appTooltips.setText(
       elements.windowToggle,
       nextKey ? "Toggle time window (T)" : "",
     );
@@ -1148,20 +755,77 @@
     return paceRatioForValues(remainingPercent, timePercent);
   }
 
-  function alternatePaceRatioText(windows, activeKey) {
+  function alternatePaceRatioSummary(windows, activeKey) {
     const comparisonKey = alternateWindowKey(activeKey);
     if (!comparisonKey || !windows[comparisonKey]) {
-      return "";
+      return null;
     }
 
     const paceRatio = paceRatioForWindow(windows[comparisonKey]);
+    const label = `${WINDOW_SPECS[comparisonKey].badge}:`;
     if (paceRatio === null) {
-      return `${WINDOW_SPECS[comparisonKey].badge}: --`;
+      return {
+        className: "",
+        label,
+        value: "--",
+      };
     }
 
-    return `${WINDOW_SPECS[comparisonKey].badge}: ${formatPaceRatioValue(
-      paceRatio,
-    )}`;
+    return {
+      className:
+        PacePetsLogic.paceStatePresentationForRatio(paceRatio).className,
+      label,
+      value: formatPaceRatioValue(paceRatio),
+    };
+  }
+
+  function renderPaceAltRatio(altRatio) {
+    elements.paceAltRatio.replaceChildren();
+    if (!altRatio) {
+      elements.paceAltRatio.hidden = true;
+      return;
+    }
+
+    if (typeof altRatio === "string") {
+      elements.paceAltRatio.textContent = altRatio;
+      elements.paceAltRatio.hidden = !altRatio;
+      return;
+    }
+
+    const label = document.createElement("span");
+    label.className = "pace-alt-ratio-label";
+    label.textContent = altRatio.label;
+
+    const value = document.createElement("span");
+    value.className = "pace-alt-ratio-value";
+    if (altRatio.className) {
+      value.classList.add("is-tinted");
+      value.classList.add(altRatio.className);
+    }
+    value.textContent = altRatio.value;
+
+    elements.paceAltRatio.replaceChildren(label, " ", value);
+    elements.paceAltRatio.hidden = false;
+  }
+
+  function paceAltRatioSnapshot() {
+    if (elements.paceAltRatio.hidden) {
+      return null;
+    }
+
+    const label = elements.paceAltRatio.querySelector(".pace-alt-ratio-label");
+    const value = elements.paceAltRatio.querySelector(".pace-alt-ratio-value");
+    if (!label || !value) {
+      return elements.paceAltRatio.textContent;
+    }
+
+    return {
+      className: PACE_CLASSES.find((className) =>
+        value.classList.contains(className),
+      ),
+      label: label.textContent,
+      value: value.textContent,
+    };
   }
 
   function statusTooltipText(title, text, detail = "") {
@@ -1230,12 +894,12 @@
       : state.text;
     const title = state.title || COLLECTION_STATUS_TITLE;
     const label = `Checked: ${lastCheckedText}. Status: ${statusText}`;
-    setAppTooltipText(
+    appTooltips.setText(
       elements.collectionPulse,
       statusTooltipText(title, state.text, state.detail),
     );
     elements.lastCollected.setAttribute("aria-label", label);
-    setAppTooltipText(elements.lastCollected, `Status: ${statusText}`);
+    appTooltips.setText(elements.lastCollected, `Status: ${statusText}`);
     updateManualRefreshButton();
   }
 
@@ -1370,7 +1034,7 @@
     button.setAttribute("aria-disabled", String(disabled));
     button.classList.toggle("is-checking", manualRefreshInFlight);
     button.setAttribute("aria-label", manualRefreshTooltipText());
-    setAppTooltipText(button, manualRefreshTooltipText());
+    appTooltips.setText(button, manualRefreshTooltipText());
 
     if (manualRefreshAvailable && remainingMs > 0) {
       scheduleManualRefreshCooldownTimer();
@@ -1966,8 +1630,7 @@
       ratioStatHidden: elements.paceRatioStat.hidden,
       ratioValue: elements.paceRatioValue.textContent,
       tabTitle: document.title,
-      altRatio: elements.paceAltRatio.textContent,
-      altRatioHidden: elements.paceAltRatio.hidden,
+      altRatio: paceAltRatioSnapshot(),
     };
   }
 
@@ -1982,8 +1645,7 @@
     elements.paceStats.hidden = snapshot.statsHidden;
     elements.paceRatioStat.hidden = snapshot.ratioStatHidden;
     elements.paceRatioValue.textContent = snapshot.ratioValue;
-    elements.paceAltRatio.textContent = snapshot.altRatio;
-    elements.paceAltRatio.hidden = snapshot.altRatioHidden;
+    renderPaceAltRatio(snapshot.altRatio);
     restoreFaviconSnapshot(snapshot.favicon);
     restorePercentSummarySnapshot(snapshot.percentSummary);
     restoreResetCountdownSnapshot(snapshot.resetCountdown);
@@ -2065,8 +1727,7 @@
     setPreviewPercentPair(PREVIEW_CONTROL.forcedPercentPairForState(state.key));
     applyStateResetCountdown(state);
     const previewRatioLabel = state.previewRatioLabel || state.ratioLabel;
-    elements.paceAltRatio.textContent = previewRatioLabel;
-    elements.paceAltRatio.hidden = !previewRatioLabel;
+    renderPaceAltRatio(previewRatioLabel);
     updateTabTitle(state.title, previewPaceRatio);
     updateStateRailPreviewSelection(state.key);
     updateToolbarPreviewBadge(state.key);
@@ -2109,8 +1770,7 @@
     setPreviewPercentPair(PREVIEW_CONTROL.forcedPercentPairForState(state.key));
     applyStateResetCountdown(state);
     const previewRatioLabel = state.previewRatioLabel || state.ratioLabel;
-    elements.paceAltRatio.textContent = previewRatioLabel;
-    elements.paceAltRatio.hidden = !previewRatioLabel;
+    renderPaceAltRatio(previewRatioLabel);
     updateTabTitle(state.title, previewPaceRatio);
     return true;
   }
@@ -2182,7 +1842,7 @@
     copy,
     remainingPercent,
     timePercent,
-    comparisonPaceText = "",
+    comparisonPaceRatio = null,
     { paceRatioDisplayOverride = null } = {},
   ) {
     const paceRatio = paceRatioForValues(remainingPercent, timePercent);
@@ -2198,8 +1858,7 @@
       paceRatioForDisplay === null
         ? "--"
         : formatPaceRatioValue(paceRatioForDisplay);
-    elements.paceAltRatio.textContent = comparisonPaceText;
-    elements.paceAltRatio.hidden = !comparisonPaceText;
+    renderPaceAltRatio(comparisonPaceRatio);
     updateTabTitle(title, paceRatioForDisplay);
   }
 
@@ -2207,7 +1866,7 @@
     windowData,
     timePercent,
     staleWindow,
-    comparisonPaceText = "",
+    comparisonPaceRatio = null,
     { allowPerfectZero = true } = {},
   ) {
     const remainingPercent = windowData?.remainingPercent;
@@ -2237,7 +1896,7 @@
         "New window, no reading yet.",
         remainingPercent,
         timePercent,
-        comparisonPaceText,
+        comparisonPaceRatio,
       );
     } else if (
       isPerfectZeroPercentPair(remainingPercent, timePercent) &&
@@ -2250,7 +1909,7 @@
         state.copy,
         remainingPercent,
         timePercent,
-        comparisonPaceText,
+        comparisonPaceRatio,
       );
     } else if (controlledPresentation) {
       const { state } = controlledPresentation;
@@ -2260,7 +1919,7 @@
         state.copy,
         remainingPercent,
         timePercent,
-        comparisonPaceText,
+        comparisonPaceRatio,
         { paceRatioDisplayOverride: controlledPresentation.displayRatio },
       );
     } else if (!hasTime || paceRatio === null) {
@@ -2270,7 +1929,7 @@
         "Reset timing is unavailable.",
         remainingPercent,
         timePercent,
-        comparisonPaceText,
+        comparisonPaceRatio,
       );
     } else {
       const state = PacePetsLogic.paceStatePresentationForRatio(paceRatio);
@@ -2280,17 +1939,9 @@
         state.copy,
         remainingPercent,
         timePercent,
-        comparisonPaceText,
+        comparisonPaceRatio,
       );
     }
-  }
-
-  function chartWindowBounds(windowData) {
-    return PacePetsLogic.resetWindowBounds(windowData);
-  }
-
-  function resetWindowSamples(history, windowKey, windowData) {
-    return PacePetsLogic.resetWindowSamples(history, windowKey, windowData);
   }
 
   function allowsPerfectZeroForWindow(history, windowKey, windowData) {
@@ -2299,158 +1950,6 @@
       windowKey,
       windowData,
     );
-  }
-
-  function chartSamplesWithLivePoint(samples, windowKey, windowData) {
-    const bounds = chartWindowBounds(windowData);
-    const nowMs = Date.now();
-    if (!bounds || nowMs < bounds.min || nowMs > bounds.max) {
-      return samples;
-    }
-
-    const latestSample = samples[samples.length - 1];
-    const latestMs = dateMs(latestSample?.collectedAt);
-    if (latestMs !== null && nowMs <= latestMs) {
-      return samples;
-    }
-
-    return samples.concat({
-      id: `live-${windowKey}`,
-      collectedAt: new Date(nowMs).toISOString(),
-      source: INTEGRATION_CONFIG.SOURCE_MARKERS.dashboardLive,
-      windows: {
-        [windowKey]: windowData,
-      },
-    });
-  }
-
-  function paceChartPoints(samples, windowKey) {
-    return samples
-      .map((sample) => {
-        const collectedMs = dateMs(sample.collectedAt);
-        const windowData = sample.windows[windowKey];
-        const remainingPercent = Number(windowData?.remainingPercent);
-        if (collectedMs === null || !Number.isFinite(remainingPercent)) {
-          return null;
-        }
-
-        const timePercent = timeRemainingPercentAt(windowData, collectedMs);
-        const paceRatio = paceRatioForValues(remainingPercent, timePercent);
-        if (paceRatio === null) {
-          return null;
-        }
-
-        return {
-          x: collectedMs,
-          y: paceRatio,
-          paceRatio,
-        };
-      })
-      .filter(Boolean);
-  }
-
-  function cappedPaceChartPoints(points, bounds) {
-    return points
-      .map((point) => {
-        const paceRatio = Number(point.paceRatio ?? point.y);
-        const plottedPaceRatio = chartPaceRatio(paceRatio, bounds);
-        if (plottedPaceRatio === null) {
-          return null;
-        }
-
-        return {
-          ...point,
-          y: plottedPaceRatio,
-          cappedHigh: paceRatio > bounds.max,
-          cappedLow: paceRatio < bounds.min,
-        };
-      })
-      .filter(Boolean);
-  }
-
-  function splitPaceChartCrossings(points) {
-    if (points.length < 2) {
-      return points;
-    }
-
-    const splitPoints = [points[0]];
-    for (let index = 1; index < points.length; index += 1) {
-      const previous = points[index - 1];
-      const current = points[index];
-      const previousDelta = previous.y - PERFECT_PACE_RATIO;
-      const currentDelta = current.y - PERFECT_PACE_RATIO;
-      const crossesPerfect =
-        previousDelta !== 0 &&
-        currentDelta !== 0 &&
-        Math.sign(previousDelta) !== Math.sign(currentDelta) &&
-        current.x !== previous.x;
-
-      if (crossesPerfect) {
-        const crossingRatio =
-          (PERFECT_PACE_RATIO - previous.y) / (current.y - previous.y);
-        splitPoints.push({
-          synthetic: true,
-          x: previous.x + (current.x - previous.x) * crossingRatio,
-          y: PERFECT_PACE_RATIO,
-        });
-      }
-
-      splitPoints.push(current);
-    }
-
-    return splitPoints;
-  }
-
-  function paceChartSegmentColor(context, colors) {
-    const p0Y = context.p0?.parsed?.y;
-    const p1Y = context.p1?.parsed?.y;
-    if (!Number.isFinite(p0Y) || !Number.isFinite(p1Y)) {
-      return colors.line;
-    }
-    if (p0Y === PERFECT_PACE_RATIO && p1Y === PERFECT_PACE_RATIO) {
-      return colors.perfectLine;
-    }
-
-    const midpoint = (p0Y + p1Y) / 2;
-    if (midpoint > PERFECT_PACE_RATIO) {
-      return colors.aboveLine;
-    }
-    if (midpoint < PERFECT_PACE_RATIO) {
-      return colors.belowLine;
-    }
-
-    return colors.line;
-  }
-
-  function paceChartDataset(points, colors, yBounds) {
-    const cappedPoints = cappedPaceChartPoints(points, yBounds);
-    const splitPoints = splitPaceChartCrossings(cappedPoints);
-
-    return {
-      label: "Pace",
-      data: splitPoints,
-      parsing: false,
-      borderColor: colors.line,
-      backgroundColor: colors.aboveFill,
-      borderWidth: 1.35,
-      fill: {
-        above: colors.aboveFill,
-        below: colors.belowFill,
-        target: {
-          value: PERFECT_PACE_RATIO,
-        },
-      },
-      pointBackgroundColor: colors.line,
-      pointBorderWidth: 0,
-      pointRadius: 0,
-      pointHoverRadius: 3,
-      segment: {
-        borderColor(context) {
-          return paceChartSegmentColor(context, colors);
-        },
-      },
-      tension: 0.28,
-    };
   }
 
   function setLatestMetadata(latest, refreshStatus = null) {
@@ -2472,244 +1971,6 @@
     lastCheckedText = nextValue;
     renderLastCollectedValue(nextValue);
     updateLastCollectedLabel();
-  }
-
-  function destroyUsageChart() {
-    const registeredChart = registeredUsageChart();
-    if (usageChart) {
-      usageChart.destroy();
-    }
-    if (registeredChart && registeredChart !== usageChart) {
-      registeredChart.destroy();
-    }
-    usageChart = null;
-  }
-
-  function registeredUsageChart() {
-    if (!globalThis.Chart || typeof globalThis.Chart.getChart !== "function") {
-      return null;
-    }
-    return globalThis.Chart.getChart(elements.chartCanvas) || null;
-  }
-
-  function setChartEmpty(message) {
-    destroyUsageChart();
-    elements.chartFrame.classList.add("empty");
-    elements.chartCanvas.hidden = true;
-    elements.chartState.hidden = false;
-    elements.chartState.textContent = message;
-  }
-
-  function roundChartBoundUp(value, step = PACE_RATIO_CHART_DETAIL_STEP) {
-    return Math.ceil(value / step) * step;
-  }
-
-  function roundChartBoundDown(value, step = PACE_RATIO_CHART_DETAIL_STEP) {
-    return Math.floor(value / step) * step;
-  }
-
-  function ratioChartBounds(points) {
-    const ratios = points
-      .map((point) => point.paceRatio ?? point.y)
-      .filter((value) => Number.isFinite(value));
-    const minRatio = Math.min(PERFECT_PACE_RATIO, ...ratios);
-    const maxRatio = Math.max(PERFECT_PACE_RATIO, ...ratios);
-
-    if (maxRatio > PACE_RATIO_CHART_HIGH_THRESHOLD) {
-      return {
-        min: PACE_RATIO_CHART_MIN,
-        max: Math.min(
-          PACE_RATIO_CHART_MAX,
-          roundChartBoundUp(maxRatio, PACE_RATIO_CHART_HIGH_STEP),
-        ),
-      };
-    }
-
-    const range = maxRatio - minRatio;
-    const padding = Math.max(
-      PACE_RATIO_CHART_MIN_PADDING,
-      range * PACE_RATIO_CHART_PADDING_RATIO,
-    );
-    let min = minRatio - padding;
-    let max = maxRatio + padding;
-    const span = max - min;
-    if (span < PACE_RATIO_CHART_MIN_SPAN) {
-      const midpoint = (min + max) / 2;
-      min = midpoint - PACE_RATIO_CHART_MIN_SPAN / 2;
-      max = midpoint + PACE_RATIO_CHART_MIN_SPAN / 2;
-    }
-
-    return {
-      min: Math.max(PACE_RATIO_CHART_MIN, roundChartBoundDown(min)),
-      max: Math.min(PACE_RATIO_CHART_MAX, roundChartBoundUp(max)),
-    };
-  }
-
-  function formatPaceRatio(value) {
-    return formatPaceRatioValue(value, { suffix: "x" });
-  }
-
-  function hasCappedPacePoints(points, yBounds) {
-    const cappedHigh = points.some((point) => point.paceRatio > yBounds.max);
-    const cappedLow = points.some((point) => point.paceRatio < yBounds.min);
-    return cappedHigh || cappedLow;
-  }
-
-  function usageChartConfig(points, windowData) {
-    const { min, max } = chartWindowBounds(windowData) || {
-      min: Date.now() - DEFAULT_CHART_WINDOW_MS,
-      max: Date.now(),
-    };
-    const colors = chartColors();
-    const yBounds = ratioChartBounds(points);
-    return {
-      type: "line",
-      data: {
-        datasets: [paceChartDataset(points, colors, yBounds)],
-      },
-      options: {
-        animation: false,
-        interaction: {
-          axis: "x",
-          intersect: false,
-          mode: "nearest",
-        },
-        maintainAspectRatio: false,
-        normalized: true,
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            backgroundColor: colors.tooltipBg,
-            bodyColor: colors.tooltipText,
-            borderColor: colors.tooltipBorder,
-            borderWidth: 1,
-            caretSize: 5,
-            cornerRadius: 6,
-            displayColors: false,
-            padding: 8,
-            titleColor: colors.tooltipText,
-            bodyFont: {
-              size: 12,
-              weight: "560",
-            },
-            titleFont: {
-              size: 12,
-              weight: "600",
-            },
-            callbacks: {
-              label(context) {
-                const paceRatio = context.raw?.paceRatio ?? context.parsed.y;
-                const capped =
-                  context.raw?.cappedHigh === true ||
-                  context.raw?.cappedLow === true;
-                return capped
-                  ? `Pace: ${formatPaceRatio(paceRatio)} (capped)`
-                  : `Pace: ${formatPaceRatio(paceRatio)}`;
-              },
-              title(items) {
-                return items[0] ? formatTime(items[0].parsed.x) : "";
-              },
-            },
-          },
-        },
-        scales: {
-          x: {
-            type: "linear",
-            min,
-            max,
-            afterBuildTicks(scale) {
-              scale.ticks = [{ value: min }, { value: max }];
-            },
-            border: {
-              display: false,
-            },
-            grid: {
-              display: false,
-            },
-            ticks: {
-              display: false,
-            },
-          },
-          y: {
-            min: yBounds.min,
-            max: yBounds.max,
-            afterBuildTicks(scale) {
-              scale.ticks = [
-                { value: yBounds.min },
-                { value: PERFECT_PACE_RATIO },
-                { value: yBounds.max },
-              ];
-            },
-            border: {
-              display: false,
-            },
-            grid: {
-              color(context) {
-                return context.tick.value === PERFECT_PACE_RATIO
-                  ? colors.perfectLine
-                  : "transparent";
-              },
-              drawTicks: false,
-              lineWidth(context) {
-                return context.tick.value === PERFECT_PACE_RATIO ? 1 : 0;
-              },
-            },
-            ticks: {
-              display: false,
-            },
-          },
-        },
-      },
-    };
-  }
-
-  function renderUsageChart(samples, windowKey, windowData) {
-    const spec = WINDOW_SPECS[windowKey];
-    if (!globalThis.Chart) {
-      setChartEmpty("Chart.js did not load from the extension asset.");
-      return;
-    }
-
-    const points = paceChartPoints(samples, windowKey);
-    if (points.length < 2) {
-      setChartEmpty(LOW_SAMPLE_CHART_COPY);
-      return;
-    }
-
-    elements.chartFrame.classList.remove("empty");
-    elements.chartCanvas.hidden = false;
-    elements.chartCanvas.setAttribute(
-      "aria-label",
-      `${spec.chartSampleLabel} pace ratio across active reset window`,
-    );
-    elements.chartState.hidden = true;
-
-    const config = usageChartConfig(points, windowData);
-    const yBounds = config.options.scales.y;
-    const hasCappedPoints = hasCappedPacePoints(points, yBounds);
-    elements.chartCanvas.setAttribute(
-      "aria-label",
-      `${spec.chartSampleLabel} pace ratio across active reset window${
-        hasCappedPoints ? "; some extreme points are capped" : ""
-      }`,
-    );
-    usageChart = usageChart || registeredUsageChart();
-    if (!usageChart) {
-      usageChart = new globalThis.Chart(
-        elements.chartCanvas.getContext("2d"),
-        config,
-      );
-      return;
-    }
-
-    usageChart.data.datasets = config.data.datasets;
-    usageChart.options.interaction = config.options.interaction;
-    usageChart.options.plugins = config.options.plugins;
-    usageChart.options.scales.x = config.options.scales.x;
-    usageChart.options.scales.y = config.options.scales.y;
-    usageChart.update();
   }
 
   function renderSummaryWindow(windowKey, windowData, windows = {}, history) {
@@ -2735,7 +1996,7 @@
       windowData,
       timePercent,
       staleWindow,
-      alternatePaceRatioText(windows, windowKey),
+      alternatePaceRatioSummary(windows, windowKey),
       {
         allowPerfectZero: allowsPerfectZeroForWindow(
           history,
@@ -2821,7 +2082,7 @@
       null,
       null,
     );
-    setChartEmpty(state.chartCopy);
+    usageChartView.setEmpty(state.chartCopy);
     setLatestMetadata(null, refreshStatus);
     refreshForcedOverrideOrActivePacePreview();
   }
@@ -2845,7 +2106,7 @@
       null,
       null,
     );
-    setChartEmpty("Could not read local history.");
+    usageChartView.setEmpty("Could not read local history.");
     refreshForcedOverrideOrActivePacePreview();
   }
 
@@ -2928,34 +2189,12 @@
     summaryWindow,
     hasResetTiming,
   ) {
-    const chartSpec = WINDOW_SPECS[summaryWindowKey];
-    const samples = resetWindowSamples(
+    usageChartView.renderHistory({
+      hasResetTiming,
       history,
       summaryWindowKey,
       summaryWindow,
-    );
-    const chartSamples = chartSamplesWithLivePoint(
-      samples,
-      summaryWindowKey,
-      summaryWindow,
-    );
-
-    if (!summaryWindow) {
-      setChartEmpty(`Waiting for ${chartSpec.chartSampleLabel} usage.`);
-      return;
-    }
-
-    if (!hasResetTiming) {
-      setChartEmpty(`${chartSpec.chartSampleLabel} reset timing unavailable.`);
-      return;
-    }
-
-    if (chartSamples.length < 2) {
-      setChartEmpty(LOW_SAMPLE_CHART_COPY);
-      return;
-    }
-
-    renderUsageChart(chartSamples, summaryWindowKey, summaryWindow);
+    });
   }
 
   function renderHistory(
@@ -3081,7 +2320,7 @@
     }
 
     showPacePreview(chip.dataset.paceStateKey);
-    hideAppTooltip();
+    appTooltips.hide();
 
     try {
       chip.setPointerCapture(event.pointerId);
@@ -3109,49 +2348,49 @@
 
     showPacePreview(chip.dataset.paceStateKey);
     schedulePacePreviewRestore();
-    releasePointerClickFocus(event, chip);
+    appTooltips.releasePointerClickFocus(event, chip);
   });
 
   elements.windowToggle.addEventListener("click", (event) => {
     const toggled = toggleUsageWindow();
     if (toggled) {
-      releasePointerClickFocus(event, elements.windowToggle);
+      appTooltips.releasePointerClickFocus(event, elements.windowToggle);
     }
   });
 
   elements.themeToggle.addEventListener("click", (event) => {
     toggleTheme();
-    releasePointerClickFocus(event, elements.themeToggle);
+    appTooltips.releasePointerClickFocus(event, elements.themeToggle);
   });
 
   elements.manualRefreshButton.addEventListener("click", (event) => {
     runManualRefresh().catch((error) => {
       console.warn("Codex usage manual refresh failed:", error);
     });
-    releasePointerClickFocus(event, elements.manualRefreshButton);
+    appTooltips.releasePointerClickFocus(event, elements.manualRefreshButton);
   });
 
   elements.infoToggle.addEventListener("click", (event) => {
     toggleInfoPanel();
-    releasePointerClickFocus(event, elements.infoToggle);
+    appTooltips.releasePointerClickFocus(event, elements.infoToggle);
   });
 
   elements.infoClose.addEventListener("click", (event) => {
-    hideInfoPanel({ restoreFocus: !isPointerClick(event) });
+    hideInfoPanel({ restoreFocus: !appTooltips.isPointerClick(event) });
   });
 
   elements.infoOverlay.addEventListener("click", (event) => {
     if (event.target === elements.infoOverlay) {
-      hideInfoPanel({ restoreFocus: !isPointerClick(event) });
+      hideInfoPanel({ restoreFocus: !appTooltips.isPointerClick(event) });
     }
   });
 
   document.addEventListener("pointerover", (event) => {
-    const target = appTooltipTarget(event);
-    if (!target || target === activeTooltipTarget) {
+    const target = appTooltips.targetFromEvent(event);
+    if (!target || appTooltips.isActiveTarget(target)) {
       return;
     }
-    if (isAppTooltipSuppressed()) {
+    if (appTooltips.isSuppressed()) {
       return;
     }
     if (
@@ -3161,11 +2400,11 @@
       return;
     }
 
-    scheduleAppTooltip(target);
+    appTooltips.schedule(target);
   });
 
   document.addEventListener("pointerout", (event) => {
-    const target = appTooltipTarget(event);
+    const target = appTooltips.targetFromEvent(event);
     if (!target) {
       return;
     }
@@ -3176,51 +2415,34 @@
       return;
     }
 
-    hideAppTooltip();
+    appTooltips.hide();
   });
 
   document.addEventListener("focusin", (event) => {
-    const target = appTooltipTarget(event);
+    const target = appTooltips.targetFromEvent(event);
     if (target) {
-      if (isAppTooltipSuppressed()) {
+      if (appTooltips.isSuppressed()) {
         return;
       }
 
-      scheduleAppTooltip(target);
+      appTooltips.schedule(target);
     }
   });
 
   document.addEventListener("focusout", (event) => {
-    const target = appTooltipTarget(event);
+    const target = appTooltips.targetFromEvent(event);
     if (target) {
-      hideAppTooltip();
+      appTooltips.hide();
     }
   });
 
-  elements.earlyResetButton.addEventListener("click", (event) => {
-    event.stopPropagation();
-    hideAppTooltip({ immediate: true });
-
-    if (earlyResetIsPopping) {
-      return;
-    }
-
-    elements.earlyResetPopover.hidden = false;
-    earlyResetClickCount += 1;
-
-    if (earlyResetClickCount > EARLY_RESET_POPOVER_MESSAGES.length) {
-      popEarlyResetPopover();
-      return;
-    }
-
-    setEarlyResetPopoverStage(earlyResetClickCount - 1);
-    scheduleEarlyResetPopoverHide();
-  });
+  elements.earlyResetButton.addEventListener(
+    "click",
+    earlyReset.handleButtonClick,
+  );
 
   document.addEventListener("click", (event) => {
-    if (!elements.earlyResetButton.contains(event.target)) {
-      hideEarlyResetPopover();
-    }
+    earlyReset.hideIfOutside(event);
   });
 
   document.addEventListener("keydown", (event) => {
@@ -3237,8 +2459,8 @@
         return;
       }
 
-      hideEarlyResetPopover();
-      hideAppTooltip();
+      earlyReset.hide();
+      appTooltips.hide();
       return;
     }
 
@@ -3288,8 +2510,8 @@
     }
   });
 
-  window.addEventListener("resize", hideAppTooltip);
-  window.addEventListener("scroll", hideAppTooltip, true);
+  window.addEventListener("resize", () => appTooltips.hide());
+  window.addEventListener("scroll", () => appTooltips.hide(), true);
   window.addEventListener("pagehide", () => {
     if (activePacePreviewKey) {
       restoreToolbarPreviewBadge();

@@ -83,6 +83,9 @@ also set the reset countdown presentation to `0d 0h 0m`.
 Dashboard pace text uses `PacePetsLogic.formatPaceRatioValue()` with a display
 cap of `100+`. Positive values below `0.01` display as `<0.01`.
 
+The dashboard's inactive-window ratio keeps the window label neutral and tints
+only the numeric value with that inactive window's pace state color.
+
 Toolbar badge text uses the same formatter with a cap of `10+`; tiny positive
 values round to `0.01` rather than using the `<0.01` display form.
 
