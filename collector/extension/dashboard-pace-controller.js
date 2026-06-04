@@ -263,19 +263,15 @@
     }
 
     function previewPaceRatioForState(stateKey) {
-      if (stateKey === DASHBOARD_RAIL_STATES.singularity.key) {
-        return 0;
-      }
-
       return PREVIEW_CONTROL.previewPaceRatioForState(stateKey);
     }
 
     function previewStateKeyEnabled(stateKey) {
-      if (stateKey === DASHBOARD_RAIL_STATES.singularity.key) {
-        return true;
-      }
-
       return PREVIEW_CONTROL.previewStateKeyEnabled(stateKey);
+    }
+
+    function forcedPaceRatioForState(stateKey) {
+      return PREVIEW_CONTROL.forcedPaceRatioForState(stateKey);
     }
 
     function paceStateForClassName(className) {
@@ -572,24 +568,31 @@
 
     function renderStateChip(stateKey) {
       const state = paceStateForKey(stateKey) || PACE_STATES.muted;
+      const canPreview = previewStateKeyEnabled(state.key);
       const chip = document.createElement("button");
       chip.className = `state-chip ${state.className}`;
       chip.type = "button";
       chip.dataset.paceStateKey = state.key;
+      chip.dataset.previewable = String(canPreview);
+      if (!canPreview) {
+        chip.setAttribute("aria-disabled", "true");
+      }
       if (state.key === PACE_STATES.sync.key) {
-        chip.dataset.tooltip =
-          "Displayed usage and time are perfectly matched.";
-        chip.dataset.tooltipHint = "Click to preview";
+        chip.dataset.tooltip = "Special live state: usage matches time.";
+        chip.dataset.tooltipHint = "Not previewable";
       } else if (state.key === PACE_STATES.perfectZero.key) {
-        chip.dataset.tooltip = "The window sticks a perfect landing at zero.";
-        chip.dataset.tooltipHint = "Click to preview";
+        chip.dataset.tooltip = "Special live state: usage and time are zero.";
+        chip.dataset.tooltipHint = "Not previewable";
       } else if (state.key === DASHBOARD_RAIL_STATES.singularity.key) {
-        chip.dataset.tooltip = "Preview mock Singularity status";
-        chip.dataset.tooltipHint = "Click to preview";
+        chip.dataset.tooltip = "Special developer state.";
+        chip.dataset.tooltipHint = "Not previewable";
       } else {
         chip.dataset.tooltip = `Preview mock ${state.title} status`;
+        chip.dataset.tooltipHint = "Click to preview";
       }
-      chip.setAttribute("aria-controls", "pace-card");
+      if (canPreview) {
+        chip.setAttribute("aria-controls", "pace-card");
+      }
 
       const icon = document.createElement("div");
       icon.className = "state-icon";
@@ -631,9 +634,7 @@
       const levelStateKeys = PACE_LEVEL_LEGEND_STATE_KEYS.filter(
         previewStateKeyEnabled,
       );
-      const perfectStateKeys = PACE_PERFECT_LEGEND_STATE_KEYS.filter(
-        previewStateKeyEnabled,
-      );
+      const perfectStateKeys = PACE_PERFECT_LEGEND_STATE_KEYS;
       const columns = [];
       if (levelStateKeys.length) {
         columns.push(
@@ -919,12 +920,12 @@
 
     function renderForcedPaceStateOverride() {
       const state = forcedPaceState();
-      if (!state || !previewStateKeyEnabled(state.key)) {
+      if (!state) {
         return false;
       }
 
-      const previewPaceRatio = previewPaceRatioForState(state.key);
-      if (previewPaceRatio === null) {
+      const forcedPaceRatio = forcedPaceRatioForState(state.key);
+      if (forcedPaceRatio === null) {
         return false;
       }
 
@@ -935,14 +936,14 @@
       elements.paceStats.hidden = false;
       elements.paceRatioStat.hidden = false;
       elements.paceRatioValue.textContent =
-        PacePetsLogic.formatPaceRatioValue(previewPaceRatio);
+        PacePetsLogic.formatPaceRatioValue(forcedPaceRatio);
       const percentPair = PREVIEW_CONTROL.forcedPercentPairForState(state.key);
       setPreviewPercentPair(percentPair);
-      renderPreviewChart(state.key, previewPaceRatio, percentPair);
+      renderPreviewChart(state.key, forcedPaceRatio, percentPair);
       applyStateResetCountdown(state);
       const previewRatioLabel = state.previewRatioLabel || state.ratioLabel;
       renderPaceAltRatio(previewRatioLabel);
-      updateTabTitle(state.title, previewPaceRatio);
+      updateTabTitle(state.title, forcedPaceRatio);
       return true;
     }
 

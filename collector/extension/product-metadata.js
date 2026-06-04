@@ -12,6 +12,17 @@
     return badgeText && label ? `${NAME} - ${label} pace ${badgeText}` : NAME;
   }
 
+  function attentionBadgeTitle({ items } = {}) {
+    const text = Array.isArray(items)
+      ? items
+          .filter((item) => item?.label && item?.paceText && item?.title)
+          .map((item) => `${item.label} ${item.title} pace ${item.paceText}`)
+          .join("; ")
+      : "";
+
+    return text ? `${NAME} - ${text}` : NAME;
+  }
+
   function previewBadgeTitle({ badgeText, title } = {}) {
     return badgeText && title
       ? `${NAME} - ${title} preview ${badgeText}`
@@ -31,6 +42,7 @@
     NAME,
     OPEN_DASHBOARD_MENU_TITLE,
     REFRESH_FAILED_TITLE,
+    attentionBadgeTitle,
     badgeTitle,
     previewBadgeTitle,
     stateOverrideBadgeTitle,

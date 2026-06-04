@@ -106,6 +106,18 @@
   box-shadow: 0 8px 18px rgb(var(--shadow-color) / 8%);
 }
 
+.state-chip[data-previewable="false"] {
+  cursor: help;
+}
+
+.state-chip[data-previewable="false"]:hover,
+.state-chip[data-previewable="false"]:focus-visible {
+  background: color-mix(in srgb, var(--pace-bg) 24%, var(--surface-mix));
+  border-color: color-mix(in srgb, var(--pace-border) 22%, var(--line));
+  border-left-color: color-mix(in srgb, var(--pace-border) 58%, var(--line));
+  box-shadow: none;
+}
+
 .state-chip:focus-visible {
   outline: 2px solid
     color-mix(in srgb, var(--pace-border) 72%, var(--accent-line));
@@ -114,6 +126,10 @@
 
 .state-chip:active {
   transform: translateY(1px);
+}
+
+.state-chip[data-previewable="false"]:active {
+  transform: none;
 }
 
 .state-copy {

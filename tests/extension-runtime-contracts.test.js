@@ -101,6 +101,22 @@ describe("CodexProductMetadata", () => {
       "Pace Pets - 7d pace 0.83",
     );
     expect(
+      metadata.attentionBadgeTitle({
+        items: [
+          {
+            label: "5h",
+            paceText: "0.42",
+            title: "Brake hard!",
+          },
+          {
+            label: "7d",
+            paceText: "0.48",
+            title: "Brake hard!",
+          },
+        ],
+      }),
+    ).toBe("Pace Pets - 5h Brake hard! pace 0.42; 7d Brake hard! pace 0.48");
+    expect(
       metadata.previewBadgeTitle({
         badgeText: "1.00",
         title: "Perfect sync",

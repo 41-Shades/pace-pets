@@ -270,22 +270,16 @@ describe("PacePetsLogic", () => {
 });
 
 describe("PacePetsPreviewControl", () => {
-  it("shares preview ratios and badge messages for dashboard and toolbar state previews", () => {
+  it("shares regular pace previews while preserving special forced states", () => {
     const preview = globalThis.PacePetsPreviewControl;
 
-    expect(preview.previewPaceRatioForState("sync")).toBe(1);
-    expect(preview.previewPaceRatioForState("perfectZero")).toBe(0);
+    expect(preview.previewPaceRatioForState("sync")).toBeNull();
+    expect(preview.previewPaceRatioForState("perfectZero")).toBeNull();
     expect(preview.previewPaceRatioForState("wellAhead")).toBe(1.8);
     expect(preview.previewPaceRatioForState("unsupported")).toBeNull();
 
-    expect(preview.previewBadgeState("sync")).toMatchObject({
-      badgeText: "1.00",
-      stateKey: "sync",
-    });
-    expect(preview.previewBadgeState("perfectZero")).toMatchObject({
-      badgeText: "0.00",
-      stateKey: "perfectZero",
-    });
+    expect(preview.previewBadgeState("sync")).toBeNull();
+    expect(preview.previewBadgeState("perfectZero")).toBeNull();
     expect(preview.previewBadgeState("unsupported")).toBeNull();
     expect(preview.forcedPaceRatioForState("sync")).toBe(1);
     expect(preview.forcedBadgeState("perfectZero")).toMatchObject({
@@ -304,9 +298,16 @@ describe("PacePetsPreviewControl", () => {
       stateKey: "ahead",
       type: preview.PREVIEW_BADGE_MESSAGE_TYPE,
     });
+    expect(preview.previewBadgeMessage("sync")).toBeNull();
     expect(
       preview.isPreviewBadgeMessage(preview.previewBadgeMessage("ahead")),
     ).toBe(true);
+    expect(
+      preview.isPreviewBadgeMessage({
+        stateKey: "sync",
+        type: preview.PREVIEW_BADGE_MESSAGE_TYPE,
+      }),
+    ).toBe(false);
     expect(preview.isPreviewBadgeMessage({ type: "unknown" })).toBe(false);
     expect(preview.isRestoreBadgeMessage(preview.restoreBadgeMessage())).toBe(
       true,

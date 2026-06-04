@@ -125,4 +125,78 @@ describe("PacePetsBackgroundLogic", () => {
     ).toBe("fiveHour");
     expect(logic.badgeWindowKey({}, "unsupported")).toBe("weekly");
   });
+
+  it("prioritizes critical badge attention before the stored window preference", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const candidates = [
+      {
+        paceRatio: 1,
+        stateKey: "on",
+        windowKey: "weekly",
+      },
+      {
+        paceRatio: 0.42,
+        stateKey: "criticalBehind",
+        windowKey: "fiveHour",
+      },
+    ];
+
+    expect(logic.isAttentionBadgeStateKey("criticalBehind")).toBe(true);
+    expect(logic.isAttentionBadgeStateKey("wellAhead")).toBe(false);
+    expect(logic.prioritizedBadgeSelection(candidates, "weekly")).toEqual({
+      attentionCandidates: [candidates[1]],
+      candidate: candidates[1],
+    });
+  });
+
+  it("keeps the preferred badge window unless an attention state exists", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const candidates = [
+      {
+        paceRatio: 1,
+        stateKey: "on",
+        windowKey: "weekly",
+      },
+      {
+        paceRatio: 0.6,
+        stateKey: "wellBehind",
+        windowKey: "fiveHour",
+      },
+    ];
+
+    expect(logic.prioritizedBadgeSelection(candidates, "fiveHour")).toEqual({
+      attentionCandidates: [],
+      candidate: candidates[1],
+    });
+  });
+
+  it("chooses the worst critical badge candidate with stable tie handling", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const weekly = {
+      paceRatio: 0.41,
+      stateKey: "criticalBehind",
+      windowKey: "weekly",
+    };
+    const fiveHour = {
+      paceRatio: 0.32,
+      stateKey: "criticalBehind",
+      windowKey: "fiveHour",
+    };
+
+    expect(
+      logic.prioritizedBadgeSelection([weekly, fiveHour], "weekly"),
+    ).toEqual({
+      attentionCandidates: [fiveHour, weekly],
+      candidate: fiveHour,
+    });
+    expect(
+      logic.prioritizedBadgeSelection(
+        [
+          { ...weekly, paceRatio: 0.4 },
+          { ...fiveHour, paceRatio: 0.4 },
+        ],
+        "weekly",
+      ).candidate.windowKey,
+    ).toBe("weekly");
+  });
 });
