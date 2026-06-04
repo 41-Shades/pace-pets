@@ -1253,6 +1253,7 @@
       state.key === PACE_STATES.perfectZero.key,
     );
     renderPaceIcon(elements.paceIcon, level, {
+      useEffects: true,
       usePerfectZeroPageAperture: pageBackgroundActive,
     });
     if (updateStateRailActive) {
@@ -1362,7 +1363,7 @@
   function renderPaceIcon(
     container,
     level,
-    { usePerfectZeroPageAperture = false } = {},
+    { useEffects = false, usePerfectZeroPageAperture = false } = {},
   ) {
     const state = paceStateForClassName(level);
     const src = state.playfulImage;
@@ -1400,7 +1401,9 @@
       image.decoding = "async";
       image.loading = "lazy";
       container.append(image);
-      renderPaceIconEffect(container, state);
+      if (useEffects) {
+        renderPaceIconEffect(container, state);
+      }
       return;
     }
 
@@ -1419,7 +1422,9 @@
       svg.append(element);
     }
     container.append(svg);
-    renderPaceIconEffect(container, state);
+    if (useEffects) {
+      renderPaceIconEffect(container, state);
+    }
   }
 
   function renderPaceIconEffect(container, state) {

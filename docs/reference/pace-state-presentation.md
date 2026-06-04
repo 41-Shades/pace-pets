@@ -75,6 +75,10 @@ Perfect Zero, which previews `0%` usage and `0%` time. The toolbar badge preview
 uses the same preview state and restores through the alarm-backed badge-preview
 contract.
 
+Pace icon motion is status-card-only. The active dashboard status icon may render
+state-specific effects, but legend rail icons stay static even when their state
+is active or being previewed.
+
 The dashboard-only Singularity state previews and forced developer overrides
 also set the reset countdown presentation to `0d 0h 0m`.
 
