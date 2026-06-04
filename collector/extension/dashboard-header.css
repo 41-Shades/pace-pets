@@ -29,7 +29,6 @@
 }
 
 .theme-toggle,
-.manual-refresh-button,
 .info-toggle,
 .info-close {
   align-items: center;
@@ -57,10 +56,25 @@
 }
 
 .manual-refresh-button {
+  align-items: center;
+  appearance: none;
   background: transparent;
-  color: color-mix(in srgb, var(--warning) 82%, var(--subhead));
-  height: 24px;
-  width: 24px;
+  border: 0;
+  border-radius: 3px;
+  color: var(--subhead);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font: inherit;
+  font-weight: 500;
+  justify-content: center;
+  line-height: 1.2;
+  margin: 0 4px 0 0;
+  padding: 0;
+  text-decoration: none;
+  transition:
+    color 180ms ease,
+    opacity 180ms ease;
 }
 
 .manual-refresh-button[hidden] {
@@ -69,9 +83,9 @@
 
 .info-toggle {
   background: transparent;
-  color: color-mix(in srgb, var(--control-icon-disc) 82%, var(--muted));
-  height: 15px;
-  width: 15px;
+  color: color-mix(in srgb, var(--control-icon-disc) 42%, var(--subhead));
+  height: 16px;
+  width: 16px;
 }
 
 .info-close {
@@ -90,7 +104,6 @@
 }
 
 .theme-toggle:hover,
-.manual-refresh-button:hover:not([aria-disabled="true"]),
 .info-close:hover {
   background: var(--control-icon-hover);
   color: color-mix(in srgb, var(--control-icon) 82%, var(--accent));
@@ -112,8 +125,10 @@
 }
 
 .manual-refresh-button:hover:not([aria-disabled="true"]) {
-  background: color-mix(in srgb, var(--warning-soft) 72%, transparent);
-  color: var(--warning);
+  color: var(--subhead);
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .theme-toggle-icon {
@@ -128,40 +143,26 @@
   width: 18px;
 }
 
-.manual-refresh-icon {
-  display: block;
-  fill: none;
-  height: 17px;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-  transform-origin: center;
-  width: 17px;
-}
-
 .manual-refresh-button[aria-disabled="true"] {
   cursor: default;
   opacity: 0.58;
 }
 
-.manual-refresh-button.is-checking .manual-refresh-icon {
-  animation: manual-refresh-spin 820ms linear infinite;
-}
-
 .info-toggle-icon {
   display: block;
-  height: 15px;
-  stroke-width: 2;
-  width: 15px;
+  height: 16px;
+  stroke-width: 2.1;
+  width: 16px;
 }
 
 .info-toggle-ring {
-  color: color-mix(in srgb, var(--control-icon-disc) 90%, var(--muted));
+  color: color-mix(in srgb, var(--control-icon-disc) 62%, var(--subhead));
+  stroke-width: 2;
 }
 
 .info-toggle-mark {
-  color: color-mix(in srgb, var(--control-icon-disc) 72%, var(--muted));
+  color: color-mix(in srgb, var(--control-icon-disc) 28%, var(--subhead));
+  stroke-width: 2.35;
 }
 
 .info-close-icon {
@@ -257,11 +258,42 @@
   display: inline-flex;
   font-weight: 560;
   font-variant-numeric: tabular-nums;
+  position: relative;
   white-space: nowrap;
+}
+
+.last-collected-value::after {
+  background: currentcolor;
+  bottom: -2px;
+  content: "";
+  height: 1px;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+}
+
+.last-collected-value.is-updated::after {
+  animation: last-collected-update-underline-fade 1400ms ease-out;
 }
 
 .last-collected-label {
   font-weight: 500;
+}
+
+@keyframes last-collected-update-underline-fade {
+  0% {
+    opacity: 0;
+  }
+
+  18%,
+  72% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -269,10 +301,14 @@
     animation: none;
   }
 
+  .last-collected-value.is-updated::after {
+    animation: none;
+    opacity: 0.6;
+  }
+
   .theme-toggle,
   .theme-toggle-icon,
   .manual-refresh-button,
-  .manual-refresh-icon,
   .info-toggle,
   .info-close,
   body,
@@ -289,9 +325,5 @@
   .reset-progress-dot,
   .reset-progress-fill {
     transition: none;
-  }
-
-  .manual-refresh-button.is-checking .manual-refresh-icon {
-    animation: none;
   }
 }

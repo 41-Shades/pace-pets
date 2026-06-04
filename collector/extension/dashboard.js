@@ -180,10 +180,12 @@
   const SIGN_IN_NOT_FOUND_COPY = DASHBOARD_STATUS.SIGN_IN_NOT_FOUND_COPY;
   const WINDOW_SPECS = USAGE_WINDOWS.WINDOW_SPECS;
   const DASHBOARD_STATUS_REFRESH_INTERVAL_MS = 60 * 1000;
+  const MS_PER_MINUTE = 60 * 1000;
 
   let currentHistory = null;
   let currentRefreshStatus = null;
   let currentForcedPaceStateKey = null;
+  let currentManualRefreshLeadWindow = false;
   let selectedWindowKey = DEFAULT_WINDOW_KEY;
 
   const manifest = chrome.runtime.getManifest();
@@ -325,7 +327,7 @@
     const checkedValue = checkedAt
       ? DASHBOARD_TIME.formatClockTime(checkedAt)
       : "waiting";
-    dashboardStatus.setLastCollected(checkedValue);
+    dashboardStatus.setLastCollected(checkedValue, checkedAt || checkedValue);
   }
 
   function renderSummaryWindow(windowKey, windowData, windows = {}, history) {
@@ -471,10 +473,27 @@
     paceView.refreshForcedOverrideOrActivePacePreview();
   }
 
+  function isManualRefreshLeadWindow(windowKey, windowData, atMs = Date.now()) {
+    if (currentManualRefreshLeadWindow) {
+      return true;
+    }
+
+    const leadMinutes = WINDOW_SPECS[windowKey]?.manualRefreshLeadMinutes;
+    const resetMs = DASHBOARD_TIME.dateMs(windowData?.resetsAt);
+    return (
+      Number.isFinite(leadMinutes) &&
+      leadMinutes > 0 &&
+      resetMs !== null &&
+      resetMs > atMs &&
+      resetMs - atMs <= leadMinutes * MS_PER_MINUTE
+    );
+  }
+
   function historyStatusState({
     refreshStatus,
     latest,
     hasAnySupportedWindow,
+    summaryWindowKey,
     summaryWindow,
     summaryState,
   }) {
@@ -541,7 +560,12 @@
       };
     }
 
-    return { text: STATUS_TEXT.live, mode: "live", detail: "" };
+    return {
+      text: STATUS_TEXT.live,
+      mode: "live",
+      detail: "",
+      manualRefresh: isManualRefreshLeadWindow(summaryWindowKey, summaryWindow),
+    };
   }
 
   function applyHistoryStatus(state) {
@@ -605,6 +629,7 @@
         refreshStatus,
         latest,
         hasAnySupportedWindow,
+        summaryWindowKey,
         summaryWindow,
         summaryState,
       }),
@@ -638,6 +663,7 @@
       selectedWindowKey = storedWindowKeyValue;
     }
     currentForcedPaceStateKey = developerOptions.forcedPaceStateKey;
+    currentManualRefreshLeadWindow = developerOptions.manualRefreshLeadWindow;
     currentHistory = history;
     currentRefreshStatus = refreshStatus;
     paceView.renderStateRail();

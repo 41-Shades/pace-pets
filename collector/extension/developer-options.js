@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "pacePetsDeveloperOptions";
   const FORCED_PACE_STATE_KEY = "forcedPaceState";
+  const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
 
   const FORCEABLE_PACE_STATE_OPTIONS = Object.freeze([
     Object.freeze({ key: "wellAhead", label: "Sprint faster!" }),
@@ -28,10 +29,17 @@
     return FORCEABLE_PACE_STATE_KEYS.includes(value) ? value : null;
   }
 
+  function normalizeManualRefreshLeadWindow(value) {
+    return value === true;
+  }
+
   function normalizeDeveloperOptions(value) {
     return Object.freeze({
       forcedPaceStateKey: normalizeForcedPaceStateKey(
         isPlainObject(value) ? value[FORCED_PACE_STATE_KEY] : null,
+      ),
+      manualRefreshLeadWindow: normalizeManualRefreshLeadWindow(
+        isPlainObject(value) ? value[MANUAL_REFRESH_LEAD_WINDOW_KEY] : null,
       ),
     });
   }
@@ -44,9 +52,11 @@
     FORCEABLE_PACE_STATE_KEYS,
     FORCEABLE_PACE_STATE_OPTIONS,
     FORCED_PACE_STATE_KEY,
+    MANUAL_REFRESH_LEAD_WINDOW_KEY,
     STORAGE_KEY,
     hasDeveloperOptionsChange,
     normalizeDeveloperOptions,
     normalizeForcedPaceStateKey,
+    normalizeManualRefreshLeadWindow,
   });
 })(globalThis);

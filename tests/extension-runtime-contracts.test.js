@@ -137,18 +137,26 @@ describe("PacePetsDeveloperOptions", () => {
     const options = globalThis.PacePetsDeveloperOptions;
 
     expect(options.STORAGE_KEY).toBe("pacePetsDeveloperOptions");
+    expect(options.MANUAL_REFRESH_LEAD_WINDOW_KEY).toBe(
+      "manualRefreshLeadWindow",
+    );
     expect(options.normalizeForcedPaceStateKey("sync")).toBe("sync");
     expect(options.normalizeForcedPaceStateKey("unsupported")).toBeNull();
+    expect(options.normalizeManualRefreshLeadWindow(true)).toBe(true);
+    expect(options.normalizeManualRefreshLeadWindow("true")).toBe(false);
     expect(
       options.normalizeDeveloperOptions({
         forcedPaceState: "perfectZero",
+        manualRefreshLeadWindow: true,
         unsupported: false,
       }),
     ).toMatchObject({
       forcedPaceStateKey: "perfectZero",
+      manualRefreshLeadWindow: true,
     });
     expect(options.normalizeDeveloperOptions(null)).toMatchObject({
       forcedPaceStateKey: null,
+      manualRefreshLeadWindow: false,
     });
     expect(
       options.hasDeveloperOptionsChange({

@@ -40,7 +40,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 7. `background.js` updates the selected toolbar badge view, applies the critical-window badge attention override when needed, and writes refresh status through `refresh-status.js`.
 8. `dashboard.js` renders summaries, reset timing, and pace state from extension-local storage, delegates chart rendering to the dashboard chart helper, then reuses cached state for minute-by-minute countdown and pace updates until storage or view preferences change.
 
-The dashboard can also request a user-initiated refresh when the visible status is actionable, such as a missing ChatGPT sign-in, failed check, stale refresh, or first-run waiting state. Manual requests use the same guarded background refresh path as the alarm and are cooldown-limited in the dashboard and background worker.
+The dashboard can also request a user-initiated refresh when the visible status is actionable, such as a missing ChatGPT sign-in, failed check, stale refresh, or first-run waiting state, and near the end of a supported reset window. Manual requests use the same guarded background refresh path as the alarm and are cooldown-limited in the dashboard and background worker.
 
 ## Developer Controls
 
@@ -49,11 +49,12 @@ local-only developer control surface. Open it from the installed unpacked
 extension origin, for example
 `chrome-extension://<local-extension-id>/dev-flags.html`.
 
-The page controls only display state overrides. It does not gate shipped product
-features. The state choices are grouped the same way as the dashboard preview
-rail: Pace Levels and Perfect States. Choosing a state stores `forcedPaceState`
-under `pacePetsDeveloperOptions` in `chrome.storage.local`; returning to live
-data removes that override.
+The page controls only display state and feature-preview overrides. It does not
+gate shipped product features. The state choices are grouped the same way as
+the dashboard preview rail: Pace Levels and Perfect States. Choosing a state
+stores `forcedPaceState` under `pacePetsDeveloperOptions` in
+`chrome.storage.local`; enabling the refresh-link preview stores
+`manualRefreshLeadWindow`. Returning to live data removes those overrides.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, toolbar badge, and state rail

@@ -5,11 +5,14 @@
   const DEFAULT_WINDOW_KEY = "weekly";
   const WEEK_MINUTES = 7 * 24 * 60;
   const FIVE_HOUR_MINUTES = 5 * 60;
+  const WEEKLY_MANUAL_REFRESH_LEAD_MINUTES = 4 * 60;
+  const FIVE_HOUR_MANUAL_REFRESH_LEAD_MINUTES = 60;
   const WINDOW_KEYS = Object.freeze(["weekly", "fiveHour"]);
   const WINDOW_SPECS = Object.freeze({
     weekly: Object.freeze({
       key: "weekly",
       durationMinutes: WEEK_MINUTES,
+      manualRefreshLeadMinutes: WEEKLY_MANUAL_REFRESH_LEAD_MINUTES,
       badge: "7d",
       titleMeta: "Week",
       chartSampleLabel: "weekly",
@@ -20,6 +23,7 @@
     fiveHour: Object.freeze({
       key: "fiveHour",
       durationMinutes: FIVE_HOUR_MINUTES,
+      manualRefreshLeadMinutes: FIVE_HOUR_MANUAL_REFRESH_LEAD_MINUTES,
       badge: "5h",
       titleMeta: "5h",
       chartSampleLabel: "5-hour",
