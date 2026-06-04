@@ -33,6 +33,9 @@
   const PACE_RATIO_CHART_MIN_PADDING = 0.04;
   const PACE_RATIO_CHART_PADDING_RATIO = 0.2;
   const PACE_RATIO_CHART_HIGH_THRESHOLD = 2;
+  const PREVIEW_PACE_BASELINE_VARIATION_RATIOS = Object.freeze([
+    0.92, 1.08, 0.96, 1.04,
+  ]);
 
   function cssCustomProperty(name) {
     return getComputedStyle(document.documentElement)
@@ -154,6 +157,34 @@
         };
       })
       .filter(Boolean);
+  }
+
+  function previewPaceChartPoints(
+    paceRatio,
+    windowData,
+    { atMs = Date.now() } = {},
+  ) {
+    const bounds = chartWindowBounds(windowData);
+    const numericPaceRatio = Number(paceRatio);
+    if (!bounds || !Number.isFinite(numericPaceRatio)) {
+      return [];
+    }
+
+    const endX = Math.max(bounds.min + 1, Math.min(bounds.max, atMs));
+    const span = endX - bounds.min;
+    return PREVIEW_PACE_BASELINE_VARIATION_RATIOS.map((ratio, index) => ({
+      x:
+        bounds.min +
+        (span * index) / PREVIEW_PACE_BASELINE_VARIATION_RATIOS.length,
+      y: ratio,
+      paceRatio: ratio,
+      preview: true,
+    })).concat({
+      x: endX,
+      y: Math.max(PACE_RATIO_CHART_MIN, numericPaceRatio),
+      paceRatio: numericPaceRatio,
+      preview: true,
+    });
   }
 
   function splitPaceChartCrossings(points) {
@@ -307,6 +338,7 @@
     hasCappedPacePoints,
     paceChartDataset,
     paceChartPoints,
+    previewPaceChartPoints,
     ratioChartBounds,
     resetWindowSamples,
   });

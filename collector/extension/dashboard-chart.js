@@ -9,6 +9,7 @@
   }
 
   const DEFAULT_CHART_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+  const MS_PER_MINUTE = 60 * 1000;
 
   function usageChartConfig(points, windowData) {
     const { min, max } = CHART_DATA.chartWindowBounds(windowData) || {
@@ -159,14 +160,18 @@
       chartState.textContent = message;
     }
 
-    function render(samples, windowKey, windowData) {
+    function renderPoints(
+      points,
+      windowKey,
+      windowData,
+      { preview = false } = {},
+    ) {
       const spec = windowSpecs[windowKey];
       if (!globalThis.Chart) {
         setEmpty("Chart.js did not load from the extension asset.");
         return;
       }
 
-      const points = CHART_DATA.paceChartPoints(samples, windowKey);
       if (points.length < 2) {
         setEmpty(CHART_DATA.LOW_SAMPLE_CHART_COPY);
         return;
@@ -176,7 +181,9 @@
       chartCanvas.hidden = false;
       chartCanvas.setAttribute(
         "aria-label",
-        `${spec.chartSampleLabel} pace ratio across active reset window`,
+        `${spec.chartSampleLabel} pace ratio across active reset window${
+          preview ? " preview" : ""
+        }`,
       );
       chartState.hidden = true;
 
@@ -186,8 +193,8 @@
       chartCanvas.setAttribute(
         "aria-label",
         `${spec.chartSampleLabel} pace ratio across active reset window${
-          hasCappedPoints ? "; some extreme points are capped" : ""
-        }`,
+          preview ? " preview" : ""
+        }${hasCappedPoints ? "; some extreme points are capped" : ""}`,
       );
       usageChart = usageChart || registeredUsageChart();
       if (!usageChart) {
@@ -201,6 +208,70 @@
       usageChart.options.scales.x = config.options.scales.x;
       usageChart.options.scales.y = config.options.scales.y;
       usageChart.update();
+    }
+
+    function render(samples, windowKey, windowData) {
+      renderPoints(
+        CHART_DATA.paceChartPoints(samples, windowKey),
+        windowKey,
+        windowData,
+      );
+    }
+
+    function previewDurationMinutes(windowKey, windowData) {
+      const windowMinutes = Number(windowData?.windowMinutes);
+      if (Number.isFinite(windowMinutes) && windowMinutes > 0) {
+        return windowMinutes;
+      }
+
+      const specDurationMinutes = Number(
+        windowSpecs[windowKey]?.durationMinutes,
+      );
+      return Number.isFinite(specDurationMinutes) && specDurationMinutes > 0
+        ? specDurationMinutes
+        : DEFAULT_CHART_WINDOW_MS / MS_PER_MINUTE;
+    }
+
+    function previewWindowData({
+      atMs,
+      percentPair,
+      summaryWindow,
+      summaryWindowKey,
+    }) {
+      const timePercent = Math.max(
+        0,
+        Math.min(100, Number(percentPair?.timePercent) || 0),
+      );
+      const durationMinutes = previewDurationMinutes(
+        summaryWindowKey,
+        summaryWindow,
+      );
+      const durationMs = durationMinutes * MS_PER_MINUTE;
+      const resetMs = atMs + (durationMs * timePercent) / 100;
+      return {
+        remainingPercent: percentPair?.remainingPercent,
+        resetsAt: new Date(resetMs).toISOString(),
+        windowMinutes: durationMinutes,
+      };
+    }
+
+    function renderPreview({
+      paceRatio,
+      percentPair,
+      summaryWindow,
+      summaryWindowKey,
+    }) {
+      const atMs = Date.now();
+      const windowData = previewWindowData({
+        atMs,
+        percentPair,
+        summaryWindow,
+        summaryWindowKey,
+      });
+      const points = CHART_DATA.previewPaceChartPoints(paceRatio, windowData, {
+        atMs,
+      });
+      renderPoints(points, summaryWindowKey, windowData, { preview: true });
     }
 
     function renderHistory({
@@ -240,6 +311,7 @@
     }
 
     return Object.freeze({
+      renderPreview,
       renderHistory,
       setEmpty,
     });
