@@ -37,14 +37,13 @@
       return;
     }
 
-    drawRoundedRectPath(
-      context,
-      width * frame.insetXRatio,
-      height * frame.insetYRatio,
-      width * frame.widthRatio,
-      height * frame.heightRatio,
-      Math.min(width, height) * frame.radiusRatio,
-    );
+    drawRoundedRectPath(context, {
+      height: height * frame.heightRatio,
+      radius: Math.min(width, height) * frame.radiusRatio,
+      width: width * frame.widthRatio,
+      x: width * frame.insetXRatio,
+      y: height * frame.insetYRatio,
+    });
   }
 
   function createBackgroundGradient(context, scene, width, height) {
