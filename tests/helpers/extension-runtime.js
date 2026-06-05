@@ -42,6 +42,7 @@ export function installExtensionRuntimeHooks() {
       "collector/extension/themes/default/asset-manifest.js",
     );
     await importExtensionScript("collector/extension/developer-options.js");
+    await importExtensionScript("collector/extension/pace-state-data.js");
     await importExtensionScript("collector/extension/pace-logic.js");
     await importExtensionScript("collector/extension/preview-control.js");
     await importExtensionScript("collector/extension/usage.js");

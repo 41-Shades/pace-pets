@@ -132,15 +132,29 @@
 }
 
 .theme-toggle-icon {
+  background: currentcolor;
+  border-radius: 50%;
   display: block;
-  fill: currentcolor;
   height: 18px;
+  overflow: hidden;
+  position: relative;
   stroke: none;
   transform-origin: center;
   transition:
     color 180ms ease,
     transform 180ms ease;
   width: 18px;
+}
+
+.theme-toggle-icon::after {
+  background: var(--theme-icon-disc);
+  border-radius: 50%;
+  content: "";
+  height: 16px;
+  position: absolute;
+  right: -2px;
+  top: -1px;
+  width: 16px;
 }
 
 .manual-refresh-button[aria-disabled="true"] {
@@ -168,8 +182,29 @@
 .info-close-icon {
   display: block;
   height: 18px;
+  position: relative;
   stroke-width: 2;
   width: 18px;
+}
+
+.info-close-icon::before,
+.info-close-icon::after {
+  background: currentcolor;
+  border-radius: 999px;
+  content: "";
+  height: 2px;
+  left: 2px;
+  position: absolute;
+  top: 8px;
+  width: 14px;
+}
+
+.info-close-icon::before {
+  transform: rotate(45deg);
+}
+
+.info-close-icon::after {
+  transform: rotate(-45deg);
 }
 
 [aria-expanded="true"].info-toggle {

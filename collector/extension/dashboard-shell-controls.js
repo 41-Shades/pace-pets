@@ -39,132 +39,153 @@
     );
   }
 
-  function createController({
-    appTooltips,
-    earlyReset,
-    elements,
-    refreshThemeSensitiveViews,
-  }) {
-    const colorSchemeMedia = window.matchMedia(COLOR_SCHEME_QUERY);
-    let explicitTheme = storedThemePreference();
-    let infoPanelReturnFocus = null;
-
-    function systemTheme() {
-      return colorSchemeMedia.matches ? "dark" : "light";
+  class ShellControls {
+    constructor({
+      appTooltips,
+      earlyReset,
+      elements,
+      refreshThemeSensitiveViews,
+    }) {
+      this.appTooltips = appTooltips;
+      this.colorSchemeMedia = window.matchMedia(COLOR_SCHEME_QUERY);
+      this.earlyReset = earlyReset;
+      this.elements = elements;
+      this.explicitTheme = storedThemePreference();
+      this.infoPanelReturnFocus = null;
+      this.refreshThemeSensitiveViews = refreshThemeSensitiveViews;
+      this.colorSchemeMedia.addEventListener("change", () => {
+        if (!this.explicitTheme) {
+          this.applyResolvedTheme({ refresh: true });
+        }
+      });
+      this.applyResolvedTheme();
     }
 
-    function resolvedTheme() {
-      return explicitTheme || systemTheme();
+    systemTheme() {
+      return this.colorSchemeMedia.matches ? "dark" : "light";
     }
 
-    function oppositeTheme(theme) {
+    resolvedTheme() {
+      return this.explicitTheme || this.systemTheme();
+    }
+
+    oppositeTheme(theme) {
       return theme === "dark" ? "light" : "dark";
     }
 
-    function updateThemeToggle(theme) {
-      if (!elements.themeToggle) {
+    updateThemeToggle(theme) {
+      if (!this.elements.themeToggle) {
         return;
       }
 
-      const nextTheme = oppositeTheme(theme);
+      const nextTheme = this.oppositeTheme(theme);
       const label = `Switch to ${nextTheme} theme`;
-      elements.themeToggle.setAttribute(
+      this.elements.themeToggle.setAttribute(
         "aria-pressed",
         String(theme === "dark"),
       );
-      elements.themeToggle.setAttribute("aria-label", label);
-      appTooltips.setText(elements.themeToggle, label);
+      this.elements.themeToggle.setAttribute("aria-label", label);
+      this.appTooltips.setText(this.elements.themeToggle, label);
     }
 
-    function applyResolvedTheme({ refresh = false } = {}) {
-      const theme = resolvedTheme();
+    applyResolvedTheme({ refresh = false } = {}) {
+      const theme = this.resolvedTheme();
       document.documentElement.dataset.theme = theme;
-      updateThemeToggle(theme);
+      this.updateThemeToggle(theme);
 
       if (refresh) {
-        refreshThemeSensitiveViews();
+        this.refreshThemeSensitiveViews();
       }
     }
 
-    function toggleTheme() {
-      explicitTheme = oppositeTheme(resolvedTheme());
-      storeThemePreference(explicitTheme);
-      applyResolvedTheme({ refresh: true });
+    toggleTheme() {
+      this.explicitTheme = this.oppositeTheme(this.resolvedTheme());
+      storeThemePreference(this.explicitTheme);
+      this.applyResolvedTheme({ refresh: true });
     }
 
-    function isInfoPanelOpen() {
-      return Boolean(elements.infoOverlay && !elements.infoOverlay.hidden);
+    isInfoPanelOpen() {
+      return Boolean(
+        this.elements.infoOverlay && !this.elements.infoOverlay.hidden,
+      );
     }
 
-    function infoPanelFocusableElements() {
-      if (!elements.infoPanel) {
+    infoPanelFocusableElements() {
+      if (!this.elements.infoPanel) {
         return [];
       }
 
       return [
-        ...elements.infoPanel.querySelectorAll(INFO_PANEL_FOCUSABLE_SELECTOR),
+        ...this.elements.infoPanel.querySelectorAll(
+          INFO_PANEL_FOCUSABLE_SELECTOR,
+        ),
       ].filter((element) => element instanceof HTMLElement);
     }
 
-    function showInfoPanel() {
-      if (!elements.infoOverlay || isInfoPanelOpen()) {
+    showInfoPanel() {
+      if (!this.elements.infoOverlay || this.isInfoPanelOpen()) {
         return;
       }
 
-      infoPanelReturnFocus =
+      this.infoPanelReturnFocus =
         document.activeElement instanceof HTMLElement
           ? document.activeElement
           : null;
-      appTooltips.hide();
-      earlyReset.hide();
-      elements.infoOverlay.hidden = false;
-      elements.infoToggle?.setAttribute("aria-expanded", "true");
+      this.appTooltips.hide();
+      this.earlyReset.hide();
+      this.elements.infoOverlay.hidden = false;
+      this.elements.infoToggle?.setAttribute("aria-expanded", "true");
 
       window.requestAnimationFrame(() => {
-        const [firstFocusable] = infoPanelFocusableElements();
+        const [firstFocusable] = this.infoPanelFocusableElements();
         firstFocusable?.focus();
       });
     }
 
-    function hideInfoPanel({ restoreFocus = true } = {}) {
-      if (!elements.infoOverlay || !isInfoPanelOpen()) {
-        return;
-      }
+    restoreInfoPanelFocus(restoreFocus) {
+      const activeElement = document.activeElement;
+      const activeElementInOverlay =
+        activeElement instanceof HTMLElement &&
+        this.elements.infoOverlay.contains(activeElement);
 
-      elements.infoOverlay.hidden = true;
-      elements.infoToggle?.setAttribute("aria-expanded", "false");
-      appTooltips.suppressTemporarily();
-      appTooltips.hide();
-
-      if (restoreFocus && infoPanelReturnFocus?.isConnected) {
-        infoPanelReturnFocus.focus();
-      } else if (
-        document.activeElement instanceof HTMLElement &&
-        elements.infoOverlay.contains(document.activeElement)
-      ) {
-        document.activeElement.blur();
+      if (restoreFocus && this.infoPanelReturnFocus?.isConnected) {
+        this.infoPanelReturnFocus.focus();
+      } else if (activeElementInOverlay) {
+        activeElement.blur();
       }
-      infoPanelReturnFocus = null;
     }
 
-    function toggleInfoPanel() {
-      if (isInfoPanelOpen()) {
-        hideInfoPanel();
+    hideInfoPanel({ restoreFocus = true } = {}) {
+      if (!this.elements.infoOverlay || !this.isInfoPanelOpen()) {
         return;
       }
 
-      showInfoPanel();
+      this.elements.infoOverlay.hidden = true;
+      this.elements.infoToggle?.setAttribute("aria-expanded", "false");
+      this.appTooltips.suppressTemporarily();
+      this.appTooltips.hide();
+      this.restoreInfoPanelFocus(restoreFocus);
+      this.infoPanelReturnFocus = null;
     }
 
-    function trapInfoPanelFocus(event) {
-      if (!isInfoPanelOpen() || event.key !== "Tab") {
+    toggleInfoPanel() {
+      if (this.isInfoPanelOpen()) {
+        this.hideInfoPanel();
         return;
       }
 
-      const focusableElements = infoPanelFocusableElements();
+      this.showInfoPanel();
+    }
+
+    trapInfoPanelFocus(event) {
+      if (!this.isInfoPanelOpen() || event.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = this.infoPanelFocusableElements();
       if (focusableElements.length === 0) {
         event.preventDefault();
-        elements.infoPanel?.focus();
+        this.elements.infoPanel?.focus();
         return;
       }
 
@@ -181,7 +202,7 @@
       }
     }
 
-    function hasSingleKeyShortcutBlocker(event) {
+    hasSingleKeyShortcutBlocker(event) {
       return (
         event.defaultPrevented ||
         event.repeat ||
@@ -191,21 +212,18 @@
         isInputLike(document.activeElement)
       );
     }
+  }
 
-    colorSchemeMedia.addEventListener("change", () => {
-      if (!explicitTheme) {
-        applyResolvedTheme({ refresh: true });
-      }
-    });
-    applyResolvedTheme();
-
+  function createController(options) {
+    const controls = new ShellControls(options);
     return Object.freeze({
-      hasSingleKeyShortcutBlocker,
-      hideInfoPanel,
-      isInfoPanelOpen,
-      toggleInfoPanel,
-      toggleTheme,
-      trapInfoPanelFocus,
+      hasSingleKeyShortcutBlocker:
+        controls.hasSingleKeyShortcutBlocker.bind(controls),
+      hideInfoPanel: controls.hideInfoPanel.bind(controls),
+      isInfoPanelOpen: controls.isInfoPanelOpen.bind(controls),
+      toggleInfoPanel: controls.toggleInfoPanel.bind(controls),
+      toggleTheme: controls.toggleTheme.bind(controls),
+      trapInfoPanelFocus: controls.trapInfoPanelFocus.bind(controls),
     });
   }
 

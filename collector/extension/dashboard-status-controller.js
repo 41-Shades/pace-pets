@@ -19,33 +19,11 @@
       "Pace Pets preview controls must load before dashboard-status-controller.js.",
     );
   }
-
-  const COLLECTION_STATUS_TITLE = "Usage collection status";
-  const STATUS_TEXT = Object.freeze({
-    live: "Live",
-    waiting: "Waiting",
-    waitingForReading: "Waiting for reading",
-    refreshNeeded: "Refresh needed",
-    signInNotFound: "ChatGPT sign-in not found",
-    checkFailed: "Check failed",
-  });
-  const SIGN_IN_NOT_FOUND_COPY = "Open ChatGPT to resume checks.";
-  const SIGN_IN_NOT_FOUND_DETAIL =
-    "Latest check failed because ChatGPT sign-in was not found.";
-  const COLLECTION_STATUS_LABELS = Object.freeze({
-    [STATUS_TEXT.checkFailed]: "Check failed",
-    [STATUS_TEXT.refreshNeeded]: "Refresh needed",
-    [STATUS_TEXT.signInNotFound]: "Sign-in needed",
-    [STATUS_TEXT.waiting]: "Waiting",
-  });
-  const MANUAL_REFRESH_DEFAULT_LABEL = "Check ChatGPT usage now";
-  const MANUAL_REFRESH_COOLDOWN_PREFIX = "Check again in";
-  const MANUAL_REFRESH_FAILURE_VISIBLE_MS = 1800;
-  const LAST_COLLECTED_UPDATE_FEEDBACK_MS = 1400;
-  const COLLECTION_STATUS_STALE_AFTER_MS = 15 * 60 * 1000;
-
-  function statusTooltipText(title, text, detail = "") {
-    return detail ? `${title}: ${text}. ${detail}` : `${title}: ${text}`;
+  const STATUS_LOGIC = globalThis.PacePetsDashboardStatusLogic;
+  if (!STATUS_LOGIC) {
+    throw new Error(
+      "Pace Pets dashboard status logic must load before dashboard-status-controller.js.",
+    );
   }
 
   function sendRuntimeMessage(message) {
@@ -54,329 +32,264 @@
     });
   }
 
-  function isTransientRuntimeMessageError(error) {
-    return /(?:message port closed|receiving end does not exist|extension context invalidated)/i.test(
-      error?.message || "",
-    );
-  }
-
-  function warnOptionalPreviewMessageFailure(label, error) {
-    if (isTransientRuntimeMessageError(error)) {
-      return;
+  class DashboardStatusController {
+    constructor({
+      appTooltips,
+      elements,
+      formatClockTime,
+      getCurrentHistory,
+      loadDashboard,
+      setCurrentRefreshStatus,
+    }) {
+      this.appTooltips = appTooltips;
+      this.elements = elements;
+      this.formatClockTime = formatClockTime;
+      this.getCurrentHistory = getCurrentHistory;
+      this.loadDashboard = loadDashboard;
+      this.setCurrentRefreshStatus = setCurrentRefreshStatus;
+      this.lastCheckedText =
+        elements.lastCollectedValue.textContent.trim() || "waiting";
+      this.lastCheckedFeedbackKey = null;
+      this.collectionStatusText = STATUS_LOGIC.STATUS_TEXT.live;
+      this.collectionStatusMode = "ok";
+      this.collectionStatusTitle = STATUS_LOGIC.COLLECTION_STATUS_TITLE;
+      this.collectionStatusDetail = "";
+      this.manualRefreshAvailable = false;
+      this.manualRefreshInFlight = false;
+      this.manualRefreshCooldownUntilMs = 0;
+      this.manualRefreshCooldownTimer = null;
+      this.manualRefreshFeedback = null;
+      this.manualRefreshFeedbackTimer = null;
+      this.lastCollectedUpdateFeedbackTimer = null;
     }
 
-    console.warn(label, error.message);
-  }
-
-  function isSignInNotFoundStatus(refreshStatus) {
-    return refreshStatus?.ok === false && refreshStatus.authFailure === true;
-  }
-
-  function isFailedRefreshStatus(refreshStatus) {
-    return (
-      refreshStatus?.ok === false &&
-      Boolean(refreshStatus.refreshedAt) &&
-      !isSignInNotFoundStatus(refreshStatus)
-    );
-  }
-
-  function createController({
-    appTooltips,
-    elements,
-    formatClockTime,
-    getCurrentHistory,
-    loadDashboard,
-    setCurrentRefreshStatus,
-  }) {
-    let lastCheckedText =
-      elements.lastCollectedValue.textContent.trim() || "waiting";
-    let lastCheckedFeedbackKey = null;
-    let collectionStatusText = STATUS_TEXT.live;
-    let collectionStatusMode = "ok";
-    let collectionStatusTitle = COLLECTION_STATUS_TITLE;
-    let collectionStatusDetail = "";
-    let manualRefreshAvailable = false;
-    let manualRefreshInFlight = false;
-    let manualRefreshCooldownUntilMs = 0;
-    let manualRefreshCooldownTimer = null;
-    let manualRefreshFeedback = null;
-    let manualRefreshFeedbackTimer = null;
-    let lastCollectedUpdateFeedbackTimer = null;
-
-    function collectionStatusLabelText(text) {
-      return COLLECTION_STATUS_LABELS[text] || "";
-    }
-
-    function setCollectionStatusLabel(text, mode) {
-      const label = collectionStatusLabelText(text);
-      elements.collectionStatusLabel.textContent = label;
-      elements.collectionStatusLabel.hidden = !label;
-      elements.collectionStatusLabel.classList.toggle(
-        "stale",
-        mode === "stale",
-      );
-      elements.collectionStatusLabel.classList.toggle(
-        "warning",
-        mode === "warning",
-      );
-      elements.collectionStatusLabel.classList.toggle(
-        "error",
-        mode === "error",
-      );
-      elements.collectionStatusLabel.classList.toggle(
-        "offline",
-        mode === "offline",
-      );
-    }
-
-    function visibleCollectionStatus() {
-      if (manualRefreshFeedback) {
-        return manualRefreshFeedback;
+    setCollectionStatusLabel(text, mode) {
+      const label = STATUS_LOGIC.collectionStatusLabelText(text);
+      this.elements.collectionStatusLabel.textContent = label;
+      this.elements.collectionStatusLabel.hidden = !label;
+      for (const state of ["stale", "warning", "error", "offline"]) {
+        this.elements.collectionStatusLabel.classList.toggle(
+          state,
+          mode === state,
+        );
       }
-
-      return {
-        text: collectionStatusText,
-        mode: collectionStatusMode,
-        title: collectionStatusTitle,
-        detail: collectionStatusDetail,
-      };
     }
 
-    function manualRefreshCooldownRemainingMs() {
-      return Math.max(0, manualRefreshCooldownUntilMs - Date.now());
+    visibleCollectionStatus() {
+      return (
+        this.manualRefreshFeedback || {
+          text: this.collectionStatusText,
+          mode: this.collectionStatusMode,
+          title: this.collectionStatusTitle,
+          detail: this.collectionStatusDetail,
+        }
+      );
     }
 
-    function clearManualRefreshCooldownTimer() {
-      window.clearTimeout(manualRefreshCooldownTimer);
-      manualRefreshCooldownTimer = null;
+    manualRefreshCooldownRemainingMs() {
+      return Math.max(0, this.manualRefreshCooldownUntilMs - Date.now());
     }
 
-    function manualRefreshTooltipText() {
-      const remainingMs = manualRefreshCooldownRemainingMs();
+    clearManualRefreshCooldownTimer() {
+      window.clearTimeout(this.manualRefreshCooldownTimer);
+      this.manualRefreshCooldownTimer = null;
+    }
+
+    manualRefreshTooltipText() {
+      const remainingMs = this.manualRefreshCooldownRemainingMs();
       if (remainingMs > 0) {
-        return `${MANUAL_REFRESH_COOLDOWN_PREFIX} ${Math.ceil(
+        return `${STATUS_LOGIC.MANUAL_REFRESH_COOLDOWN_PREFIX} ${Math.ceil(
           remainingMs / 1000,
         )}s`;
       }
 
-      return MANUAL_REFRESH_DEFAULT_LABEL;
+      return STATUS_LOGIC.MANUAL_REFRESH_DEFAULT_LABEL;
     }
 
-    function scheduleManualRefreshCooldownTimer() {
-      clearManualRefreshCooldownTimer();
-      const remainingMs = manualRefreshCooldownRemainingMs();
+    scheduleManualRefreshCooldownTimer() {
+      this.clearManualRefreshCooldownTimer();
+      const remainingMs = this.manualRefreshCooldownRemainingMs();
       if (remainingMs <= 0) {
         return;
       }
 
-      manualRefreshCooldownTimer = window.setTimeout(
+      this.manualRefreshCooldownTimer = window.setTimeout(
         () => {
-          updateManualRefreshButton();
-          scheduleManualRefreshCooldownTimer();
+          this.updateManualRefreshButton();
+          this.scheduleManualRefreshCooldownTimer();
         },
         Math.min(1000, remainingMs),
       );
     }
 
-    function updateManualRefreshButton() {
-      const button = elements.manualRefreshButton;
+    updateManualRefreshButton() {
+      const button = this.elements.manualRefreshButton;
       if (!button) {
         return;
       }
 
-      const remainingMs = manualRefreshCooldownRemainingMs();
-      const disabled = manualRefreshInFlight || remainingMs > 0;
-      button.hidden = !manualRefreshAvailable;
+      const remainingMs = this.manualRefreshCooldownRemainingMs();
+      const disabled = this.manualRefreshInFlight || remainingMs > 0;
+      const tooltipText = this.manualRefreshTooltipText();
+      button.hidden = !this.manualRefreshAvailable;
       button.setAttribute("aria-disabled", String(disabled));
-      button.setAttribute("aria-label", manualRefreshTooltipText());
-      appTooltips.setText(button, manualRefreshTooltipText());
+      button.setAttribute("aria-label", tooltipText);
+      this.appTooltips.setText(button, tooltipText);
 
-      if (manualRefreshAvailable && remainingMs > 0) {
-        scheduleManualRefreshCooldownTimer();
+      if (this.manualRefreshAvailable && remainingMs > 0) {
+        this.scheduleManualRefreshCooldownTimer();
       } else {
-        clearManualRefreshCooldownTimer();
+        this.clearManualRefreshCooldownTimer();
       }
     }
 
-    function renderCollectionStatus() {
-      const state = visibleCollectionStatus();
-      elements.collectionPulse.classList.toggle("live", state.mode === "live");
-      elements.collectionPulse.classList.toggle(
-        "stale",
-        state.mode === "stale",
-      );
-      elements.collectionPulse.classList.toggle(
-        "offline",
-        state.mode === "offline",
-      );
-      elements.collectionPulse.classList.toggle(
-        "error",
-        state.mode === "error",
-      );
-      elements.collectionPulse.classList.toggle(
-        "warning",
-        state.mode === "warning",
-      );
-      setCollectionStatusLabel(state.text, state.mode);
+    renderCollectionStatus() {
+      const state = this.visibleCollectionStatus();
+      for (const mode of ["live", "stale", "offline", "error", "warning"]) {
+        this.elements.collectionPulse.classList.toggle(
+          mode,
+          state.mode === mode,
+        );
+      }
+      this.setCollectionStatusLabel(state.text, state.mode);
 
       const statusText = state.detail
         ? `${state.text}. ${state.detail}`
         : state.text;
-      const title = state.title || COLLECTION_STATUS_TITLE;
-      const label = `Checked: ${lastCheckedText}. Status: ${statusText}`;
-      appTooltips.setText(
-        elements.collectionPulse,
-        statusTooltipText(title, state.text, state.detail),
+      const title = state.title || STATUS_LOGIC.COLLECTION_STATUS_TITLE;
+      this.appTooltips.setText(
+        this.elements.collectionPulse,
+        STATUS_LOGIC.statusTooltipText(title, state.text, state.detail),
       );
-      elements.lastCollected.setAttribute("aria-label", label);
-      appTooltips.setText(elements.lastCollected, `Status: ${statusText}`);
-      updateManualRefreshButton();
+      this.elements.lastCollected.setAttribute(
+        "aria-label",
+        `Checked: ${this.lastCheckedText}. Status: ${statusText}`,
+      );
+      this.appTooltips.setText(
+        this.elements.lastCollected,
+        `Status: ${statusText}`,
+      );
+      this.updateManualRefreshButton();
     }
 
-    function setStatus(
+    setStatus(
       text,
       mode = "ok",
-      title = COLLECTION_STATUS_TITLE,
+      title = STATUS_LOGIC.COLLECTION_STATUS_TITLE,
       detail = "",
       { manualRefresh = false } = {},
     ) {
-      collectionStatusText = text;
-      collectionStatusMode = mode;
-      collectionStatusTitle = title;
-      collectionStatusDetail = detail;
-      manualRefreshAvailable = manualRefresh;
-      renderCollectionStatus();
+      this.collectionStatusText = text;
+      this.collectionStatusMode = mode;
+      this.collectionStatusTitle = title;
+      this.collectionStatusDetail = detail;
+      this.manualRefreshAvailable = manualRefresh;
+      this.renderCollectionStatus();
     }
 
-    function showLastCollectedUpdateFeedback() {
-      const value = elements.lastCollectedValue;
+    showLastCollectedUpdateFeedback() {
+      const value = this.elements.lastCollectedValue;
       if (!value) {
         return;
       }
 
-      window.clearTimeout(lastCollectedUpdateFeedbackTimer);
+      window.clearTimeout(this.lastCollectedUpdateFeedbackTimer);
       value.classList.remove("is-updated");
       void value.offsetWidth;
       value.classList.add("is-updated");
-      lastCollectedUpdateFeedbackTimer = window.setTimeout(() => {
+      this.lastCollectedUpdateFeedbackTimer = window.setTimeout(() => {
         value.classList.remove("is-updated");
-        lastCollectedUpdateFeedbackTimer = null;
-      }, LAST_COLLECTED_UPDATE_FEEDBACK_MS);
+        this.lastCollectedUpdateFeedbackTimer = null;
+      }, STATUS_LOGIC.LAST_COLLECTED_UPDATE_FEEDBACK_MS);
     }
 
-    function setLastCollected(value, feedbackKey = value) {
+    setLastCollected(value, feedbackKey = value) {
       const nextCheckedText = String(value || "waiting");
       const nextFeedbackKey = String(feedbackKey || nextCheckedText);
       const changed =
-        lastCheckedFeedbackKey !== null &&
-        nextFeedbackKey !== lastCheckedFeedbackKey;
-      lastCheckedText = nextCheckedText;
-      lastCheckedFeedbackKey = nextFeedbackKey;
-      elements.lastCollectedValue.textContent = lastCheckedText;
+        this.lastCheckedFeedbackKey !== null &&
+        nextFeedbackKey !== this.lastCheckedFeedbackKey;
+      this.lastCheckedText = nextCheckedText;
+      this.lastCheckedFeedbackKey = nextFeedbackKey;
+      this.elements.lastCollectedValue.textContent = this.lastCheckedText;
       if (changed) {
-        showLastCollectedUpdateFeedback();
+        this.showLastCollectedUpdateFeedback();
       }
-      renderCollectionStatus();
+      this.renderCollectionStatus();
     }
 
-    function statusCodeText(refreshStatus) {
-      return refreshStatus?.statusCode
-        ? `HTTP ${refreshStatus.statusCode}`
-        : "";
+    refreshFailureDetail(refreshStatus, latest = null) {
+      return STATUS_LOGIC.refreshFailureDetail({
+        formatClockTime: this.formatClockTime,
+        latest,
+        refreshStatus,
+      });
     }
 
-    function refreshAttemptText(refreshStatus) {
-      return refreshStatus?.refreshedAt
-        ? formatClockTime(refreshStatus.refreshedAt)
-        : "";
+    clearManualRefreshFeedback() {
+      window.clearTimeout(this.manualRefreshFeedbackTimer);
+      this.manualRefreshFeedbackTimer = null;
+      this.manualRefreshFeedback = null;
     }
 
-    function refreshFailureDetail(refreshStatus, latest = null) {
-      const message = isSignInNotFoundStatus(refreshStatus)
-        ? SIGN_IN_NOT_FOUND_DETAIL
-        : String(refreshStatus?.message || "Latest usage check failed.").trim();
-      const statusCode = statusCodeText(refreshStatus);
-      const attemptText = refreshAttemptText(refreshStatus);
-      const latestText = latest?.collectedAt
-        ? formatClockTime(latest.collectedAt)
-        : "";
-      const parts = [
-        message,
-        statusCode,
-        attemptText ? `attempt ${attemptText}` : "",
-        latestText ? `stored ${latestText}` : "",
-      ].filter(Boolean);
-      return parts.join("; ");
-    }
-
-    function clearManualRefreshFeedback() {
-      window.clearTimeout(manualRefreshFeedbackTimer);
-      manualRefreshFeedbackTimer = null;
-      manualRefreshFeedback = null;
-    }
-
-    function latestCurrentSample() {
-      const currentHistory = getCurrentHistory();
+    latestCurrentSample() {
+      const currentHistory = this.getCurrentHistory();
       return currentHistory
         ? CodexUsageHistory.latestSample(currentHistory)
         : null;
     }
 
-    function manualRefreshFailureDetail(refreshStatus, error = null) {
-      if (refreshStatus) {
-        return refreshFailureDetail(refreshStatus, latestCurrentSample());
-      }
-
-      return error?.message || "Could not request a usage check.";
+    manualRefreshFailureDetail(refreshStatus, error = null) {
+      return refreshStatus
+        ? this.refreshFailureDetail(refreshStatus, this.latestCurrentSample())
+        : error?.message || "Could not request a usage check.";
     }
 
-    function showManualRefreshFailure(refreshStatus, error = null) {
-      clearManualRefreshFeedback();
-      manualRefreshFeedback = {
-        text: STATUS_TEXT.checkFailed,
+    showManualRefreshFailure(refreshStatus, error = null) {
+      this.clearManualRefreshFeedback();
+      this.manualRefreshFeedback = {
+        text: STATUS_LOGIC.STATUS_TEXT.checkFailed,
         mode: "error",
-        title: COLLECTION_STATUS_TITLE,
-        detail: manualRefreshFailureDetail(refreshStatus, error),
+        title: STATUS_LOGIC.COLLECTION_STATUS_TITLE,
+        detail: this.manualRefreshFailureDetail(refreshStatus, error),
       };
-      manualRefreshFeedbackTimer = window.setTimeout(() => {
-        manualRefreshFeedback = null;
-        manualRefreshFeedbackTimer = null;
-        renderCollectionStatus();
-      }, MANUAL_REFRESH_FAILURE_VISIBLE_MS);
-      renderCollectionStatus();
+      this.manualRefreshFeedbackTimer = window.setTimeout(() => {
+        this.manualRefreshFeedback = null;
+        this.manualRefreshFeedbackTimer = null;
+        this.renderCollectionStatus();
+      }, STATUS_LOGIC.MANUAL_REFRESH_FAILURE_VISIBLE_MS);
+      this.renderCollectionStatus();
     }
 
-    function canRunManualRefresh() {
+    canRunManualRefresh() {
       return (
-        manualRefreshAvailable &&
-        !manualRefreshInFlight &&
-        manualRefreshCooldownRemainingMs() <= 0
+        this.manualRefreshAvailable &&
+        !this.manualRefreshInFlight &&
+        this.manualRefreshCooldownRemainingMs() <= 0
       );
     }
 
-    function startManualRefreshAttempt() {
-      manualRefreshInFlight = true;
-      manualRefreshCooldownUntilMs =
+    startManualRefreshAttempt() {
+      this.manualRefreshInFlight = true;
+      this.manualRefreshCooldownUntilMs =
         Date.now() + REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS;
-      clearManualRefreshFeedback();
-      renderCollectionStatus();
+      this.clearManualRefreshFeedback();
+      this.renderCollectionStatus();
     }
 
-    function finishManualRefreshAttempt() {
-      manualRefreshInFlight = false;
-      renderCollectionStatus();
+    finishManualRefreshAttempt() {
+      this.manualRefreshInFlight = false;
+      this.renderCollectionStatus();
     }
 
-    function applyManualRefreshCooldown(response) {
-      if (!Number.isFinite(response?.cooldownRemainingMs)) {
-        return;
+    applyManualRefreshCooldown(response) {
+      if (Number.isFinite(response?.cooldownRemainingMs)) {
+        this.manualRefreshCooldownUntilMs =
+          Date.now() + Math.max(0, response.cooldownRemainingMs);
       }
-
-      manualRefreshCooldownUntilMs =
-        Date.now() + Math.max(0, response.cooldownRemainingMs);
     }
 
-    function manualRefreshResponseFailed(response) {
+    manualRefreshResponseFailed(response) {
       return (
         response?.refreshStatus?.ok === false ||
         (response?.ok === false &&
@@ -384,102 +297,101 @@
       );
     }
 
-    async function applyManualRefreshResponse(response) {
-      const refreshFailed = manualRefreshResponseFailed(response);
-      applyManualRefreshCooldown(response);
+    async applyManualRefreshResponse(response) {
+      const refreshFailed = this.manualRefreshResponseFailed(response);
+      this.applyManualRefreshCooldown(response);
 
       if (response?.refreshStatus) {
-        setCurrentRefreshStatus(response.refreshStatus);
+        this.setCurrentRefreshStatus(response.refreshStatus);
       }
 
-      await loadDashboard({ refreshWindowPreference: false });
+      await this.loadDashboard({ refreshWindowPreference: false });
 
       if (refreshFailed) {
-        showManualRefreshFailure(response?.refreshStatus);
+        this.showManualRefreshFailure(response?.refreshStatus);
         return;
       }
 
-      clearManualRefreshFeedback();
+      this.clearManualRefreshFeedback();
     }
 
-    function handleManualRefreshError(error) {
-      setStatus(
-        STATUS_TEXT.checkFailed,
+    handleManualRefreshError(error) {
+      this.setStatus(
+        STATUS_LOGIC.STATUS_TEXT.checkFailed,
         "error",
-        COLLECTION_STATUS_TITLE,
+        STATUS_LOGIC.COLLECTION_STATUS_TITLE,
         error?.message || "Could not request a usage check.",
         { manualRefresh: true },
       );
-      showManualRefreshFailure(null, error);
+      this.showManualRefreshFailure(null, error);
     }
 
-    async function runManualRefresh() {
-      if (!canRunManualRefresh()) {
+    async runManualRefresh() {
+      if (!this.canRunManualRefresh()) {
         return;
       }
 
-      startManualRefreshAttempt();
+      this.startManualRefreshAttempt();
 
       try {
         const response = await sendRuntimeMessage({
           type: REFRESH_CONTROL.REFRESH_NOW_MESSAGE_TYPE,
         });
-        await applyManualRefreshResponse(response);
+        await this.applyManualRefreshResponse(response);
       } catch (error) {
-        handleManualRefreshError(error);
+        this.handleManualRefreshError(error);
       } finally {
-        finishManualRefreshAttempt();
+        this.finishManualRefreshAttempt();
       }
     }
 
-    function updateToolbarPreviewBadge(stateKey) {
+    updateToolbarPreviewBadge(stateKey) {
       const message = PREVIEW_CONTROL.previewBadgeMessage(stateKey);
       if (!message) {
         return;
       }
 
       sendRuntimeMessage(message).catch((error) => {
-        warnOptionalPreviewMessageFailure(
+        STATUS_LOGIC.warnOptionalPreviewMessageFailure(
           "Codex usage badge preview failed:",
           error,
         );
       });
     }
 
-    function restoreToolbarPreviewBadge() {
+    restoreToolbarPreviewBadge() {
       sendRuntimeMessage(PREVIEW_CONTROL.restoreBadgeMessage()).catch(
         (error) => {
-          warnOptionalPreviewMessageFailure(
+          STATUS_LOGIC.warnOptionalPreviewMessageFailure(
             "Codex usage badge preview restore failed:",
             error,
           );
         },
       );
     }
+  }
 
+  function createController(options) {
+    const controller = new DashboardStatusController(options);
     return Object.freeze({
-      refreshFailureDetail,
-      restoreToolbarPreviewBadge,
-      runManualRefresh,
-      setLastCollected,
-      setStatus,
-      updateToolbarPreviewBadge,
+      refreshFailureDetail: controller.refreshFailureDetail.bind(controller),
+      restoreToolbarPreviewBadge:
+        controller.restoreToolbarPreviewBadge.bind(controller),
+      runManualRefresh: controller.runManualRefresh.bind(controller),
+      setLastCollected: controller.setLastCollected.bind(controller),
+      setStatus: controller.setStatus.bind(controller),
+      updateToolbarPreviewBadge:
+        controller.updateToolbarPreviewBadge.bind(controller),
     });
   }
 
   globalThis.PacePetsDashboardStatus = Object.freeze({
-    COLLECTION_STATUS_TITLE,
-    SIGN_IN_NOT_FOUND_COPY,
-    STATUS_TEXT,
+    COLLECTION_STATUS_TITLE: STATUS_LOGIC.COLLECTION_STATUS_TITLE,
+    SIGN_IN_NOT_FOUND_COPY: STATUS_LOGIC.SIGN_IN_NOT_FOUND_COPY,
+    STATUS_TEXT: STATUS_LOGIC.STATUS_TEXT,
     createController,
-    isFailedRefreshStatus,
-    isRecentRefreshStatus(refreshStatus) {
-      const refreshedMs = PacePetsLogic.dateMs(refreshStatus?.refreshedAt);
-      return (
-        refreshedMs !== null &&
-        Date.now() - refreshedMs <= COLLECTION_STATUS_STALE_AFTER_MS
-      );
-    },
-    isSignInNotFoundStatus,
+    isFailedRefreshStatus: STATUS_LOGIC.isFailedRefreshStatus,
+    isRecentRefreshStatus: STATUS_LOGIC.isRecentRefreshStatus,
+    isSignInNotFoundStatus: STATUS_LOGIC.isSignInNotFoundStatus,
   });
 })();

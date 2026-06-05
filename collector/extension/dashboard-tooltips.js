@@ -32,14 +32,17 @@
     return event.detail > 0;
   }
 
-  function createController({ tooltipElement }) {
-    let activeTarget = null;
-    let showTimer = null;
-    let hideTimer = null;
-    let autoHideTimer = null;
-    let suppressUntilMs = 0;
+  class AppTooltipController {
+    constructor({ tooltipElement }) {
+      this.activeTarget = null;
+      this.autoHideTimer = null;
+      this.hideTimer = null;
+      this.showTimer = null;
+      this.suppressUntilMs = 0;
+      this.tooltipElement = tooltipElement;
+    }
 
-    function addDescription(target) {
+    addDescription(target) {
       if (target.getAttribute("aria-hidden") === "true") {
         return;
       }
@@ -57,7 +60,7 @@
       );
     }
 
-    function removeDescription(target) {
+    removeDescription(target) {
       if (!target?.dataset?.appTooltipDescribed) {
         return;
       }
@@ -73,52 +76,46 @@
       delete target.dataset.appTooltipDescribed;
     }
 
-    function position(target) {
-      if (!tooltipElement) {
-        return;
-      }
-
-      const targetRect = target.getBoundingClientRect();
-      const tooltipRect = tooltipElement.getBoundingClientRect();
+    positionBesideTarget(target, targetRect, tooltipRect) {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const margin = APP_TOOLTIP_VIEWPORT_MARGIN_PX;
-      const preferredPlacement = target.dataset.tooltipPlacement;
-
-      if (preferredPlacement === "right") {
-        let placement = "right";
-        let left = targetRect.right + APP_TOOLTIP_OFFSET_PX;
-        if (left + tooltipRect.width > viewportWidth - margin) {
-          placement = "left";
-          left = targetRect.left - tooltipRect.width - APP_TOOLTIP_OFFSET_PX;
-        }
-
-        left = clampNumber(
-          left,
-          margin,
-          viewportWidth - tooltipRect.width - margin,
-        );
-        const top = clampNumber(
-          targetRect.top + targetRect.height / 2 - tooltipRect.height / 2,
-          margin,
-          viewportHeight - tooltipRect.height - margin,
-        );
-        const arrowTop = clampNumber(
-          targetRect.top + targetRect.height / 2 - top,
-          12,
-          tooltipRect.height - 12,
-        );
-
-        tooltipElement.dataset.placement = placement;
-        tooltipElement.style.left = `${left}px`;
-        tooltipElement.style.top = `${top}px`;
-        tooltipElement.style.setProperty(
-          "--tooltip-arrow-top",
-          `${arrowTop}px`,
-        );
-        return;
+      let placement = "right";
+      let left = targetRect.right + APP_TOOLTIP_OFFSET_PX;
+      if (left + tooltipRect.width > viewportWidth - margin) {
+        placement = "left";
+        left = targetRect.left - tooltipRect.width - APP_TOOLTIP_OFFSET_PX;
       }
 
+      left = clampNumber(
+        left,
+        margin,
+        viewportWidth - tooltipRect.width - margin,
+      );
+      const top = clampNumber(
+        targetRect.top + targetRect.height / 2 - tooltipRect.height / 2,
+        margin,
+        viewportHeight - tooltipRect.height - margin,
+      );
+      const arrowTop = clampNumber(
+        targetRect.top + targetRect.height / 2 - top,
+        12,
+        tooltipRect.height - 12,
+      );
+
+      this.tooltipElement.dataset.placement = placement;
+      this.tooltipElement.style.left = `${left}px`;
+      this.tooltipElement.style.top = `${top}px`;
+      this.tooltipElement.style.setProperty(
+        "--tooltip-arrow-top",
+        `${arrowTop}px`,
+      );
+    }
+
+    positionAboveOrBelowTarget(targetRect, tooltipRect) {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const margin = APP_TOOLTIP_VIEWPORT_MARGIN_PX;
       let placement = "top";
       let top = targetRect.top - tooltipRect.height - APP_TOOLTIP_OFFSET_PX;
 
@@ -145,106 +142,145 @@
         tooltipRect.width - 12,
       );
 
-      tooltipElement.dataset.placement = placement;
-      tooltipElement.style.left = `${left}px`;
-      tooltipElement.style.top = `${top}px`;
-      tooltipElement.style.setProperty(
+      this.tooltipElement.dataset.placement = placement;
+      this.tooltipElement.style.left = `${left}px`;
+      this.tooltipElement.style.top = `${top}px`;
+      this.tooltipElement.style.setProperty(
         "--tooltip-arrow-left",
         `${arrowLeft}px`,
       );
     }
 
-    function hide({ immediate = false } = {}) {
-      window.clearTimeout(showTimer);
-      showTimer = null;
-      window.clearTimeout(autoHideTimer);
-      autoHideTimer = null;
-      if (activeTarget) {
-        removeDescription(activeTarget);
-      }
-      activeTarget = null;
-
-      if (tooltipElement) {
-        const hasSlowFade =
-          tooltipElement.dataset.motion === "slow" && !tooltipElement.hidden;
-        window.clearTimeout(hideTimer);
-        hideTimer = null;
-        tooltipElement.classList.remove("is-visible");
-        if (hasSlowFade && !immediate) {
-          hideTimer = window.setTimeout(() => {
-            tooltipElement.hidden = true;
-            delete tooltipElement.dataset.motion;
-            delete tooltipElement.dataset.variant;
-            hideTimer = null;
-          }, APP_TOOLTIP_SLOW_FADE_MS);
-        } else {
-          tooltipElement.hidden = true;
-          delete tooltipElement.dataset.motion;
-          delete tooltipElement.dataset.variant;
-        }
-      }
-    }
-
-    function show(target) {
-      const text = textForTarget(target);
-      const hint = hintForTarget(target);
-      if (!tooltipElement || !text) {
-        hide();
+    position(target) {
+      if (!this.tooltipElement) {
         return;
       }
 
-      window.clearTimeout(hideTimer);
-      hideTimer = null;
-      window.clearTimeout(autoHideTimer);
-      autoHideTimer = null;
-      activeTarget = target;
+      const targetRect = target.getBoundingClientRect();
+      const tooltipRect = this.tooltipElement.getBoundingClientRect();
+      if (target.dataset.tooltipPlacement === "right") {
+        this.positionBesideTarget(target, targetRect, tooltipRect);
+        return;
+      }
+
+      this.positionAboveOrBelowTarget(targetRect, tooltipRect);
+    }
+
+    clearTimers() {
+      window.clearTimeout(this.showTimer);
+      this.showTimer = null;
+      window.clearTimeout(this.autoHideTimer);
+      this.autoHideTimer = null;
+    }
+
+    finishHide() {
+      this.tooltipElement.hidden = true;
+      delete this.tooltipElement.dataset.motion;
+      delete this.tooltipElement.dataset.variant;
+    }
+
+    hide({ immediate = false } = {}) {
+      this.clearTimers();
+      if (this.activeTarget) {
+        this.removeDescription(this.activeTarget);
+      }
+      this.activeTarget = null;
+
+      if (!this.tooltipElement) {
+        return;
+      }
+
+      const hasSlowFade =
+        this.tooltipElement.dataset.motion === "slow" &&
+        !this.tooltipElement.hidden;
+      window.clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+      this.tooltipElement.classList.remove("is-visible");
+      if (hasSlowFade && !immediate) {
+        this.hideTimer = window.setTimeout(() => {
+          this.finishHide();
+          this.hideTimer = null;
+        }, APP_TOOLTIP_SLOW_FADE_MS);
+        return;
+      }
+
+      this.finishHide();
+    }
+
+    applyTargetDecorations(target) {
       const motion = target.dataset.tooltipMotion?.trim() || "";
-      if (motion) {
-        tooltipElement.dataset.motion = motion;
-      } else {
-        delete tooltipElement.dataset.motion;
-      }
       const variant = target.dataset.tooltipVariant?.trim() || "";
-      if (variant) {
-        tooltipElement.dataset.variant = variant;
+      if (motion) {
+        this.tooltipElement.dataset.motion = motion;
       } else {
-        delete tooltipElement.dataset.variant;
+        delete this.tooltipElement.dataset.motion;
       }
-      tooltipElement.textContent = text;
+      if (variant) {
+        this.tooltipElement.dataset.variant = variant;
+      } else {
+        delete this.tooltipElement.dataset.variant;
+      }
+    }
+
+    renderContent(text, hint) {
+      this.tooltipElement.textContent = text;
       if (hint) {
         const hintElement = document.createElement("span");
         hintElement.className = "app-tooltip-hint";
         hintElement.textContent = hint;
-        tooltipElement.append(hintElement);
+        this.tooltipElement.append(hintElement);
       }
-      tooltipElement.hidden = false;
-      tooltipElement.classList.remove("is-visible");
-      position(target);
-      addDescription(target);
+    }
+
+    scheduleAutoHide(target) {
+      if (target.dataset.tooltipAutoHide !== "true") {
+        return;
+      }
+
+      this.autoHideTimer = window.setTimeout(() => {
+        if (this.activeTarget === target) {
+          this.hide();
+        }
+      }, APP_TOOLTIP_SLOW_AUTO_HIDE_DELAY_MS);
+    }
+
+    show(target) {
+      const text = textForTarget(target);
+      const hint = hintForTarget(target);
+      if (!this.tooltipElement || !text) {
+        this.hide();
+        return;
+      }
+
+      window.clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+      window.clearTimeout(this.autoHideTimer);
+      this.autoHideTimer = null;
+      this.activeTarget = target;
+      this.applyTargetDecorations(target);
+      this.renderContent(text, hint);
+      this.tooltipElement.hidden = false;
+      this.tooltipElement.classList.remove("is-visible");
+      this.position(target);
+      this.addDescription(target);
 
       window.requestAnimationFrame(() => {
-        if (activeTarget === target) {
-          tooltipElement.classList.add("is-visible");
-          if (target.dataset.tooltipAutoHide === "true") {
-            autoHideTimer = window.setTimeout(() => {
-              if (activeTarget === target) {
-                hide();
-              }
-            }, APP_TOOLTIP_SLOW_AUTO_HIDE_DELAY_MS);
-          }
+        if (this.activeTarget === target) {
+          this.tooltipElement.classList.add("is-visible");
+          this.scheduleAutoHide(target);
         }
       });
     }
 
-    function schedule(target) {
-      window.clearTimeout(showTimer);
-      showTimer = window.setTimeout(() => {
-        showTimer = null;
-        show(target);
+    schedule(target) {
+      window.clearTimeout(this.showTimer);
+      this.showTimer = window.setTimeout(() => {
+        this.showTimer = null;
+        this.show(target);
       }, APP_TOOLTIP_SHOW_DELAY_MS);
     }
 
-    function setText(element, text) {
+    setText(element, text) {
       if (!element) {
         return;
       }
@@ -256,47 +292,49 @@
         element.removeAttribute("data-tooltip");
       }
 
-      if (element === activeTarget) {
+      if (element === this.activeTarget) {
         if (nextText) {
-          show(element);
+          this.show(element);
         } else {
-          hide();
+          this.hide();
         }
       }
     }
 
-    function suppressTemporarily(
-      durationMs = APP_TOOLTIP_SUPPRESS_AFTER_INFO_CLOSE_MS,
-    ) {
-      suppressUntilMs = Date.now() + durationMs;
+    suppressTemporarily(durationMs = APP_TOOLTIP_SUPPRESS_AFTER_INFO_CLOSE_MS) {
+      this.suppressUntilMs = Date.now() + durationMs;
     }
 
-    function isSuppressed() {
-      return Date.now() < suppressUntilMs;
+    isSuppressed() {
+      return Date.now() < this.suppressUntilMs;
     }
 
-    function isActiveTarget(target) {
-      return activeTarget === target;
+    isActiveTarget(target) {
+      return this.activeTarget === target;
     }
 
-    function releasePointerClickFocus(event, element) {
+    releasePointerClickFocus(event, element) {
       if (!isPointerClick(event) || document.activeElement !== element) {
         return;
       }
 
       element.blur();
-      hide();
+      this.hide();
     }
+  }
 
+  function createController(options) {
+    const controller = new AppTooltipController(options);
     return Object.freeze({
-      hide,
-      isActiveTarget,
+      hide: controller.hide.bind(controller),
+      isActiveTarget: controller.isActiveTarget.bind(controller),
       isPointerClick,
-      isSuppressed,
-      releasePointerClickFocus,
-      schedule,
-      setText,
-      suppressTemporarily,
+      isSuppressed: controller.isSuppressed.bind(controller),
+      releasePointerClickFocus:
+        controller.releasePointerClickFocus.bind(controller),
+      schedule: controller.schedule.bind(controller),
+      setText: controller.setText.bind(controller),
+      suppressTemporarily: controller.suppressTemporarily.bind(controller),
       targetFromEvent,
     });
   }
