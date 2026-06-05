@@ -412,7 +412,10 @@ assert(
       "showManualRefreshFailure(response?.refreshStatus)",
     ) &&
     dashboardStatusControllerJs.includes(
-      '[STATUS_TEXT.checking]: "Checking..."',
+      "const disabled = manualRefreshInFlight || remainingMs > 0;",
+    ) &&
+    dashboardStatusControllerJs.includes(
+      'button.setAttribute("aria-disabled", String(disabled));',
     ) &&
     backgroundJs.includes(
       "PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS",

@@ -26,7 +26,6 @@
     waiting: "Waiting",
     waitingForReading: "Waiting for reading",
     refreshNeeded: "Refresh needed",
-    checking: "Checking",
     signInNotFound: "ChatGPT sign-in not found",
     checkFailed: "Check failed",
   });
@@ -35,15 +34,14 @@
     "Latest check failed because ChatGPT sign-in was not found.";
   const COLLECTION_STATUS_LABELS = Object.freeze({
     [STATUS_TEXT.checkFailed]: "Check failed",
-    [STATUS_TEXT.checking]: "Checking...",
     [STATUS_TEXT.refreshNeeded]: "Refresh needed",
     [STATUS_TEXT.signInNotFound]: "Sign-in needed",
     [STATUS_TEXT.waiting]: "Waiting",
   });
   const MANUAL_REFRESH_DEFAULT_LABEL = "Check ChatGPT usage now";
-  const MANUAL_REFRESH_CHECKING_LABEL = "Checking usage...";
   const MANUAL_REFRESH_COOLDOWN_PREFIX = "Check again in";
   const MANUAL_REFRESH_FAILURE_VISIBLE_MS = 1800;
+  const LAST_COLLECTED_UPDATE_FEEDBACK_MS = 1400;
   const COLLECTION_STATUS_STALE_AFTER_MS = 15 * 60 * 1000;
 
   function statusTooltipText(title, text, detail = "") {
@@ -92,6 +90,7 @@
   }) {
     let lastCheckedText =
       elements.lastCollectedValue.textContent.trim() || "waiting";
+    let lastCheckedFeedbackKey = null;
     let collectionStatusText = STATUS_TEXT.live;
     let collectionStatusMode = "ok";
     let collectionStatusTitle = COLLECTION_STATUS_TITLE;
@@ -102,6 +101,7 @@
     let manualRefreshCooldownTimer = null;
     let manualRefreshFeedback = null;
     let manualRefreshFeedbackTimer = null;
+    let lastCollectedUpdateFeedbackTimer = null;
 
     function collectionStatusLabelText(text) {
       return COLLECTION_STATUS_LABELS[text] || "";
@@ -130,15 +130,6 @@
     }
 
     function visibleCollectionStatus() {
-      if (manualRefreshInFlight) {
-        return {
-          text: STATUS_TEXT.checking,
-          mode: "warning",
-          title: COLLECTION_STATUS_TITLE,
-          detail: "Checking ChatGPT usage now.",
-        };
-      }
-
       if (manualRefreshFeedback) {
         return manualRefreshFeedback;
       }
@@ -161,10 +152,6 @@
     }
 
     function manualRefreshTooltipText() {
-      if (manualRefreshInFlight) {
-        return MANUAL_REFRESH_CHECKING_LABEL;
-      }
-
       const remainingMs = manualRefreshCooldownRemainingMs();
       if (remainingMs > 0) {
         return `${MANUAL_REFRESH_COOLDOWN_PREFIX} ${Math.ceil(
@@ -201,7 +188,6 @@
       const disabled = manualRefreshInFlight || remainingMs > 0;
       button.hidden = !manualRefreshAvailable;
       button.setAttribute("aria-disabled", String(disabled));
-      button.classList.toggle("is-checking", manualRefreshInFlight);
       button.setAttribute("aria-label", manualRefreshTooltipText());
       appTooltips.setText(button, manualRefreshTooltipText());
 
@@ -262,9 +248,34 @@
       renderCollectionStatus();
     }
 
-    function setLastCollected(value) {
-      lastCheckedText = String(value || "waiting");
+    function showLastCollectedUpdateFeedback() {
+      const value = elements.lastCollectedValue;
+      if (!value) {
+        return;
+      }
+
+      window.clearTimeout(lastCollectedUpdateFeedbackTimer);
+      value.classList.remove("is-updated");
+      void value.offsetWidth;
+      value.classList.add("is-updated");
+      lastCollectedUpdateFeedbackTimer = window.setTimeout(() => {
+        value.classList.remove("is-updated");
+        lastCollectedUpdateFeedbackTimer = null;
+      }, LAST_COLLECTED_UPDATE_FEEDBACK_MS);
+    }
+
+    function setLastCollected(value, feedbackKey = value) {
+      const nextCheckedText = String(value || "waiting");
+      const nextFeedbackKey = String(feedbackKey || nextCheckedText);
+      const changed =
+        lastCheckedFeedbackKey !== null &&
+        nextFeedbackKey !== lastCheckedFeedbackKey;
+      lastCheckedText = nextCheckedText;
+      lastCheckedFeedbackKey = nextFeedbackKey;
       elements.lastCollectedValue.textContent = lastCheckedText;
+      if (changed) {
+        showLastCollectedUpdateFeedback();
+      }
       renderCollectionStatus();
     }
 

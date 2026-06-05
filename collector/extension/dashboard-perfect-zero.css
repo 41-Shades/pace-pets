@@ -84,9 +84,7 @@ body.has-perfect-zero-page-background .state-chip.is-previewing {
   box-shadow: none;
 }
 
-body.has-perfect-zero-page-background .theme-toggle:hover,
-body.has-perfect-zero-page-background
-  .manual-refresh-button:hover:not([aria-disabled="true"]) {
+body.has-perfect-zero-page-background .theme-toggle:hover {
   background: transparent;
 }
 

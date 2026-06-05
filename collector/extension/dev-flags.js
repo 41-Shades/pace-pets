@@ -10,6 +10,7 @@
   const elements = {
     currentModePanel: document.querySelector(".current-mode-panel"),
     currentModeSummary: document.querySelector("#current-mode-summary"),
+    featurePreviewList: document.querySelector("#feature-preview-list"),
     paceLevelList: document.querySelector("#pace-level-list"),
     perfectStateList: document.querySelector("#perfect-state-list"),
     resetAll: document.querySelector("#reset-all"),
@@ -32,6 +33,7 @@
   ]);
 
   let currentForcedPaceStateKey = null;
+  let currentManualRefreshLeadWindow = false;
   let statusTimer = null;
 
   function setStatus(message) {
@@ -42,21 +44,32 @@
     }, 2200);
   }
 
-  function storageValue(forcedPaceStateKey) {
+  function storageValue({
+    forcedPaceStateKey,
+    manualRefreshLeadWindow = false,
+  } = {}) {
     const normalizedForcedPaceStateKey =
       DEVELOPER_OPTIONS.normalizeForcedPaceStateKey(forcedPaceStateKey);
-    if (!normalizedForcedPaceStateKey) {
-      return {};
+    const normalizedManualRefreshLeadWindow =
+      DEVELOPER_OPTIONS.normalizeManualRefreshLeadWindow(
+        manualRefreshLeadWindow,
+      );
+    const value = {};
+    if (normalizedForcedPaceStateKey) {
+      value[DEVELOPER_OPTIONS.FORCED_PACE_STATE_KEY] =
+        normalizedForcedPaceStateKey;
     }
-    return {
-      [DEVELOPER_OPTIONS.FORCED_PACE_STATE_KEY]: normalizedForcedPaceStateKey,
-    };
+    if (normalizedManualRefreshLeadWindow) {
+      value[DEVELOPER_OPTIONS.MANUAL_REFRESH_LEAD_WINDOW_KEY] = true;
+    }
+    return value;
   }
 
   function developerOptionsFromStorage(value) {
     const options = DEVELOPER_OPTIONS.normalizeDeveloperOptions(value);
     return {
       forcedPaceStateKey: options.forcedPaceStateKey,
+      manualRefreshLeadWindow: options.manualRefreshLeadWindow,
     };
   }
 
@@ -65,8 +78,8 @@
     return developerOptionsFromStorage(items?.[DEVELOPER_OPTIONS.STORAGE_KEY]);
   }
 
-  async function writeDeveloperOptions(forcedPaceStateKey) {
-    const normalizedValue = storageValue(forcedPaceStateKey);
+  async function writeDeveloperOptions(options) {
+    const normalizedValue = storageValue(options);
     if (Object.keys(normalizedValue).length === 0) {
       await STORAGE.removeLocal(DEVELOPER_OPTIONS.STORAGE_KEY);
       return developerOptionsFromStorage(null);
@@ -78,9 +91,20 @@
     return developerOptionsFromStorage(normalizedValue);
   }
 
-  async function persistDeveloperOptions(forcedPaceStateKey) {
-    const options = await writeDeveloperOptions(forcedPaceStateKey);
+  function currentDeveloperOptions() {
+    return {
+      forcedPaceStateKey: currentForcedPaceStateKey,
+      manualRefreshLeadWindow: currentManualRefreshLeadWindow,
+    };
+  }
+
+  async function persistDeveloperOptions(nextOptions) {
+    const options = await writeDeveloperOptions({
+      ...currentDeveloperOptions(),
+      ...nextOptions,
+    });
     currentForcedPaceStateKey = options.forcedPaceStateKey;
+    currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     render();
   }
 
@@ -93,25 +117,53 @@
   }
 
   function currentModeLabel() {
-    return currentForcedPaceStateKey
-      ? stateOptionByKey(currentForcedPaceStateKey)?.label || "Unknown state"
-      : "Live data";
+    const labels = [];
+    if (currentForcedPaceStateKey) {
+      labels.push(
+        stateOptionByKey(currentForcedPaceStateKey)?.label || "Unknown state",
+      );
+    }
+    if (currentManualRefreshLeadWindow) {
+      labels.push("Refresh link");
+    }
+    return labels.length > 0 ? labels.join(" + ") : "Live data";
   }
 
   function currentModeDetail() {
-    return currentForcedPaceStateKey ? "Dev override active" : "No override";
+    const activeCount =
+      Number(Boolean(currentForcedPaceStateKey)) +
+      Number(currentManualRefreshLeadWindow);
+    if (activeCount === 0) {
+      return "No override";
+    }
+    return activeCount === 1
+      ? "Dev override active"
+      : `${activeCount} dev overrides active`;
   }
 
-  function optionRow({ checked, labelText, onChange, value }) {
+  function hasActiveOverride() {
+    return Boolean(currentForcedPaceStateKey) || currentManualRefreshLeadWindow;
+  }
+
+  function optionRow({
+    checked,
+    inputName = null,
+    inputType = "radio",
+    labelText,
+    onChange,
+    value,
+  }) {
     const label = document.createElement("label");
     label.className = "option-row";
     const input = document.createElement("input");
     input.checked = checked;
-    input.name = "state-override";
-    input.type = "radio";
+    if (inputName) {
+      input.name = inputName;
+    }
+    input.type = inputType;
     input.value = value;
     input.addEventListener("change", () => {
-      if (!input.checked) {
+      if (input.type === "radio" && !input.checked) {
         return;
       }
       onChange(input).catch((error) => {
@@ -135,8 +187,9 @@
           checked: currentForcedPaceStateKey === state.key,
           labelText: state.label,
           value: state.key,
+          inputName: "state-override",
           onChange: async () => {
-            await persistDeveloperOptions(state.key);
+            await persistDeveloperOptions({ forcedPaceStateKey: state.key });
             setStatus(`State override: ${state.label}.`);
           },
         }),
@@ -146,7 +199,7 @@
   function renderCurrentMode() {
     elements.currentModePanel.classList.toggle(
       "has-override",
-      Boolean(currentForcedPaceStateKey),
+      hasActiveOverride(),
     );
 
     const label = document.createElement("div");
@@ -169,15 +222,40 @@
     );
   }
 
+  function renderFeaturePreviews() {
+    elements.featurePreviewList.replaceChildren(
+      optionRow({
+        checked: currentManualRefreshLeadWindow,
+        inputType: "checkbox",
+        labelText: "Refresh link",
+        value: "manual-refresh-lead-window",
+        onChange: async (input) => {
+          await persistDeveloperOptions({
+            manualRefreshLeadWindow: input.checked,
+          });
+          setStatus(
+            input.checked
+              ? "Refresh link forced."
+              : "Refresh link returned to timing.",
+          );
+        },
+      }),
+    );
+  }
+
   function render() {
     renderCurrentMode();
     renderStateOverrideColumns();
-    elements.resetAll.disabled = !currentForcedPaceStateKey;
+    renderFeaturePreviews();
+    elements.resetAll.disabled = !hasActiveOverride();
   }
 
   async function resetAllOverrides() {
-    await persistDeveloperOptions(null);
-    setStatus("State override reset.");
+    await persistDeveloperOptions({
+      forcedPaceStateKey: null,
+      manualRefreshLeadWindow: false,
+    });
+    setStatus("Dev overrides reset.");
   }
 
   elements.resetAll.addEventListener("click", () => {
@@ -198,12 +276,14 @@
       changes[DEVELOPER_OPTIONS.STORAGE_KEY]?.newValue,
     );
     currentForcedPaceStateKey = options.forcedPaceStateKey;
+    currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     render();
   });
 
   readDeveloperOptions()
     .then((options) => {
       currentForcedPaceStateKey = options.forcedPaceStateKey;
+      currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
       render();
     })
     .catch((error) => {
