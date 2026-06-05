@@ -18,14 +18,31 @@
   const BADGE_WINDOW_LABELS = USAGE_WINDOWS.WINDOW_BADGE_LABELS;
   const AUTH_SESSION_URLS = INTEGRATION_CONFIG.AUTH_SESSION_URLS;
   const ATTENTION_BADGE_STATE_KEYS = Object.freeze(["criticalBehind"]);
+  const PACE_LOGIC = root.PacePetsLogic;
+  if (!PACE_LOGIC) {
+    throw new Error(
+      "Pace presentation logic must load before background-logic.js.",
+    );
+  }
+  const PRODUCT_METADATA = root.CodexProductMetadata;
+  if (!PRODUCT_METADATA) {
+    throw new Error("Product metadata must load before background-logic.js.");
+  }
+  const ACCESS_TOKEN_PATHS = Object.freeze([
+    Object.freeze(["accessToken"]),
+    Object.freeze(["access_token"]),
+    Object.freeze(["session", "accessToken"]),
+    Object.freeze(["session", "access_token"]),
+    Object.freeze(["token"]),
+  ]);
+
+  function valueAtPath(data, path) {
+    return path.reduce((value, key) => value?.[key], data);
+  }
 
   function extractAccessToken(data) {
     return (
-      data?.accessToken ||
-      data?.access_token ||
-      data?.session?.accessToken ||
-      data?.session?.access_token ||
-      data?.token ||
+      ACCESS_TOKEN_PATHS.map((path) => valueAtPath(data, path)).find(Boolean) ||
       null
     );
   }
@@ -69,6 +86,15 @@
     return USAGE_WINDOWS.firstAvailableWindowKey(windows, preferredWindowKey);
   }
 
+  function badgeWindowKeys(windows, preferredWindowKey) {
+    const availableWindowKeys = USAGE_WINDOWS.WINDOW_KEYS.filter(
+      (windowKey) => windows?.[windowKey],
+    );
+    return availableWindowKeys.length > 0
+      ? availableWindowKeys
+      : [badgeWindowKey(windows, preferredWindowKey)];
+  }
+
   function isAttentionBadgeStateKey(stateKey) {
     return ATTENTION_BADGE_STATE_KEYS.includes(stateKey);
   }
@@ -83,19 +109,21 @@
     return Number.isFinite(paceRatio) ? paceRatio : null;
   }
 
-  function compareAttentionBadgeCandidates(left, right, preferredWindowKey) {
-    const leftRatio = candidatePaceRatio(left);
-    const rightRatio = candidatePaceRatio(right);
-    if (leftRatio !== null && rightRatio !== null && leftRatio !== rightRatio) {
-      return leftRatio - rightRatio;
-    }
-    if (leftRatio !== null && rightRatio === null) {
-      return -1;
-    }
-    if (leftRatio === null && rightRatio !== null) {
-      return 1;
+  function candidateRatioRank(paceRatio) {
+    return paceRatio === null ? 1 : 0;
+  }
+
+  function compareCandidateRatios(leftRatio, rightRatio) {
+    const rankDifference =
+      candidateRatioRank(leftRatio) - candidateRatioRank(rightRatio);
+    if (rankDifference !== 0 || leftRatio === null) {
+      return rankDifference;
     }
 
+    return leftRatio - rightRatio;
+  }
+
+  function compareCandidatePreference(left, right, preferredWindowKey) {
     const normalizedPreference = normalizeBadgeWindowKey(preferredWindowKey);
     if (left?.windowKey === normalizedPreference) {
       return -1;
@@ -105,6 +133,15 @@
     }
 
     return badgeCandidateWindowIndex(left) - badgeCandidateWindowIndex(right);
+  }
+
+  function compareAttentionBadgeCandidates(left, right, preferredWindowKey) {
+    return (
+      compareCandidateRatios(
+        candidatePaceRatio(left),
+        candidatePaceRatio(right),
+      ) || compareCandidatePreference(left, right, preferredWindowKey)
+    );
   }
 
   function sortedAttentionBadgeCandidates(candidates, preferredWindowKey) {
@@ -141,11 +178,146 @@
     };
   }
 
+  function badgeCandidateForWindow(windows, history, windowKey, atMs) {
+    const windowData = windows?.[windowKey];
+    const allowPerfectZero = PACE_LOGIC.allowsPerfectZeroForWindow(
+      history,
+      windowKey,
+      windowData,
+    );
+    const controlledPresentation =
+      PACE_LOGIC.controlledPacePresentationForWindow(windowData, {
+        allowPerfectZero,
+        atMs,
+      });
+    const paceRatio = PACE_LOGIC.paceRatioForWindow(windowData, atMs);
+    const state =
+      controlledPresentation?.state ||
+      PACE_LOGIC.paceStatePresentationForRatio(paceRatio);
+    const badgePaceRatio = controlledPresentation
+      ? controlledPresentation.displayRatio
+      : paceRatio;
+    const label = BADGE_WINDOW_LABELS[windowKey] || "";
+    const ratioBadgeText = PACE_LOGIC.badgeTextForPaceRatio(badgePaceRatio);
+    const isAttentionBadge = isAttentionBadgeStateKey(state.key);
+
+    return {
+      badgeColor: controlledPresentation
+        ? state.badgeColor
+        : PACE_LOGIC.badgeColorForPaceRatio(paceRatio),
+      badgePaceRatio,
+      badgeText: isAttentionBadge ? label : ratioBadgeText,
+      isAttentionBadge,
+      label,
+      paceRatio,
+      ratioBadgeText,
+      stateKey: state.key,
+      stateTitle: state.title,
+      windowKey,
+    };
+  }
+
+  function badgeCandidatesForWindows(
+    windows,
+    history,
+    preferredWindowKey,
+    atMs,
+  ) {
+    return badgeWindowKeys(windows, preferredWindowKey).map((windowKey) =>
+      badgeCandidateForWindow(windows, history, windowKey, atMs),
+    );
+  }
+
+  function attentionBadgeTitleItems(attentionCandidates) {
+    return attentionCandidates.map((candidate) => ({
+      label: candidate.label,
+      paceText: candidate.ratioBadgeText,
+      title: candidate.stateTitle,
+    }));
+  }
+
+  function badgeTitleForCandidate(candidate, attentionCandidates) {
+    if (!candidate) {
+      return PRODUCT_METADATA.ACTION_DEFAULT_TITLE;
+    }
+    if (candidate.isAttentionBadge) {
+      return PRODUCT_METADATA.attentionBadgeTitle({
+        items: attentionBadgeTitleItems(attentionCandidates),
+      });
+    }
+
+    return PRODUCT_METADATA.badgeTitle(
+      candidate.badgePaceRatio === null
+        ? null
+        : { badgeText: candidate.badgeText, label: candidate.label },
+    );
+  }
+
+  function forcedBadgeDisplay(forcedBadgeState, paceRatio, windowKey) {
+    return {
+      badgeColor: forcedBadgeState.badgeColor,
+      badgePaceRatio: forcedBadgeState.paceRatio,
+      badgeText: forcedBadgeState.badgeText,
+      paceRatio,
+      title: PRODUCT_METADATA.stateOverrideBadgeTitle({
+        badgeText: forcedBadgeState.badgeText,
+        title: forcedBadgeState.state.title,
+      }),
+      windowKey,
+    };
+  }
+
+  function selectedBadgeDisplay(candidate, attentionCandidates, windowKey) {
+    return {
+      badgeColor:
+        candidate?.badgeColor || PACE_LOGIC.DEFAULT_BADGE_COLORS.muted,
+      badgePaceRatio: candidate?.badgePaceRatio ?? null,
+      badgeText: candidate?.badgeText || "",
+      paceRatio: candidate?.paceRatio ?? null,
+      title: badgeTitleForCandidate(candidate, attentionCandidates),
+      windowKey,
+    };
+  }
+
+  function badgeDisplayForSelection({
+    attentionCandidates,
+    candidate,
+    forcedBadgeState,
+    preferredWindowKey,
+  }) {
+    const paceRatio = candidate?.paceRatio ?? null;
+    const windowKey = candidate?.windowKey || preferredWindowKey;
+    return forcedBadgeState
+      ? forcedBadgeDisplay(forcedBadgeState, paceRatio, windowKey)
+      : selectedBadgeDisplay(candidate, attentionCandidates, windowKey);
+  }
+
+  function badgeDisplayForWindows({
+    atMs,
+    forcedBadgeState,
+    history,
+    preferredWindowKey,
+    windows,
+  }) {
+    const badgeCandidates = badgeCandidatesForWindows(
+      windows,
+      history,
+      preferredWindowKey,
+      atMs,
+    );
+    return badgeDisplayForSelection({
+      ...prioritizedBadgeSelection(badgeCandidates, preferredWindowKey),
+      forcedBadgeState,
+      preferredWindowKey,
+    });
+  }
+
   root.PacePetsBackgroundLogic = {
     ATTENTION_BADGE_STATE_KEYS,
     AUTH_SESSION_URLS,
     BADGE_WINDOW_LABELS,
     DEFAULT_BADGE_WINDOW_KEY,
+    badgeDisplayForWindows,
     badgeWindowKey,
     extractAccessToken,
     extractAccessTokenFromSessionResponse,

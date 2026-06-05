@@ -55,8 +55,17 @@ export default [
   {
     files: ["**/*.{js,mjs}"],
     rules: {
-      complexity: ["error", { max: 15 }],
+      complexity: ["warn", { max: 10 }],
       "max-depth": ["error", 4],
+      "max-lines": [
+        "warn",
+        { max: 400, skipBlankLines: true, skipComments: true },
+      ],
+      "max-lines-per-function": [
+        "warn",
+        { max: 100, skipBlankLines: true, skipComments: true },
+      ],
+      "max-params": ["warn", 5],
       "no-restricted-syntax": ["error", ...restrictedSyntax],
     },
   },
@@ -81,7 +90,10 @@ export default [
         CodexUsageWindows: "readonly",
         GM_xmlhttpRequest: "readonly",
         importScripts: "readonly",
+        PacePetsBackgroundBadgePreviewSchedule: "readonly",
+        PacePetsBackgroundContextMenu: "readonly",
         PacePetsBackgroundLogic: "readonly",
+        PacePetsBackgroundUsageSource: "readonly",
         PacePetsDeveloperOptions: "readonly",
         PacePetsLogic: "readonly",
         PacePetsPreviewControl: "readonly",

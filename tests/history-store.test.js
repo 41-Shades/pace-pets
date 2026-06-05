@@ -71,7 +71,9 @@ describe("CodexUsageHistory.normalizeHistory", () => {
       ],
     });
   });
+});
 
+describe("CodexUsageHistory.normalizeHistory duration validation", () => {
   it("drops stored windows whose duration does not match their key", () => {
     const history = globalThis.CodexUsageHistory.normalizeHistory({
       samples: [
@@ -127,7 +129,9 @@ describe("CodexUsageHistory.normalizeHistory", () => {
       },
     ]);
   });
+});
 
+describe("CodexUsageHistory.normalizeHistory compaction", () => {
   it("compacts unchanged plateau samples but keeps changed samples", () => {
     const windows = {
       fiveHour: {

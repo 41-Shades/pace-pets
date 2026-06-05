@@ -7,90 +7,10 @@ const INITIAL_REFRESH_DELAY_MINUTES = 1;
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.WINDOW_STORAGE_KEY;
 const DEVELOPER_OPTIONS_STORAGE_KEY = PacePetsDeveloperOptions.STORAGE_KEY;
-const BADGE_PREVIEW_EXPIRES_STORAGE_KEY =
-  PacePetsPreviewControl.BADGE_PREVIEW_EXPIRES_STORAGE_KEY;
-const BADGE_PREVIEW_RESTORE_ALARM =
-  PacePetsPreviewControl.BADGE_PREVIEW_RESTORE_ALARM;
-const OPEN_DASHBOARD_CONTEXT_MENU_ID = "open-dashboard";
-const BADGE_CONTEXT_MENU_SEPARATOR_ID = "badge-window-separator";
-const BADGE_CONTEXT_MENU_ID_PREFIX = "badge-window:";
-const BADGE_CONTEXT_MENU_CONTEXTS = ["action"];
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
 let currentForcedPaceStateKey = null;
-
-async function fetchAccessToken() {
-  for (const url of PacePetsBackgroundLogic.AUTH_SESSION_URLS) {
-    try {
-      const response = await fetch(url, {
-        cache: "no-store",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-      const token =
-        await PacePetsBackgroundLogic.extractAccessTokenFromSessionResponse(
-          response,
-        );
-      if (token) {
-        return token;
-      }
-    } catch (error) {
-      console.warn(
-        "Codex usage auth session check failed:",
-        error?.message || "unknown error",
-      );
-      continue;
-    }
-  }
-
-  return null;
-}
-
-function usageHeaders(accessToken) {
-  return PacePetsBackgroundLogic.usageHeaders(
-    accessToken,
-    chrome.i18n.getUILanguage?.() || "en-US",
-  );
-}
-
-async function fetchWhamUsage() {
-  let accessToken = await fetchAccessToken();
-  let response = await fetch(CodexWeeklyUsage.USAGE_ENDPOINT, {
-    cache: "no-store",
-    credentials: "include",
-    headers: usageHeaders(accessToken),
-  });
-
-  if (
-    PacePetsBackgroundLogic.shouldRetryUsageResponse(
-      response.status,
-      accessToken,
-    )
-  ) {
-    accessToken = await fetchAccessToken();
-    response = await fetch(CodexWeeklyUsage.USAGE_ENDPOINT, {
-      cache: "no-store",
-      credentials: "include",
-      headers: usageHeaders(accessToken),
-    });
-  }
-
-  if (!response.ok) {
-    const error = new Error(
-      accessToken
-        ? `ChatGPT usage endpoint returned ${response.status} with session token.`
-        : `Could not read ChatGPT session token; usage endpoint returned ${response.status}.`,
-    );
-    error.authFailure = response.status === 401 || response.status === 403;
-    error.statusCode = response.status;
-    throw error;
-  }
-
-  return response.json();
-}
 
 async function persistRefreshStatus(refreshState) {
   try {
@@ -108,165 +28,6 @@ async function setBadge(
   await chrome.action.setBadgeText({ text });
   await chrome.action.setBadgeBackgroundColor({ color });
   await chrome.action.setTitle({ title });
-}
-
-function paceRatioForWindow(windowData, atMs = Date.now()) {
-  return PacePetsLogic.paceRatioForWindow(windowData, atMs);
-}
-
-function badgeTextForPaceRatio(paceRatio) {
-  return PacePetsLogic.badgeTextForPaceRatio(paceRatio);
-}
-
-function badgeColorForPaceRatio(paceRatio) {
-  return PacePetsLogic.badgeColorForPaceRatio(
-    paceRatio,
-    PacePetsLogic.DEFAULT_BADGE_COLORS,
-  );
-}
-
-function controlledPacePresentationForWindow(windowData, options) {
-  return PacePetsLogic.controlledPacePresentationForWindow(windowData, options);
-}
-
-function stateOverrideBadgeTitle(forcedBadgeState) {
-  return CodexProductMetadata.stateOverrideBadgeTitle({
-    badgeText: forcedBadgeState.badgeText,
-    title: forcedBadgeState.state.title,
-  });
-}
-
-function allowsPerfectZeroForWindow(history, windowKey, windowData) {
-  return PacePetsLogic.allowsPerfectZeroForWindow(
-    history,
-    windowKey,
-    windowData,
-  );
-}
-
-function badgeWindowKeys(windows, preferredWindowKey) {
-  const availableWindowKeys = CodexUsageWindows.WINDOW_KEYS.filter(
-    (windowKey) => windows?.[windowKey],
-  );
-  if (availableWindowKeys.length > 0) {
-    return availableWindowKeys;
-  }
-
-  return [PacePetsBackgroundLogic.badgeWindowKey(windows, preferredWindowKey)];
-}
-
-function badgeCandidateForWindow(windows, history, windowKey, atMs) {
-  const windowData = windows?.[windowKey];
-  const allowPerfectZero = allowsPerfectZeroForWindow(
-    history,
-    windowKey,
-    windowData,
-  );
-  const controlledPresentation = controlledPacePresentationForWindow(
-    windowData,
-    { allowPerfectZero, atMs },
-  );
-  const paceRatio = paceRatioForWindow(windowData, atMs);
-  const badgePaceRatio = controlledPresentation
-    ? controlledPresentation.displayRatio
-    : paceRatio;
-  const state = controlledPresentation
-    ? controlledPresentation.state
-    : PacePetsLogic.paceStatePresentationForRatio(paceRatio);
-  const label = PacePetsBackgroundLogic.BADGE_WINDOW_LABELS[windowKey] || "";
-  const ratioBadgeText = badgeTextForPaceRatio(badgePaceRatio);
-  const isAttentionBadge = PacePetsBackgroundLogic.isAttentionBadgeStateKey(
-    state.key,
-  );
-
-  return {
-    badgeColor: controlledPresentation
-      ? state.badgeColor
-      : badgeColorForPaceRatio(paceRatio),
-    badgePaceRatio,
-    badgeText: isAttentionBadge ? label : ratioBadgeText,
-    isAttentionBadge,
-    label,
-    paceRatio,
-    ratioBadgeText,
-    stateKey: state.key,
-    stateTitle: state.title,
-    windowKey,
-  };
-}
-
-function badgeCandidatesForWindows(windows, history, preferredWindowKey, atMs) {
-  return badgeWindowKeys(windows, preferredWindowKey).map((windowKey) =>
-    badgeCandidateForWindow(windows, history, windowKey, atMs),
-  );
-}
-
-function attentionBadgeTitleItems(attentionCandidates) {
-  return attentionCandidates.map((candidate) => ({
-    label: candidate.label,
-    paceText: candidate.ratioBadgeText,
-    title: candidate.stateTitle,
-  }));
-}
-
-function badgeTitleForCandidate(candidate, attentionCandidates) {
-  if (!candidate) {
-    return CodexProductMetadata.ACTION_DEFAULT_TITLE;
-  }
-  if (candidate.isAttentionBadge) {
-    return CodexProductMetadata.attentionBadgeTitle({
-      items: attentionBadgeTitleItems(attentionCandidates),
-    });
-  }
-
-  return CodexProductMetadata.badgeTitle(
-    candidate.badgePaceRatio === null
-      ? null
-      : { badgeText: candidate.badgeText, label: candidate.label },
-  );
-}
-
-function badgeDisplayForSelection({
-  attentionCandidates,
-  candidate,
-  forcedBadgeState,
-  preferredWindowKey,
-}) {
-  const paceRatio = candidate?.paceRatio ?? null;
-  const windowKey = candidate?.windowKey || preferredWindowKey;
-
-  if (forcedBadgeState) {
-    return {
-      badgeColor: forcedBadgeState.badgeColor,
-      badgePaceRatio: forcedBadgeState.paceRatio,
-      badgeText: forcedBadgeState.badgeText,
-      paceRatio,
-      title: stateOverrideBadgeTitle(forcedBadgeState),
-      windowKey,
-    };
-  }
-
-  return {
-    badgeColor:
-      candidate?.badgeColor || PacePetsLogic.DEFAULT_BADGE_COLORS.muted,
-    badgePaceRatio: candidate?.badgePaceRatio ?? null,
-    badgeText: candidate?.badgeText || "",
-    paceRatio,
-    title: badgeTitleForCandidate(candidate, attentionCandidates),
-    windowKey,
-  };
-}
-
-function createAlarm(alarmName, alarmInfo) {
-  return CodexExtensionStorage.callbackWithLastError((done) => {
-    chrome.alarms.create(alarmName, alarmInfo, done);
-  });
-}
-
-function clearAlarm(alarmName) {
-  return CodexExtensionStorage.callbackWithLastError((done) => {
-    chrome.alarms.clear(alarmName, done);
-  });
 }
 
 async function selectedBadgeWindowKey() {
@@ -303,88 +64,18 @@ async function readDeveloperOptions() {
   };
 }
 
-function badgeContextMenuId(windowKey) {
-  return `${BADGE_CONTEXT_MENU_ID_PREFIX}${windowKey}`;
-}
-
-function badgeWindowKeyFromContextMenuId(menuItemId) {
-  if (
-    typeof menuItemId !== "string" ||
-    !menuItemId.startsWith(BADGE_CONTEXT_MENU_ID_PREFIX)
-  ) {
-    return null;
-  }
-
-  const windowKey = menuItemId.slice(BADGE_CONTEXT_MENU_ID_PREFIX.length);
-  return CodexUsageWindows.isSupportedWindowKey(windowKey) ? windowKey : null;
-}
-
-function contextMenusAvailable() {
-  return Boolean(
-    chrome.contextMenus?.create &&
-    chrome.contextMenus?.removeAll &&
-    chrome.contextMenus?.update,
+async function createBadgeContextMenus() {
+  const selectedWindowKey = await selectedBadgeWindowKey();
+  await PacePetsBackgroundContextMenu.createBadgeContextMenus(
+    selectedWindowKey,
   );
 }
 
-function removeAllContextMenus() {
-  return CodexExtensionStorage.callbackWithLastError((done) => {
-    chrome.contextMenus.removeAll(done);
-  });
-}
-
-function createContextMenu(properties) {
-  return CodexExtensionStorage.callbackWithLastError((done) => {
-    chrome.contextMenus.create(properties, done);
-  });
-}
-
-function updateContextMenu(menuItemId, properties) {
-  return CodexExtensionStorage.callbackWithLastError((done) => {
-    chrome.contextMenus.update(menuItemId, properties, done);
-  });
-}
-
-async function createBadgeContextMenus() {
-  if (!contextMenusAvailable()) {
-    return;
-  }
-
-  const selectedWindowKey = await selectedBadgeWindowKey();
-  await removeAllContextMenus();
-  await createContextMenu({
-    contexts: BADGE_CONTEXT_MENU_CONTEXTS,
-    id: OPEN_DASHBOARD_CONTEXT_MENU_ID,
-    title: CodexProductMetadata.OPEN_DASHBOARD_MENU_TITLE,
-  });
-  await createContextMenu({
-    contexts: BADGE_CONTEXT_MENU_CONTEXTS,
-    id: BADGE_CONTEXT_MENU_SEPARATOR_ID,
-    type: "separator",
-  });
-
-  for (const windowKey of CodexUsageWindows.WINDOW_KEYS) {
-    await createContextMenu({
-      checked: windowKey === selectedWindowKey,
-      contexts: BADGE_CONTEXT_MENU_CONTEXTS,
-      id: badgeContextMenuId(windowKey),
-      title: `${CodexUsageWindows.WINDOW_SPECS[windowKey].badge} badge`,
-      type: "radio",
-    });
-  }
-}
-
 async function syncBadgeContextMenuSelection() {
-  if (!contextMenusAvailable()) {
-    return;
-  }
-
   const selectedWindowKey = await selectedBadgeWindowKey();
-  for (const windowKey of CodexUsageWindows.WINDOW_KEYS) {
-    await updateContextMenu(badgeContextMenuId(windowKey), {
-      checked: windowKey === selectedWindowKey,
-    });
-  }
+  await PacePetsBackgroundContextMenu.syncBadgeContextMenuSelection(
+    selectedWindowKey,
+  );
 }
 
 async function updatePaceBadge(windows, history = null) {
@@ -392,23 +83,12 @@ async function updatePaceBadge(windows, history = null) {
   const forcedBadgeState =
     PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey);
   const preferredWindowKey = await selectedBadgeWindowKey();
-  const atMs = Date.now();
-  const badgeCandidates = badgeCandidatesForWindows(
-    windows,
+  const badgeDisplay = PacePetsBackgroundLogic.badgeDisplayForWindows({
+    atMs: Date.now(),
+    forcedBadgeState,
     history,
     preferredWindowKey,
-    atMs,
-  );
-  const { attentionCandidates, candidate } =
-    PacePetsBackgroundLogic.prioritizedBadgeSelection(
-      badgeCandidates,
-      preferredWindowKey,
-    );
-  const badgeDisplay = badgeDisplayForSelection({
-    attentionCandidates,
-    candidate,
-    forcedBadgeState,
-    preferredWindowKey,
+    windows,
   });
 
   await setBadge(
@@ -434,7 +114,10 @@ async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
       await setBadge(
         forcedBadgeState.badgeText,
         forcedBadgeState.badgeColor,
-        stateOverrideBadgeTitle(forcedBadgeState),
+        CodexProductMetadata.stateOverrideBadgeTitle({
+          badgeText: forcedBadgeState.badgeText,
+          title: forcedBadgeState.state.title,
+        }),
       );
       return;
     }
@@ -458,37 +141,13 @@ async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
   };
 }
 
-async function readBadgePreviewExpiresAtMs() {
-  const items = await CodexExtensionStorage.getLocal(
-    BADGE_PREVIEW_EXPIRES_STORAGE_KEY,
-  );
-  return PacePetsPreviewControl.normalizeBadgePreviewExpiresAtMs(
-    items?.[BADGE_PREVIEW_EXPIRES_STORAGE_KEY],
-  );
-}
-
-async function scheduleBadgePreviewRestore() {
-  const expiresAtMs = PacePetsPreviewControl.badgePreviewExpiresAtMs();
-  await CodexExtensionStorage.setLocal({
-    [BADGE_PREVIEW_EXPIRES_STORAGE_KEY]: expiresAtMs,
-  });
-  await createAlarm(BADGE_PREVIEW_RESTORE_ALARM, { when: expiresAtMs });
-}
-
-async function clearBadgePreviewRestoreSchedule() {
-  await Promise.all([
-    clearAlarm(BADGE_PREVIEW_RESTORE_ALARM),
-    CodexExtensionStorage.removeLocal(BADGE_PREVIEW_EXPIRES_STORAGE_KEY),
-  ]);
-}
-
 async function previewPaceBadge(stateKey) {
   const preview = PacePetsPreviewControl.previewBadgeState(stateKey);
   if (!preview) {
     return { ok: false };
   }
 
-  await scheduleBadgePreviewRestore();
+  await PacePetsBackgroundBadgePreviewSchedule.scheduleRestore();
   await setBadge(
     preview.badgeText,
     preview.badgeColor,
@@ -502,18 +161,22 @@ async function previewPaceBadge(stateKey) {
 
 async function restorePaceBadgePreview() {
   await updatePaceBadgeFromHistory({ clearWhenEmpty: true });
-  await clearBadgePreviewRestoreSchedule();
+  await PacePetsBackgroundBadgePreviewSchedule.clearRestore();
   return { ok: true };
 }
 
 async function restoreExpiredPaceBadgePreview() {
-  const expiresAtMs = await readBadgePreviewExpiresAtMs();
+  const expiresAtMs =
+    await PacePetsBackgroundBadgePreviewSchedule.readExpiresAtMs();
   if (expiresAtMs === null) {
     return { ok: false };
   }
 
   if (expiresAtMs > Date.now()) {
-    await createAlarm(BADGE_PREVIEW_RESTORE_ALARM, { when: expiresAtMs });
+    await PacePetsBackgroundBadgePreviewSchedule.createAlarm(
+      PacePetsBackgroundBadgePreviewSchedule.RESTORE_ALARM,
+      { when: expiresAtMs },
+    );
     return { ok: false };
   }
 
@@ -521,7 +184,7 @@ async function restoreExpiredPaceBadgePreview() {
 }
 
 async function refreshUsage() {
-  const rawUsage = await fetchWhamUsage();
+  const rawUsage = await PacePetsBackgroundUsageSource.fetchWhamUsage();
   const payload = CodexWeeklyUsage.normalizeWhamUsage(rawUsage);
   payload.source = CodexIntegrationConfig.SOURCE_MARKERS.background;
   const { history, sample, stored, checkedAt } =
@@ -668,12 +331,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   return false;
 });
 chrome.contextMenus?.onClicked?.addListener((info) => {
-  if (info.menuItemId === OPEN_DASHBOARD_CONTEXT_MENU_ID) {
+  if (PacePetsBackgroundContextMenu.isOpenDashboardMenuItem(info.menuItemId)) {
     openDashboard();
     return;
   }
 
-  const windowKey = badgeWindowKeyFromContextMenuId(info.menuItemId);
+  const windowKey =
+    PacePetsBackgroundContextMenu.badgeWindowKeyFromContextMenuId(
+      info.menuItemId,
+    );
   if (!windowKey) {
     return;
   }
@@ -685,7 +351,7 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
   });
 });
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === BADGE_PREVIEW_RESTORE_ALARM) {
+  if (alarm.name === PacePetsBackgroundBadgePreviewSchedule.RESTORE_ALARM) {
     restoreExpiredPaceBadgePreview().catch((error) => {
       console.warn("Codex usage badge preview restore failed:", error);
     });

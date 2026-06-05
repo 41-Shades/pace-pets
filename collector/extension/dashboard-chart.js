@@ -11,11 +11,106 @@
   const DEFAULT_CHART_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
   const MS_PER_MINUTE = 60 * 1000;
 
-  function usageChartConfig(points, windowData) {
-    const { min, max } = CHART_DATA.chartWindowBounds(windowData) || {
-      min: Date.now() - DEFAULT_CHART_WINDOW_MS,
-      max: Date.now(),
+  function chartWindowRange(windowData) {
+    return (
+      CHART_DATA.chartWindowBounds(windowData) || {
+        min: Date.now() - DEFAULT_CHART_WINDOW_MS,
+        max: Date.now(),
+      }
+    );
+  }
+
+  function chartTooltipOptions(colors) {
+    return {
+      backgroundColor: colors.tooltipBg,
+      bodyColor: colors.tooltipText,
+      borderColor: colors.tooltipBorder,
+      borderWidth: 1,
+      caretSize: 5,
+      cornerRadius: 6,
+      displayColors: false,
+      padding: 8,
+      titleColor: colors.tooltipText,
+      bodyFont: {
+        size: 12,
+        weight: "560",
+      },
+      titleFont: {
+        size: 12,
+        weight: "600",
+      },
+      callbacks: {
+        label(context) {
+          const paceRatio = context.raw?.paceRatio ?? context.parsed.y;
+          const capped =
+            context.raw?.cappedHigh === true || context.raw?.cappedLow === true;
+          return capped
+            ? `Pace: ${CHART_DATA.formatPaceRatio(paceRatio)} (capped)`
+            : `Pace: ${CHART_DATA.formatPaceRatio(paceRatio)}`;
+        },
+        title(items) {
+          return items[0] ? CHART_DATA.formatTime(items[0].parsed.x) : "";
+        },
+      },
     };
+  }
+
+  function xScaleOptions({ max, min }) {
+    return {
+      type: "linear",
+      min,
+      max,
+      afterBuildTicks(scale) {
+        scale.ticks = [{ value: min }, { value: max }];
+      },
+      border: {
+        display: false,
+      },
+      grid: {
+        display: false,
+      },
+      ticks: {
+        display: false,
+      },
+    };
+  }
+
+  function yGridOptions(colors) {
+    return {
+      color(context) {
+        return context.tick.value === CHART_DATA.PERFECT_PACE_RATIO
+          ? colors.perfectLine
+          : "transparent";
+      },
+      drawTicks: false,
+      lineWidth(context) {
+        return context.tick.value === CHART_DATA.PERFECT_PACE_RATIO ? 1 : 0;
+      },
+    };
+  }
+
+  function yScaleOptions(yBounds, colors) {
+    return {
+      min: yBounds.min,
+      max: yBounds.max,
+      afterBuildTicks(scale) {
+        scale.ticks = [
+          { value: yBounds.min },
+          { value: CHART_DATA.PERFECT_PACE_RATIO },
+          { value: yBounds.max },
+        ];
+      },
+      border: {
+        display: false,
+      },
+      grid: yGridOptions(colors),
+      ticks: {
+        display: false,
+      },
+    };
+  }
+
+  function usageChartConfig(points, windowData) {
     const colors = CHART_DATA.chartColors();
     const yBounds = CHART_DATA.ratioChartBounds(points);
     return {
@@ -36,213 +131,141 @@
           legend: {
             display: false,
           },
-          tooltip: {
-            backgroundColor: colors.tooltipBg,
-            bodyColor: colors.tooltipText,
-            borderColor: colors.tooltipBorder,
-            borderWidth: 1,
-            caretSize: 5,
-            cornerRadius: 6,
-            displayColors: false,
-            padding: 8,
-            titleColor: colors.tooltipText,
-            bodyFont: {
-              size: 12,
-              weight: "560",
-            },
-            titleFont: {
-              size: 12,
-              weight: "600",
-            },
-            callbacks: {
-              label(context) {
-                const paceRatio = context.raw?.paceRatio ?? context.parsed.y;
-                const capped =
-                  context.raw?.cappedHigh === true ||
-                  context.raw?.cappedLow === true;
-                return capped
-                  ? `Pace: ${CHART_DATA.formatPaceRatio(paceRatio)} (capped)`
-                  : `Pace: ${CHART_DATA.formatPaceRatio(paceRatio)}`;
-              },
-              title(items) {
-                return items[0] ? CHART_DATA.formatTime(items[0].parsed.x) : "";
-              },
-            },
-          },
+          tooltip: chartTooltipOptions(colors),
         },
         scales: {
-          x: {
-            type: "linear",
-            min,
-            max,
-            afterBuildTicks(scale) {
-              scale.ticks = [{ value: min }, { value: max }];
-            },
-            border: {
-              display: false,
-            },
-            grid: {
-              display: false,
-            },
-            ticks: {
-              display: false,
-            },
-          },
-          y: {
-            min: yBounds.min,
-            max: yBounds.max,
-            afterBuildTicks(scale) {
-              scale.ticks = [
-                { value: yBounds.min },
-                { value: CHART_DATA.PERFECT_PACE_RATIO },
-                { value: yBounds.max },
-              ];
-            },
-            border: {
-              display: false,
-            },
-            grid: {
-              color(context) {
-                return context.tick.value === CHART_DATA.PERFECT_PACE_RATIO
-                  ? colors.perfectLine
-                  : "transparent";
-              },
-              drawTicks: false,
-              lineWidth(context) {
-                return context.tick.value === CHART_DATA.PERFECT_PACE_RATIO
-                  ? 1
-                  : 0;
-              },
-            },
-            ticks: {
-              display: false,
-            },
-          },
+          x: xScaleOptions(chartWindowRange(windowData)),
+          y: yScaleOptions(yBounds, colors),
         },
       },
     };
   }
 
-  function createRenderer({
-    chartCanvas,
-    chartFrame,
-    chartState,
-    windowSpecs,
-  }) {
-    let usageChart = null;
+  class UsageChartRenderer {
+    constructor({ chartCanvas, chartFrame, chartState, windowSpecs }) {
+      this.chartCanvas = chartCanvas;
+      this.chartFrame = chartFrame;
+      this.chartState = chartState;
+      this.windowSpecs = windowSpecs;
+      this.usageChart = null;
+    }
 
-    function registeredUsageChart() {
+    registeredUsageChart() {
       if (
         !globalThis.Chart ||
         typeof globalThis.Chart.getChart !== "function"
       ) {
         return null;
       }
-      return globalThis.Chart.getChart(chartCanvas) || null;
+      return globalThis.Chart.getChart(this.chartCanvas) || null;
     }
 
-    function destroy() {
-      const registeredChart = registeredUsageChart();
-      if (usageChart) {
-        usageChart.destroy();
+    destroy() {
+      const registeredChart = this.registeredUsageChart();
+      if (this.usageChart) {
+        this.usageChart.destroy();
       }
-      if (registeredChart && registeredChart !== usageChart) {
+      if (registeredChart && registeredChart !== this.usageChart) {
         registeredChart.destroy();
       }
-      usageChart = null;
+      this.usageChart = null;
     }
 
-    function setEmpty(message) {
-      destroy();
-      chartFrame.classList.add("empty");
-      chartCanvas.hidden = true;
-      chartState.hidden = false;
-      chartState.textContent = message;
+    setEmpty(message) {
+      this.destroy();
+      this.chartFrame.classList.add("empty");
+      this.chartCanvas.hidden = true;
+      this.chartState.hidden = false;
+      this.chartState.textContent = message;
     }
 
-    function renderPoints(
-      points,
-      windowKey,
-      windowData,
-      { preview = false } = {},
-    ) {
-      const spec = windowSpecs[windowKey];
+    chartAriaLabel(spec, preview, hasCappedPoints = false) {
+      const previewLabel = preview ? " preview" : "";
+      const cappedLabel = hasCappedPoints
+        ? "; some extreme points are capped"
+        : "";
+      return `${spec.chartSampleLabel} pace ratio across active reset window${previewLabel}${cappedLabel}`;
+    }
+
+    showChartCanvas(spec, preview) {
+      this.chartFrame.classList.remove("empty");
+      this.chartCanvas.hidden = false;
+      this.chartCanvas.setAttribute(
+        "aria-label",
+        this.chartAriaLabel(spec, preview),
+      );
+      this.chartState.hidden = true;
+    }
+
+    updateChart(config) {
+      this.usageChart = this.usageChart || this.registeredUsageChart();
+      if (!this.usageChart) {
+        this.usageChart = new globalThis.Chart(
+          this.chartCanvas.getContext("2d"),
+          config,
+        );
+        return;
+      }
+
+      this.usageChart.data.datasets = config.data.datasets;
+      this.usageChart.options.interaction = config.options.interaction;
+      this.usageChart.options.plugins = config.options.plugins;
+      this.usageChart.options.scales.x = config.options.scales.x;
+      this.usageChart.options.scales.y = config.options.scales.y;
+      this.usageChart.update();
+    }
+
+    renderPoints(points, windowKey, windowData, { preview = false } = {}) {
+      const spec = this.windowSpecs[windowKey];
       if (!globalThis.Chart) {
-        setEmpty("Chart.js did not load from the extension asset.");
+        this.setEmpty("Chart.js did not load from the extension asset.");
         return;
       }
 
       if (points.length < 2) {
-        setEmpty(CHART_DATA.LOW_SAMPLE_CHART_COPY);
+        this.setEmpty(CHART_DATA.LOW_SAMPLE_CHART_COPY);
         return;
       }
 
-      chartFrame.classList.remove("empty");
-      chartCanvas.hidden = false;
-      chartCanvas.setAttribute(
-        "aria-label",
-        `${spec.chartSampleLabel} pace ratio across active reset window${
-          preview ? " preview" : ""
-        }`,
-      );
-      chartState.hidden = true;
-
+      this.showChartCanvas(spec, preview);
       const config = usageChartConfig(points, windowData);
       const yBounds = config.options.scales.y;
       const hasCappedPoints = CHART_DATA.hasCappedPacePoints(points, yBounds);
-      chartCanvas.setAttribute(
+      this.chartCanvas.setAttribute(
         "aria-label",
-        `${spec.chartSampleLabel} pace ratio across active reset window${
-          preview ? " preview" : ""
-        }${hasCappedPoints ? "; some extreme points are capped" : ""}`,
+        this.chartAriaLabel(spec, preview, hasCappedPoints),
       );
-      usageChart = usageChart || registeredUsageChart();
-      if (!usageChart) {
-        usageChart = new globalThis.Chart(chartCanvas.getContext("2d"), config);
-        return;
-      }
-
-      usageChart.data.datasets = config.data.datasets;
-      usageChart.options.interaction = config.options.interaction;
-      usageChart.options.plugins = config.options.plugins;
-      usageChart.options.scales.x = config.options.scales.x;
-      usageChart.options.scales.y = config.options.scales.y;
-      usageChart.update();
+      this.updateChart(config);
     }
 
-    function render(samples, windowKey, windowData) {
-      renderPoints(
+    render(samples, windowKey, windowData) {
+      this.renderPoints(
         CHART_DATA.paceChartPoints(samples, windowKey),
         windowKey,
         windowData,
       );
     }
 
-    function previewDurationMinutes(windowKey, windowData) {
+    previewDurationMinutes(windowKey, windowData) {
       const windowMinutes = Number(windowData?.windowMinutes);
       if (Number.isFinite(windowMinutes) && windowMinutes > 0) {
         return windowMinutes;
       }
 
       const specDurationMinutes = Number(
-        windowSpecs[windowKey]?.durationMinutes,
+        this.windowSpecs[windowKey]?.durationMinutes,
       );
       return Number.isFinite(specDurationMinutes) && specDurationMinutes > 0
         ? specDurationMinutes
         : DEFAULT_CHART_WINDOW_MS / MS_PER_MINUTE;
     }
 
-    function previewWindowData({
-      atMs,
-      percentPair,
-      summaryWindow,
-      summaryWindowKey,
-    }) {
+    previewWindowData({ atMs, percentPair, summaryWindow, summaryWindowKey }) {
       const timePercent = Math.max(
         0,
         Math.min(100, Number(percentPair?.timePercent) || 0),
       );
-      const durationMinutes = previewDurationMinutes(
+      const durationMinutes = this.previewDurationMinutes(
         summaryWindowKey,
         summaryWindow,
       );
@@ -255,14 +278,9 @@
       };
     }
 
-    function renderPreview({
-      paceRatio,
-      percentPair,
-      summaryWindow,
-      summaryWindowKey,
-    }) {
+    renderPreview({ paceRatio, percentPair, summaryWindow, summaryWindowKey }) {
       const atMs = Date.now();
-      const windowData = previewWindowData({
+      const windowData = this.previewWindowData({
         atMs,
         percentPair,
         summaryWindow,
@@ -271,16 +289,18 @@
       const points = CHART_DATA.previewPaceChartPoints(paceRatio, windowData, {
         atMs,
       });
-      renderPoints(points, summaryWindowKey, windowData, { preview: true });
+      this.renderPoints(points, summaryWindowKey, windowData, {
+        preview: true,
+      });
     }
 
-    function renderHistory({
+    renderHistory({
       hasResetTiming,
       history,
       summaryWindow,
       summaryWindowKey,
     }) {
-      const chartSpec = windowSpecs[summaryWindowKey];
+      const chartSpec = this.windowSpecs[summaryWindowKey];
       const samples = CHART_DATA.resetWindowSamples(
         history,
         summaryWindowKey,
@@ -293,27 +313,32 @@
       );
 
       if (!summaryWindow) {
-        setEmpty(`Waiting for ${chartSpec.chartSampleLabel} usage.`);
+        this.setEmpty(`Waiting for ${chartSpec.chartSampleLabel} usage.`);
         return;
       }
 
       if (!hasResetTiming) {
-        setEmpty(`${chartSpec.chartSampleLabel} reset timing unavailable.`);
+        this.setEmpty(
+          `${chartSpec.chartSampleLabel} reset timing unavailable.`,
+        );
         return;
       }
 
       if (chartSamples.length < 2) {
-        setEmpty(CHART_DATA.LOW_SAMPLE_CHART_COPY);
+        this.setEmpty(CHART_DATA.LOW_SAMPLE_CHART_COPY);
         return;
       }
 
-      render(chartSamples, summaryWindowKey, summaryWindow);
+      this.render(chartSamples, summaryWindowKey, summaryWindow);
     }
+  }
 
+  function createRenderer(options) {
+    const renderer = new UsageChartRenderer(options);
     return Object.freeze({
-      renderPreview,
-      renderHistory,
-      setEmpty,
+      renderHistory: renderer.renderHistory.bind(renderer),
+      renderPreview: renderer.renderPreview.bind(renderer),
+      setEmpty: renderer.setEmpty.bind(renderer),
     });
   }
 

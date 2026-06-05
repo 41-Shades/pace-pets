@@ -25,8 +25,10 @@ default.
   dimensions, and transparent default pace icon assets.
 - `npm run lint:release` validates release-facing source metadata and public
   docs for private paths, sensitive artifacts, and version drift.
-- `npm run check` runs format check, the full lint chain, smoke checks, and
-  Vitest tests.
+- `npm run check:file-lengths` blocks maintained extension, docs, script, and
+  test source files over 400 lines.
+- `npm run check` runs format check, the full lint chain, file-length
+  guardrails, smoke checks, and Vitest tests.
 - `npm run preflight` is the full local release gate and adds dependency audits.
 
 ## Generated Docs

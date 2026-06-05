@@ -2,7 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { requiredExtensionFiles } from "./extension-check-required-files.mjs";
 import { assertStorageSchemaDocumentCurrent } from "./storage-schema-doc.mjs";
+import { checkDashboardSmoke } from "./smoke-check-dashboard.mjs";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -96,36 +98,9 @@ assert(
   !manifest.content_scripts,
   "Extension must not inject localhost content scripts.",
 );
-assertFile("collector/extension/background.js");
-assertFile("collector/extension/background-logic.js");
-assertFile("collector/extension/runtime-manifest.js");
-assertFile("collector/extension/dashboard-loader.js");
-assertFile("collector/extension/product-metadata.js");
-assertFile("collector/extension/integration-config.js");
-assertFile("collector/extension/usage-windows.js");
-assertFile("collector/extension/usage-values.js");
-assertFile("collector/extension/refresh-status.js");
-assertFile("collector/extension/refresh-control.js");
-assertFile("collector/extension/storage-adapter.js");
-assertFile("collector/extension/usage-integration-adapters.js");
-assertFile("collector/extension/usage.js");
-assertFile("collector/extension/history-store.js");
-assertFile("collector/extension/themes/default/asset-manifest.js");
-assertFile("collector/extension/developer-options.js");
-assertFile("collector/extension/pace-logic.js");
-assertFile("collector/extension/dashboard.html");
-assertFile("collector/extension/dashboard.css");
-assertFile("collector/extension/dashboard-tooltips.js");
-assertFile("collector/extension/dashboard-early-reset.js");
-assertFile("collector/extension/dashboard-chart-data.js");
-assertFile("collector/extension/dashboard-chart.js");
-assertFile("collector/extension/dashboard-time.js");
-assertFile("collector/extension/dashboard-shell-controls.js");
-assertFile("collector/extension/dashboard-status-controller.js");
-assertFile("collector/extension/dashboard-pace-controller.js");
-assertFile("collector/extension/dashboard.js");
-assertFile("collector/extension/vendor/chart.umd.min.js");
-assertFile("collector/extension/vendor/chart.umd.min.js.map");
+for (const requiredExtensionFile of requiredExtensionFiles) {
+  assertFile(`collector/extension/${requiredExtensionFile}`);
+}
 for (const size of ["16", "32", "48", "128"]) {
   assertFile(
     extensionPathFromExtensionPageUrl(
@@ -144,10 +119,27 @@ for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
 }
 
 const dashboardHtml = readText("collector/extension/dashboard.html");
-const backgroundJs = readText("collector/extension/background.js");
-const dashboardJs = readText("collector/extension/dashboard.js");
+const backgroundJs = [
+  "background.js",
+  "background-badge-preview-schedule.js",
+  "background-context-menu.js",
+  "background-usage-source.js",
+]
+  .map((file) => readText(`collector/extension/${file}`))
+  .join("\n");
+const dashboardSource = [
+  "dashboard.js",
+  "dashboard-app-core.js",
+  "dashboard-history-methods.js",
+  "dashboard-event-methods.js",
+]
+  .map((file) => readText(`collector/extension/${file}`))
+  .join("\n");
 const dashboardStatusControllerJs = readText(
   "collector/extension/dashboard-status-controller.js",
+);
+const dashboardStatusLogicJs = readText(
+  "collector/extension/dashboard-status-logic.js",
 );
 const usageJs = readText("collector/extension/usage.js");
 const usageIntegrationAdaptersJs = readText(
@@ -155,264 +147,32 @@ const usageIntegrationAdaptersJs = readText(
 );
 const extensionDocsHtml = readText("docs/extension.html");
 await assertStorageSchemaDocumentCurrent();
-assert(
-  dashboardHtml.includes(`<title>${productMetadata.NAME}</title>`) &&
-    dashboardHtml.includes(
-      `<h1 id="usage-title">${productMetadata.NAME}</h1>`,
-    ) &&
-    dashboardHtml.includes(
-      `<p id="usage-description">${productMetadata.DASHBOARD_DESCRIPTION}</p>`,
-    ),
-  "Dashboard static product metadata must match product-metadata.js.",
-);
-assert(
-  !/"windowMinutes"\s*:\s*(?:10080|300)/.test(extensionDocsHtml),
-  "Extension setup docs must not duplicate generated storage schema examples.",
-);
-assert(
-  !/>\s*Unknown\s*<\/span>/i.test(dashboardHtml),
-  "Dashboard placeholders must not render Unknown.",
-);
-for (const requiredId of [
-  "collection-pulse",
-  "collection-status-label",
-  "pace-card",
-  "pace-icon",
-  "pace-title",
-  "pace-copy",
-  "pace-ratio-stat",
-  "pace-ratio-value",
-  "usage-percent",
-  "time-percent",
-  "usage-bar",
-  "time-bar",
-  "prior-reset-label",
-  "prior-reset-date",
-  "prior-reset-time",
-  "resets-in",
-  "scheduled-reset-label",
-  "scheduled-reset-date",
-  "scheduled-reset-time",
-  "chart-frame",
-  "usage-chart",
-  "chart-state",
-  "last-collected",
-  "manual-refresh-button",
-  "collector-version",
-  "early-reset-button",
-  "early-reset-popover",
-  "pace-state-stack",
-]) {
-  assertIncludes(
-    dashboardHtml,
-    `id="${requiredId}"`,
-    `dashboard id ${requiredId}`,
-  );
-}
-assert(
-  !/<article\b[^>]*class="[^"]*\bstate-chip\b/i.test(dashboardHtml),
-  "Pace state legend chips must be rendered from shared pace-state metadata.",
-);
-assert(
-  /<link\b[^>]*rel="stylesheet"[^>]*href="\.\/dashboard\.css"[^>]*>/s.test(
-    dashboardHtml,
-  ),
-  "Missing dashboard stylesheet link.",
-);
-assert(
-  dashboardHtml.includes(`href="${themeAssets.appIconPathForSize(32)}"`),
-  "Missing dashboard favicon link.",
-);
-assert(
-  /<link\b[^>]*id="dynamic-favicon"[^>]*rel="icon"[^>]*href=/s.test(
-    dashboardHtml,
-  ),
-  "Dashboard favicon link must be present.",
-);
-assert(
-  /<script\b[^>]*src="\.\/runtime-manifest\.js"[^>]*><\/script>/s.test(
-    dashboardHtml,
-  ),
-  "Missing runtime manifest script link.",
-);
-assert(
-  /<script\b[^>]*src="\.\/dashboard-loader\.js"[^>]*><\/script>/s.test(
-    dashboardHtml,
-  ),
-  "Missing dashboard loader script link.",
-);
-assert(
-  dashboardHtml.indexOf('src="./runtime-manifest.js"') <
-    dashboardHtml.indexOf('src="./dashboard-loader.js"'),
-  "Dashboard must load the runtime manifest before the dashboard loader.",
-);
-assert(
-  runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes("./dashboard.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
-      "./developer-options.js",
-    ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
-      "./dashboard-tooltips.js",
-    ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
-      "./dashboard-early-reset.js",
-    ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
-      "./dashboard-chart-data.js",
-    ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes("./dashboard-chart.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes("./dashboard-time.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
-      "./dashboard-shell-controls.js",
-    ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
-      "./dashboard-status-controller.js",
-    ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
-      "./dashboard-pace-controller.js",
-    ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(
-      "./vendor/chart.umd.min.js",
-    ),
-  "Dashboard runtime manifest must include developer options, dashboard helpers, dashboard, and Chart.js scripts.",
-);
-assert(
-  runtimeManifest.OPTIONAL_DASHBOARD_SCRIPT_SOURCES?.includes(
-    "./vendor/chart.umd.min.js",
-  ),
-  "Chart.js must be optional so the dashboard can still load without charts.",
-);
-assert(
-  runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./product-metadata.js") <
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js"),
-  "Dashboard runtime manifest must load product metadata before dashboard.js.",
-);
-assert(
-  runtimeManifest.BACKGROUND_SCRIPT_SOURCES.indexOf("product-metadata.js") <
-    runtimeManifest.BACKGROUND_SCRIPT_SOURCES.indexOf("background-logic.js"),
-  "Background runtime manifest must load product metadata before background logic.",
-);
-assert(
-  runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./integration-config.js") <
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage-windows.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage-values.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage-values.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./history-store.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./refresh-status.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./history-store.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage-values.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./storage-adapter.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./usage-integration-adapters.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./usage.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./themes/default/asset-manifest.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./integration-config.js",
-    ) <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-chart-data.js",
-      ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-chart-data.js",
-      ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./dashboard-chart-data.js",
-    ) <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-chart.js",
-      ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./pace-logic.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-chart.js",
-      ) &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./developer-options.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./dashboard-tooltips.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./dashboard-early-reset.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-chart.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-time.js") <
-      runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./dashboard-shell-controls.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./dashboard-status-controller.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js") &&
-    runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./dashboard-pace-controller.js",
-    ) < runtimeManifest.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard.js"),
-  "Dashboard runtime manifest must load shared contracts before dependent scripts.",
-);
-assert(
-  !/\.\/themes\/default\/pace-icons\//.test(dashboardJs),
-  "Dashboard script must read pace icon paths from shared pace-state metadata.",
-);
-assert(
-  !/localStorage\.(?:getItem|setItem)\(\s*WINDOW_STORAGE_KEY\b/.test(
-    dashboardJs,
-  ),
-  "Selected usage window preference must use chrome.storage.local, not localStorage.",
-);
-assert(
-  dashboardJs.includes("EXTENSION_STORAGE.getLocal(WINDOW_STORAGE_KEY"),
-  "Dashboard must read selected usage window preference through the storage adapter.",
-);
-assert(
-  !/Promise\.resolve\(\s*selectedWindowKey\s*\)/.test(dashboardJs),
-  "Dashboard reloads must not snapshot selectedWindowKey during local window toggles.",
-);
-assert(
-  dashboardJs.includes("let currentHistory = null;") &&
-    dashboardJs.includes("let currentRefreshStatus = null;"),
-  "Dashboard must cache the last loaded state for lightweight time-sensitive refreshes.",
-);
-assert(
-  dashboardJs.includes("refreshDashboardTimeSensitiveViews().catch") &&
-    dashboardJs.includes("refreshChart: false"),
-  "Dashboard minute refresh must reuse cached state without rebuilding the chart.",
-);
-assert(
-  /async function refreshDashboardTimeSensitiveViews\(\) \{\s*if \(!currentHistory\) \{\s*await loadDashboard\(\);\s*return;\s*\}/s.test(
-    dashboardJs,
-  ),
-  "Dashboard minute refresh must retry a full load until cached state exists.",
-);
-assert(
-  !/window\.setInterval\(\(\) => {\s*loadDashboard\(/s.test(dashboardJs),
-  "Dashboard minute refresh must not reread full storage state.",
-);
-assert(
-  !/runtime\.sendMessage\(\s*\{\s*type:\s*"status"\s*\}/.test(
-    `${dashboardJs}\n${dashboardStatusControllerJs}`,
-  ) && backgroundJs.includes("PacePetsRefreshControl.isRefreshNowMessage"),
-  "Dashboard status updates must use stored refresh status while manual checks use the refresh-now message contract.",
-);
+checkDashboardSmoke({
+  assert,
+  assertIncludes,
+  backgroundSource: backgroundJs,
+  dashboardHtml,
+  dashboardSource,
+  dashboardStatusLogicSource: dashboardStatusLogicJs,
+  dashboardStatusSource: dashboardStatusControllerJs,
+  extensionDocsHtml,
+  productMetadata,
+  runtimeManifest,
+  themeAssets,
+});
 assert(
   dashboardStatusControllerJs.includes(
     "REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS",
   ) &&
     dashboardStatusControllerJs.includes(
-      "button.hidden = !manualRefreshAvailable",
+      "button.hidden = !this.manualRefreshAvailable",
     ) &&
     dashboardStatusControllerJs.includes("manualRefreshFeedback") &&
     dashboardStatusControllerJs.includes(
       "showManualRefreshFailure(response?.refreshStatus)",
     ) &&
     dashboardStatusControllerJs.includes(
-      "const disabled = manualRefreshInFlight || remainingMs > 0;",
+      "const disabled = this.manualRefreshInFlight || remainingMs > 0;",
     ) &&
     dashboardStatusControllerJs.includes(
       'button.setAttribute("aria-disabled", String(disabled));',
@@ -425,21 +185,6 @@ assert(
   "Manual refresh must be conditional, cooldown guarded, and routed through the scheduled refresh path.",
 );
 assert(
-  dashboardStatusControllerJs.includes(
-    '[STATUS_TEXT.signInNotFound]: "Sign-in needed"',
-  ) &&
-    !dashboardStatusControllerJs.includes(
-      '[STATUS_TEXT.signInNotFound]: "Check failed"',
-    ) &&
-    dashboardStatusControllerJs.includes(
-      "Latest check failed because ChatGPT sign-in was not found.",
-    ) &&
-    dashboardJs.includes(
-      "const checkedAt = refreshStatus?.refreshedAt || latest?.collectedAt;",
-    ),
-  "Dashboard status copy must keep auth failures actionable and checked time tied to the latest refresh attempt.",
-);
-assert(
   backgroundJs.includes("let scheduledRefreshPromise = null;") &&
     /function runScheduledRefresh\(\) \{\s*if \(scheduledRefreshPromise\) \{\s*return scheduledRefreshPromise;\s*\}/s.test(
       backgroundJs,
@@ -449,12 +194,8 @@ assert(
 );
 assert(
   !backgroundJs.includes("badgePreviewRestoreTimer") &&
-    backgroundJs.includes(
-      "PacePetsPreviewControl.BADGE_PREVIEW_RESTORE_ALARM",
-    ) &&
-    backgroundJs.includes(
-      "PacePetsPreviewControl.BADGE_PREVIEW_EXPIRES_STORAGE_KEY",
-    ) &&
+    backgroundJs.includes("BADGE_PREVIEW_RESTORE_ALARM") &&
+    backgroundJs.includes("BADGE_PREVIEW_EXPIRES_STORAGE_KEY") &&
     backgroundJs.includes("restoreExpiredPaceBadgePreview") &&
     backgroundJs.includes("chrome.alarms.create(alarmName, alarmInfo, done)"),
   "Toolbar badge previews must use persistent alarm-backed restore state.",

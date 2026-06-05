@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { checkDashboardAssets } from "./extension-check-dashboard.mjs";
+import { requiredExtensionFiles } from "./extension-check-required-files.mjs";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -235,6 +237,24 @@ assertScriptBefore(
   "background-logic.js",
   "Background runtime manifest",
 );
+assertScriptBefore(
+  backgroundImports,
+  "pace-state-data.js",
+  "pace-logic.js",
+  "Background runtime manifest",
+);
+for (const helper of [
+  "background-usage-source.js",
+  "background-context-menu.js",
+  "background-badge-preview-schedule.js",
+]) {
+  assertScriptBefore(
+    backgroundImports,
+    "background-logic.js",
+    helper,
+    "Background runtime manifest",
+  );
+}
 for (const src of backgroundImports) {
   assert(
     !/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src),
@@ -272,33 +292,9 @@ assert(
   !manifest.externally_connectable,
   "Extension must not accept external connections.",
 );
-assertExtensionFile("usage.js");
-assertExtensionFile("product-metadata.js");
-assertExtensionFile("integration-config.js");
-assertExtensionFile("dashboard-loader.js");
-assertExtensionFile("usage-windows.js");
-assertExtensionFile("usage-values.js");
-assertExtensionFile("refresh-status.js");
-assertExtensionFile("storage-adapter.js");
-assertExtensionFile("usage-integration-adapters.js");
-assertExtensionFile("history-store.js");
-assertExtensionFile("themes/default/asset-manifest.js");
-assertExtensionFile("developer-options.js");
-assertExtensionFile("pace-logic.js");
-assertExtensionFile("background-logic.js");
-assertExtensionFile("dashboard.html");
-assertExtensionFile("dashboard.css");
-assertExtensionFile("dashboard-tooltips.js");
-assertExtensionFile("dashboard-early-reset.js");
-assertExtensionFile("dashboard-chart-data.js");
-assertExtensionFile("dashboard-chart.js");
-assertExtensionFile("dashboard-time.js");
-assertExtensionFile("dashboard-shell-controls.js");
-assertExtensionFile("dashboard-status-controller.js");
-assertExtensionFile("dashboard-pace-controller.js");
-assertExtensionFile("dashboard.js");
-assertExtensionFile("vendor/chart.umd.min.js");
-assertExtensionFile("vendor/chart.umd.min.js.map");
+for (const requiredExtensionFile of requiredExtensionFiles) {
+  assertExtensionFile(requiredExtensionFile);
+}
 assertExactStringSet(
   Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE),
   [
@@ -324,266 +320,18 @@ for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
 }
 
 const dashboardHtml = readExtensionText("dashboard.html");
-const expectedDashboardStylesheetSources = Object.freeze([
-  "./dashboard.css",
-  "./dashboard-rail.css",
-  "./dashboard-header.css",
-  "./dashboard-overlays.css",
-  "./dashboard-pace-card.css",
-  "./dashboard-pace-states.css",
-  "./dashboard-cards.css",
-  "./dashboard-early-reset-stages.css",
-  "./dashboard-reset.css",
-  "./dashboard-responsive.css",
-  "./dashboard-perfect-zero.css",
-]);
-const linkTags = dashboardHtml.match(/<link\b[^>]*>/gi) || [];
-const stylesheetTags = linkTags.filter((linkTag) =>
-  /\bstylesheet\b/i.test(attributeValue(linkTag, "rel") || ""),
-);
-const dashboardStylesheetSources = stylesheetTags.map((linkTag) =>
-  attributeValue(linkTag, "href"),
-);
-const scriptTags = dashboardHtml.match(/<script\b[\s\S]*?<\/script>/gi) || [];
-assert(scriptTags.length > 0, "Dashboard must load local script assets.");
-assert(
-  !/<(?!a\b)[^>]+\b(?:src|href)=["'](?:https?:)?\/\//i.test(dashboardHtml),
-  "Dashboard HTML must not load remote resources.",
-);
-const anchorTags = dashboardHtml.match(/<a\b[\s\S]*?<\/a>/gi) || [];
-for (const anchorTag of anchorTags) {
-  const href = attributeValue(anchorTag, "href");
-  if (!/^(?:https?:)?\/\//i.test(href || "")) {
-    continue;
-  }
-
-  const rel = attributeValue(anchorTag, "rel") || "";
-  assert(
-    attributeValue(anchorTag, "target") === "_blank" &&
-      /\bnoopener\b/i.test(rel) &&
-      /\bnoreferrer\b/i.test(rel),
-    `External dashboard links must open safely: ${href}`,
-  );
-}
-for (const scriptTag of scriptTags) {
-  const src = attributeValue(scriptTag, "src");
-  assert(src, "Dashboard inline scripts are not allowed.");
-  assert(
-    src.startsWith("./") && !/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src),
-    `Dashboard script source must be extension-local: ${src}`,
-  );
-  assert(
-    scriptTag.replace(/<script\b[^>]*>|<\/script>/gi, "").trim() === "",
-    "Dashboard script tags must not contain inline code.",
-  );
-  assertExtensionFile(src.slice(2));
-}
-assert(
-  dashboardStylesheetSources.length ===
-    expectedDashboardStylesheetSources.length &&
-    dashboardStylesheetSources.every(
-      (src, index) => src === expectedDashboardStylesheetSources[index],
-    ),
-  `Dashboard stylesheet links must be exactly: ${expectedDashboardStylesheetSources.join(", ")}.`,
-);
-for (const href of dashboardStylesheetSources) {
-  assert(href, "Dashboard stylesheet href is required.");
-  assertExtensionFile(
-    extensionPathFromExtensionPageUrl(href, "Dashboard stylesheet"),
-  );
-}
-const dashboardScriptSources = scriptTags.map((scriptTag) =>
-  attributeValue(scriptTag, "src"),
-);
-assert(
-  dashboardScriptSources.length === 2 &&
-    dashboardScriptSources[0] === "./runtime-manifest.js" &&
-    dashboardScriptSources[1] === "./dashboard-loader.js",
-  "Dashboard HTML must bootstrap only the runtime manifest and dashboard loader.",
-);
-assert(
-  dashboardHtml.includes(`<title>${productMetadata.NAME}</title>`) &&
-    dashboardHtml.includes(
-      `<h1 id="usage-title">${productMetadata.NAME}</h1>`,
-    ) &&
-    dashboardHtml.includes(
-      `<p id="usage-description">${productMetadata.DASHBOARD_DESCRIPTION}</p>`,
-    ),
-  "Dashboard static product metadata must match product-metadata.js.",
-);
-const dashboardRuntimeScripts = runtimeManifest.DASHBOARD_SCRIPT_SOURCES;
-assert(
-  Array.isArray(dashboardRuntimeScripts),
-  "Dashboard script sources must be an array.",
-);
-const optionalDashboardRuntimeScripts =
-  runtimeManifest.OPTIONAL_DASHBOARD_SCRIPT_SOURCES;
-assert(
-  Array.isArray(optionalDashboardRuntimeScripts),
-  "Optional dashboard script sources must be an array.",
-);
-assert(
-  optionalDashboardRuntimeScripts.includes("./vendor/chart.umd.min.js"),
-  "Chart.js must be declared as an optional dashboard script.",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./product-metadata.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./integration-config.js",
-  "./usage.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./usage-windows.js",
-  "./usage.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./usage-values.js",
-  "./usage.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./usage-values.js",
-  "./history-store.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./refresh-status.js",
-  "./history-store.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./usage-values.js",
-  "./pace-logic.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./storage-adapter.js",
-  "./usage.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./usage-integration-adapters.js",
-  "./usage.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./themes/default/asset-manifest.js",
-  "./pace-logic.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./developer-options.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./integration-config.js",
-  "./dashboard-chart-data.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./pace-logic.js",
-  "./dashboard-chart-data.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./dashboard-chart-data.js",
-  "./dashboard-chart.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./pace-logic.js",
-  "./dashboard-chart.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./dashboard-tooltips.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./dashboard-early-reset.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./dashboard-chart.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./dashboard-time.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./dashboard-shell-controls.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./dashboard-status-controller.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-assertScriptBefore(
-  dashboardRuntimeScripts,
-  "./dashboard-pace-controller.js",
-  "./dashboard.js",
-  "Dashboard runtime manifest",
-);
-for (const src of dashboardRuntimeScripts) {
-  assertExtensionFile(extensionPathFromDashboardScript(src));
-}
-for (const src of optionalDashboardRuntimeScripts) {
-  assert(
-    dashboardRuntimeScripts.includes(src),
-    `Optional dashboard script must also be in dashboard script order: ${src}`,
-  );
-  assertExtensionFile(extensionPathFromDashboardScript(src));
-}
-
-for (const href of dashboardStylesheetSources) {
-  const stylesheetPath = extensionPathFromExtensionPageUrl(
-    href,
-    "Dashboard stylesheet",
-  );
-  const stylesheetText = readExtensionText(stylesheetPath);
-  assert(
-    !/@import\b/i.test(stylesheetText),
-    `Dashboard CSS must not use imports: ${href}`,
-  );
-  assert(
-    !/url\(\s*["']?(?:https?:|\/\/)/i.test(stylesheetText),
-    `Dashboard CSS must not load remote resources: ${href}`,
-  );
-}
+checkDashboardAssets({
+  assert,
+  assertExtensionFile,
+  assertScriptBefore,
+  attributeValue,
+  dashboardHtml,
+  extensionPathFromDashboardScript,
+  extensionPathFromExtensionPageUrl,
+  productMetadata,
+  readExtensionText,
+  runtimeManifest,
+});
 
 const disallowedPackagedArtifactPatterns = [
   /(^|\/)usage\.json$/i,

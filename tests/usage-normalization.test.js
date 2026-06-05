@@ -92,7 +92,9 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
       windowMinutes: 10080,
     });
   });
+});
 
+describe("CodexWeeklyUsage.normalizeWhamUsage live paths", () => {
   it("normalizes adapter-declared nested WHAM windows", () => {
     const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
       usage: {
@@ -154,7 +156,9 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
       },
     });
   });
+});
 
+describe("CodexWeeklyUsage.normalizeWhamUsage fallbacks", () => {
   it("normalizes path-matched WHAM candidates with alternate field names", () => {
     const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
       account: {
@@ -238,7 +242,9 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
       }),
     ).toThrow("ChatGPT usage response changed; Pace Pets needs an update.");
   });
+});
 
+describe("CodexWeeklyUsage.normalizeWhamUsage duration handling", () => {
   it("does not treat durationless primary usage as a weekly window", () => {
     const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
       subscription: {

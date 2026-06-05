@@ -220,17 +220,12 @@
     return splitPoints;
   }
 
-  function paceChartSegmentColor(context, colors) {
-    const p0Y = context.p0?.parsed?.y;
-    const p1Y = context.p1?.parsed?.y;
-    if (!Number.isFinite(p0Y) || !Number.isFinite(p1Y)) {
-      return colors.line;
-    }
-    if (p0Y === PERFECT_PACE_RATIO && p1Y === PERFECT_PACE_RATIO) {
-      return colors.perfectLine;
-    }
+  function parsedSegmentY(context, pointKey) {
+    const value = context[pointKey]?.parsed?.y;
+    return Number.isFinite(value) ? value : null;
+  }
 
-    const midpoint = (p0Y + p1Y) / 2;
+  function paceChartMidpointColor(midpoint, colors) {
     if (midpoint > PERFECT_PACE_RATIO) {
       return colors.aboveLine;
     }
@@ -239,6 +234,19 @@
     }
 
     return colors.line;
+  }
+
+  function paceChartSegmentColor(context, colors) {
+    const p0Y = parsedSegmentY(context, "p0");
+    const p1Y = parsedSegmentY(context, "p1");
+    if (p0Y === null || p1Y === null) {
+      return colors.line;
+    }
+    if (p0Y === PERFECT_PACE_RATIO && p1Y === PERFECT_PACE_RATIO) {
+      return colors.perfectLine;
+    }
+
+    return paceChartMidpointColor((p0Y + p1Y) / 2, colors);
   }
 
   function paceChartDataset(points, colors, yBounds) {

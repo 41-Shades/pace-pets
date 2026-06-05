@@ -11,6 +11,11 @@ const projectRoot = path.resolve(
 beforeAll(async () => {
   await import(
     pathToFileURL(
+      path.join(projectRoot, "collector/extension/product-metadata.js"),
+    )
+  );
+  await import(
+    pathToFileURL(
       path.join(projectRoot, "collector/extension/integration-config.js"),
     )
   );
@@ -20,13 +25,32 @@ beforeAll(async () => {
     )
   );
   await import(
+    pathToFileURL(path.join(projectRoot, "collector/extension/usage-values.js"))
+  );
+  await import(
+    pathToFileURL(
+      path.join(
+        projectRoot,
+        "collector/extension/themes/default/asset-manifest.js",
+      ),
+    )
+  );
+  await import(
+    pathToFileURL(
+      path.join(projectRoot, "collector/extension/pace-state-data.js"),
+    )
+  );
+  await import(
+    pathToFileURL(path.join(projectRoot, "collector/extension/pace-logic.js"))
+  );
+  await import(
     pathToFileURL(
       path.join(projectRoot, "collector/extension/background-logic.js"),
     )
   );
 });
 
-describe("PacePetsBackgroundLogic", () => {
+describe("PacePetsBackgroundLogic auth", () => {
   it("extracts access tokens from supported session shapes only", () => {
     const logic = globalThis.PacePetsBackgroundLogic;
 
@@ -90,7 +114,9 @@ describe("PacePetsBackgroundLogic", () => {
     expect(logic.shouldRetryUsageResponse(401, null)).toBe(false);
     expect(logic.shouldRetryUsageResponse(500, "token")).toBe(false);
   });
+});
 
+describe("PacePetsBackgroundLogic badge selection", () => {
   it("selects badge windows from valid stored preferences and available data", () => {
     const logic = globalThis.PacePetsBackgroundLogic;
     const storageKey = globalThis.CodexUsageWindows.WINDOW_STORAGE_KEY;
@@ -148,7 +174,9 @@ describe("PacePetsBackgroundLogic", () => {
       candidate: candidates[1],
     });
   });
+});
 
+describe("PacePetsBackgroundLogic attention badge ordering", () => {
   it("keeps the preferred badge window unless an attention state exists", () => {
     const logic = globalThis.PacePetsBackgroundLogic;
     const candidates = [

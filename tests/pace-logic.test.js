@@ -55,7 +55,9 @@ describe("PacePetsLogic", () => {
       false,
     );
   });
+});
 
+describe("PacePetsLogic controlled presentations", () => {
   it("builds controlled pace presentations for badge and dashboard sync states", () => {
     const syncPresentation =
       globalThis.PacePetsLogic.controlledPacePresentationForValues(50.4, 49.6);
@@ -115,7 +117,9 @@ describe("PacePetsLogic", () => {
       globalThis.PacePetsLogic.controlledPacePresentationForValues(50.6, 49.4),
     ).toBeNull();
   });
+});
 
+describe("PacePetsLogic perfect-zero history", () => {
   it("detects usage that reached displayed zero before the final time band", () => {
     const windowData = {
       remainingPercent: 0.4,
@@ -179,7 +183,9 @@ describe("PacePetsLogic", () => {
       ),
     ).toBe(true);
   });
+});
 
+describe("PacePetsLogic presentation", () => {
   it("formats dashboard and badge pace ratios with their existing caps", () => {
     expect(globalThis.PacePetsLogic.formatPaceRatioValue(0.005)).toBe("<0.01");
     expect(
