@@ -2,6 +2,11 @@
   "use strict";
 
   const SVG_NS = "http://www.w3.org/2000/svg";
+  const COPY = Object.freeze({
+    liveFooter: "Default operating mode",
+    liveNotice: "No override active. Streaming from live sensors.",
+    overrideNotice: "Manual test control is overriding live sensors.",
+  });
 
   function textElement(tagName, className, textContent) {
     const element = document.createElement(tagName);
@@ -119,9 +124,7 @@
     body.append(
       textElement("div", "current-mode-command-label", "Command"),
       command,
-      modeNotice(
-        "Manual test control is currently overriding live sensor data.",
-      ),
+      modeNotice(COPY.overrideNotice),
     );
     summary.append(body);
   }
@@ -133,9 +136,9 @@
     footer.className = "current-mode-footer";
     footer.append(
       modeIcon("shield"),
-      textElement("span", "current-mode-footer-text", "Default operating mode"),
+      textElement("span", "current-mode-footer-text", COPY.liveFooter),
     );
-    body.append(modeNotice("No override active. Streaming from live sensors."));
+    body.append(modeNotice(COPY.liveNotice));
     summary.append(body, footer);
   }
 
