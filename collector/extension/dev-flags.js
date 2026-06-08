@@ -145,28 +145,14 @@
     return Boolean(currentForcedPaceStateKey) || currentManualRefreshLeadWindow;
   }
 
-  function optionRow({
-    checked,
-    inputName = null,
-    inputType = "radio",
-    labelText,
-    onChange,
-    value,
-  }) {
-    const label = document.createElement("label");
-    label.className = "option-row";
-    const input = document.createElement("input");
-    input.checked = checked;
-    if (inputName) {
-      input.name = inputName;
-    }
-    input.type = inputType;
-    input.value = value;
-    input.addEventListener("change", () => {
-      if (input.type === "radio" && !input.checked) {
-        return;
-      }
-      onChange(input).catch((error) => {
+  function optionButton({ labelText, onClick, pressed, value }) {
+    const button = document.createElement("button");
+    button.className = "option-row";
+    button.type = "button";
+    button.value = value;
+    button.setAttribute("aria-pressed", String(pressed));
+    button.addEventListener("click", () => {
+      onClick({ pressed }).catch((error) => {
         setStatus(error.message || "Could not update.");
         render();
       });
@@ -174,8 +160,8 @@
     const text = document.createElement("span");
     text.className = "option-label";
     text.textContent = labelText;
-    label.append(input, text);
-    return label;
+    button.append(text);
+    return button;
   }
 
   function optionRowsForKeys(stateKeys) {
@@ -183,14 +169,18 @@
       .map(stateOptionByKey)
       .filter(Boolean)
       .map((state) =>
-        optionRow({
-          checked: currentForcedPaceStateKey === state.key,
+        optionButton({
           labelText: state.label,
+          pressed: currentForcedPaceStateKey === state.key,
           value: state.key,
-          inputName: "state-override",
-          onChange: async () => {
-            await persistDeveloperOptions({ forcedPaceStateKey: state.key });
-            setStatus(`State override: ${state.label}.`);
+          onClick: async ({ pressed }) => {
+            const forcedPaceStateKey = pressed ? null : state.key;
+            await persistDeveloperOptions({ forcedPaceStateKey });
+            setStatus(
+              forcedPaceStateKey
+                ? `State override: ${state.label}.`
+                : "State override cleared.",
+            );
           },
         }),
       );
@@ -224,17 +214,17 @@
 
   function renderFeaturePreviews() {
     elements.featurePreviewList.replaceChildren(
-      optionRow({
-        checked: currentManualRefreshLeadWindow,
-        inputType: "checkbox",
+      optionButton({
         labelText: "Refresh link",
+        pressed: currentManualRefreshLeadWindow,
         value: "manual-refresh-lead-window",
-        onChange: async (input) => {
+        onClick: async ({ pressed }) => {
+          const manualRefreshLeadWindow = !pressed;
           await persistDeveloperOptions({
-            manualRefreshLeadWindow: input.checked,
+            manualRefreshLeadWindow,
           });
           setStatus(
-            input.checked
+            manualRefreshLeadWindow
               ? "Refresh link forced."
               : "Refresh link returned to timing.",
           );
