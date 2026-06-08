@@ -2,8 +2,9 @@
   "use strict";
 
   const DEVELOPER_OPTIONS = globalThis.PacePetsDeveloperOptions;
+  const CURRENT_MODE = globalThis.PacePetsDevFlagsCurrentMode;
   const STORAGE = globalThis.CodexExtensionStorage;
-  if (!DEVELOPER_OPTIONS || !STORAGE) {
+  if (!CURRENT_MODE || !DEVELOPER_OPTIONS || !STORAGE) {
     throw new Error("Dev controls dependencies did not load.");
   }
 
@@ -134,11 +135,9 @@
       Number(Boolean(currentForcedPaceStateKey)) +
       Number(currentManualRefreshLeadWindow);
     if (activeCount === 0) {
-      return "No override";
+      return "Live data";
     }
-    return activeCount === 1
-      ? "Dev override active"
-      : `${activeCount} dev overrides active`;
+    return activeCount === 1 ? "Dev override active" : "Dev overrides active";
   }
 
   function hasActiveOverride() {
@@ -187,20 +186,14 @@
   }
 
   function renderCurrentMode() {
-    elements.currentModePanel.classList.toggle(
-      "has-override",
-      hasActiveOverride(),
-    );
-
-    const label = document.createElement("div");
-    label.className = "current-mode-label";
-    label.textContent = currentModeLabel();
-
-    const detail = document.createElement("div");
-    detail.className = "current-mode-detail";
-    detail.textContent = currentModeDetail();
-
-    elements.currentModeSummary.replaceChildren(label, detail);
+    const hasOverride = hasActiveOverride();
+    CURRENT_MODE.renderCurrentMode({
+      hasOverride,
+      modeDetail: currentModeDetail(),
+      modeLabel: currentModeLabel(),
+      panel: elements.currentModePanel,
+      summary: elements.currentModeSummary,
+    });
   }
 
   function renderStateOverrideColumns() {
@@ -237,6 +230,7 @@
     renderCurrentMode();
     renderStateOverrideColumns();
     renderFeaturePreviews();
+    elements.resetAll.hidden = !hasActiveOverride();
     elements.resetAll.disabled = !hasActiveOverride();
   }
 
