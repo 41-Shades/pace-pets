@@ -202,15 +202,15 @@
   }
 
   18% {
-    transform: translate3d(-34px, -18px, 0) rotate(-3deg);
+    transform: translate3d(-51px, -27px, 0) rotate(-4.5deg);
   }
 
   44% {
-    transform: translate3d(30px, 20px, 0) rotate(2.4deg);
+    transform: translate3d(45px, 30px, 0) rotate(3.6deg);
   }
 
   70% {
-    transform: translate3d(-12px, -10px, 0) rotate(-1deg);
+    transform: translate3d(-18px, -15px, 0) rotate(-1.5deg);
   }
 }
 
@@ -221,23 +221,23 @@
   }
 
   10% {
-    transform: translate3d(-36px, -20px, 0) rotate(-3.4deg);
+    transform: translate3d(-54px, -30px, 0) rotate(-5.1deg);
   }
 
   23% {
-    transform: translate3d(32px, 22px, 0) rotate(2.8deg);
+    transform: translate3d(48px, 33px, 0) rotate(4.2deg);
   }
 
   36% {
-    transform: translate3d(-28px, 15px, 0) rotate(-2.2deg);
+    transform: translate3d(-42px, 22.5px, 0) rotate(-3.3deg);
   }
 
   51% {
-    transform: translate3d(24px, -18px, 0) rotate(1.8deg);
+    transform: translate3d(36px, -27px, 0) rotate(2.7deg);
   }
 
   72% {
-    transform: translate3d(-10px, 8px, 0) rotate(-0.8deg);
+    transform: translate3d(-15px, 12px, 0) rotate(-1.2deg);
   }
 }
 
@@ -248,31 +248,31 @@
   }
 
   8% {
-    transform: translate3d(-38px, -22px, 0) rotate(-3.8deg);
+    transform: translate3d(-57px, -33px, 0) rotate(-5.7deg);
   }
 
   17% {
-    transform: translate3d(34px, 24px, 0) rotate(3.2deg);
+    transform: translate3d(51px, 36px, 0) rotate(4.8deg);
   }
 
   27% {
-    transform: translate3d(-31px, 17px, 0) rotate(-2.6deg);
+    transform: translate3d(-46.5px, 25.5px, 0) rotate(-3.9deg);
   }
 
   38% {
-    transform: translate3d(28px, -21px, 0) rotate(2.2deg);
+    transform: translate3d(42px, -31.5px, 0) rotate(3.3deg);
   }
 
   51% {
-    transform: translate3d(-23px, -13px, 0) rotate(-1.8deg);
+    transform: translate3d(-34.5px, -19.5px, 0) rotate(-2.7deg);
   }
 
   65% {
-    transform: translate3d(18px, 14px, 0) rotate(1.3deg);
+    transform: translate3d(27px, 21px, 0) rotate(1.95deg);
   }
 
   84% {
-    transform: translate3d(-8px, -7px, 0) rotate(-0.6deg);
+    transform: translate3d(-12px, -10.5px, 0) rotate(-0.9deg);
   }
 }
 
@@ -283,15 +283,15 @@
   }
 
   16% {
-    transform: translate3d(-190px, -122px, 0) rotate(-6deg);
+    transform: translate3d(-106.875px, -68.625px, 0) rotate(-3.375deg);
   }
 
   42% {
-    transform: translate3d(66px, 48px, 0) rotate(4.2deg);
+    transform: translate3d(37.125px, 27px, 0) rotate(2.3625deg);
   }
 
   68% {
-    transform: translate3d(-28px, -22px, 0) rotate(-1.6deg);
+    transform: translate3d(-15.75px, -12.375px, 0) rotate(-0.9deg);
   }
 }
 
@@ -302,23 +302,23 @@
   }
 
   10% {
-    transform: translate3d(-204px, -132px, 0) rotate(-6.4deg);
+    transform: translate3d(-114.75px, -74.25px, 0) rotate(-3.6deg);
   }
 
   23% {
-    transform: translate3d(74px, 54px, 0) rotate(4.8deg);
+    transform: translate3d(41.625px, 30.375px, 0) rotate(2.7deg);
   }
 
   36% {
-    transform: translate3d(-154px, 48px, 0) rotate(-4deg);
+    transform: translate3d(-86.625px, 27px, 0) rotate(-2.25deg);
   }
 
   51% {
-    transform: translate3d(58px, -48px, 0) rotate(3.2deg);
+    transform: translate3d(32.625px, -27px, 0) rotate(1.8deg);
   }
 
   72% {
-    transform: translate3d(-22px, 18px, 0) rotate(-1.1deg);
+    transform: translate3d(-12.375px, 10.125px, 0) rotate(-0.6188deg);
   }
 }
 
@@ -329,31 +329,31 @@
   }
 
   8% {
-    transform: translate3d(-220px, -146px, 0) rotate(-7deg);
+    transform: translate3d(-123.75px, -82.125px, 0) rotate(-3.9375deg);
   }
 
   17% {
-    transform: translate3d(82px, 60px, 0) rotate(5.2deg);
+    transform: translate3d(46.125px, 33.75px, 0) rotate(2.925deg);
   }
 
   27% {
-    transform: translate3d(-176px, 58px, 0) rotate(-4.6deg);
+    transform: translate3d(-99px, 32.625px, 0) rotate(-2.5875deg);
   }
 
   38% {
-    transform: translate3d(68px, -56px, 0) rotate(3.6deg);
+    transform: translate3d(38.25px, -31.5px, 0) rotate(2.025deg);
   }
 
   51% {
-    transform: translate3d(-126px, -48px, 0) rotate(-2.8deg);
+    transform: translate3d(-70.875px, -27px, 0) rotate(-1.575deg);
   }
 
   65% {
-    transform: translate3d(44px, 38px, 0) rotate(1.8deg);
+    transform: translate3d(24.75px, 21.375px, 0) rotate(1.0125deg);
   }
 
   84% {
-    transform: translate3d(-18px, -16px, 0) rotate(-0.8deg);
+    transform: translate3d(-10.125px, -9px, 0) rotate(-0.45deg);
   }
 }
 
