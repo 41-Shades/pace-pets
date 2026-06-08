@@ -119,6 +119,7 @@
 
       this.clearBrakeWobbleEffectClasses(container);
       this.clearSprintSmokeEffectClasses(container);
+      this.clearTrainRollEffectClasses(container);
     },
 
     scheduleBrakeWobbleBurst(container, state, delayRange) {
@@ -216,6 +217,11 @@
 
       if (effect === "brake-wobble") {
         this.startBrakeWobbleEffect(container);
+        return;
+      }
+
+      if (effect === "train-roll") {
+        this.renderTrainRollEffect(container);
         return;
       }
 
