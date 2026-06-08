@@ -59,6 +59,7 @@
     "./dashboard-brake-debris-methods.js",
     "./dashboard-pace-icon-methods.js",
     "./dashboard-sprint-smoke-methods.js",
+    "./dashboard-train-roll-methods.js",
     "./dashboard-pace-rail-methods.js",
     "./dashboard-pace-summary-methods.js",
     "./dashboard-pace-preview-methods.js",

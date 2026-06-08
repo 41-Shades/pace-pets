@@ -176,6 +176,7 @@
     PACE_CLASSES,
     PACE_ICON_EFFECTS_BY_STATE: Object.freeze({
       [PACE_STATES.wellAhead.key]: "sprint-smoke",
+      [PACE_STATES.on.key]: "train-roll",
       [PACE_STATES.criticalBehind.key]: "brake-wobble",
     }),
     SPRINT_BOUNCE_PROFILE_DELAY_RANGE_MS: Object.freeze([700, 1500]),

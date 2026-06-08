@@ -1,0 +1,96 @@
+@keyframes train-body-roll {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  26% {
+    transform: translate3d(0, -1px, 0) rotate(-0.18deg);
+  }
+
+  62% {
+    transform: translate3d(0, 1px, 0) rotate(0.14deg);
+  }
+}
+
+@keyframes train-front-rail-pass {
+  0% {
+    opacity: 0;
+    transform: translate3d(7px, 0.42px, 0) skewX(76deg) rotate(-4deg);
+  }
+
+  18%,
+  64% {
+    opacity: 0.58;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(-9px, -0.42px, 0) skewX(76deg) rotate(-4deg);
+  }
+}
+
+.pace-icon.has-pace-icon-effect-train-roll {
+  animation: train-body-roll 1.45s ease-in-out infinite;
+  isolation: isolate;
+  transform-origin: 52% 84%;
+  will-change: transform;
+}
+
+.pace-icon.has-pace-icon-effect-train-roll.is-debug-targeting::before {
+  background:
+    linear-gradient(
+        90deg,
+        transparent 0 7px,
+        rgb(255 0 168 / 58%) 7px 8px,
+        transparent 8px 15px
+      )
+      center / 15px 15px no-repeat,
+    linear-gradient(
+        180deg,
+        transparent 0 7px,
+        rgb(255 0 168 / 58%) 7px 8px,
+        transparent 8px 15px
+      )
+      center / 15px 15px no-repeat;
+  border: 0;
+  border-radius: 999px;
+  content: "";
+  height: 15px;
+  left: 70px;
+  pointer-events: none;
+  position: absolute;
+  top: 93px;
+  transform: translate(-50%, -50%);
+  width: 15px;
+  z-index: 5;
+}
+
+.pace-icon.has-pace-icon-effect-train-roll::after {
+  animation: train-front-rail-pass 620ms ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    rgb(16 27 28 / 34%),
+    rgb(16 27 28 / 68%) 45%,
+    rgb(16 27 28 / 42%)
+  );
+  border-radius: 1px;
+  content: "";
+  filter: blur(0.06px);
+  height: 3px;
+  left: 63px;
+  mix-blend-mode: multiply;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 94px;
+  transform: translate3d(7px, 0.42px, 0) skewX(76deg) rotate(-4deg);
+  transform-origin: center;
+  width: 10px;
+  will-change: opacity, transform;
+  z-index: 2;
+}
+
+.pace-icon.has-pace-icon-effect-train-roll img {
+  will-change: auto;
+}

@@ -1,0 +1,154 @@
+.pace-train-cloud-puff-2 {
+  --train-cloud-drift-x: -28px;
+  --train-cloud-drift-y: -4px;
+  --train-cloud-end-scale: 1.16;
+  --train-cloud-back-lobe-height: 10px;
+  --train-cloud-back-lobe-left: 3px;
+  --train-cloud-back-lobe-radius: 52% 48% 44% 56% / 58% 42% 54% 46%;
+  --train-cloud-back-lobe-top: -5px;
+  --train-cloud-back-lobe-width: 14px;
+  --train-cloud-front-lobe-height: 13px;
+  --train-cloud-front-lobe-radius: 56% 44% 62% 38% / 52% 62% 38% 48%;
+  --train-cloud-front-lobe-right: -7px;
+  --train-cloud-front-lobe-top: 0;
+  --train-cloud-front-lobe-width: 16px;
+  --train-cloud-radius: 58% 42% 48% 52% / 48% 58% 42% 52%;
+  --train-cloud-mid-opacity: 0.38;
+  --train-cloud-peak-opacity: 0.68;
+  --train-cloud-outline: rgb(27 42 53 / 78%);
+  --train-cloud-start-opacity: 0.12;
+  --train-cloud-tilt: -8deg;
+  --train-cloud-x-ease: cubic-bezier(0.12, 0.66, 0.34, 1);
+  --train-cloud-y-ease: cubic-bezier(0.42, 0, 0.2, 1);
+
+  animation-delay: -380ms;
+  animation-duration: 840ms;
+  height: 12px;
+  left: 51px;
+  top: 2px;
+  width: 26px;
+}
+
+.pace-train-cloud-puff-3 {
+  --train-cloud-drift-x: -42px;
+  --train-cloud-drift-y: -8px;
+  --train-cloud-end-scale: 1.24;
+  --train-cloud-back-lobe-height: 15px;
+  --train-cloud-back-lobe-left: 7px;
+  --train-cloud-back-lobe-radius: 44% 56% 50% 50% / 68% 46% 54% 32%;
+  --train-cloud-back-lobe-top: -8px;
+  --train-cloud-back-lobe-width: 18px;
+  --train-cloud-front-lobe-height: 9px;
+  --train-cloud-front-lobe-radius: 62% 38% 50% 50% / 46% 52% 48% 54%;
+  --train-cloud-front-lobe-right: -6px;
+  --train-cloud-front-lobe-top: 4px;
+  --train-cloud-front-lobe-width: 13px;
+  --train-cloud-radius: 46% 54% 60% 40% / 60% 44% 56% 40%;
+  --train-cloud-mid-opacity: 0.34;
+  --train-cloud-peak-opacity: 0.62;
+  --train-cloud-outline: rgb(27 42 53 / 72%);
+  --train-cloud-start-opacity: 0.24;
+  --train-cloud-tilt: -15deg;
+  --train-cloud-x-ease: cubic-bezier(0.2, 0.78, 0.3, 1);
+  --train-cloud-y-ease: cubic-bezier(0.62, 0, 0.36, 1);
+
+  animation-delay: -1.4s;
+  animation-duration: 1.9s;
+  height: 13px;
+  left: 39px;
+  top: 5px;
+  width: 28px;
+}
+
+.pace-train-cloud-puff-4 {
+  --train-cloud-drift-x: -56px;
+  --train-cloud-drift-y: -5px;
+  --train-cloud-end-scale: 1.32;
+  --train-cloud-back-lobe-height: 9px;
+  --train-cloud-back-lobe-left: 4px;
+  --train-cloud-back-lobe-radius: 62% 38% 54% 46% / 48% 62% 38% 52%;
+  --train-cloud-back-lobe-top: -4px;
+  --train-cloud-back-lobe-width: 16px;
+  --train-cloud-front-lobe-height: 11px;
+  --train-cloud-front-lobe-radius: 44% 56% 58% 42% / 58% 44% 56% 42%;
+  --train-cloud-front-lobe-right: -9px;
+  --train-cloud-front-lobe-top: 1px;
+  --train-cloud-front-lobe-width: 18px;
+  --train-cloud-radius: 64% 36% 46% 54% / 44% 56% 40% 60%;
+  --train-cloud-mid-opacity: 0.26;
+  --train-cloud-peak-opacity: 0.54;
+  --train-cloud-outline: rgb(27 42 53 / 66%);
+  --train-cloud-start-opacity: 0.09;
+  --train-cloud-tilt: -6deg;
+  --train-cloud-x-ease: cubic-bezier(0.14, 0.64, 0.42, 1);
+  --train-cloud-y-ease: cubic-bezier(0.38, 0, 0.22, 1);
+
+  animation-delay: -2.3s;
+  animation-duration: 2.8s;
+  height: 12px;
+  left: 29px;
+  top: 3px;
+  width: 25px;
+}
+
+.pace-train-cloud-puff-5 {
+  --train-cloud-drift-x: -65px;
+  --train-cloud-drift-y: -10px;
+  --train-cloud-end-scale: 1.38;
+  --train-cloud-back-lobe-height: 12px;
+  --train-cloud-back-lobe-left: 2px;
+  --train-cloud-back-lobe-radius: 48% 52% 40% 60% / 62% 38% 58% 42%;
+  --train-cloud-back-lobe-top: -7px;
+  --train-cloud-back-lobe-width: 13px;
+  --train-cloud-front-lobe-height: 8px;
+  --train-cloud-front-lobe-radius: 58% 42% 54% 46% / 42% 58% 46% 54%;
+  --train-cloud-front-lobe-right: -5px;
+  --train-cloud-front-lobe-top: 3px;
+  --train-cloud-front-lobe-width: 12px;
+  --train-cloud-radius: 50% 50% 42% 58% / 54% 50% 44% 56%;
+  --train-cloud-mid-opacity: 0.18;
+  --train-cloud-peak-opacity: 0.44;
+  --train-cloud-outline: rgb(27 42 53 / 60%);
+  --train-cloud-start-opacity: 0.18;
+  --train-cloud-tilt: -18deg;
+  --train-cloud-x-ease: cubic-bezier(0.24, 0.82, 0.34, 1);
+  --train-cloud-y-ease: cubic-bezier(0.68, 0, 0.4, 1);
+
+  animation-delay: -3.2s;
+  animation-duration: 3.4s;
+  height: 11px;
+  left: 19px;
+  top: 4px;
+  width: 24px;
+}
+
+.pace-train-cloud-puff-6 {
+  --train-cloud-drift-x: -65px;
+  --train-cloud-drift-y: -8px;
+  --train-cloud-end-scale: 1.42;
+  --train-cloud-back-lobe-height: 10px;
+  --train-cloud-back-lobe-left: 6px;
+  --train-cloud-back-lobe-radius: 56% 44% 42% 58% / 58% 40% 60% 42%;
+  --train-cloud-back-lobe-top: -5px;
+  --train-cloud-back-lobe-width: 16px;
+  --train-cloud-front-lobe-height: 9px;
+  --train-cloud-front-lobe-radius: 46% 54% 62% 38% / 50% 58% 42% 50%;
+  --train-cloud-front-lobe-right: -6px;
+  --train-cloud-front-lobe-top: 2px;
+  --train-cloud-front-lobe-width: 14px;
+  --train-cloud-radius: 58% 42% 56% 44% / 50% 60% 42% 58%;
+  --train-cloud-mid-opacity: 0.14;
+  --train-cloud-peak-opacity: 0.36;
+  --train-cloud-outline: rgb(27 42 53 / 52%);
+  --train-cloud-start-opacity: 0.06;
+  --train-cloud-tilt: -10deg;
+  --train-cloud-x-ease: cubic-bezier(0.18, 0.76, 0.3, 1);
+  --train-cloud-y-ease: cubic-bezier(0.54, 0, 0.3, 1);
+
+  animation-delay: -2.7s;
+  animation-duration: 3.7s;
+  height: 10px;
+  left: 15px;
+  top: 2px;
+  width: 22px;
+}

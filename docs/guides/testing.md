@@ -14,8 +14,8 @@ default.
 
 ## Check Layers
 
-- `npm run lint:js` runs ESLint safety, style, and complexity guardrails for
-  JavaScript source and repo scripts.
+- `npm run lint:js` runs ESLint safety, style, and hard source-shape
+  guardrails for JavaScript source and repo scripts.
 - `npm run lint:css` runs Stylelint checks for CSS source.
 - `npm run test` runs Node-only Vitest tests for pure extension logic.
 - `npm run smoke` runs lightweight static and sample-data assertions.
@@ -25,11 +25,21 @@ default.
   dimensions, and transparent default pace icon assets.
 - `npm run lint:release` validates release-facing source metadata and public
   docs for private paths, sensitive artifacts, and version drift.
-- `npm run check:file-lengths` blocks maintained extension, docs, script, and
-  test source files over 400 lines.
-- `npm run check` runs format check, the full lint chain, file-length
-  guardrails, smoke checks, and Vitest tests.
+- `npm run shape` blocks hard source-shape drift by running JavaScript
+  complexity, function-length, parameter-count, and file-length gates, plus the
+  maintained-source 400-line file-length scan.
+- `npm run check` runs format check, the shape gate, static extension and
+  release linting, smoke checks, and Vitest tests.
 - `npm run preflight` is the full local release gate and adds dependency audits.
+
+## Source Shape
+
+Keep extension code sized for focused agent edits and human review. The
+preferred range is 150-250 lines per file, 30-70 lines per function, and
+cyclomatic complexity at or below 8. The hard gate blocks files over 400 lines,
+functions over 100 lines, complexity over 10, and functions with more than 5
+parameters. Generated outputs, vendored assets, dependency folders, and local
+runtime artifacts stay out of the maintained-source scan.
 
 ## Generated Docs
 
