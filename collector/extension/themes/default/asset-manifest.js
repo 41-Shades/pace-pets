@@ -17,7 +17,7 @@
     ahead: "pace-icons/pick-up-speed.png",
     on: "pace-icons/keep-pace.png",
     behind: "pace-icons/ease-up.png",
-    wellBehind: "pace-icons/slow-down.png",
+    wellBehind: "pace-icons/slow-down-shopping-cart.png",
     criticalBehind: "pace-icons/brake-hard.png",
     sync: "pace-icons/perfect-sync.png",
     perfectZero: "pace-icons/perfect-zero.png",
