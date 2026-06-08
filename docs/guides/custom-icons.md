@@ -18,7 +18,7 @@ collector/extension/themes/default/
     pick-up-speed.png
     keep-pace.png
     ease-up.png
-    slow-down.png
+    slow-down-shopping-cart.png
     brake-hard.png
     perfect-sync.png
     perfect-zero.png
