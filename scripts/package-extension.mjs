@@ -20,6 +20,8 @@ const checksumPath = path.join(distDir, `${packageBaseName}.zip.sha256`);
 const fixedZipDate = new Date(Date.UTC(2024, 0, 1, 0, 0, 0));
 const sourceOnlyFiles = new Set([
   "README.md",
+  "dev-flags-current-mode.css",
+  "dev-flags-current-mode.js",
   "dev-flags.css",
   "dev-flags.html",
   "dev-flags.js",

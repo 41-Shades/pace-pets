@@ -5,7 +5,7 @@
   const COPY = Object.freeze({
     liveFooter: "Default operating mode",
     liveNotice: "No override active. Streaming from live sensors.",
-    overrideNotice: "Manual test control is overriding live sensors.",
+    overrideNotice: "Manual override replaces live data.",
   });
 
   function textElement(tagName, className, textContent) {
