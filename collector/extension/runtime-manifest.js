@@ -56,6 +56,7 @@
     "./dashboard-pace-data.js",
     "./dashboard-pace-core.js",
     "./dashboard-pace-icon-methods.js",
+    "./dashboard-sprint-smoke-methods.js",
     "./dashboard-pace-rail-methods.js",
     "./dashboard-pace-summary-methods.js",
     "./dashboard-pace-preview-methods.js",

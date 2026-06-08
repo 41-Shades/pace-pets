@@ -56,6 +56,33 @@
   }
 }
 
+@keyframes sprint-scooter-bounce {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  13% {
+    transform: var(--sprint-bounce-step-1);
+  }
+
+  24% {
+    transform: var(--sprint-bounce-step-2);
+  }
+
+  41% {
+    transform: var(--sprint-bounce-step-3);
+  }
+
+  58% {
+    transform: var(--sprint-bounce-step-4);
+  }
+
+  76% {
+    transform: var(--sprint-bounce-step-5);
+  }
+}
+
 @keyframes brake-hard-idle-shake {
   0%,
   100% {

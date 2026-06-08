@@ -94,6 +94,79 @@
   z-index: 1;
 }
 
+@keyframes sprint-speed-bump {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  16% {
+    transform: translate3d(-1px, 4px, 0) rotate(0.8deg);
+  }
+
+  31% {
+    transform: translate3d(4px, -22px, 0) rotate(-4.2deg);
+  }
+
+  48% {
+    transform: translate3d(5px, -16px, 0) rotate(-2.4deg);
+  }
+
+  66% {
+    transform: translate3d(-1px, 5px, 0) rotate(2.2deg);
+  }
+
+  82% {
+    transform: translate3d(2px, -7px, 0) rotate(-1.1deg);
+  }
+
+  92% {
+    transform: translate3d(0, 2px, 0) rotate(0.5deg);
+  }
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke {
+  --sprint-speed-bump-duration: 920ms;
+  --sprint-bounce-duration: 640ms;
+  --sprint-bounce-step-1: translate3d(1px, -2px, 0) rotate(-0.7deg);
+  --sprint-bounce-step-2: translate3d(0, 1px, 0) rotate(0.35deg);
+  --sprint-bounce-step-3: translate3d(1px, -3px, 0) rotate(0.55deg);
+  --sprint-bounce-step-4: translate3d(-1px, 0, 0) rotate(-0.25deg);
+  --sprint-bounce-step-5: translate3d(0, -2px, 0) rotate(0.4deg);
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-bounce-profile="2"] {
+  --sprint-bounce-duration: 560ms;
+  --sprint-bounce-step-1: translate3d(-1px, -1px, 0) rotate(0.4deg);
+  --sprint-bounce-step-2: translate3d(1px, -3px, 0) rotate(-0.65deg);
+  --sprint-bounce-step-3: translate3d(0, 1px, 0) rotate(0.28deg);
+  --sprint-bounce-step-4: translate3d(1px, -2px, 0) rotate(0.5deg);
+  --sprint-bounce-step-5: translate3d(-1px, 0, 0) rotate(-0.35deg);
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-bounce-profile="3"] {
+  --sprint-bounce-duration: 720ms;
+  --sprint-bounce-step-1: translate3d(1px, -3px, 0) rotate(-0.6deg);
+  --sprint-bounce-step-2: translate3d(-1px, 0, 0) rotate(0.3deg);
+  --sprint-bounce-step-3: translate3d(0, -1px, 0) rotate(-0.2deg);
+  --sprint-bounce-step-4: translate3d(1px, -2px, 0) rotate(0.55deg);
+  --sprint-bounce-step-5: translate3d(0, 1px, 0) rotate(-0.25deg);
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke img {
+  animation: sprint-scooter-bounce var(--sprint-bounce-duration) ease-in-out
+    infinite;
+  transform-origin: 52% 82%;
+  will-change: transform;
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke.is-sprint-speed-bumping {
+  animation: sprint-speed-bump var(--sprint-speed-bump-duration)
+    cubic-bezier(0.18, 0.82, 0.24, 1) both;
+  transform-origin: 52% 84%;
+  will-change: transform;
+}
+
 .pace-icon.has-pace-icon-effect-brake-wobble img {
   animation: brake-hard-idle-shake 840ms steps(1, end) infinite;
   transform-origin: 50% 56%;
@@ -176,10 +249,16 @@
 }
 
 .pace-smoke-puff {
+  --smoke-blur: 0.1px;
+  --smoke-delay: 0s;
+  --smoke-duration: 1.65s;
+  --smoke-easing: ease-out;
   --smoke-end-scale: 1.58;
   --smoke-y-offset: 0px;
 
-  animation: sprint-smoke-puff 1.65s ease-out infinite;
+  animation: sprint-smoke-puff var(--smoke-duration) var(--smoke-easing)
+    infinite;
+  animation-delay: var(--smoke-delay);
   background: radial-gradient(
     circle at 36% 34%,
     rgb(255 255 255 / 92%),
@@ -189,7 +268,7 @@
   );
   border-radius: 999px;
   box-shadow: 0 1px 3px rgb(71 85 105 / 16%);
-  filter: blur(0.15px);
+  filter: blur(var(--smoke-blur));
   height: var(--smoke-size);
   left: var(--smoke-origin-left);
   opacity: 0;
@@ -201,40 +280,98 @@
 }
 
 .pace-smoke-puff-1 {
+  --smoke-delay: -1.38s;
+  --smoke-drift-x: -60px;
+  --smoke-drift-y: -10px;
+  --smoke-duration: 1.66s;
+  --smoke-end-scale: 1.58;
   --smoke-size: var(--smoke-size-1);
   --smoke-y-offset: -8px;
-
-  animation-delay: -1.38s;
 }
 
 .pace-smoke-puff-2 {
-  --smoke-end-scale: 1.35;
+  --smoke-blur: 0.05px;
+  --smoke-delay: -0.98s;
+  --smoke-drift-x: -54px;
+  --smoke-drift-y: -9px;
+  --smoke-duration: 1.56s;
+  --smoke-end-scale: 1.32;
+  --smoke-mid-opacity: 0.58;
+  --smoke-peak-opacity: 0.76;
   --smoke-size: var(--smoke-size-2);
-  --smoke-y-offset: 3px;
-
-  animation-delay: -0.98s;
+  --smoke-y-offset: 5px;
 }
 
 .pace-smoke-puff-3 {
-  --smoke-end-scale: 1.7;
+  --smoke-blur: 0.18px;
+  --smoke-delay: -0.58s;
+  --smoke-drift-x: -62px;
+  --smoke-drift-y: -10px;
+  --smoke-duration: 1.72s;
+  --smoke-end-scale: 1.68;
   --smoke-size: var(--smoke-size-3);
   --smoke-y-offset: -2px;
-
-  animation-delay: -0.58s;
 }
 
 .pace-smoke-puff-4 {
-  --smoke-end-scale: 1.42;
+  --smoke-blur: 0;
+  --smoke-delay: -0.22s;
+  --smoke-drift-x: -50px;
+  --smoke-drift-y: -9px;
+  --smoke-duration: 1.5s;
+  --smoke-end-scale: 1.38;
+  --smoke-mid-opacity: 0.52;
+  --smoke-peak-opacity: 0.7;
   --smoke-size: var(--smoke-size-4);
   --smoke-y-offset: 7px;
-
-  animation-delay: -0.22s;
 }
 
 .pace-smoke-puff-5 {
+  --smoke-blur: 0.22px;
+  --smoke-delay: -1.62s;
+  --smoke-drift-x: -64px;
+  --smoke-drift-y: -12px;
+  --smoke-duration: 1.76s;
   --smoke-end-scale: 1.62;
   --smoke-size: var(--smoke-size-5);
   --smoke-y-offset: -12px;
+}
 
-  animation-delay: -1.62s;
+.pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-smoke-profile="1"]
+  .pace-smoke-puff-3 {
+  --smoke-drift-x: -86px;
+  --smoke-duration: 1.96s;
+  --smoke-end-scale: 1.7;
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-smoke-profile="1"]
+  .pace-smoke-puff-5 {
+  --smoke-drift-x: -68px;
+  --smoke-duration: 1.82s;
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-smoke-profile="2"]
+  .pace-smoke-puff-1 {
+  --smoke-drift-x: -82px;
+  --smoke-duration: 1.92s;
+  --smoke-end-scale: 1.64;
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-smoke-profile="2"]
+  .pace-smoke-puff-3 {
+  --smoke-drift-x: -58px;
+  --smoke-duration: 1.66s;
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-smoke-profile="3"]
+  .pace-smoke-puff-2 {
+  --smoke-drift-x: -58px;
+  --smoke-duration: 1.52s;
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-smoke-profile="3"]
+  .pace-smoke-puff-5 {
+  --smoke-drift-x: -88px;
+  --smoke-duration: 2s;
+  --smoke-end-scale: 1.7;
 }

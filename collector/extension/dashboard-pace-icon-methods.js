@@ -118,6 +118,7 @@
       }
 
       this.clearBrakeWobbleEffectClasses(container);
+      this.clearSprintSmokeEffectClasses(container);
     },
 
     scheduleBrakeWobbleBurst(container, state, delayRange) {
@@ -223,6 +224,10 @@
         layer.append(puff);
       }
       container.append(layer);
+
+      if (effect === "sprint-smoke") {
+        this.startSprintSmokeEffect(container, layer);
+      }
     },
 
     renderPlayfulPaceIcon(container, src, state, useEffects) {

@@ -109,7 +109,7 @@
       className: "pace-sync",
       title: "Perfect sync",
       copy: "Time and pace are in harmony. Ascendent.",
-      ratioLabel: "Time = Usage",
+      ratioLabel: "Usage = Time",
       badgeColor: "#0f766e",
       favicon: { bg: "#edf6f4", color: "#0f766e" },
       playfulImage: THEME_ASSETS.paceIconPathForState("sync"),
@@ -127,7 +127,7 @@
       className: "pace-perfect-zero",
       title: "Perfect zero",
       copy: "A beautiful, unreasonable zero.",
-      ratioLabel: "Time = Usage = 0",
+      ratioLabel: "Usage = Time = 0",
       badgeColor: "#6b7280",
       favicon: {
         bg: "#020617",
