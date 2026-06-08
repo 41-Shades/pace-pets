@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pace Pets Dev Controls</title>
     <link rel="stylesheet" href="./dev-flags.css" />
+    <link rel="stylesheet" href="./dev-flags-current-mode.css" />
   </head>
   <body>
     <main class="dev-flags-shell">
@@ -14,10 +15,9 @@
       </header>
 
       <div class="dev-controls-layout">
-        <aside class="current-mode-panel" aria-labelledby="current-mode-title">
-          <h2 id="current-mode-title">Current Mode</h2>
+        <aside class="current-mode-panel" aria-live="polite">
           <div class="current-mode-summary" id="current-mode-summary"></div>
-          <button class="live-data-button" id="reset-all" type="button">
+          <button class="live-data-button" id="reset-all" type="button" hidden>
             Return to live data
           </button>
         </aside>
@@ -50,6 +50,7 @@
 
     <script src="./developer-options.js"></script>
     <script src="./storage-adapter.js"></script>
+    <script src="./dev-flags-current-mode.js"></script>
     <script src="./dev-flags.js"></script>
   </body>
 </html>
