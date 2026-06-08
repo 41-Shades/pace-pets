@@ -56,7 +56,7 @@
   align-items: center;
   border-bottom: 1px solid var(--border);
   display: flex;
-  gap: 14px;
+  gap: 12px;
   min-height: 112px;
   padding: 26px 22px 26px 34px;
 }
@@ -64,7 +64,7 @@
 .current-mode-title {
   color: var(--text);
   flex: 1 1 auto;
-  font-size: 1.55rem;
+  font-size: 1.35rem;
   font-weight: 800;
   line-height: 1.08;
   margin: 0;
@@ -90,8 +90,8 @@
 .current-mode-icon-check,
 .current-mode-icon-warning {
   color: var(--mode-accent);
-  height: 44px;
-  width: 44px;
+  height: 38px;
+  width: 38px;
 }
 
 .current-mode-icon-mark {
