@@ -11,7 +11,7 @@
   --override-tint: #ffead8;
   --panel: #ffffff;
   --text: #172033;
-  --current-mode-card-height: 430px;
+  --current-mode-card-height: 400px;
   --current-mode-shadow: 0 12px 30px rgb(39 55 77 / 10%);
 }
 
@@ -135,15 +135,6 @@
 .current-mode-panel.is-live .current-mode-body {
   justify-content: center;
   padding-bottom: 34px;
-}
-
-.current-mode-command-label {
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  margin-bottom: 13px;
-  text-transform: uppercase;
 }
 
 .current-mode-command {

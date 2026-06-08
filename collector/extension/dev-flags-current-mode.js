@@ -121,11 +121,7 @@
       modeIcon("terminal"),
       textElement("span", "current-mode-command-text", modeLabel),
     );
-    body.append(
-      textElement("div", "current-mode-command-label", "Command"),
-      command,
-      modeNotice(COPY.overrideNotice),
-    );
+    body.append(command, modeNotice(COPY.overrideNotice));
     summary.append(body);
   }
 
