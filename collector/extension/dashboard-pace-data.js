@@ -38,7 +38,7 @@
       className: "pace-singularity",
       title: "Singularity",
       copy: "It all ends in nothingness. Maybe.",
-      ratioLabel: "Time = Usage = Resets In = 0",
+      ratioLabel: "Usage = Time = Resets In = 0",
       previewRatioLabel: "The black hole of zero",
       badgeColor: "#000000",
       favicon: Object.freeze({
@@ -147,6 +147,16 @@
     PACE_ICON_EFFECTS_BY_STATE: Object.freeze({
       [PACE_STATES.wellAhead.key]: "sprint-smoke",
       [PACE_STATES.criticalBehind.key]: "brake-wobble",
+    }),
+    SPRINT_BOUNCE_PROFILE_DELAY_RANGE_MS: Object.freeze([700, 1500]),
+    SPRINT_SMOKE_VARIATION: Object.freeze({
+      BLUR_JITTER_CENTIPX: Object.freeze([-4, 4]),
+      DRIFT_X_JITTER_PX: Object.freeze([-4, 4]),
+      DRIFT_Y_JITTER_PX: Object.freeze([-2, 2]),
+      END_SCALE_JITTER_PERCENT: Object.freeze([-5, 5]),
+      MID_OPACITY_JITTER_PERCENT: Object.freeze([-5, 5]),
+      PEAK_OPACITY_JITTER_PERCENT: Object.freeze([-4, 4]),
+      Y_OFFSET_JITTER_PX: Object.freeze([-2, 2]),
     }),
     PACE_LEVEL_LEGEND_STATE_KEYS: Object.freeze([
       PACE_STATES.wellAhead.key,
