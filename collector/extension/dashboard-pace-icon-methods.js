@@ -163,6 +163,7 @@
           : "wide";
       }
       container.classList.add("is-brake-wobbling");
+      this.launchBrakeDebrisBurst(container, burst, state);
 
       state.settleTimer = window.setTimeout(() => {
         state.settleTimer = null;
@@ -182,6 +183,8 @@
         burstsUntilWide: this.randomIntegerInRange(
           DATA.BRAKE_WOBBLE_WIDE_BURST_INTERVAL_RANGE,
         ),
+        debrisLayers: new Set(),
+        debrisTimers: new Set(),
         delayTimer: null,
         isActive: true,
         nextWideBurstEscapes: false,
@@ -200,6 +203,7 @@
         state.isActive = false;
         window.clearTimeout(state.delayTimer);
         window.clearTimeout(state.settleTimer);
+        this.clearBrakeDebrisLayers(state);
         this.clearBrakeWobbleEffectClasses(container);
       });
     },

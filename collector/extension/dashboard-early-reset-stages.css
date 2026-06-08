@@ -256,6 +256,8 @@
   .pace-icon.has-pace-icon-effect-sprint-smoke img,
   .pace-icon.has-pace-icon-effect-brake-wobble img,
   .pace-icon.has-pace-icon-effect-brake-wobble.is-brake-wobbling img,
+  .brake-debris-piece,
+  .brake-debris-svg,
   .pace-smoke-puff,
   .early-reset-popover[data-early-reset-stage="5"],
   .early-reset-popover.is-popping,
@@ -263,6 +265,7 @@
     animation: none;
   }
 
+  .brake-debris-layer,
   .pace-icon-effect-sprint-smoke {
     display: none;
   }

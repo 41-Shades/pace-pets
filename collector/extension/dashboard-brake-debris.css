@@ -1,0 +1,97 @@
+@keyframes brake-debris-path {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+
+  7% {
+    opacity: 1;
+  }
+
+  84% {
+    opacity: 0.96;
+  }
+
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes brake-debris-spin {
+  0% {
+    transform: rotate(var(--brake-debris-start-rotate)) scale(0.62);
+  }
+
+  38% {
+    transform: rotate(var(--brake-debris-mid-spin))
+      scale(var(--brake-debris-mid-scale));
+  }
+
+  100% {
+    transform: rotate(var(--brake-debris-spin))
+      scale(var(--brake-debris-end-scale));
+  }
+}
+
+.brake-debris-layer {
+  contain: layout style;
+  height: 100vh;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  position: fixed;
+  width: 100vw;
+  z-index: 35;
+}
+
+.brake-debris-piece {
+  --brake-debris-delay: 0ms;
+  --brake-debris-duration: 1200ms;
+  --brake-debris-end-scale: 0.86;
+  --brake-debris-mid-scale: 1;
+  --brake-debris-mid-spin: 160deg;
+  --brake-debris-size: 10px;
+  --brake-debris-spin: 420deg;
+  --brake-debris-start-rotate: 0deg;
+
+  animation: brake-debris-path var(--brake-debris-duration) linear forwards;
+  animation-delay: var(--brake-debris-delay);
+  display: block;
+  filter: drop-shadow(0 1px 0 rgb(15 23 42 / 34%));
+  height: var(--brake-debris-size);
+  offset-anchor: 50% 50%;
+  offset-distance: 0%;
+  offset-path: path("M 0 0 C 0 -80 90 -80 90 420");
+  offset-rotate: 0deg;
+  opacity: 0;
+  position: absolute;
+  transform-origin: 50% 50%;
+  width: var(--brake-debris-size);
+  will-change: offset-distance, opacity;
+}
+
+.brake-debris-layer[data-brake-debris-range="escape"] .brake-debris-piece {
+  animation-timing-function: linear;
+}
+
+.brake-debris-piece[data-brake-debris-kind="spark"] {
+  filter: drop-shadow(0 0 2px rgb(251 146 60 / 44%))
+    drop-shadow(0 1px 0 rgb(15 23 42 / 34%));
+}
+
+.brake-debris-piece[data-brake-debris-kind="smoke"] {
+  filter: blur(0.08px) drop-shadow(0 1px 0 rgb(15 23 42 / 24%));
+}
+
+.brake-debris-svg {
+  animation: brake-debris-spin var(--brake-debris-duration) ease-in-out forwards;
+  animation-delay: var(--brake-debris-delay);
+  display: block;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(var(--brake-debris-start-rotate)) scale(0.62);
+  transform-origin: 50% 50%;
+  width: 100%;
+  will-change: transform;
+}
