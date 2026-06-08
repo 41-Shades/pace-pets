@@ -245,7 +245,12 @@
     will-change: auto;
   }
 
+  .pace-icon.has-pace-icon-effect-sprint-smoke.is-sprint-speed-bumping {
+    will-change: auto;
+  }
+
   .pace-card.pace-sync .pace-icon,
+  .pace-icon.has-pace-icon-effect-sprint-smoke.is-sprint-speed-bumping,
   .pace-icon.is-perfect-zero-aperture::after,
   .pace-icon.is-perfect-zero-aperture .perfect-zero-cameo,
   .pace-icon.has-pace-icon-effect-sprint-smoke img,

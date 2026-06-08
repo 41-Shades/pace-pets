@@ -48,7 +48,10 @@
 
   Object.assign(Controller.prototype, {
     clearSprintSmokeEffectClasses(container) {
-      container.classList.remove("has-pace-icon-effect-sprint-smoke");
+      container.classList.remove(
+        "has-pace-icon-effect-sprint-smoke",
+        "is-sprint-speed-bumping",
+      );
       container.removeAttribute("data-sprint-bounce-profile");
       container.removeAttribute("data-sprint-smoke-profile");
     },
@@ -148,11 +151,35 @@
       }, this.randomIntegerInRange(DATA.SPRINT_BOUNCE_PROFILE_DELAY_RANGE_MS));
     },
 
+    scheduleSprintSpeedBump(container, state) {
+      state.speedBumpTimer = window.setTimeout(() => {
+        state.speedBumpTimer = null;
+        this.runSprintSpeedBump(container, state);
+      }, this.randomIntegerInRange(DATA.SPRINT_SPEED_BUMP_DELAY_RANGE_MS));
+    },
+
+    runSprintSpeedBump(container, state) {
+      if (!state.isActive) {
+        return;
+      }
+
+      container.classList.add("is-sprint-speed-bumping");
+      state.speedBumpSettleTimer = window.setTimeout(() => {
+        state.speedBumpSettleTimer = null;
+        container.classList.remove("is-sprint-speed-bumping");
+        if (state.isActive) {
+          this.scheduleSprintSpeedBump(container, state);
+        }
+      }, DATA.SPRINT_SPEED_BUMP_DURATION_MS);
+    },
+
     startSprintSmokeEffect(container, layer) {
       const state = {
         bounceProfileTimer: null,
         cleanups: [],
         isActive: true,
+        speedBumpSettleTimer: null,
+        speedBumpTimer: null,
       };
 
       this.clearSprintSmokeEffectClasses(container);
@@ -161,10 +188,13 @@
       this.setSprintSmokeProfile(container);
       this.startSprintSmokePuffVariation(layer, state);
       this.scheduleSprintBounceProfile(container, state);
+      this.scheduleSprintSpeedBump(container, state);
 
       this.paceIconEffectCleanups.set(container, () => {
         state.isActive = false;
         window.clearTimeout(state.bounceProfileTimer);
+        window.clearTimeout(state.speedBumpSettleTimer);
+        window.clearTimeout(state.speedBumpTimer);
         for (const cleanup of state.cleanups) {
           cleanup();
         }

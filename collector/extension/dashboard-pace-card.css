@@ -94,7 +94,39 @@
   z-index: 1;
 }
 
+@keyframes sprint-speed-bump {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  16% {
+    transform: translate3d(-1px, 4px, 0) rotate(0.8deg);
+  }
+
+  31% {
+    transform: translate3d(4px, -22px, 0) rotate(-4.2deg);
+  }
+
+  48% {
+    transform: translate3d(5px, -16px, 0) rotate(-2.4deg);
+  }
+
+  66% {
+    transform: translate3d(-1px, 5px, 0) rotate(2.2deg);
+  }
+
+  82% {
+    transform: translate3d(2px, -7px, 0) rotate(-1.1deg);
+  }
+
+  92% {
+    transform: translate3d(0, 2px, 0) rotate(0.5deg);
+  }
+}
+
 .pace-icon.has-pace-icon-effect-sprint-smoke {
+  --sprint-speed-bump-duration: 920ms;
   --sprint-bounce-duration: 640ms;
   --sprint-bounce-step-1: translate3d(1px, -2px, 0) rotate(-0.7deg);
   --sprint-bounce-step-2: translate3d(0, 1px, 0) rotate(0.35deg);
@@ -125,6 +157,13 @@
   animation: sprint-scooter-bounce var(--sprint-bounce-duration) ease-in-out
     infinite;
   transform-origin: 52% 82%;
+  will-change: transform;
+}
+
+.pace-icon.has-pace-icon-effect-sprint-smoke.is-sprint-speed-bumping {
+  animation: sprint-speed-bump var(--sprint-speed-bump-duration)
+    cubic-bezier(0.18, 0.82, 0.24, 1) both;
+  transform-origin: 52% 84%;
   will-change: transform;
 }
 

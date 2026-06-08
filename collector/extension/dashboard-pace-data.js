@@ -149,6 +149,8 @@
       [PACE_STATES.criticalBehind.key]: "brake-wobble",
     }),
     SPRINT_BOUNCE_PROFILE_DELAY_RANGE_MS: Object.freeze([700, 1500]),
+    SPRINT_SPEED_BUMP_DELAY_RANGE_MS: Object.freeze([8000, 12000]),
+    SPRINT_SPEED_BUMP_DURATION_MS: 920,
     SPRINT_SMOKE_VARIATION: Object.freeze({
       BLUR_JITTER_CENTIPX: Object.freeze([-4, 4]),
       DRIFT_X_JITTER_PX: Object.freeze([-4, 4]),
