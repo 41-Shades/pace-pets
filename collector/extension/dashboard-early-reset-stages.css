@@ -265,6 +265,7 @@
   .brake-debris-piece,
   .brake-debris-svg,
   .pace-smoke-puff,
+  .pace-train-cloud-puff,
   .early-reset-popover[data-early-reset-stage="5"],
   .early-reset-popover.is-popping,
   .early-reset-popover.is-popping::before {

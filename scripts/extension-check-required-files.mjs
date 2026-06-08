@@ -22,6 +22,8 @@ export const requiredExtensionFiles = Object.freeze([
   "dashboard-animations.css",
   "dashboard-brake-debris.css",
   "dashboard-train-roll.css",
+  "dashboard-train-smoke.css",
+  "dashboard-train-smoke-puffs.css",
   "dashboard-tooltips.js",
   "dashboard-early-reset.js",
   "dashboard-chart-data.js",

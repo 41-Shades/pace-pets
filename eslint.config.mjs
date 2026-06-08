@@ -55,17 +55,17 @@ export default [
   {
     files: ["**/*.{js,mjs}"],
     rules: {
-      complexity: ["warn", { max: 10 }],
+      complexity: ["error", { max: 10 }],
       "max-depth": ["error", 4],
       "max-lines": [
-        "warn",
+        "error",
         { max: 400, skipBlankLines: true, skipComments: true },
       ],
       "max-lines-per-function": [
-        "warn",
+        "error",
         { max: 100, skipBlankLines: true, skipComments: true },
       ],
-      "max-params": ["warn", 5],
+      "max-params": ["error", 5],
       "no-restricted-syntax": ["error", ...restrictedSyntax],
     },
   },

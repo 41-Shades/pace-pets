@@ -12,8 +12,9 @@
     "lint:extension": "node scripts/extension-check.mjs",
     "lint:assets": "node scripts/vendor-asset-check.mjs",
     "lint:release": "node scripts/release-artifact-check.mjs",
-    "lint": "npm run lint:js && npm run lint:css && npm run lint:extension && npm run lint:assets && npm run lint:release",
-    "check:file-lengths": "node scripts/check-long-files.mjs",
+    "lint:static": "npm run lint:css && npm run lint:extension && npm run lint:assets && npm run lint:release",
+    "lint": "npm run lint:js && npm run lint:static",
+    "shape": "npm run lint:js && node scripts/check-long-files.mjs",
     "smoke": "node scripts/smoke-check.mjs",
     "test": "vitest run --environment node",
     "docs:storage": "node scripts/storage-schema-doc.mjs --write",
@@ -25,7 +26,7 @@
     "audit:deps": "npm audit --audit-level=high",
     "audit:deps:prod": "npm audit --omit=dev --audit-level=high",
     "security:check": "npm run audit:deps:prod && npm run audit:deps",
-    "check": "npm run format:check && npm run lint && npm run check:file-lengths && npm run smoke && npm run test",
+    "check": "npm run format:check && npm run shape && npm run lint:static && npm run smoke && npm run test",
     "preflight": "npm run check && npm run security:check"
   },
   "devDependencies": {
