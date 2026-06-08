@@ -4,7 +4,7 @@
   const SVG_NS = "http://www.w3.org/2000/svg";
   const COPY = Object.freeze({
     liveFooter: "Default operating mode",
-    liveNotice: "No override active. Streaming from live sensors.",
+    liveNotice: "Live sensors streaming normally.",
     overrideNotice: "Manual override replaces live data.",
   });
 

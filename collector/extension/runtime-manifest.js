@@ -55,6 +55,8 @@
     "./dashboard-status-controller.js",
     "./dashboard-pace-data.js",
     "./dashboard-pace-core.js",
+    "./dashboard-brake-debris-data.js",
+    "./dashboard-brake-debris-methods.js",
     "./dashboard-pace-icon-methods.js",
     "./dashboard-sprint-smoke-methods.js",
     "./dashboard-pace-rail-methods.js",
