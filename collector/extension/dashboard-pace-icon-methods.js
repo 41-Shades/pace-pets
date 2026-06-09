@@ -119,6 +119,7 @@
 
       this.clearBrakeWobbleEffectClasses(container);
       this.clearSprintSmokeEffectClasses(container);
+      this.clearSpeedLinesEffectClasses(container);
       this.clearTrainRollEffectClasses(container);
     },
 
@@ -222,6 +223,11 @@
 
       if (effect === "train-roll") {
         this.renderTrainRollEffect(container);
+        return;
+      }
+
+      if (effect === "speed-lines") {
+        this.renderSpeedLinesEffect(container);
         return;
       }
 

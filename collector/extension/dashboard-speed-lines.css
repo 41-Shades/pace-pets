@@ -1,0 +1,167 @@
+@keyframes pick-up-speed-line-pass {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scaleX(0.72);
+  }
+
+  16% {
+    opacity: var(--speed-line-peak-opacity);
+  }
+
+  58% {
+    opacity: var(--speed-line-mid-opacity);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(-18px, 0, 0) scaleX(1.04);
+  }
+}
+
+@keyframes pick-up-speed-dog-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  42% {
+    transform: translate3d(0, -2px, 0) rotate(-0.35deg);
+  }
+
+  68% {
+    transform: translate3d(0, 1px, 0) rotate(0.18deg);
+  }
+}
+
+@keyframes pick-up-speed-shadow-pulse {
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: translate3d(0, 0, 0) scaleX(0.92);
+  }
+
+  42% {
+    opacity: 0.12;
+    transform: translate3d(2px, 1px, 0) scaleX(0.78);
+  }
+
+  68% {
+    opacity: 0.26;
+    transform: translate3d(-1px, 0, 0) scaleX(1);
+  }
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines {
+  --speed-line-color: rgb(82 103 112 / 52%);
+  --speed-line-soft: rgb(82 103 112 / 16%);
+  --speed-run-cycle-duration: 1180ms;
+}
+
+.pace-icon-effect-speed-lines {
+  inset: 0;
+  overflow: visible;
+  z-index: 0;
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines::after {
+  animation: pick-up-speed-shadow-pulse var(--speed-run-cycle-duration)
+    ease-in-out infinite;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(82 103 112 / 42%) 0%,
+    rgb(82 103 112 / 24%) 48%,
+    rgb(82 103 112 / 0%) 74%
+  );
+  border-radius: 50%;
+  bottom: 12px;
+  content: "";
+  height: 11px;
+  left: 17px;
+  pointer-events: none;
+  position: absolute;
+  width: 66px;
+  z-index: 0;
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines img {
+  animation: pick-up-speed-dog-bob var(--speed-run-cycle-duration) ease-in-out
+    infinite;
+  transform-origin: 52% 82%;
+  will-change: transform;
+}
+
+.pace-speed-line {
+  --speed-line-delay: 0s;
+  --speed-line-duration: 1180ms;
+  --speed-line-height: 1px;
+  --speed-line-mid-opacity: 0.24;
+  --speed-line-peak-opacity: 0.46;
+
+  animation: pick-up-speed-line-pass var(--speed-line-duration)
+    cubic-bezier(0.34, 0, 0.24, 1) infinite;
+  animation-delay: var(--speed-line-delay);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--speed-line-soft) 12%,
+    var(--speed-line-color) 44%,
+    var(--speed-line-color) 78%,
+    transparent 100%
+  );
+  border-radius: 999px;
+  box-shadow: 0 0 4px rgb(82 103 112 / 8%);
+  height: var(--speed-line-height);
+  left: var(--speed-line-left);
+  opacity: 0;
+  position: absolute;
+  top: var(--speed-line-top);
+  transform-origin: right center;
+  width: var(--speed-line-width);
+  will-change: opacity, transform;
+}
+
+.pace-speed-line-1 {
+  --speed-line-delay: -0.96s;
+  --speed-line-duration: 1180ms;
+  --speed-line-left: 16px;
+  --speed-line-top: 20px;
+  --speed-line-width: 16px;
+}
+
+.pace-speed-line-2 {
+  --speed-line-delay: -0.32s;
+  --speed-line-duration: 1.3s;
+  --speed-line-height: 1.5px;
+  --speed-line-left: 2px;
+  --speed-line-mid-opacity: 0.22;
+  --speed-line-peak-opacity: 0.42;
+  --speed-line-top: 36px;
+  --speed-line-width: 22px;
+}
+
+.pace-speed-line-3 {
+  --speed-line-delay: -0.64s;
+  --speed-line-duration: 1.08s;
+  --speed-line-left: 0;
+  --speed-line-top: 48px;
+  --speed-line-width: 12px;
+}
+
+.pace-speed-line-4 {
+  --speed-line-delay: -1.08s;
+  --speed-line-duration: 1.4s;
+  --speed-line-height: 1.5px;
+  --speed-line-left: -4px;
+  --speed-line-mid-opacity: 0.2;
+  --speed-line-peak-opacity: 0.38;
+  --speed-line-top: 59px;
+  --speed-line-width: 14px;
+}
+
+.pace-speed-line-5 {
+  --speed-line-delay: -0.14s;
+  --speed-line-duration: 1.14s;
+  --speed-line-left: -6px;
+  --speed-line-top: 72px;
+  --speed-line-width: 14px;
+}
