@@ -19,6 +19,7 @@
   const {
     DEFAULT_BADGE_COLORS,
     PACE_CLASS_NAMES,
+    PACE_IMPERFECT_STATE_KEYS,
     PACE_LEGEND_STATE_KEYS,
     PACE_LEVEL_STATE_KEYS,
     PACE_PERFECT_STATE_KEYS,
@@ -70,8 +71,26 @@
     );
   }
 
+  function isUsageAbsoluteZeroWithTimeRemaining(remainingPercent, timePercent) {
+    const numericRemainingPercent =
+      remainingPercent === null ||
+      remainingPercent === undefined ||
+      remainingPercent === ""
+        ? null
+        : Number(remainingPercent);
+    const boundedTimePercent = boundedPercent(timePercent);
+    return (
+      numericRemainingPercent === 0 &&
+      boundedTimePercent !== null &&
+      boundedTimePercent > 0
+    );
+  }
+
   function controlledPaceDisplayRatio(state) {
-    return state.key === PACE_STATES.perfectZero.key ? 0 : PERFECT_PACE_RATIO;
+    return state.key === PACE_STATES.perfectZero.key ||
+      state.key === PACE_STATES.splat.key
+      ? 0
+      : PERFECT_PACE_RATIO;
   }
 
   function controlledPacePresentationForValues(
@@ -79,6 +98,14 @@
     timePercent,
     { allowPerfectZero = true } = {},
   ) {
+    if (isUsageAbsoluteZeroWithTimeRemaining(remainingPercent, timePercent)) {
+      return {
+        displayRatio: controlledPaceDisplayRatio(PACE_STATES.splat),
+        paceRatio: paceRatioForValues(remainingPercent, timePercent),
+        state: PACE_STATES.splat,
+      };
+    }
+
     const perfectZero = isPerfectZeroPercentPair(remainingPercent, timePercent);
     if (perfectZero && !allowPerfectZero) {
       return null;
@@ -263,6 +290,7 @@
     BADGE_PACE_RATIO_DISPLAY_MAX,
     DEFAULT_BADGE_COLORS,
     PACE_CLASS_NAMES,
+    PACE_IMPERFECT_STATE_KEYS,
     PACE_LEGEND_STATE_KEYS,
     PACE_LEVEL_STATE_KEYS,
     PACE_PERFECT_STATE_KEYS,
@@ -284,6 +312,7 @@
     formatPaceRatioValue,
     isPerfectSyncPercentPair,
     isPerfectZeroPercentPair,
+    isUsageAbsoluteZeroWithTimeRemaining,
     isResetWindowStale,
     paceStateForClassName,
     paceStatePresentationForRatio,

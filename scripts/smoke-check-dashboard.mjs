@@ -132,6 +132,7 @@ function assertRuntimeManifest({ assert, runtimeManifest }) {
     ["./refresh-status.js", "./history-store.js"],
     ["./usage-values.js", "./pace-logic.js"],
     ["./themes/default/asset-manifest.js", "./pace-logic.js"],
+    ["./pace-state-art.js", "./pace-state-data.js"],
     ["./perfect-zero-space-draw.js", "./perfect-zero-space-scene.js"],
     ["./dashboard-status-logic.js", "./dashboard-status-controller.js"],
     ["./dashboard-pace-controller.js", "./dashboard-app-core.js"],
@@ -139,6 +140,7 @@ function assertRuntimeManifest({ assert, runtimeManifest }) {
   ]);
   assertRuntimeOrder(assert, runtimeManifest.BACKGROUND_SCRIPT_SOURCES, [
     ["product-metadata.js", "background-logic.js"],
+    ["pace-state-art.js", "pace-state-data.js"],
     ["pace-state-data.js", "pace-logic.js"],
     ["background-logic.js", "background-usage-source.js"],
   ]);

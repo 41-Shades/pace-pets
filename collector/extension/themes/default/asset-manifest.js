@@ -21,9 +21,11 @@
     criticalBehind: "pace-icons/brake-hard.png",
     sync: "pace-icons/perfect-sync.png",
     perfectZero: "pace-icons/perfect-zero.png",
+    splat: "pace-icons/06-slow-down-splat-transparent.png",
   });
   const PACE_ICON_VARIANT_FILES = Object.freeze({
     perfectZeroGlow: "pace-icons/perfect-zero-glow.png",
+    splatFreeFall: "pace-icons/06-slow-down-free-fall-transparent.png",
   });
 
   const APP_ICON_FILES = Object.freeze(Object.values(APP_ICON_FILES_BY_SIZE));

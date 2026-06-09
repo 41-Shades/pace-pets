@@ -8,20 +8,22 @@
   const PACE_STATE_PREVIEW_DURATION_MS = 1800;
   const BADGE_PREVIEW_STALE_TIMEOUT_MS = 60 * 1000;
   const DEFAULT_PACE_STATE_PREVIEW_TIME_PERCENT = 50;
+  const PERFECT_ZERO_PREVIEW_TIME_PERCENT = 0.4;
+  const MS_PER_MINUTE = 60 * 1000;
   const PACE_LOGIC = root.PacePetsLogic;
   if (!PACE_LOGIC) {
     throw new Error(
       "Pace Pets pace logic must load before preview-control.js.",
     );
   }
+  const USAGE_VALUES = root.CodexUsageValues;
+  if (!USAGE_VALUES) {
+    throw new Error(
+      "Codex usage value helpers must load before preview-control.js.",
+    );
+  }
   const PACE_STATES = PACE_LOGIC.PACE_STATES;
-  const DASHBOARD_ONLY_FORCED_STATES = Object.freeze({
-    singularity: Object.freeze({
-      badgeColor: "#000000",
-      key: "singularity",
-      title: "Singularity",
-    }),
-  });
+  const LIVE_TIMING_PREVIEW_STATE_KEYS = Object.freeze([PACE_STATES.splat.key]);
 
   function pacePreviewPercentPair(
     paceRatio,
@@ -47,21 +49,20 @@
     [PACE_STATES.sync.key]: pacePreviewPercentPair(
       PACE_LOGIC.PERFECT_PACE_RATIO,
     ),
-    [PACE_STATES.perfectZero.key]: pacePreviewPercentPair(0, {
+    [PACE_STATES.perfectZero.key]: pacePreviewPercentPair(
+      PACE_LOGIC.PERFECT_PACE_RATIO,
+      {
+        timePercent: PERFECT_ZERO_PREVIEW_TIME_PERCENT,
+      },
+    ),
+    [PACE_STATES.singularity.key]: pacePreviewPercentPair(0, {
       timePercent: 0,
     }),
-  });
-  const ZERO_PERCENT_PAIR = Object.freeze({
-    remainingPercent: 0,
-    timePercent: 0,
+    [PACE_STATES.splat.key]: pacePreviewPercentPair(0),
   });
 
   function normalizePreviewStateKey(stateKey) {
-    return (
-      PACE_STATES[stateKey]?.key ||
-      DASHBOARD_ONLY_FORCED_STATES[stateKey]?.key ||
-      null
-    );
+    return PACE_STATES[stateKey]?.key || null;
   }
 
   function previewStateKeyEnabled(stateKey) {
@@ -82,15 +83,119 @@
     return forcedPaceRatioForState(normalizedStateKey);
   }
 
-  function forcedPercentPairForState(stateKey) {
+  function usesLivePreviewTiming(stateKey) {
+    return LIVE_TIMING_PREVIEW_STATE_KEYS.includes(stateKey);
+  }
+
+  function livePreviewTimePercent(stateKey, windowData, atMs) {
+    if (!usesLivePreviewTiming(stateKey)) {
+      return null;
+    }
+
+    const timePercent = PACE_LOGIC.timeRemainingPercent(windowData, atMs);
+    return Number.isFinite(timePercent) && timePercent > 0 ? timePercent : null;
+  }
+
+  function positiveNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? number : null;
+  }
+
+  function previewDurationMinutes(windowData, fallbackDurationMinutes) {
+    return (
+      positiveNumber(windowData?.windowMinutes) ||
+      positiveNumber(fallbackDurationMinutes)
+    );
+  }
+
+  function livePreviewResetMs(stateKey, windowData, atMs) {
+    if (!usesLivePreviewTiming(stateKey)) {
+      return null;
+    }
+
+    const resetMs = PACE_LOGIC.dateMs(windowData?.resetsAt);
+    const startMs = PACE_LOGIC.windowStartMs(windowData);
+    return startMs !== null &&
+      resetMs !== null &&
+      startMs < resetMs &&
+      resetMs > atMs
+      ? resetMs
+      : null;
+  }
+
+  function forcedPercentPairForState(
+    stateKey,
+    { atMs = Date.now(), windowData = null } = {},
+  ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    if (FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey]) {
-      return FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey];
+    const percentPair = FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey];
+    if (!percentPair) {
+      return null;
     }
-    if (normalizedStateKey === DASHBOARD_ONLY_FORCED_STATES.singularity.key) {
-      return ZERO_PERCENT_PAIR;
+
+    const liveTimePercent = livePreviewTimePercent(
+      normalizedStateKey,
+      windowData,
+      atMs,
+    );
+    return liveTimePercent === null
+      ? percentPair
+      : Object.freeze({
+          ...percentPair,
+          timePercent: liveTimePercent,
+        });
+  }
+
+  function previewWindowDataForPercentPair(
+    stateKey,
+    percentPair,
+    { atMs, durationMinutes, windowData },
+  ) {
+    const remainingPercent = PACE_LOGIC.boundedPercent(
+      percentPair?.remainingPercent,
+    );
+    const timePercent = PACE_LOGIC.boundedPercent(percentPair?.timePercent);
+    const windowMinutes = previewDurationMinutes(windowData, durationMinutes);
+    if (
+      remainingPercent === null ||
+      timePercent === null ||
+      windowMinutes === null
+    ) {
+      return null;
     }
-    return null;
+
+    const liveResetMs = livePreviewResetMs(stateKey, windowData, atMs);
+    const resetMs =
+      liveResetMs ?? atMs + (windowMinutes * MS_PER_MINUTE * timePercent) / 100;
+    return Object.freeze({
+      remainingPercent,
+      resetsAt: new Date(resetMs).toISOString(),
+      usedPercent: USAGE_VALUES.percentComplement(remainingPercent),
+      windowMinutes,
+    });
+  }
+
+  function forcedPreviewWindowForState(
+    stateKey,
+    { atMs = Date.now(), durationMinutes = null, windowData = null } = {},
+  ) {
+    const normalizedStateKey = normalizePreviewStateKey(stateKey);
+    const percentPair = forcedPercentPairForState(normalizedStateKey, {
+      atMs,
+      windowData,
+    });
+    const previewWindowData = previewWindowDataForPercentPair(
+      normalizedStateKey,
+      percentPair,
+      { atMs, durationMinutes, windowData },
+    );
+    return previewWindowData
+      ? Object.freeze({
+          atMs,
+          percentPair,
+          windowData: previewWindowData,
+        })
+      : null;
   }
 
   function forcedPaceRatioForState(stateKey) {
@@ -102,7 +207,7 @@
 
     if (
       normalizedStateKey === PACE_STATES.perfectZero.key ||
-      normalizedStateKey === DASHBOARD_ONLY_FORCED_STATES.singularity.key
+      normalizedStateKey === PACE_STATES.singularity.key
     ) {
       return 0;
     }
@@ -115,9 +220,7 @@
 
   function forcedBadgeState(stateKey) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    const state =
-      PACE_STATES[normalizedStateKey] ||
-      DASHBOARD_ONLY_FORCED_STATES[normalizedStateKey];
+    const state = PACE_STATES[normalizedStateKey];
     if (!state) {
       return null;
     }
@@ -210,6 +313,7 @@
     forcedBadgeState,
     forcedPercentPairForState,
     forcedPaceRatioForState,
+    forcedPreviewWindowForState,
     normalizeBadgePreviewExpiresAtMs,
     normalizePreviewStateKey,
     previewBadgeMessage,

@@ -147,6 +147,24 @@
   --pace-icon-bg: #000000;
 }
 
+.pace-splat {
+  --pace-color: #475569;
+  --pace-bg: #f8fafc;
+  --pace-border: #cbd5e1;
+  --pace-icon-bg: #e2e8f0;
+}
+
+.state-chip.pace-splat .state-icon img {
+  object-fit: cover;
+  transform: scale(1.08);
+  transform-origin: center;
+}
+
+.pace-card.pace-splat .pace-icon > img {
+  transform: translateY(4px) scale(1.1);
+  transform-origin: center;
+}
+
 .state-chip.pace-singularity {
   --state-ratio-font-size: 0.64rem;
 
@@ -309,6 +327,13 @@
   --pace-border: #9ca3af;
   --pace-copy-color: #a8b7b4;
   --pace-icon-bg: #000000;
+}
+
+[data-theme="dark"] .pace-splat {
+  --pace-color: #cbd5e1;
+  --pace-bg: #202829;
+  --pace-border: #64748b;
+  --pace-icon-bg: #303a42;
 }
 
 [data-theme="dark"] .pace-ahead {

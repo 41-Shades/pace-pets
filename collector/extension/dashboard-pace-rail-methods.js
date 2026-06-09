@@ -16,8 +16,11 @@
     if (state.key === DATA.PACE_STATES.perfectZero.key) {
       return "Usage and time perfectly round to zero, without running out.";
     }
-    if (state.key === DATA.DASHBOARD_RAIL_STATES.singularity.key) {
+    if (state.key === DATA.PACE_STATES.singularity.key) {
       return "A perfect singularity of round zeros, but not actually zero.";
+    }
+    if (state.key === DATA.PACE_STATES.splat.key) {
+      return "An imperfect splat against time.";
     }
 
     return `Preview mock ${state.title} status`;
@@ -78,6 +81,34 @@
       return column;
     },
 
+    renderStateSection(className, titleText, stateKeys) {
+      const section = document.createElement("div");
+      section.className = `state-column-section ${className}`;
+      const title = document.createElement("h2");
+      title.className = "state-column-title";
+      title.textContent = titleText;
+      section.replaceChildren(
+        title,
+        ...stateKeys.map((stateKey) => this.renderStateChip(stateKey)),
+      );
+      return section;
+    },
+
+    renderStateColumnStack(className, sections) {
+      const column = document.createElement("div");
+      column.className = `state-column ${className}`;
+      column.replaceChildren(
+        ...sections.map((section) =>
+          this.renderStateSection(
+            section.className,
+            section.titleText,
+            section.stateKeys,
+          ),
+        ),
+      );
+      return column;
+    },
+
     renderStateRail() {
       if (!this.elements.paceStateStack) {
         return;
@@ -96,12 +127,30 @@
           ),
         );
       }
+
+      const rightColumnSections = [];
       if (DATA.PACE_PERFECT_LEGEND_STATE_KEYS.length) {
+        rightColumnSections.push({
+          className: "state-section-perfects",
+          titleText: "Perfect states",
+          stateKeys: DATA.PACE_PERFECT_LEGEND_STATE_KEYS,
+        });
+      }
+      if (DATA.PACE_IMPERFECT_LEGEND_STATE_KEYS.length) {
+        rightColumnSections.push({
+          className: "state-section-imperfects",
+          titleText:
+            DATA.PACE_IMPERFECT_LEGEND_STATE_KEYS.length === 1
+              ? "Imperfect State"
+              : "Imperfect States",
+          stateKeys: DATA.PACE_IMPERFECT_LEGEND_STATE_KEYS,
+        });
+      }
+      if (rightColumnSections.length) {
         columns.push(
-          this.renderStateColumn(
+          this.renderStateColumnStack(
             "state-column-perfects",
-            "Perfect states",
-            DATA.PACE_PERFECT_LEGEND_STATE_KEYS,
+            rightColumnSections,
           ),
         );
       }

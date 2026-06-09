@@ -12,6 +12,7 @@ const expectedDashboardStylesheetSources = Object.freeze([
   "./dashboard-train-smoke.css",
   "./dashboard-train-smoke-puffs.css",
   "./dashboard-pace-states.css",
+  "./dashboard-splat-fall.css",
   "./dashboard-cards.css",
   "./dashboard-early-reset-stages.css",
   "./dashboard-reset.css",

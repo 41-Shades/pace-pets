@@ -25,6 +25,7 @@
       this.pacePreviewRestoreSnapshot = null;
       this.pacePreviewRestoreTimer = null;
       this.paceIconEffectCleanups = new WeakMap();
+      this.lastForcedPaceStateKey = null;
       this.perfectZeroPageBackgroundScene = null;
     }
 
@@ -76,23 +77,31 @@
       return windows[this.selectedSupportedWindowKey()] || null;
     }
 
+    previewWindowForState(stateKey) {
+      const windowKey = this.selectedSupportedWindowKey();
+      return PREVIEW_CONTROL.forcedPreviewWindowForState(stateKey, {
+        durationMinutes: this.windowSpecs[windowKey]?.durationMinutes,
+        windowData: this.selectedSummaryWindowForChartPreview(),
+      });
+    }
+
     previewChartPaceRatioForState(stateKey, paceRatio) {
       return stateKey === DATA.PACE_STATES.perfectZero.key ||
-        stateKey === DATA.DASHBOARD_RAIL_STATES.singularity.key
+        stateKey === DATA.PACE_STATES.singularity.key
         ? PacePetsLogic.PERFECT_PACE_RATIO
         : paceRatio;
     }
 
-    renderPreviewChart(stateKey, paceRatio, percentPair) {
-      if (!percentPair || paceRatio === null) {
+    renderPreviewChart(stateKey, paceRatio, previewWindow) {
+      if (!previewWindow?.windowData || paceRatio === null) {
         return;
       }
 
       this.usageChartView.renderPreview({
+        atMs: previewWindow.atMs,
         paceRatio: this.previewChartPaceRatioForState(stateKey, paceRatio),
-        percentPair,
-        summaryWindow: this.selectedSummaryWindowForChartPreview(),
         summaryWindowKey: this.selectedSupportedWindowKey(),
+        windowData: previewWindow.windowData,
       });
     }
 
@@ -109,18 +118,11 @@
     }
 
     paceStateForClassName(className) {
-      return (
-        DATA.DASHBOARD_RAIL_STATES_BY_CLASS[className] ||
-        PacePetsLogic.paceStateForClassName(className)
-      );
+      return PacePetsLogic.paceStateForClassName(className);
     }
 
     paceStateForKey(stateKey) {
-      return (
-        DATA.DASHBOARD_RAIL_STATES[stateKey] ||
-        DATA.PACE_STATES[stateKey] ||
-        null
-      );
+      return DATA.PACE_STATES[stateKey] || null;
     }
 
     forcedPaceState() {

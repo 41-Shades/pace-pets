@@ -1,0 +1,231 @@
+.pace-icon.has-pace-icon-effect-splat-fall.is-splat-fall-running
+  > img:not(.splat-fall-image) {
+  opacity: 0;
+}
+
+.pace-card.pace-splat .pace-icon::before {
+  background: radial-gradient(
+    ellipse at center,
+    rgb(71 85 105 / 26%),
+    rgb(71 85 105 / 13%) 46%,
+    transparent 74%
+  );
+  border-radius: 50%;
+  bottom: 6px;
+  content: "";
+  height: 14px;
+  left: 10px;
+  opacity: 0.56;
+  pointer-events: none;
+  position: absolute;
+  right: 10px;
+  transform: scaleX(1);
+  transform-origin: center;
+  z-index: 0;
+}
+
+.pace-card.pace-splat
+  .pace-icon.has-pace-icon-effect-splat-fall.is-splat-fall-running::before {
+  animation: splat-ground-shadow 1200ms linear both;
+}
+
+.pace-icon.has-pace-icon-effect-splat-fall.is-splat-impacting {
+  animation: splat-impact-jolt 220ms cubic-bezier(0.2, 0.84, 0.24, 1) both;
+}
+
+.pace-icon-effect-splat-fall {
+  --splat-fall-start-x: 10px;
+  --splat-fall-start-y: -100vh;
+
+  animation: splat-fall-layer 1200ms linear both;
+  inset: -8px;
+  z-index: 4;
+}
+
+.pace-icon-effect-splat-fall .splat-fall-image {
+  animation: splat-fall-tumble 1200ms linear both;
+  display: block;
+  height: 112px;
+  left: -8px;
+  object-fit: contain;
+  position: absolute;
+  top: -8px;
+  width: 112px;
+  z-index: 2;
+}
+
+.splat-fall-line {
+  animation: splat-fall-streak 1200ms linear both;
+  background: color-mix(in srgb, var(--pace-border) 68%, transparent);
+  border-radius: 999px;
+  height: 44px;
+  opacity: 0;
+  position: absolute;
+  width: 3px;
+  z-index: 1;
+}
+
+.splat-fall-line-1 {
+  left: 12px;
+  top: -18px;
+}
+
+.splat-fall-line-2 {
+  animation-delay: 80ms;
+  height: 58px;
+  left: 86px;
+  top: -28px;
+}
+
+.splat-fall-line-3 {
+  animation-delay: 140ms;
+  height: 36px;
+  left: 102px;
+  top: 16px;
+}
+
+.splat-fall-line-4 {
+  animation-delay: 40ms;
+  height: 48px;
+  left: 4px;
+  top: 36px;
+}
+
+@keyframes splat-fall-layer {
+  0% {
+    opacity: 0;
+    transform: translate3d(
+        var(--splat-fall-start-x),
+        var(--splat-fall-start-y),
+        0
+      )
+      scale(0.82);
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  62% {
+    transform: translate3d(5px, -74px, 0) scale(0.98);
+  }
+
+  74% {
+    opacity: 1;
+    transform: translate3d(1px, -28px, 0) scale(1.02, 0.96);
+  }
+
+  80% {
+    opacity: 1;
+    transform: translate3d(0, -18px, 0) scale(1.14, 0.76);
+  }
+
+  83% {
+    opacity: 0;
+    transform: translate3d(0, -18px, 0) scale(1.16, 0.74);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -18px, 0) scale(1.16, 0.74);
+  }
+}
+
+@keyframes splat-ground-shadow {
+  0% {
+    opacity: 0.08;
+    transform: scaleX(0.22);
+  }
+
+  48% {
+    opacity: 0.16;
+    transform: scaleX(0.36);
+  }
+
+  62% {
+    opacity: 0.28;
+    transform: scaleX(0.58);
+  }
+
+  80% {
+    opacity: 0.78;
+    transform: scaleX(1.22);
+  }
+
+  83% {
+    opacity: 0.7;
+    transform: scaleX(1.06);
+  }
+
+  100% {
+    opacity: 0.56;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes splat-fall-tumble {
+  0% {
+    transform: scaleX(-1) rotate(-18deg);
+  }
+
+  24% {
+    transform: scaleX(-1) rotate(10deg);
+  }
+
+  52% {
+    transform: scaleX(-1) rotate(-7deg);
+  }
+
+  78% {
+    transform: scaleX(-1) rotate(-7deg);
+  }
+
+  80%,
+  100% {
+    transform: scaleX(-1) rotate(0deg);
+  }
+}
+
+@keyframes splat-fall-streak {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translateY(-18px) scaleY(0.7);
+  }
+
+  28%,
+  80% {
+    opacity: 0.72;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(22px) scaleY(1.18);
+  }
+}
+
+@keyframes splat-impact-jolt {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  38% {
+    transform: translate3d(0, 4px, 0) scale(1.02, 0.94);
+  }
+
+  64% {
+    transform: translate3d(0, -2px, 0) scale(0.99, 1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pace-icon-effect-splat-fall,
+  .splat-fall-image,
+  .splat-fall-line,
+  .pace-card.pace-splat
+    .pace-icon.has-pace-icon-effect-splat-fall.is-splat-fall-running::before,
+  .pace-icon.has-pace-icon-effect-splat-fall.is-splat-impacting {
+    animation: none;
+  }
+}

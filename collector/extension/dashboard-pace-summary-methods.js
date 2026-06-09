@@ -22,6 +22,10 @@
   }) {
     return (
       PacePetsLogic.isPerfectZeroPercentPair(remainingPercent, timePercent) &&
+      !PacePetsLogic.isUsageAbsoluteZeroWithTimeRemaining(
+        remainingPercent,
+        timePercent,
+      ) &&
       !allowPerfectZero
     );
   }
@@ -155,7 +159,7 @@
     },
 
     singularityPaceSummary(context) {
-      const state = DATA.DASHBOARD_RAIL_STATES.singularity;
+      const state = DATA.PACE_STATES.singularity;
       return {
         ...context,
         copy: state.copy,

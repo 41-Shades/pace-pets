@@ -119,6 +119,7 @@
 
       this.clearBrakeWobbleEffectClasses(container);
       this.clearSprintSmokeEffectClasses(container);
+      this.clearSplatFallEffectClasses?.(container);
       this.clearSpeedLinesEffectClasses(container);
       this.clearTrainRollEffectClasses(container);
     },
@@ -231,6 +232,11 @@
         return;
       }
 
+      if (effect === "splat-fall") {
+        this.renderSplatFallEffect(container);
+        return;
+      }
+
       const layer = document.createElement("span");
       layer.className = `pace-icon-effect pace-icon-effect-${effect}`;
       layer.setAttribute("aria-hidden", "true");
@@ -305,6 +311,10 @@
         container === this.elements.paceIcon &&
         state.key === DATA.PACE_STATES.perfectZero.key &&
         usePerfectZeroPageAperture;
+      const shouldPlaySplatFallIntro =
+        container.dataset.splatFallIntro === "true" &&
+        useEffects &&
+        state.key === DATA.PACE_STATES.splat.key;
 
       this.clearPaceIconEffects(container);
       container.replaceChildren();
@@ -312,6 +322,9 @@
         "is-perfect-zero-aperture",
         Boolean(shouldRenderPerfectZeroPageAperture),
       );
+      if (shouldPlaySplatFallIntro) {
+        container.dataset.splatFallIntro = "true";
+      }
 
       if (shouldRenderPerfectZeroPageAperture) {
         this.renderPerfectZeroApertureIcon(container, src);
@@ -324,13 +337,23 @@
 
     setPaceLevel(
       level,
-      { updateTabIcon = true, updateStateRailActive = true } = {},
+      {
+        replaySplatFall = false,
+        updateTabIcon = true,
+        updateStateRailActive = true,
+      } = {},
     ) {
+      const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const state = this.paceStateForClassName(level);
-      this.elements.paceCard.classList.remove(
-        ...DATA.PACE_CLASSES,
-        ...DATA.DASHBOARD_RAIL_PACE_CLASSES,
-      );
+      const playSplatFall =
+        state.key === DATA.PACE_STATES.splat.key &&
+        (replaySplatFall || previousState.key !== state.key);
+      if (playSplatFall) {
+        this.elements.paceIcon.dataset.splatFallIntro = "true";
+      } else {
+        delete this.elements.paceIcon.dataset.splatFallIntro;
+      }
+      this.elements.paceCard.classList.remove(...DATA.PACE_CLASSES);
       this.elements.paceCard.classList.add(level);
       const pageBackgroundActive = this.setPerfectZeroPageBackgroundActive(
         state.key === DATA.PACE_STATES.perfectZero.key,
@@ -349,8 +372,8 @@
 
     currentPaceLevel() {
       return (
-        [...DATA.PACE_CLASSES, ...DATA.DASHBOARD_RAIL_PACE_CLASSES].find(
-          (className) => this.elements.paceCard.classList.contains(className),
+        DATA.PACE_CLASSES.find((className) =>
+          this.elements.paceCard.classList.contains(className),
         ) || DATA.MUTED_PACE_CLASS
       );
     },
