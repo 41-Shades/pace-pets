@@ -62,7 +62,7 @@
     setDatePart(dateElement, timeElement, value, format);
   }
 
-  function setResetParts(elements, windowData, spec) {
+  function setResetParts(elements, windowData, spec, atMs = Date.now()) {
     const startMs = PacePetsLogic.windowStartMs(windowData);
     const resetMs = dateMs(windowData?.resetsAt);
     const valueFormat = spec.resetValueFormat;
@@ -86,20 +86,20 @@
     }
 
     const elapsedPercent =
-      PacePetsLogic.elapsedWindowPercentAt(windowData, Date.now()) || 0;
+      PacePetsLogic.elapsedWindowPercentAt(windowData, atMs) || 0;
     elements.resetProgressFill.style.setProperty(
       "--reset-progress",
       `${elapsedPercent}%`,
     );
   }
 
-  function resetCountdown(value) {
+  function resetCountdown(value, atMs = Date.now()) {
     const resetMs = dateMs(value);
     if (resetMs === null) {
       return "--";
     }
 
-    const remainingMs = resetMs - Date.now();
+    const remainingMs = resetMs - atMs;
     if (remainingMs <= 0) {
       return "Window ended";
     }
@@ -112,11 +112,22 @@
     return days > 0 ? `${days}d ${time}` : time;
   }
 
+  function resetCountdownDisplaysZero(value, atMs = Date.now()) {
+    const resetMs = dateMs(value);
+    if (resetMs === null) {
+      return false;
+    }
+
+    const remainingMs = resetMs - atMs;
+    return remainingMs > 0 && Math.floor(remainingMs / 60000) === 0;
+  }
+
   globalThis.PacePetsDashboardTime = Object.freeze({
     dateMs,
     formatClockTime,
     isResetWindowStale: PacePetsLogic.isResetWindowStale,
     resetCountdown,
+    resetCountdownDisplaysZero,
     setResetParts,
     timeRemainingPercent: PacePetsLogic.timeRemainingPercent,
     windowStartMs: PacePetsLogic.windowStartMs,

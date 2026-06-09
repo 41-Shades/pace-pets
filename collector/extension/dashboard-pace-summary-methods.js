@@ -9,6 +9,33 @@
     );
   }
 
+  function hasUsableTime(timePercent, paceRatio) {
+    return (
+      Number.isFinite(timePercent) && timePercent > 0 && paceRatio !== null
+    );
+  }
+
+  function shouldBlockPerfectZero({
+    allowPerfectZero,
+    remainingPercent,
+    timePercent,
+  }) {
+    return (
+      PacePetsLogic.isPerfectZeroPercentPair(remainingPercent, timePercent) &&
+      !allowPerfectZero
+    );
+  }
+
+  function shouldShowSingularity(
+    controlledPresentation,
+    resetCountdownDisplaysZero,
+  ) {
+    return (
+      controlledPresentation?.state.key === DATA.PACE_STATES.perfectZero.key &&
+      resetCountdownDisplaysZero
+    );
+  }
+
   Object.assign(Controller.prototype, {
     updateTabTitle(title, paceRatio) {
       const selectedWindowKey = this.getSelectedWindowKey();
@@ -127,6 +154,18 @@
       };
     },
 
+    singularityPaceSummary(context) {
+      const state = DATA.DASHBOARD_RAIL_STATES.singularity;
+      return {
+        ...context,
+        copy: state.copy,
+        level: state.className,
+        paceRatioDisplayOverride: 0,
+        resetCountdownOverride: DATA.SINGULARITY_RESET_COUNTDOWN_TEXT,
+        title: state.title,
+      };
+    },
+
     resetTimeMissingSummary(context) {
       return {
         ...context,
@@ -150,6 +189,7 @@
       allowPerfectZero,
       comparisonPaceRatio,
       remainingPercent,
+      resetCountdownDisplaysZero,
       staleWindow,
       timePercent,
       waitingForReadingText,
@@ -169,20 +209,30 @@
           timePercent,
           { allowPerfectZero },
         );
-      const hasTime = Number.isFinite(timePercent) && timePercent > 0;
       if (staleWindow) {
         return this.stalePaceSummary({ ...context, waitingForReadingText });
       }
       if (
-        PacePetsLogic.isPerfectZeroPercentPair(remainingPercent, timePercent) &&
-        !allowPerfectZero
+        shouldBlockPerfectZero({
+          allowPerfectZero,
+          remainingPercent,
+          timePercent,
+        })
       ) {
         return this.perfectZeroBlockedSummary(context);
+      }
+      if (
+        shouldShowSingularity(
+          controlledPresentation,
+          resetCountdownDisplaysZero,
+        )
+      ) {
+        return this.singularityPaceSummary(context);
       }
       if (controlledPresentation) {
         return this.controlledPaceSummary(context, controlledPresentation);
       }
-      if (!hasTime || paceRatio === null) {
+      if (!hasUsableTime(timePercent, paceRatio)) {
         return this.resetTimeMissingSummary(context);
       }
 
@@ -194,18 +244,23 @@
       timePercent,
       staleWindow,
       comparisonPaceRatio = null,
-      { allowPerfectZero = true, waitingForReadingText = "Waiting" } = {},
+      {
+        allowPerfectZero = true,
+        resetCountdownDisplaysZero = false,
+        waitingForReadingText = "Waiting",
+      } = {},
     ) {
-      this.setPaceSummary(
-        this.paceSummaryModel({
-          allowPerfectZero,
-          comparisonPaceRatio,
-          remainingPercent: windowData?.remainingPercent,
-          staleWindow,
-          timePercent,
-          waitingForReadingText,
-        }),
-      );
+      const summary = this.paceSummaryModel({
+        allowPerfectZero,
+        comparisonPaceRatio,
+        remainingPercent: windowData?.remainingPercent,
+        resetCountdownDisplaysZero,
+        staleWindow,
+        timePercent,
+        waitingForReadingText,
+      });
+      this.setPaceSummary(summary);
+      return summary;
     },
   });
 })();

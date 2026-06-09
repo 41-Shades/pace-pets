@@ -349,8 +349,8 @@
 
     currentPaceLevel() {
       return (
-        DATA.PACE_CLASSES.find((className) =>
-          this.elements.paceCard.classList.contains(className),
+        [...DATA.PACE_CLASSES, ...DATA.DASHBOARD_RAIL_PACE_CLASSES].find(
+          (className) => this.elements.paceCard.classList.contains(className),
         ) || DATA.MUTED_PACE_CLASS
       );
     },

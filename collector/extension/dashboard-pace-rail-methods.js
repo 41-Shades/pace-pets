@@ -11,36 +11,37 @@
 
   function tooltipForState(state) {
     if (state.key === DATA.PACE_STATES.sync.key) {
-      return "Special live state: usage matches time.";
+      return "Usage and time perfectly match.";
     }
     if (state.key === DATA.PACE_STATES.perfectZero.key) {
-      return "Special live state: usage and time are zero.";
+      return "Usage and time perfectly round to zero, without running out.";
     }
     if (state.key === DATA.DASHBOARD_RAIL_STATES.singularity.key) {
-      return "Special developer state.";
+      return "A perfect singularity of round zeros, but not actually zero.";
     }
 
     return `Preview mock ${state.title} status`;
   }
 
   function tooltipHintForState(canPreview) {
-    return canPreview ? "Click to preview" : "Not previewable";
+    return canPreview ? "Click to preview" : "";
   }
 
   Object.assign(Controller.prototype, {
     renderStateChip(stateKey) {
       const state = this.paceStateForKey(stateKey) || DATA.PACE_STATES.muted;
       const canPreview = this.previewStateKeyEnabled(state.key);
-      const chip = document.createElement("button");
+      const chip = document.createElement(canPreview ? "button" : "div");
       chip.className = `state-chip ${state.className}`;
-      chip.type = "button";
       chip.dataset.paceStateKey = state.key;
       chip.dataset.previewable = String(canPreview);
       chip.dataset.tooltip = tooltipForState(state);
-      chip.dataset.tooltipHint = tooltipHintForState(canPreview);
-      if (!canPreview) {
-        chip.setAttribute("aria-disabled", "true");
-      } else {
+      const tooltipHint = tooltipHintForState(canPreview);
+      if (tooltipHint) {
+        chip.dataset.tooltipHint = tooltipHint;
+      }
+      if (canPreview) {
+        chip.type = "button";
         chip.setAttribute("aria-controls", "pace-card");
       }
 
@@ -146,7 +147,11 @@
     stateChipFromEvent(event) {
       const target = event.target instanceof Element ? event.target : null;
       const chip = target?.closest(".state-chip[data-pace-state-key]");
-      return chip && this.elements.paceStateStack.contains(chip) ? chip : null;
+      return chip &&
+        chip.dataset.previewable === "true" &&
+        this.elements.paceStateStack.contains(chip)
+        ? chip
+        : null;
     },
   });
 })();
