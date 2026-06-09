@@ -76,7 +76,25 @@ function assertRuntimeOrder({ assertScriptBefore, dashboardRuntimeScripts }) {
     ["./pace-logic.js", "./dashboard-chart.js"],
     ["./perfect-zero-space-draw.js", "./perfect-zero-space-scene.js"],
     ["./dashboard-status-logic.js", "./dashboard-status-controller.js"],
+    [
+      "./dashboard-push-stretch-renderer.js",
+      "./dashboard-push-stretch-methods.js",
+    ],
+    [
+      "./dashboard-push-sweat-variation.js",
+      "./dashboard-push-sweat-renderer.js",
+    ],
+    [
+      "./dashboard-push-sweat-renderer.js",
+      "./dashboard-push-stretch-methods.js",
+    ],
+    [
+      "./dashboard-push-water-renderer.js",
+      "./dashboard-push-stretch-methods.js",
+    ],
+    ["./dashboard-pace-icon-methods.js", "./dashboard-pace-rail-methods.js"],
     ["./dashboard-pace-core.js", "./dashboard-pace-controller.js"],
+    ["./dashboard-pace-rail-methods.js", "./dashboard-pace-controller.js"],
     ["./dashboard-pace-controller.js", "./dashboard-app-core.js"],
     ["./dashboard-app-core.js", "./dashboard.js"],
     ["./dashboard-history-methods.js", "./dashboard.js"],

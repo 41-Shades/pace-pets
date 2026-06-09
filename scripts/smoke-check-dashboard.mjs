@@ -7,6 +7,7 @@ const requiredDashboardIds = Object.freeze([
   "pace-copy",
   "pace-ratio-stat",
   "pace-ratio-value",
+  "pace-state-stack",
   "usage-percent",
   "time-percent",
   "usage-bar",
@@ -71,10 +72,10 @@ function assertDashboardHtml({
     );
   }
   assert(
-    !dashboardHtml.includes("dashboard-rail.css") &&
-      !dashboardHtml.includes("pace-state-stack") &&
-      !/\bstate-chip\b/.test(dashboardHtml),
-    "Dashboard must not render the retired pace state preview rail.",
+    dashboardHtml.includes("dashboard-rail.css") &&
+      dashboardHtml.includes("pace-state-stack") &&
+      dashboardHtml.includes('class="state-rail"'),
+    "Dashboard must render the passive pace state rail.",
   );
   assert(
     /<link\b[^>]*rel="stylesheet"[^>]*href="\.\/dashboard\.css"[^>]*>/s.test(
@@ -120,6 +121,8 @@ function assertRuntimeManifest({ assert, runtimeManifest }) {
     ["./pace-state-data.js", "./developer-options.js"],
     ["./perfect-zero-space-draw.js", "./perfect-zero-space-scene.js"],
     ["./dashboard-status-logic.js", "./dashboard-status-controller.js"],
+    ["./dashboard-pace-icon-methods.js", "./dashboard-pace-rail-methods.js"],
+    ["./dashboard-pace-rail-methods.js", "./dashboard-pace-controller.js"],
     ["./dashboard-pace-controller.js", "./dashboard-app-core.js"],
     ["./dashboard-app-core.js", "./dashboard.js"],
   ]);
@@ -188,6 +191,11 @@ function assertDashboardSource({
         "const checkedAt = refreshStatus?.refreshedAt || latest?.collectedAt;",
       ),
     "Dashboard status copy must keep auth failures actionable and checked time tied to the latest refresh attempt.",
+  );
+  assert(
+    !dashboardSource.includes("stateChipFromEvent") &&
+      !dashboardSource.includes("showPacePreview"),
+    "Dashboard rail must stay passive; developer controls own forced state previews.",
   );
 }
 

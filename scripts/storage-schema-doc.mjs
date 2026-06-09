@@ -163,6 +163,7 @@ function developerOptionsExample({ developerOptions }) {
     criticalBadgeWindow: true,
     forcedPaceStateKey: "perfectZero",
     manualRefreshLeadWindow: true,
+    maxPoolFill: true,
   });
 }
 

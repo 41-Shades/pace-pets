@@ -293,7 +293,7 @@
       key: "strongAhead",
       className: "pace-strong-ahead",
       title: "Push harder",
-      copy: "This window wants a challenge.",
+      copy: "The headband means business.",
       ratioLabel: "Pace 1.25-1.55",
       badgeColor: "#166534",
       favicon: { bg: "#edf6ec", color: "#166534" },

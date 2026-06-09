@@ -1,0 +1,66 @@
+.pace-icon.has-pace-icon-effect-push-stretch > img {
+  opacity: 0;
+}
+
+.pace-card.has-pace-push-water {
+  isolation: isolate;
+  overflow: visible;
+  position: relative;
+}
+
+.pace-card.has-pace-push-water > :not(.pace-push-water-layer) {
+  position: relative;
+  z-index: 1;
+}
+
+.pace-push-water-layer {
+  border-radius: inherit;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.pace-push-water-canvas {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.pace-push-stretch-layer {
+  display: block;
+  inset: -300%;
+  z-index: 8;
+}
+
+.pace-push-stretch-canvas,
+.pace-push-sweat-canvas {
+  display: block;
+  height: 100%;
+  inset: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.pace-push-stretch-canvas {
+  z-index: 0;
+}
+
+.pace-push-sweat-canvas {
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pace-icon.has-pace-icon-effect-push-stretch > img {
+    opacity: 1;
+  }
+
+  .pace-push-water-layer {
+    display: none;
+  }
+
+  .pace-push-stretch-layer {
+    display: none;
+  }
+}

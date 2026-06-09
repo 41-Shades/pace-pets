@@ -98,7 +98,7 @@ imperfect: splat
 
 Preview controls are owned by `collector/extension/preview-control.js`.
 Synthetic preview ratios are based on a default `50%` time remaining. The
-dashboard does not expose clickable pace-state previews; local developer
+dashboard rail is passive and highlights the active state; local developer
 controls can still force regular, perfect, and imperfect states for inspection.
 Forced toolbar badge states use the same synthetic ratio model.
 
@@ -121,6 +121,21 @@ status card briefly teeters and the ratio stat pops upward before both settle.
 
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects.
+
+The `strongAhead` / Push harder state uses a dashboard-only WebGL canvas mesh
+effect in `collector/extension/dashboard-push-stretch-methods.js` and
+`collector/extension/dashboard-push-stretch.css`. The main status icon texture is
+warped along the lower-left-foot-to-head axis so the root stays pinned while the
+head end expands more. A matching 2D canvas layer emits small sweat beads from
+the transformed head area. Normal pulses choose three beads from a small seeded
+track pool so launch timing, bead size, lift, spin, and travel vary per pulse
+without frame-to-frame jitter. Extreme pulses emit a wider seeded burst. The
+status card also renders a clipped canvas water layer behind the content so the
+falling drops land into a slowly rising shimmer pool. The local developer
+controls include a max-pool-fill preview that forces that water layer to its
+configured cap for inspection. The legend rail remains static. After every four
+to six normal pulses, the status icon runs one extreme pulse with a longer
+expansion range and larger head stretch before returning to the normal loop.
 
 The `ahead` / Pick up speed state uses the dashboard-only speed-lines effect in
 `collector/extension/dashboard-speed-lines-methods.js`,

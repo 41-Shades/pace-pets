@@ -21,6 +21,7 @@
       this.currentRefreshStatus = null;
       this.currentForcedPaceStateKey = null;
       this.currentManualRefreshLeadWindow = false;
+      this.currentMaxPoolFill = false;
       this.selectedWindowKey = this.DEFAULT_WINDOW_KEY;
       this.createControllers();
       this.applyProductMetadata();
@@ -67,6 +68,7 @@
         elements: this.elements,
         getCurrentForcedPaceStateKey: () => this.currentForcedPaceStateKey,
         getCurrentHistory: () => this.currentHistory,
+        getCurrentMaxPoolFill: () => this.currentMaxPoolFill,
         getCurrentRefreshStatus: () => this.currentRefreshStatus,
         getSelectedWindowKey: () => this.selectedWindowKey,
         renderHistory: (history, refreshStatus, options) =>
@@ -171,8 +173,10 @@
       this.currentForcedPaceStateKey = developerOptions.forcedPaceStateKey;
       this.currentManualRefreshLeadWindow =
         developerOptions.manualRefreshLeadWindow;
+      this.currentMaxPoolFill = developerOptions.maxPoolFill;
       this.currentHistory = history;
       this.currentRefreshStatus = refreshStatus;
+      this.paceView.renderStateRail();
       this.renderHistory(this.currentHistory, this.currentRefreshStatus);
     }
 
@@ -191,6 +195,7 @@
       this.loadDashboard().catch((error) =>
         this.renderHistoryLoadFailure(error),
       );
+      this.paceView.renderStateRail();
     }
 
     toggleUsageWindow() {

@@ -1,0 +1,208 @@
+.content-grid {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: row;
+  gap: 82px;
+  justify-content: center;
+  max-width: 1360px;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.state-rail {
+  --state-chip-gap-x: 28px;
+  --state-chip-gap-y: 10px;
+  --state-chip-width: 228px;
+  --state-rail-top-inset: 28px;
+  --state-section-gap-y: 18px;
+  --state-stack-max-width: calc(
+    (var(--state-chip-width) * 2) + var(--state-chip-gap-x)
+  );
+
+  align-self: flex-start;
+  display: block;
+  flex: 0 0 auto;
+  max-width: var(--state-stack-max-width);
+  padding-top: var(--state-rail-top-inset);
+  position: static;
+  width: auto;
+}
+
+.state-stack {
+  display: grid;
+  gap: var(--state-chip-gap-y) var(--state-chip-gap-x);
+  grid-template-columns: repeat(2, var(--state-chip-width));
+  justify-content: center;
+  margin-inline: auto;
+  max-width: min(100%, var(--state-stack-max-width));
+  width: auto;
+}
+
+.state-stack[hidden] {
+  display: none;
+}
+
+.state-column {
+  align-content: start;
+  display: grid;
+  gap: var(--state-chip-gap-y);
+}
+
+.state-column-perfects {
+  gap: var(--state-section-gap-y);
+}
+
+.state-column-section {
+  align-content: start;
+  display: grid;
+  gap: var(--state-chip-gap-y);
+}
+
+.state-column-title {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 620;
+  line-height: 1.1;
+  margin: 0 0 2px;
+  padding-left: 6px;
+}
+
+.state-chip {
+  --state-icon-size: 38px;
+  --state-image-size: 35px;
+  --state-meta-font-size: 0.72rem;
+  --state-ratio-font-size: 0.7rem;
+  --state-title-font-size: 1rem;
+
+  align-items: center;
+  background: color-mix(in srgb, var(--pace-bg) 24%, var(--surface-mix));
+  border: 1px solid color-mix(in srgb, var(--pace-border) 22%, var(--line));
+  border-left: 3px solid color-mix(in srgb, var(--pace-border) 58%, var(--line));
+  border-radius: 8px;
+  color: inherit;
+  display: flex;
+  font: inherit;
+  gap: 9px;
+  max-width: 100%;
+  min-height: 56px;
+  min-width: 0;
+  padding: 7px 15px 7px 12px;
+  text-align: left;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease;
+  width: 100%;
+}
+
+.state-chip:hover,
+.state-chip.is-active {
+  background: color-mix(in srgb, var(--pace-bg) 42%, var(--surface-mix));
+  border-color: color-mix(in srgb, var(--pace-border) 52%, var(--line));
+}
+
+.state-chip.is-active {
+  border-left-color: var(--pace-color);
+  box-shadow: 0 8px 18px rgb(var(--shadow-color) / 8%);
+}
+
+.state-copy {
+  min-width: 0;
+}
+
+.state-icon {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--pace-color);
+  display: inline-flex;
+  height: var(--state-icon-size);
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  width: var(--state-icon-size);
+}
+
+.state-icon svg {
+  fill: none;
+  height: 25px;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.8;
+  width: 25px;
+}
+
+.state-icon img {
+  border-radius: inherit;
+  display: block;
+  height: var(--state-image-size);
+  object-fit: contain;
+  position: relative;
+  width: var(--state-image-size);
+  z-index: 1;
+}
+
+.state-chip.pace-splat .state-icon img {
+  object-fit: cover;
+  transform: scale(1.08);
+  transform-origin: center;
+}
+
+.state-chip strong {
+  color: var(--pace-color);
+  display: block;
+  font-size: var(--state-title-font-size);
+  font-weight: 680;
+  line-height: 1.08;
+}
+
+.state-chip .state-meta {
+  align-items: baseline;
+  color: var(--subhead);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--state-meta-font-size);
+  gap: 1px 5px;
+  line-height: 1.1;
+  margin-top: 2px;
+  min-width: 0;
+}
+
+.state-chip .state-meta span {
+  white-space: nowrap;
+}
+
+.state-chip .state-ratio {
+  color: var(--pace-color);
+  font-size: var(--state-ratio-font-size);
+  font-weight: 800;
+  letter-spacing: 0;
+  opacity: 0.76;
+}
+
+.state-chip.pace-singularity {
+  --state-ratio-font-size: 0.64rem;
+
+  color: var(--pace-color);
+}
+
+.state-chip.pace-singularity:hover,
+.state-chip.pace-singularity.is-active {
+  background: color-mix(in srgb, var(--pace-bg) 46%, var(--surface-mix));
+  border-color: var(--pace-color);
+}
+
+.state-chip.pace-singularity strong {
+  color: var(--pace-color);
+}
+
+.state-chip.pace-singularity .state-ratio {
+  color: var(--pace-copy-color);
+  line-height: 1;
+}
+
+.state-chip.pace-singularity .state-meta {
+  color: var(--pace-copy-color);
+}

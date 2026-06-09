@@ -46,28 +46,34 @@ describe("PacePetsDeveloperOptions storage", () => {
     expect(options.MANUAL_REFRESH_LEAD_WINDOW_KEY).toBe(
       "manualRefreshLeadWindow",
     );
+    expect(options.MAX_POOL_FILL_KEY).toBe("maxPoolFill");
     expect(options.normalizeForcedPaceStateKey("sync")).toBe("sync");
     expect(options.normalizeForcedPaceStateKey("unsupported")).toBeNull();
     expect(options.normalizeCriticalBadgeWindow(true)).toBe(true);
     expect(options.normalizeCriticalBadgeWindow("true")).toBe(false);
     expect(options.normalizeManualRefreshLeadWindow(true)).toBe(true);
     expect(options.normalizeManualRefreshLeadWindow("true")).toBe(false);
+    expect(options.normalizeMaxPoolFill(true)).toBe(true);
+    expect(options.normalizeMaxPoolFill("true")).toBe(false);
     expect(
       options.normalizeDeveloperOptions({
         criticalBadgeWindow: true,
         forcedPaceState: "perfectZero",
         manualRefreshLeadWindow: true,
+        maxPoolFill: true,
         unsupported: false,
       }),
     ).toMatchObject({
       criticalBadgeWindow: true,
       forcedPaceStateKey: "perfectZero",
       manualRefreshLeadWindow: true,
+      maxPoolFill: true,
     });
     expect(options.normalizeDeveloperOptions(null)).toMatchObject({
       criticalBadgeWindow: false,
       forcedPaceStateKey: null,
       manualRefreshLeadWindow: false,
+      maxPoolFill: false,
     });
   });
 
@@ -79,11 +85,13 @@ describe("PacePetsDeveloperOptions storage", () => {
         criticalBadgeWindow: true,
         forcedPaceStateKey: "perfectZero",
         manualRefreshLeadWindow: true,
+        maxPoolFill: true,
       }),
     ).toEqual({
       criticalBadgeWindow: true,
       forcedPaceState: "perfectZero",
       manualRefreshLeadWindow: true,
+      maxPoolFill: true,
     });
     expect(
       options.developerOptionsStorageItems({

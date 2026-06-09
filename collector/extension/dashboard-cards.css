@@ -36,7 +36,12 @@
 }
 
 .metric-icon svg {
+  fill: none;
   height: 17px;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
   width: 17px;
 }
 
