@@ -112,37 +112,6 @@
   }
 }
 
-@keyframes pick-up-speed-dog-launch {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-  }
-
-  46% {
-    transform: translate3d(4px, 6px, 0) rotate(9deg) scale(0.98);
-  }
-
-  100% {
-    transform: translate3d(8px, -13px, 0) rotate(-5deg) scale(0.9);
-  }
-}
-
-@keyframes pick-up-speed-shadow-launch {
-  0% {
-    opacity: 0.24;
-    transform: translate3d(0, 0, 0) scaleX(0.94);
-  }
-
-  46% {
-    opacity: 0.3;
-    transform: translate3d(2px, 1px, 0) scaleX(1.02);
-  }
-
-  100% {
-    opacity: 0.12;
-    transform: translate3d(2px, 1px, 0) scaleX(0.64);
-  }
-}
-
 @keyframes pick-up-speed-shadow-pulse {
   0%,
   100% {
@@ -207,7 +176,6 @@
 .pace-icon.has-pace-icon-effect-speed-lines {
   --speed-line-color: rgb(82 103 112 / 52%);
   --speed-line-soft: rgb(82 103 112 / 16%);
-  --speed-launch-duration: 390ms;
   --speed-orbit-back-y: -35px;
   --speed-orbit-center-y: 0px;
   --speed-orbit-front-y: -6px;
@@ -267,16 +235,6 @@
     infinite;
   transform-origin: 52% 82%;
   will-change: transform;
-}
-
-.pace-icon.has-pace-icon-effect-speed-lines.is-speed-launching::after {
-  animation: pick-up-speed-shadow-launch var(--speed-launch-duration)
-    ease-in-out both;
-}
-
-.pace-icon.has-pace-icon-effect-speed-lines.is-speed-launching img {
-  animation: pick-up-speed-dog-launch var(--speed-launch-duration) ease-in-out
-    both;
 }
 
 .pace-icon.has-pace-icon-effect-speed-lines.is-speed-orbiting::after {

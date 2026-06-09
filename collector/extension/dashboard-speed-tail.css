@@ -1,0 +1,160 @@
+@keyframes pick-up-speed-dog-crouch {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+
+  100% {
+    transform: translate3d(4px, 6px, 0) rotate(9deg) scale(0.98);
+  }
+}
+
+@keyframes pick-up-speed-dog-jump {
+  0% {
+    transform: translate3d(4px, 6px, 0) rotate(9deg) scale(0.98);
+  }
+
+  100% {
+    transform: translate3d(8px, -13px, 0) rotate(-5deg) scale(0.9);
+  }
+}
+
+@keyframes pick-up-speed-shadow-crouch {
+  0% {
+    opacity: 0.24;
+    transform: translate3d(0, 0, 0) scaleX(0.94);
+  }
+
+  100% {
+    opacity: 0.3;
+    transform: translate3d(2px, 1px, 0) scaleX(1.02);
+  }
+}
+
+@keyframes pick-up-speed-shadow-jump {
+  0% {
+    opacity: 0.3;
+    transform: translate3d(2px, 1px, 0) scaleX(1.02);
+  }
+
+  100% {
+    opacity: 0.12;
+    transform: translate3d(2px, 1px, 0) scaleX(0.64);
+  }
+}
+
+@keyframes pick-up-speed-tail-wag-up {
+  0%,
+  24%,
+  48%,
+  72%,
+  100% {
+    opacity: 0;
+  }
+
+  1%,
+  23%,
+  49%,
+  71% {
+    opacity: 0.84;
+  }
+}
+
+@keyframes pick-up-speed-tail-wag-down {
+  0%,
+  24%,
+  48%,
+  72%,
+  100% {
+    opacity: 0;
+  }
+
+  25%,
+  47%,
+  73%,
+  95% {
+    opacity: 0.78;
+  }
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines {
+  --speed-crouch-duration: 170ms;
+  --speed-jump-duration: 110ms;
+  --speed-tail-root-x: 36px;
+  --speed-tail-root-y: 44px;
+  --speed-tail-wag-count: 1;
+  --speed-tail-wag-duration: 250ms;
+}
+
+.pace-speed-tail-layer {
+  inset: 0;
+  z-index: 2;
+}
+
+.pace-speed-tail-ghost {
+  background: linear-gradient(
+    90deg,
+    rgb(180 98 34 / 68%),
+    rgb(245 176 75 / 78%)
+  );
+  border: 1px solid rgb(32 38 46 / 58%);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgb(32 38 46 / 12%);
+  height: 4px;
+  opacity: 0;
+  position: absolute;
+  left: var(--speed-tail-root-x);
+  top: var(--speed-tail-root-y);
+  transform-origin: left center;
+}
+
+.pace-speed-tail-ghost-up {
+  transform: translateY(-50%) rotate(300deg);
+  width: 7px;
+}
+
+.pace-speed-tail-ghost-down {
+  transform: translateY(-50%) rotate(190deg);
+  width: 7px;
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines.is-speed-crouching::after {
+  animation: pick-up-speed-shadow-crouch var(--speed-crouch-duration) ease-out
+    both;
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines.is-speed-crouching img {
+  animation: pick-up-speed-dog-crouch var(--speed-crouch-duration) ease-out both;
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines.is-speed-crouched::after {
+  animation: none;
+  opacity: 0.3;
+  transform: translate3d(2px, 1px, 0) scaleX(1.02);
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines.is-speed-crouched img {
+  animation: none;
+  transform: translate3d(4px, 6px, 0) rotate(9deg) scale(0.98);
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines.is-speed-jumping::after {
+  animation: pick-up-speed-shadow-jump var(--speed-jump-duration) ease-in both;
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines.is-speed-jumping img {
+  animation: pick-up-speed-dog-jump var(--speed-jump-duration) ease-in both;
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines.is-speed-tail-wagging
+  .pace-speed-tail-ghost-up {
+  animation: pick-up-speed-tail-wag-up var(--speed-tail-wag-duration)
+    steps(1, end) both;
+  animation-iteration-count: var(--speed-tail-wag-count);
+}
+
+.pace-icon.has-pace-icon-effect-speed-lines.is-speed-tail-wagging
+  .pace-speed-tail-ghost-down {
+  animation: pick-up-speed-tail-wag-down var(--speed-tail-wag-duration)
+    steps(1, end) both;
+  animation-iteration-count: var(--speed-tail-wag-count);
+}
