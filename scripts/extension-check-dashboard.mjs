@@ -1,23 +1,4 @@
-const expectedDashboardStylesheetSources = Object.freeze([
-  "./dashboard.css",
-  "./dashboard-header.css",
-  "./dashboard-overlays.css",
-  "./dashboard-animations.css",
-  "./dashboard-brake-debris.css",
-  "./dashboard-pace-card.css",
-  "./dashboard-speed-lines.css",
-  "./dashboard-speed-tail.css",
-  "./dashboard-train-roll.css",
-  "./dashboard-train-smoke.css",
-  "./dashboard-train-smoke-puffs.css",
-  "./dashboard-pace-states.css",
-  "./dashboard-splat-fall.css",
-  "./dashboard-cards.css",
-  "./dashboard-early-reset-stages.css",
-  "./dashboard-reset.css",
-  "./dashboard-responsive.css",
-  "./dashboard-perfect-zero.css",
-]);
+import { dashboardAssetSourcesFromHtml } from "./extension-check-required-files.mjs";
 
 function assertDashboardStylesheets({
   assert,
@@ -25,16 +6,22 @@ function assertDashboardStylesheets({
   dashboardStylesheetSources,
   extensionPathFromExtensionPageUrl,
 }) {
+  assert(dashboardStylesheetSources.length > 0, "Dashboard CSS is required.");
   assert(
-    dashboardStylesheetSources.length ===
-      expectedDashboardStylesheetSources.length &&
-      dashboardStylesheetSources.every(
-        (src, index) => src === expectedDashboardStylesheetSources[index],
-      ),
-    `Dashboard stylesheet links must be exactly: ${expectedDashboardStylesheetSources.join(", ")}.`,
+    dashboardStylesheetSources[0] === "./dashboard.css",
+    "Dashboard base stylesheet must load first.",
+  );
+  assert(
+    new Set(dashboardStylesheetSources).size ===
+      dashboardStylesheetSources.length,
+    "Dashboard stylesheet links must not be duplicated.",
   );
   for (const href of dashboardStylesheetSources) {
     assert(href, "Dashboard stylesheet href is required.");
+    assert(
+      href.endsWith(".css"),
+      `Dashboard stylesheet must be a CSS file: ${href}`,
+    );
     assertExtensionFile(
       extensionPathFromExtensionPageUrl(href, "Dashboard stylesheet"),
     );
@@ -77,8 +64,11 @@ function assertRuntimeOrder({ assertScriptBefore, dashboardRuntimeScripts }) {
     ["./refresh-status.js", "./history-store.js"],
     ["./usage-values.js", "./pace-logic.js"],
     ["./storage-adapter.js", "./usage.js"],
-    ["./usage-integration-adapters.js", "./usage.js"],
+    ["./usage-integration-adapters.js", "./usage-providers.js"],
+    ["./usage-providers.js", "./usage.js"],
+    ["./usage-providers.js", "./history-store.js"],
     ["./themes/default/asset-manifest.js", "./pace-logic.js"],
+    ["./pace-state-data.js", "./developer-options.js"],
     ["./developer-options.js", "./dashboard.js"],
     ["./integration-config.js", "./dashboard-chart-data.js"],
     ["./pace-logic.js", "./dashboard-chart-data.js"],
@@ -154,7 +144,10 @@ function assertDashboardCss({
       "Dashboard stylesheet",
     );
     const stylesheetText = readExtensionText(stylesheetPath);
-    assert(!/@import\b/i.test(stylesheetText), `Dashboard CSS must not use imports: ${href}`);
+    assert(
+      !/@import\b/i.test(stylesheetText),
+      `Dashboard CSS must not use imports: ${href}`,
+    );
     assert(
       !/url\(\s*["']?(?:https?:|\/\/)/i.test(stylesheetText),
       `Dashboard CSS must not load remote resources: ${href}`,
@@ -163,19 +156,10 @@ function assertDashboardCss({
 }
 
 export function checkDashboardAssets(context) {
-  const {
-    assert,
+  const { assert, attributeValue, dashboardHtml, runtimeManifest } = context;
+  const dashboardAssets = dashboardAssetSourcesFromHtml(dashboardHtml, {
     attributeValue,
-    dashboardHtml,
-    runtimeManifest,
-  } = context;
-  const linkTags = dashboardHtml.match(/<link\b[^>]*>/gi) || [];
-  const stylesheetTags = linkTags.filter((linkTag) =>
-    /\bstylesheet\b/i.test(attributeValue(linkTag, "rel") || ""),
-  );
-  const dashboardStylesheetSources = stylesheetTags.map((linkTag) =>
-    attributeValue(linkTag, "href"),
-  );
+  });
   const scriptTags = dashboardHtml.match(/<script\b[\s\S]*?<\/script>/gi) || [];
   assert(
     !/<(?!a\b)[^>]+\b(?:src|href)=["'](?:https?:)?\/\//i.test(dashboardHtml),
@@ -186,12 +170,13 @@ export function checkDashboardAssets(context) {
     anchorTags: dashboardHtml.match(/<a\b[\s\S]*?<\/a>/gi) || [],
   });
   assertDashboardScriptTags({ ...context, scriptTags });
-  assertDashboardStylesheets({ ...context, dashboardStylesheetSources });
+  assertDashboardStylesheets({
+    ...context,
+    dashboardStylesheetSources: dashboardAssets.stylesheetSources,
+  });
   assertDashboardBootstrap({
     ...context,
-    dashboardScriptSources: scriptTags.map((scriptTag) =>
-      attributeValue(scriptTag, "src"),
-    ),
+    dashboardScriptSources: dashboardAssets.scriptSources,
   });
   assertDashboardProductMetadata(context);
   const dashboardRuntimeScripts = runtimeManifest.DASHBOARD_SCRIPT_SOURCES;
@@ -220,5 +205,8 @@ export function checkDashboardAssets(context) {
     );
     context.assertExtensionFile(context.extensionPathFromDashboardScript(src));
   }
-  assertDashboardCss({ ...context, dashboardStylesheetSources });
+  assertDashboardCss({
+    ...context,
+    dashboardStylesheetSources: dashboardAssets.stylesheetSources,
+  });
 }

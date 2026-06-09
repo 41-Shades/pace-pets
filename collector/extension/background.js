@@ -49,9 +49,7 @@ async function readDeveloperOptions() {
     const items = await CodexExtensionStorage.getLocal(
       DEVELOPER_OPTIONS_STORAGE_KEY,
     );
-    return PacePetsDeveloperOptions.normalizeDeveloperOptions(
-      items?.[DEVELOPER_OPTIONS_STORAGE_KEY],
-    );
+    return PacePetsDeveloperOptions.developerOptionsFromStorageItems(items);
   } catch (error) {
     console.warn("Could not read developer options:", error);
     return PacePetsDeveloperOptions.normalizeDeveloperOptions(null);
@@ -142,7 +140,8 @@ async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
 async function refreshUsage() {
   const rawUsage = await PacePetsBackgroundUsageSource.fetchWhamUsage();
   const payload = CodexWeeklyUsage.normalizeWhamUsage(rawUsage);
-  payload.source = CodexIntegrationConfig.SOURCE_MARKERS.background;
+  payload.source =
+    CodexWeeklyUsage.DEFAULT_USAGE_PROVIDER.sourceMarkers.background;
   const { history, sample, stored, checkedAt } =
     await CodexUsageHistory.appendUsageSnapshot(payload);
   const badgeState = await updatePaceBadge(sample.windows, history);

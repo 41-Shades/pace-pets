@@ -13,6 +13,10 @@
       "Codex integration config must load before history-store.js.",
     );
   }
+  const USAGE_PROVIDERS = root.CodexUsageProviders;
+  if (!USAGE_PROVIDERS) {
+    throw new Error("Codex usage providers must load before history-store.js.");
+  }
   const USAGE_VALUES = root.CodexUsageValues;
   if (!USAGE_VALUES) {
     throw new Error(
@@ -33,6 +37,8 @@
   const HISTORY_STORAGE_KEY = "codexUsageHistory";
   const REFRESH_STATUS_STORAGE_KEY = REFRESH_STATUS.REFRESH_STATUS_STORAGE_KEY;
   const HISTORY_VERSION = 1;
+  const DEFAULT_SOURCE_MARKERS =
+    USAGE_PROVIDERS.DEFAULT_USAGE_PROVIDER.sourceMarkers;
   const RETENTION_DAYS = 14;
   const MAX_SAMPLES = 500;
   const PLATEAU_SAMPLE_INTERVAL_MINUTES = 30;
@@ -110,10 +116,7 @@
     const sample = {
       id: safeText(value.id, collectedAt),
       collectedAt,
-      source: safeText(
-        value.source,
-        INTEGRATION_CONFIG.SOURCE_MARKERS.background,
-      ),
+      source: safeText(value.source, DEFAULT_SOURCE_MARKERS.background),
       collectorVersion: safeText(value.collectorVersion, collectorVersion()),
       windows,
     };
@@ -128,7 +131,7 @@
     return normalizeSample({
       id: collectedAt,
       collectedAt,
-      source: payload?.source || INTEGRATION_CONFIG.SOURCE_MARKERS.background,
+      source: payload?.source || DEFAULT_SOURCE_MARKERS.background,
       collectorVersion: collectorVersion(),
       windows: payload?.windows,
     });

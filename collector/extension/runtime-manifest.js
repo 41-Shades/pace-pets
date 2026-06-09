@@ -1,7 +1,7 @@
 (function attachCodexExtensionRuntime(root) {
   "use strict";
 
-  const BACKGROUND_SCRIPT_SOURCES = Object.freeze([
+  const COMMON_SCRIPT_SOURCES = Object.freeze([
     "product-metadata.js",
     "integration-config.js",
     "usage-windows.js",
@@ -10,36 +10,24 @@
     "refresh-control.js",
     "storage-adapter.js",
     "usage-integration-adapters.js",
+    "usage-providers.js",
     "usage.js",
     "history-store.js",
     "themes/default/asset-manifest.js",
     "pace-state-art.js",
-    "developer-options.js",
     "pace-state-data.js",
+    "developer-options.js",
     "pace-logic.js",
     "preview-control.js",
+  ]);
+
+  const BACKGROUND_ONLY_SCRIPT_SOURCES = Object.freeze([
     "background-logic.js",
     "background-usage-source.js",
     "background-context-menu.js",
   ]);
 
-  const DASHBOARD_SCRIPT_SOURCES = Object.freeze([
-    "./product-metadata.js",
-    "./integration-config.js",
-    "./usage-windows.js",
-    "./usage-values.js",
-    "./refresh-status.js",
-    "./refresh-control.js",
-    "./storage-adapter.js",
-    "./usage-integration-adapters.js",
-    "./usage.js",
-    "./history-store.js",
-    "./themes/default/asset-manifest.js",
-    "./pace-state-art.js",
-    "./developer-options.js",
-    "./pace-state-data.js",
-    "./pace-logic.js",
-    "./preview-control.js",
+  const DASHBOARD_ONLY_SCRIPT_SOURCES = Object.freeze([
     "./vendor/chart.umd.min.js",
     "./perfect-zero-space-data.js",
     "./perfect-zero-space-factory.js",
@@ -73,12 +61,29 @@
     "./dashboard.js",
   ]);
 
+  function dashboardSource(source) {
+    return `./${source}`;
+  }
+
+  const BACKGROUND_SCRIPT_SOURCES = Object.freeze([
+    ...COMMON_SCRIPT_SOURCES,
+    ...BACKGROUND_ONLY_SCRIPT_SOURCES,
+  ]);
+
+  const DASHBOARD_SCRIPT_SOURCES = Object.freeze([
+    ...COMMON_SCRIPT_SOURCES.map(dashboardSource),
+    ...DASHBOARD_ONLY_SCRIPT_SOURCES,
+  ]);
+
   const OPTIONAL_DASHBOARD_SCRIPT_SOURCES = Object.freeze([
     "./vendor/chart.umd.min.js",
   ]);
 
   root.CodexExtensionRuntime = Object.freeze({
+    BACKGROUND_ONLY_SCRIPT_SOURCES,
     BACKGROUND_SCRIPT_SOURCES,
+    COMMON_SCRIPT_SOURCES,
+    DASHBOARD_ONLY_SCRIPT_SOURCES,
     DASHBOARD_SCRIPT_SOURCES,
     OPTIONAL_DASHBOARD_SCRIPT_SOURCES,
   });

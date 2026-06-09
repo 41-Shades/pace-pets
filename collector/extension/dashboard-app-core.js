@@ -107,9 +107,7 @@
         const items = await this.EXTENSION_STORAGE.getLocal(
           this.DEVELOPER_OPTIONS_STORAGE_KEY,
         );
-        return this.DEVELOPER_OPTIONS.normalizeDeveloperOptions(
-          items?.[this.DEVELOPER_OPTIONS_STORAGE_KEY],
-        );
+        return this.DEVELOPER_OPTIONS.developerOptionsFromStorageItems(items);
       } catch (error) {
         console.warn("Could not read developer options:", error.message);
         return this.DEVELOPER_OPTIONS.normalizeDeveloperOptions(null);

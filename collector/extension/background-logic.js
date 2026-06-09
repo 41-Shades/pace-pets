@@ -13,10 +13,17 @@
       "Codex integration config must load before background-logic.js.",
     );
   }
+  const USAGE_PROVIDERS = root.CodexUsageProviders;
+  if (!USAGE_PROVIDERS) {
+    throw new Error(
+      "Codex usage providers must load before background-logic.js.",
+    );
+  }
 
   const DEFAULT_BADGE_WINDOW_KEY = USAGE_WINDOWS.DEFAULT_WINDOW_KEY;
   const BADGE_WINDOW_LABELS = USAGE_WINDOWS.WINDOW_BADGE_LABELS;
-  const AUTH_SESSION_URLS = INTEGRATION_CONFIG.AUTH_SESSION_URLS;
+  const DEFAULT_USAGE_PROVIDER = USAGE_PROVIDERS.DEFAULT_USAGE_PROVIDER;
+  const AUTH_SESSION_URLS = DEFAULT_USAGE_PROVIDER.authSessionUrls;
   const ATTENTION_BADGE_STATE_KEYS = Object.freeze(["criticalBehind"]);
   const PACE_LOGIC = root.PacePetsLogic;
   if (!PACE_LOGIC) {
@@ -37,50 +44,28 @@
 
   const ATTENTION_BADGE_STATE_KEY = "criticalBehind";
   const ATTENTION_BADGE_BASE_STATE_KEY = "on";
-  const ACCESS_TOKEN_PATHS = Object.freeze([
-    Object.freeze(["accessToken"]),
-    Object.freeze(["access_token"]),
-    Object.freeze(["session", "accessToken"]),
-    Object.freeze(["session", "access_token"]),
-    Object.freeze(["token"]),
-  ]);
-
-  function valueAtPath(data, path) {
-    return path.reduce((value, key) => value?.[key], data);
-  }
-
   function extractAccessToken(data) {
-    return (
-      ACCESS_TOKEN_PATHS.map((path) => valueAtPath(data, path)).find(Boolean) ||
-      null
-    );
+    return USAGE_PROVIDERS.extractAccessToken(data);
   }
 
   async function extractAccessTokenFromSessionResponse(response) {
-    if (!response?.ok) {
-      return null;
-    }
-
-    try {
-      return extractAccessToken(await response.json());
-    } catch {
-      return null;
-    }
+    return USAGE_PROVIDERS.extractAccessTokenFromSessionResponse(response);
   }
 
   function usageHeaders(accessToken, uiLanguage = "en-US") {
-    const headers = {
-      Accept: "application/json",
-      "oai-language": uiLanguage || "en-US",
-    };
-    if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return headers;
+    return USAGE_PROVIDERS.usageHeaders(
+      DEFAULT_USAGE_PROVIDER,
+      accessToken,
+      uiLanguage,
+    );
   }
 
   function shouldRetryUsageResponse(status, accessToken) {
-    return (status === 401 || status === 403) && Boolean(accessToken);
+    return USAGE_PROVIDERS.shouldRetryUsageResponse(
+      DEFAULT_USAGE_PROVIDER,
+      status,
+      accessToken,
+    );
   }
 
   function normalizeBadgeWindowKey(value) {

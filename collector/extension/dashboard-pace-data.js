@@ -3,6 +3,7 @@
 
   const PACE_STATES = PacePetsLogic.PACE_STATES;
   const PACE_CLASSES = PacePetsLogic.PACE_CLASS_NAMES;
+  const PACE_STATE_GROUPS = PacePetsLogic.PACE_STATE_GROUPS_BY_KEY;
   const THEME_ASSETS = globalThis.CodexThemeAssets;
   if (!THEME_ASSETS) {
     throw new Error(
@@ -70,21 +71,11 @@
       PEAK_OPACITY_JITTER_PERCENT: Object.freeze([-4, 4]),
       Y_OFFSET_JITTER_PX: Object.freeze([-2, 2]),
     }),
-    PACE_LEVEL_LEGEND_STATE_KEYS: Object.freeze([
-      PACE_STATES.wellAhead.key,
-      PACE_STATES.strongAhead.key,
-      PACE_STATES.ahead.key,
-      PACE_STATES.on.key,
-      PACE_STATES.behind.key,
-      PACE_STATES.wellBehind.key,
-      PACE_STATES.criticalBehind.key,
-    ]),
-    PACE_PERFECT_LEGEND_STATE_KEYS: Object.freeze([
-      PACE_STATES.sync.key,
-      PACE_STATES.perfectZero.key,
-      PACE_STATES.singularity.key,
-    ]),
-    PACE_IMPERFECT_LEGEND_STATE_KEYS: Object.freeze([PACE_STATES.splat.key]),
+    PACE_LEVEL_LEGEND_STATE_KEYS: PACE_STATE_GROUPS.paceLevels.displayStateKeys,
+    PACE_PERFECT_LEGEND_STATE_KEYS:
+      PACE_STATE_GROUPS.perfectStates.displayStateKeys,
+    PACE_IMPERFECT_LEGEND_STATE_KEYS:
+      PACE_STATE_GROUPS.imperfectStates.displayStateKeys,
     PACE_STATES,
     SINGULARITY_RESET_COUNTDOWN_TEXT: "0d 0h 0m",
     SPLAT_FREE_FALL_IMAGE: THEME_ASSETS.paceIconVariantPath("splatFreeFall"),

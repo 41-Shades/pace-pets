@@ -5,10 +5,6 @@
   if (!USAGE_WINDOWS) {
     throw new Error("Codex usage window contract must load before usage.js.");
   }
-  const INTEGRATION_CONFIG = root.CodexIntegrationConfig;
-  if (!INTEGRATION_CONFIG) {
-    throw new Error("Codex integration config must load before usage.js.");
-  }
   const USAGE_VALUES = root.CodexUsageValues;
   if (!USAGE_VALUES) {
     throw new Error("Codex usage value helpers must load before usage.js.");
@@ -19,11 +15,15 @@
       "Codex usage integration adapters must load before usage.js.",
     );
   }
+  const USAGE_PROVIDERS = root.CodexUsageProviders;
+  if (!USAGE_PROVIDERS) {
+    throw new Error("Codex usage providers must load before usage.js.");
+  }
 
-  const USAGE_ENDPOINT = INTEGRATION_CONFIG.CHATGPT_USAGE_ENDPOINT;
+  const DEFAULT_USAGE_PROVIDER = USAGE_PROVIDERS.DEFAULT_USAGE_PROVIDER;
+  const USAGE_ENDPOINT = DEFAULT_USAGE_PROVIDER.usageEndpoint;
   const WINDOW_SPECS = USAGE_WINDOWS.WINDOW_SPECS;
-  const DEFAULT_USAGE_ADAPTER =
-    USAGE_INTEGRATION_ADAPTERS.DEFAULT_USAGE_ADAPTER;
+  const DEFAULT_USAGE_ADAPTER = DEFAULT_USAGE_PROVIDER.adapter;
   const UNSUPPORTED_USAGE_MESSAGE =
     "ChatGPT usage response changed; Pace Pets needs an update.";
   const { dateMs, numberFrom, percentComplement, percentFrom } = USAGE_VALUES;
@@ -278,20 +278,29 @@
 
     return {
       windows,
-      source: INTEGRATION_CONFIG.SOURCE_MARKERS.normalizedUsage,
+      source: DEFAULT_USAGE_PROVIDER.sourceMarkers.normalizedUsage,
     };
   }
 
+  function normalizeUsageWithProvider(
+    rawUsage,
+    provider = DEFAULT_USAGE_PROVIDER,
+  ) {
+    return normalizeUsageWithAdapter(rawUsage, provider.adapter);
+  }
+
   function normalizeWhamUsage(rawUsage) {
-    return normalizeUsageWithAdapter(rawUsage, DEFAULT_USAGE_ADAPTER);
+    return normalizeUsageWithProvider(rawUsage, DEFAULT_USAGE_PROVIDER);
   }
 
   root.CodexWeeklyUsage = {
+    DEFAULT_USAGE_PROVIDER,
     USAGE_ENDPOINT,
     WINDOW_STORAGE_KEY: USAGE_WINDOWS.WINDOW_STORAGE_KEY,
     WEEK_MINUTES: USAGE_WINDOWS.WEEK_MINUTES,
     FIVE_HOUR_MINUTES: USAGE_WINDOWS.FIVE_HOUR_MINUTES,
     normalizeUsageWithAdapter,
+    normalizeUsageWithProvider,
     normalizeWhamUsage,
   };
 })(globalThis);

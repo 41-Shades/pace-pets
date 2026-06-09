@@ -1,21 +1,17 @@
 (function attachPacePetsBackgroundUsageSource(root) {
   "use strict";
 
-  const BACKGROUND_LOGIC = root.PacePetsBackgroundLogic;
-  if (!BACKGROUND_LOGIC) {
+  const USAGE_PROVIDERS = root.CodexUsageProviders;
+  if (!USAGE_PROVIDERS) {
     throw new Error(
-      "Pace Pets background logic must load before background-usage-source.js.",
-    );
-  }
-  const WEEKLY_USAGE = root.CodexWeeklyUsage;
-  if (!WEEKLY_USAGE) {
-    throw new Error(
-      "Codex usage helpers must load before background-usage-source.js.",
+      "Codex usage providers must load before background-usage-source.js.",
     );
   }
 
+  const USAGE_PROVIDER = USAGE_PROVIDERS.DEFAULT_USAGE_PROVIDER;
+
   async function fetchAccessToken() {
-    for (const url of BACKGROUND_LOGIC.AUTH_SESSION_URLS) {
+    for (const url of USAGE_PROVIDER.authSessionUrls) {
       try {
         const response = await fetch(url, {
           cache: "no-store",
@@ -25,9 +21,7 @@
           },
         });
         const token =
-          await BACKGROUND_LOGIC.extractAccessTokenFromSessionResponse(
-            response,
-          );
+          await USAGE_PROVIDERS.extractAccessTokenFromSessionResponse(response);
         if (token) {
           return token;
         }
@@ -43,7 +37,8 @@
   }
 
   function usageHeaders(accessToken) {
-    return BACKGROUND_LOGIC.usageHeaders(
+    return USAGE_PROVIDERS.usageHeaders(
+      USAGE_PROVIDER,
       accessToken,
       chrome.i18n.getUILanguage?.() || "en-US",
     );
@@ -51,17 +46,21 @@
 
   async function fetchWhamUsage() {
     let accessToken = await fetchAccessToken();
-    let response = await fetch(WEEKLY_USAGE.USAGE_ENDPOINT, {
+    let response = await fetch(USAGE_PROVIDER.usageEndpoint, {
       cache: "no-store",
       credentials: "include",
       headers: usageHeaders(accessToken),
     });
 
     if (
-      BACKGROUND_LOGIC.shouldRetryUsageResponse(response.status, accessToken)
+      USAGE_PROVIDERS.shouldRetryUsageResponse(
+        USAGE_PROVIDER,
+        response.status,
+        accessToken,
+      )
     ) {
       accessToken = await fetchAccessToken();
-      response = await fetch(WEEKLY_USAGE.USAGE_ENDPOINT, {
+      response = await fetch(USAGE_PROVIDER.usageEndpoint, {
         cache: "no-store",
         credentials: "include",
         headers: usageHeaders(accessToken),
@@ -70,11 +69,16 @@
 
     if (!response.ok) {
       const error = new Error(
-        accessToken
-          ? `ChatGPT usage endpoint returned ${response.status} with session token.`
-          : `Could not read ChatGPT session token; usage endpoint returned ${response.status}.`,
+        USAGE_PROVIDERS.usageFailureMessage(
+          USAGE_PROVIDER,
+          response.status,
+          accessToken,
+        ),
       );
-      error.authFailure = response.status === 401 || response.status === 403;
+      error.authFailure = USAGE_PROVIDERS.isAuthFailureStatus(
+        USAGE_PROVIDER,
+        response.status,
+      );
       error.statusCode = response.status;
       throw error;
     }

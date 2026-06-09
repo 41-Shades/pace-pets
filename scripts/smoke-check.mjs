@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { requiredExtensionFiles } from "./extension-check-required-files.mjs";
+import { requiredExtensionFilesFromContracts } from "./extension-check-required-files.mjs";
 import { assertStorageSchemaDocumentCurrent } from "./storage-schema-doc.mjs";
 import { checkDashboardSmoke } from "./smoke-check-dashboard.mjs";
 
@@ -62,7 +62,20 @@ await import(
     path.join(projectRoot, "collector/extension/integration-config.js"),
   )
 );
-const integrationConfig = globalThis.CodexIntegrationConfig;
+await import(
+  pathToFileURL(path.join(projectRoot, "collector/extension/usage-windows.js"))
+);
+await import(
+  pathToFileURL(
+    path.join(projectRoot, "collector/extension/usage-integration-adapters.js"),
+  )
+);
+await import(
+  pathToFileURL(
+    path.join(projectRoot, "collector/extension/usage-providers.js"),
+  )
+);
+const usageProviders = globalThis.CodexUsageProviders;
 await import(
   pathToFileURL(
     path.join(
@@ -86,9 +99,9 @@ assert(
 );
 assert(
   manifest.host_permissions?.includes(
-    integrationConfig.CHATGPT_HOST_PERMISSION,
+    usageProviders.DEFAULT_USAGE_PROVIDER.hostPermission,
   ),
-  "Extension host permission is not aligned with the integration config.",
+  "Extension host permission is not aligned with the usage provider.",
 );
 assert(
   !manifest.action?.default_popup,
@@ -98,6 +111,13 @@ assert(
   !manifest.content_scripts,
   "Extension must not inject localhost content scripts.",
 );
+const dashboardHtml = readText("collector/extension/dashboard.html");
+const requiredExtensionFiles = requiredExtensionFilesFromContracts({
+  dashboardHtml,
+  manifest,
+  runtimeManifest,
+  themeAssets,
+});
 for (const requiredExtensionFile of requiredExtensionFiles) {
   assertFile(`collector/extension/${requiredExtensionFile}`);
 }
@@ -118,7 +138,6 @@ for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
   );
 }
 
-const dashboardHtml = readText("collector/extension/dashboard.html");
 const backgroundJs = [
   "background.js",
   "background-context-menu.js",
@@ -140,6 +159,7 @@ const dashboardStatusControllerJs = readText(
 const dashboardStatusLogicJs = readText(
   "collector/extension/dashboard-status-logic.js",
 );
+const devFlagsJs = readText("collector/extension/dev-flags.js");
 const usageJs = readText("collector/extension/usage.js");
 const usageIntegrationAdaptersJs = readText(
   "collector/extension/usage-integration-adapters.js",
@@ -195,7 +215,8 @@ assert(
   !backgroundJs.includes("badgePreviewRestoreTimer") &&
     !backgroundJs.includes("BADGE_PREVIEW_RESTORE_ALARM") &&
     !backgroundJs.includes("BADGE_PREVIEW_EXPIRES_STORAGE_KEY") &&
-    !backgroundJs.includes("restoreExpiredPaceBadgePreview"),
+    !backgroundJs.includes("restoreExpiredPaceBadgePreview") &&
+    !devFlagsJs.includes("pacePets.restoreBadge"),
   "Dashboard must not ship temporary toolbar badge preview restore state.",
 );
 assert(
@@ -223,9 +244,6 @@ assert(
 
 const sampleUsage = readJson("data/usage.sample.json");
 await import(
-  pathToFileURL(path.join(projectRoot, "collector/extension/usage-windows.js"))
-);
-await import(
   pathToFileURL(path.join(projectRoot, "collector/extension/usage-values.js"))
 );
 const usageWindows = globalThis.CodexUsageWindows;
@@ -248,11 +266,6 @@ assert(
   "Sample usage must use the five-hour window.",
 );
 
-await import(
-  pathToFileURL(
-    path.join(projectRoot, "collector/extension/usage-integration-adapters.js"),
-  )
-);
 await import(
   pathToFileURL(path.join(projectRoot, "collector/extension/usage.js"))
 );

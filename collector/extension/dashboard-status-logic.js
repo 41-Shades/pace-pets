@@ -13,6 +13,10 @@
   const SIGN_IN_NOT_FOUND_COPY = "Open ChatGPT to resume checks.";
   const SIGN_IN_NOT_FOUND_DETAIL =
     "Latest check failed because ChatGPT sign-in was not found.";
+  const EMPTY_HISTORY_TITLE = "No history yet";
+  const EMPTY_HISTORY_COPY = "Waiting for the first automatic usage check.";
+  const EMPTY_HISTORY_CHART_COPY = "Waiting for local history.";
+  const FAILED_HISTORY_COPY = "The latest usage check failed.";
   const COLLECTION_STATUS_LABELS = Object.freeze({
     [STATUS_TEXT.checkFailed]: "Check failed",
     [STATUS_TEXT.refreshNeeded]: "Refresh needed",
@@ -60,7 +64,9 @@
   }
 
   function formattedStatusTime(value, formatClockTime) {
-    return value ? formatClockTime(value) : "";
+    return value && typeof formatClockTime === "function"
+      ? formatClockTime(value)
+      : "";
   }
 
   function refreshFailureDetail({
@@ -86,6 +92,166 @@
       .join("; ");
   }
 
+  function collectionStatusState({
+    detail = "",
+    manualRefresh = false,
+    mode = "ok",
+    text,
+  }) {
+    return {
+      detail,
+      manualRefresh: manualRefresh === true,
+      mode,
+      text,
+    };
+  }
+
+  function failedCollectionStatusState({
+    formatClockTime,
+    latest = null,
+    refreshStatus,
+  }) {
+    if (isSignInNotFoundStatus(refreshStatus)) {
+      return collectionStatusState({
+        detail: refreshFailureDetail({
+          formatClockTime,
+          latest,
+          refreshStatus,
+        }),
+        manualRefresh: true,
+        mode: "warning",
+        text: STATUS_TEXT.signInNotFound,
+      });
+    }
+
+    if (isFailedRefreshStatus(refreshStatus)) {
+      return collectionStatusState({
+        detail: refreshFailureDetail({
+          formatClockTime,
+          latest,
+          refreshStatus,
+        }),
+        manualRefresh: true,
+        mode: "error",
+        text: STATUS_TEXT.checkFailed,
+      });
+    }
+
+    return null;
+  }
+
+  function staleRefreshCollectionStatusState(refreshStatus) {
+    return refreshStatus?.ok === true && !isRecentRefreshStatus(refreshStatus)
+      ? collectionStatusState({
+          manualRefresh: true,
+          mode: "stale",
+          text: STATUS_TEXT.refreshNeeded,
+        })
+      : null;
+  }
+
+  function emptyHistoryCollectionState({
+    formatClockTime,
+    refreshStatus = null,
+  } = {}) {
+    const failedStatus = failedCollectionStatusState({
+      formatClockTime,
+      refreshStatus,
+    });
+    if (failedStatus) {
+      return {
+        chartCopy: isSignInNotFoundStatus(refreshStatus)
+          ? STATUS_TEXT.signInNotFound
+          : EMPTY_HISTORY_CHART_COPY,
+        paceCopy: isSignInNotFoundStatus(refreshStatus)
+          ? SIGN_IN_NOT_FOUND_COPY
+          : refreshStatus?.message || FAILED_HISTORY_COPY,
+        paceTitle: failedStatus.text,
+        status: failedStatus,
+      };
+    }
+
+    const refreshNeeded =
+      staleRefreshCollectionStatusState(refreshStatus) ||
+      collectionStatusState({ text: STATUS_TEXT.waiting });
+    return {
+      chartCopy: EMPTY_HISTORY_CHART_COPY,
+      paceCopy: EMPTY_HISTORY_COPY,
+      paceTitle: EMPTY_HISTORY_TITLE,
+      status: {
+        ...refreshNeeded,
+        manualRefresh: true,
+      },
+    };
+  }
+
+  function missingWindowCollectionStatusState({
+    hasAnySupportedWindow,
+    hasResetTiming,
+    summaryWindow,
+  }) {
+    return hasAnySupportedWindow && summaryWindow && hasResetTiming
+      ? null
+      : collectionStatusState({
+          manualRefresh: true,
+          mode: "warning",
+          text: STATUS_TEXT.waiting,
+        });
+  }
+
+  function staleWindowCollectionStatusState({
+    refreshStatus,
+    staleWindow = false,
+  }) {
+    if (!staleWindow) {
+      return null;
+    }
+
+    return refreshStatus?.ok === true && isRecentRefreshStatus(refreshStatus)
+      ? collectionStatusState({
+          mode: "live",
+          text: STATUS_TEXT.waitingForReading,
+        })
+      : collectionStatusState({
+          manualRefresh: true,
+          mode: "stale",
+          text: STATUS_TEXT.refreshNeeded,
+        });
+  }
+
+  function firstCollectionStatusState(states) {
+    return states.find(Boolean) || null;
+  }
+
+  function historyCollectionStatusState(options = {}) {
+    const status = firstCollectionStatusState([
+      failedCollectionStatusState({
+        formatClockTime: options.formatClockTime,
+        latest: options.latest || null,
+        refreshStatus: options.refreshStatus || null,
+      }),
+      staleRefreshCollectionStatusState(options.refreshStatus || null),
+      missingWindowCollectionStatusState({
+        hasAnySupportedWindow: options.hasAnySupportedWindow === true,
+        hasResetTiming: options.hasResetTiming === true,
+        summaryWindow: options.summaryWindow || null,
+      }),
+      staleWindowCollectionStatusState({
+        refreshStatus: options.refreshStatus || null,
+        staleWindow: options.staleWindow === true,
+      }),
+    ]);
+    if (status) {
+      return status;
+    }
+
+    return collectionStatusState({
+      manualRefresh: options.manualRefreshLeadWindow === true,
+      mode: "live",
+      text: STATUS_TEXT.live,
+    });
+  }
+
   globalThis.PacePetsDashboardStatusLogic = Object.freeze({
     COLLECTION_STATUS_TITLE,
     LAST_COLLECTED_UPDATE_FEEDBACK_MS,
@@ -96,6 +262,8 @@
     SIGN_IN_NOT_FOUND_DETAIL,
     STATUS_TEXT,
     collectionStatusLabelText,
+    emptyHistoryCollectionState,
+    historyCollectionStatusState,
     isFailedRefreshStatus,
     isRecentRefreshStatus,
     isSignInNotFoundStatus,

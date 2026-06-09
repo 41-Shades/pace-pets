@@ -5,6 +5,15 @@
   const FORCED_PACE_STATE_KEY = "forcedPaceState";
   const CRITICAL_BADGE_WINDOW_KEY = "criticalBadgeWindow";
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
+  const PACE_STATE_DATA = root.PacePetsPaceStateData;
+  if (!PACE_STATE_DATA) {
+    throw new Error("Pace state data must load before developer-options.js.");
+  }
+  const FORCEABLE_PACE_STATE_GROUP_LIST_ELEMENT_IDS = Object.freeze({
+    imperfectStates: "imperfect-state-list",
+    paceLevels: "pace-level-list",
+    perfectStates: "perfect-state-list",
+  });
 
   function paceStateOption(key) {
     return Object.freeze({ key });
@@ -15,6 +24,14 @@
       key,
       listElementId,
       options: Object.freeze(options),
+    });
+  }
+
+  function forceablePaceStateGroup(group) {
+    return paceStateGroup({
+      key: group.key,
+      listElementId: FORCEABLE_PACE_STATE_GROUP_LIST_ELEMENT_IDS[group.key],
+      options: group.displayStateKeys.map(paceStateOption),
     });
   }
 
@@ -34,35 +51,9 @@
     });
   }
 
-  const FORCEABLE_PACE_STATE_GROUPS = Object.freeze([
-    paceStateGroup({
-      key: "paceLevels",
-      listElementId: "pace-level-list",
-      options: [
-        paceStateOption("wellAhead"),
-        paceStateOption("strongAhead"),
-        paceStateOption("ahead"),
-        paceStateOption("on"),
-        paceStateOption("behind"),
-        paceStateOption("wellBehind"),
-        paceStateOption("criticalBehind"),
-      ],
-    }),
-    paceStateGroup({
-      key: "perfectStates",
-      listElementId: "perfect-state-list",
-      options: [
-        paceStateOption("sync"),
-        paceStateOption("perfectZero"),
-        paceStateOption("singularity"),
-      ],
-    }),
-    paceStateGroup({
-      key: "imperfectStates",
-      listElementId: "imperfect-state-list",
-      options: [paceStateOption("splat")],
-    }),
-  ]);
+  const FORCEABLE_PACE_STATE_GROUPS = Object.freeze(
+    PACE_STATE_DATA.PACE_STATE_GROUPS.map(forceablePaceStateGroup),
+  );
   const FORCEABLE_PACE_STATE_OPTIONS = Object.freeze(
     FORCEABLE_PACE_STATE_GROUPS.reduce(
       (options, group) => options.concat(group.options),
@@ -119,6 +110,47 @@
     });
   }
 
+  function storedDeveloperOptionsValue(options = {}) {
+    const normalized = normalizeDeveloperOptions(
+      isPlainObject(options)
+        ? {
+            [CRITICAL_BADGE_WINDOW_KEY]: options.criticalBadgeWindow,
+            [FORCED_PACE_STATE_KEY]:
+              options.forcedPaceStateKey ?? options[FORCED_PACE_STATE_KEY],
+            [MANUAL_REFRESH_LEAD_WINDOW_KEY]: options.manualRefreshLeadWindow,
+          }
+        : null,
+    );
+    const value = {};
+    if (normalized.forcedPaceStateKey) {
+      value[FORCED_PACE_STATE_KEY] = normalized.forcedPaceStateKey;
+    }
+    if (normalized.criticalBadgeWindow) {
+      value[CRITICAL_BADGE_WINDOW_KEY] = true;
+    }
+    if (normalized.manualRefreshLeadWindow) {
+      value[MANUAL_REFRESH_LEAD_WINDOW_KEY] = true;
+    }
+    return Object.freeze(value);
+  }
+
+  function hasStoredDeveloperOptionsValue(value) {
+    return isPlainObject(value) && Object.keys(value).length > 0;
+  }
+
+  function developerOptionsStorageItems(options = {}) {
+    const value = storedDeveloperOptionsValue(options);
+    return hasStoredDeveloperOptionsValue(value)
+      ? Object.freeze({ [STORAGE_KEY]: value })
+      : null;
+  }
+
+  function developerOptionsFromStorageItems(items) {
+    return normalizeDeveloperOptions(
+      isPlainObject(items) ? items[STORAGE_KEY] : null,
+    );
+  }
+
   function hasDeveloperOptionsChange(changes) {
     return Object.hasOwn(changes || {}, STORAGE_KEY);
   }
@@ -132,10 +164,14 @@
     FORCED_PACE_STATE_KEY,
     MANUAL_REFRESH_LEAD_WINDOW_KEY,
     STORAGE_KEY,
+    developerOptionsFromStorageItems,
+    developerOptionsStorageItems,
     hasDeveloperOptionsChange,
+    hasStoredDeveloperOptionsValue,
     normalizeCriticalBadgeWindow,
     normalizeDeveloperOptions,
     normalizeForcedPaceStateKey,
     normalizeManualRefreshLeadWindow,
+    storedDeveloperOptionsValue,
   });
 })(globalThis);

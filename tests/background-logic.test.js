@@ -8,56 +8,27 @@ const projectRoot = path.resolve(
   "..",
 );
 
+async function importExtensionScript(source) {
+  await import(
+    pathToFileURL(path.join(projectRoot, "collector/extension", source))
+  );
+}
+
+async function importRuntimeManifest() {
+  await importExtensionScript("runtime-manifest.js");
+  const runtimeManifest = globalThis.CodexExtensionRuntime;
+  if (!Array.isArray(runtimeManifest?.COMMON_SCRIPT_SOURCES)) {
+    throw new Error("Extension runtime manifest common sources are not wired.");
+  }
+  return runtimeManifest;
+}
+
 beforeAll(async () => {
-  await import(
-    pathToFileURL(
-      path.join(projectRoot, "collector/extension/product-metadata.js"),
-    )
-  );
-  await import(
-    pathToFileURL(
-      path.join(projectRoot, "collector/extension/integration-config.js"),
-    )
-  );
-  await import(
-    pathToFileURL(
-      path.join(projectRoot, "collector/extension/usage-windows.js"),
-    )
-  );
-  await import(
-    pathToFileURL(path.join(projectRoot, "collector/extension/usage-values.js"))
-  );
-  await import(
-    pathToFileURL(
-      path.join(
-        projectRoot,
-        "collector/extension/themes/default/asset-manifest.js",
-      ),
-    )
-  );
-  await import(
-    pathToFileURL(
-      path.join(projectRoot, "collector/extension/pace-state-art.js"),
-    )
-  );
-  await import(
-    pathToFileURL(
-      path.join(projectRoot, "collector/extension/pace-state-data.js"),
-    )
-  );
-  await import(
-    pathToFileURL(path.join(projectRoot, "collector/extension/pace-logic.js"))
-  );
-  await import(
-    pathToFileURL(
-      path.join(projectRoot, "collector/extension/preview-control.js"),
-    )
-  );
-  await import(
-    pathToFileURL(
-      path.join(projectRoot, "collector/extension/background-logic.js"),
-    )
-  );
+  const runtimeManifest = await importRuntimeManifest();
+  for (const source of runtimeManifest.COMMON_SCRIPT_SOURCES) {
+    await importExtensionScript(source);
+  }
+  await importExtensionScript("background-logic.js");
 });
 
 describe("PacePetsBackgroundLogic auth", () => {

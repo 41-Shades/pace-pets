@@ -22,7 +22,9 @@ describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
     });
 
     expect(usage).toMatchObject({
-      source: globalThis.CodexIntegrationConfig.SOURCE_MARKERS.normalizedUsage,
+      source:
+        globalThis.CodexUsageProviders.DEFAULT_USAGE_PROVIDER.sourceMarkers
+          .normalizedUsage,
       windows: {
         fiveHour: {
           remainingPercent: 42.25,

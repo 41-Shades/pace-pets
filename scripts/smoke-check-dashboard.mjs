@@ -28,24 +28,6 @@ const requiredDashboardIds = Object.freeze([
   "early-reset-popover",
 ]);
 
-const requiredDashboardScripts = Object.freeze([
-  "./dashboard-tooltips.js",
-  "./dashboard-early-reset.js",
-  "./dashboard-chart-data.js",
-  "./dashboard-chart.js",
-  "./dashboard-time.js",
-  "./dashboard-shell-controls.js",
-  "./dashboard-status-logic.js",
-  "./dashboard-status-controller.js",
-  "./dashboard-pace-favicon-methods.js",
-  "./dashboard-pace-controller.js",
-  "./dashboard-app-core.js",
-  "./dashboard-history-methods.js",
-  "./dashboard-event-methods.js",
-  "./dashboard.js",
-  "./vendor/chart.umd.min.js",
-]);
-
 function assertRuntimeOrder(assert, sources, orderedPairs) {
   for (const [before, after, message] of orderedPairs) {
     assert(
@@ -113,7 +95,7 @@ function assertDashboardHtml({
 }
 
 function assertRuntimeManifest({ assert, runtimeManifest }) {
-  for (const src of requiredDashboardScripts) {
+  for (const src of runtimeManifest.DASHBOARD_ONLY_SCRIPT_SOURCES) {
     assert(
       runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(src),
       `Dashboard runtime manifest must include ${src}.`,
@@ -135,6 +117,7 @@ function assertRuntimeManifest({ assert, runtimeManifest }) {
     ["./usage-values.js", "./pace-logic.js"],
     ["./themes/default/asset-manifest.js", "./pace-logic.js"],
     ["./pace-state-art.js", "./pace-state-data.js"],
+    ["./pace-state-data.js", "./developer-options.js"],
     ["./perfect-zero-space-draw.js", "./perfect-zero-space-scene.js"],
     ["./dashboard-status-logic.js", "./dashboard-status-controller.js"],
     ["./dashboard-pace-controller.js", "./dashboard-app-core.js"],
@@ -143,6 +126,7 @@ function assertRuntimeManifest({ assert, runtimeManifest }) {
   assertRuntimeOrder(assert, runtimeManifest.BACKGROUND_SCRIPT_SOURCES, [
     ["product-metadata.js", "background-logic.js"],
     ["pace-state-art.js", "pace-state-data.js"],
+    ["pace-state-data.js", "developer-options.js"],
     ["pace-state-data.js", "pace-logic.js"],
     ["background-logic.js", "background-usage-source.js"],
   ]);

@@ -355,6 +355,8 @@
     SIGN_IN_NOT_FOUND_COPY: STATUS_LOGIC.SIGN_IN_NOT_FOUND_COPY,
     STATUS_TEXT: STATUS_LOGIC.STATUS_TEXT,
     createController,
+    emptyHistoryCollectionState: STATUS_LOGIC.emptyHistoryCollectionState,
+    historyCollectionStatusState: STATUS_LOGIC.historyCollectionStatusState,
     isFailedRefreshStatus: STATUS_LOGIC.isFailedRefreshStatus,
     isRecentRefreshStatus: STATUS_LOGIC.isRecentRefreshStatus,
     isSignInNotFoundStatus: STATUS_LOGIC.isSignInNotFoundStatus,

@@ -7,6 +7,12 @@
       "Codex integration config must load before dashboard-chart-data.js.",
     );
   }
+  const USAGE_PROVIDERS = globalThis.CodexUsageProviders;
+  if (!USAGE_PROVIDERS) {
+    throw new Error(
+      "Codex usage providers must load before dashboard-chart-data.js.",
+    );
+  }
   const PACE_LOGIC = globalThis.PacePetsLogic;
   if (!PACE_LOGIC) {
     throw new Error(
@@ -25,6 +31,7 @@
     perfectLine: "rgba(20, 184, 166, 0.48)",
   };
   const PERFECT_PACE_RATIO = PACE_LOGIC.PERFECT_PACE_RATIO;
+  const SOURCE_MARKERS = USAGE_PROVIDERS.DEFAULT_USAGE_PROVIDER.sourceMarkers;
   const PACE_RATIO_CHART_MIN = 0;
   const PACE_RATIO_CHART_MAX = PACE_LOGIC.PACE_RATIO_CHART_MAX;
   const PACE_RATIO_CHART_DETAIL_STEP = 0.05;
@@ -102,7 +109,7 @@
     return samples.concat({
       id: `live-${windowKey}`,
       collectedAt: new Date(nowMs).toISOString(),
-      source: INTEGRATION_CONFIG.SOURCE_MARKERS.dashboardLive,
+      source: SOURCE_MARKERS.dashboardLive,
       windows: {
         [windowKey]: windowData,
       },

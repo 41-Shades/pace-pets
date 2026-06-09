@@ -13,6 +13,22 @@ async function importExtensionScript(relativePath) {
   await import(pathToFileURL(path.join(projectRoot, relativePath)));
 }
 
+async function importRuntimeManifest() {
+  await importExtensionScript("collector/extension/runtime-manifest.js");
+  const runtimeManifest = globalThis.CodexExtensionRuntime;
+  if (!Array.isArray(runtimeManifest?.COMMON_SCRIPT_SOURCES)) {
+    throw new Error("Extension runtime manifest common sources are not wired.");
+  }
+  return runtimeManifest;
+}
+
+async function importCommonExtensionScripts() {
+  const runtimeManifest = await importRuntimeManifest();
+  for (const source of runtimeManifest.COMMON_SCRIPT_SOURCES) {
+    await importExtensionScript(`collector/extension/${source}`);
+  }
+}
+
 export function installExtensionRuntimeHooks() {
   beforeAll(async () => {
     globalThis.chrome = {
@@ -29,25 +45,7 @@ export function installExtensionRuntimeHooks() {
       },
     };
 
-    await importExtensionScript("collector/extension/product-metadata.js");
-    await importExtensionScript("collector/extension/integration-config.js");
-    await importExtensionScript("collector/extension/usage-windows.js");
-    await importExtensionScript("collector/extension/usage-values.js");
-    await importExtensionScript("collector/extension/refresh-status.js");
-    await importExtensionScript("collector/extension/storage-adapter.js");
-    await importExtensionScript(
-      "collector/extension/usage-integration-adapters.js",
-    );
-    await importExtensionScript(
-      "collector/extension/themes/default/asset-manifest.js",
-    );
-    await importExtensionScript("collector/extension/pace-state-art.js");
-    await importExtensionScript("collector/extension/developer-options.js");
-    await importExtensionScript("collector/extension/pace-state-data.js");
-    await importExtensionScript("collector/extension/pace-logic.js");
-    await importExtensionScript("collector/extension/preview-control.js");
-    await importExtensionScript("collector/extension/usage.js");
-    await importExtensionScript("collector/extension/history-store.js");
+    await importCommonExtensionScripts();
   });
 
   beforeEach(() => {
