@@ -42,31 +42,41 @@ formatting, but the stored history keeps source precision after normalization.
 | `wellAhead`      | `pace-well-ahead`      | `> 1.55`                | Sprint faster!    |
 | `muted`          | `pace-muted`           | unavailable             | Waiting for usage |
 
-Perfect Sync and Perfect Zero are controlled presentation states, not threshold
-states. They can override the displayed state when the rounded usage and time
-percentages match.
+Perfect Sync, Perfect Zero, and dashboard Singularity are controlled
+presentation states, not threshold states. They sit above threshold mapping and
+can override the displayed state when their exact rule matches.
 
-## Controlled States
+## Perfect State Contract
 
-Perfect Sync applies when the rounded remaining-usage percent and rounded
-time-remaining percent are equal. It displays the `sync` state with a controlled
-display ratio of `1.00`.
+Perfect states use display rounding, not exact raw equality. Percent values are
+bounded to `0..100` and then rounded with `Math.round()` before the perfect-state
+rules compare them. A round zero can therefore be a small positive source value
+that displays as `0%`.
 
-Perfect Zero applies when those rounded percentages match and the rounded
-remaining-usage percent is zero. It displays the `perfectZero` state with a
-controlled display ratio of `0.00`.
+| State                        | Surface                                          | Rule                                                                                              | Presentation                                                                                                                            |
+| ---------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Perfect sync (`sync`)        | Dashboard and toolbar badge                      | Rounded remaining-usage percent equals rounded time-remaining percent.                            | Uses the `sync` state with a controlled display ratio of `1.00`.                                                                        |
+| Perfect zero (`perfectZero`) | Dashboard and toolbar badge                      | Perfect sync is valid and rounded remaining-usage percent is `0`.                                 | Uses the `perfectZero` state with a controlled display ratio of `0.00`.                                                                 |
+| Singularity (`singularity`)  | Dashboard only, except forced developer override | Perfect zero is valid and `Resets In` also displays zero while `resetsAt` is still in the future. | Uses the dashboard-only `singularity` state with a controlled display ratio of `0.00` and a reset countdown presentation of `0d 0h 0m`. |
 
-Controlled presentation is suppressed when the reset window is stale, meaning
+The three perfect states are mutually ordered by specificity. Singularity wins
+over Perfect Zero on the dashboard when its reset-countdown rule is also true.
+Perfect Zero wins over Perfect Sync when the matching rounded percent is zero.
+
+Perfect presentation is suppressed when the reset window is stale, meaning
 `resetsAt` is at or before the current time. Perfect Zero can also be disallowed
 for a current reset window when history shows usage already reached displayed
-zero while time still remained in that same window.
+zero while time still remained in that same window. Singularity inherits that
+Perfect Zero guard and also requires the countdown display-zero band, not an
+ended window.
 
 ## Legend And Preview Order
 
-The dashboard legend uses `PACE_LEGEND_STATE_KEYS` from `pace-logic.js`:
+The dashboard legend uses dashboard-owned level and perfect-state key lists:
 
 ```text
-wellAhead, on, behind, strongAhead, sync, wellBehind, ahead, perfectZero, criticalBehind
+levels: wellAhead, strongAhead, ahead, on, behind, wellBehind, criticalBehind
+perfect: sync, perfectZero, singularity
 ```
 
 Preview controls are owned by `collector/extension/preview-control.js`. Only
@@ -80,8 +90,8 @@ Pace icon motion is status-card-only. The active dashboard status icon may rende
 state-specific effects, but legend rail icons stay static even when their state
 is active or being previewed.
 
-When Singularity is active through a forced developer override, it also sets the
-reset countdown presentation to `0d 0h 0m`.
+The forced developer override can also render Singularity for preview and sets
+the reset countdown presentation to `0d 0h 0m`.
 
 ## Display Caps
 

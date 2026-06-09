@@ -107,7 +107,7 @@
 }
 
 .state-chip[data-previewable="false"] {
-  cursor: help;
+  cursor: default;
 }
 
 .state-chip[data-previewable="false"]:hover,

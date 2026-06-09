@@ -55,12 +55,24 @@
 
     renderSummaryWindow(windowKey, windowData, windows = {}, history) {
       const spec = this.WINDOW_SPECS[windowKey];
+      const atMs = Date.now();
       const resetMs = this.DASHBOARD_TIME.dateMs(windowData?.resetsAt);
-      const timePercent = this.DASHBOARD_TIME.timeRemainingPercent(windowData);
+      const timePercent = this.DASHBOARD_TIME.timeRemainingPercent(
+        windowData,
+        atMs,
+      );
       const hasResetTiming =
         resetMs !== null &&
         this.DASHBOARD_TIME.windowStartMs(windowData) !== null;
-      const staleWindow = this.DASHBOARD_TIME.isResetWindowStale(windowData);
+      const staleWindow = this.DASHBOARD_TIME.isResetWindowStale(
+        windowData,
+        atMs,
+      );
+      const resetCountdownDisplaysZero =
+        this.DASHBOARD_TIME.resetCountdownDisplaysZero(
+          windowData?.resetsAt,
+          atMs,
+        );
 
       this.elements.priorResetLabel.textContent = spec.priorResetLabel;
       this.elements.scheduledResetLabel.textContent = spec.scheduledResetLabel;
@@ -75,11 +87,12 @@
         this.elements.timeBar,
         timePercent,
       );
-      this.DASHBOARD_TIME.setResetParts(this.elements, windowData, spec);
+      this.DASHBOARD_TIME.setResetParts(this.elements, windowData, spec, atMs);
       this.elements.resetsIn.textContent = this.DASHBOARD_TIME.resetCountdown(
         windowData?.resetsAt,
+        atMs,
       );
-      this.paceView.renderPaceSummary(
+      const paceSummary = this.paceView.renderPaceSummary(
         windowData,
         timePercent,
         staleWindow,
@@ -90,9 +103,13 @@
             windowKey,
             windowData,
           ),
+          resetCountdownDisplaysZero,
           waitingForReadingText: this.STATUS_TEXT.waitingForReading,
         },
       );
+      if (paceSummary?.resetCountdownOverride) {
+        this.elements.resetsIn.textContent = paceSummary.resetCountdownOverride;
+      }
 
       return { hasResetTiming, staleWindow };
     },

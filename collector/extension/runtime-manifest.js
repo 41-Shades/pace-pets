@@ -58,6 +58,7 @@
     "./dashboard-brake-debris-data.js",
     "./dashboard-brake-debris-methods.js",
     "./dashboard-pace-icon-methods.js",
+    "./dashboard-speed-lines-methods.js",
     "./dashboard-sprint-smoke-methods.js",
     "./dashboard-train-roll-methods.js",
     "./dashboard-pace-rail-methods.js",

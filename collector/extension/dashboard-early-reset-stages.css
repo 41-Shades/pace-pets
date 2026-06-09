@@ -253,15 +253,22 @@
     will-change: auto;
   }
 
+  .pace-icon.has-pace-icon-effect-speed-lines img {
+    will-change: auto;
+  }
+
   .pace-card.pace-sync .pace-icon,
   .pace-icon.has-pace-icon-effect-sprint-smoke.is-sprint-speed-bumping,
   .pace-icon.is-perfect-zero-aperture::after,
   .pace-icon.is-perfect-zero-aperture .perfect-zero-cameo,
   .pace-icon.has-pace-icon-effect-train-roll,
   .pace-icon.has-pace-icon-effect-train-roll::after,
+  .pace-icon.has-pace-icon-effect-speed-lines::after,
+  .pace-icon.has-pace-icon-effect-speed-lines img,
   .pace-icon.has-pace-icon-effect-sprint-smoke img,
   .pace-icon.has-pace-icon-effect-brake-wobble img,
   .pace-icon.has-pace-icon-effect-brake-wobble.is-brake-wobbling img,
+  .pace-speed-line,
   .brake-debris-piece,
   .brake-debris-svg,
   .pace-smoke-puff,
@@ -273,6 +280,7 @@
   }
 
   .brake-debris-layer,
+  .pace-icon-effect-speed-lines,
   .pace-icon-effect-sprint-smoke {
     display: none;
   }

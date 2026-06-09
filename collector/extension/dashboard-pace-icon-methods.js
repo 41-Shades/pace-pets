@@ -119,6 +119,7 @@
 
       this.clearBrakeWobbleEffectClasses(container);
       this.clearSprintSmokeEffectClasses(container);
+      this.clearSpeedLinesEffectClasses(container);
       this.clearTrainRollEffectClasses(container);
     },
 
@@ -222,6 +223,11 @@
 
       if (effect === "train-roll") {
         this.renderTrainRollEffect(container);
+        return;
+      }
+
+      if (effect === "speed-lines") {
+        this.renderSpeedLinesEffect(container);
         return;
       }
 
@@ -343,8 +349,8 @@
 
     currentPaceLevel() {
       return (
-        DATA.PACE_CLASSES.find((className) =>
-          this.elements.paceCard.classList.contains(className),
+        [...DATA.PACE_CLASSES, ...DATA.DASHBOARD_RAIL_PACE_CLASSES].find(
+          (className) => this.elements.paceCard.classList.contains(className),
         ) || DATA.MUTED_PACE_CLASS
       );
     },
