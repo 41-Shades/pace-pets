@@ -38,6 +38,7 @@ const requiredDashboardScripts = Object.freeze([
   "./dashboard-shell-controls.js",
   "./dashboard-status-logic.js",
   "./dashboard-status-controller.js",
+  "./dashboard-pace-favicon-methods.js",
   "./dashboard-pace-controller.js",
   "./dashboard-app-core.js",
   "./dashboard-history-methods.js",
@@ -187,7 +188,8 @@ function assertDashboardSource({
   assert(
     !/runtime\.sendMessage\(\s*\{\s*type:\s*"status"\s*\}/.test(
       `${dashboardSource}\n${dashboardStatusSource}`,
-    ) && backgroundSource.includes("PacePetsRefreshControl.isRefreshNowMessage"),
+    ) &&
+      backgroundSource.includes("PacePetsRefreshControl.isRefreshNowMessage"),
     "Dashboard status updates must use stored refresh status while manual checks use the refresh-now message contract.",
   );
   assert(

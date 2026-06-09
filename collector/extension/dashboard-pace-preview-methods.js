@@ -273,6 +273,7 @@
       this.lastForcedPaceStateKey = state.key;
       this.clearActivePacePreviewState();
       this.setPaceLevel(state.className, {
+        playSplatFallOnEntry: false,
         replaySplatFall:
           forcedStateChanged && state.key === DATA.PACE_STATES.splat.key,
       });

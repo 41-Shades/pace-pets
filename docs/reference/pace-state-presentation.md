@@ -113,7 +113,10 @@ with the live `Resets in` countdown.
 Splat's active status icon plays a one-time free-fall animation on entry into
 the state. The resting Splat icon stays hidden until the falling icon reaches
 the status icon area. Passive time refreshes while Splat remains active do not
-replay the animation; turning Splat on again through dev controls does.
+replay the animation. Leaving forced Splat active in dev controls also does not
+replay on interval refreshes, but turning Splat on again or reloading the
+dashboard while Splat is active can replay it once. At the impact moment, the
+status card briefly teeters and the ratio stat pops upward before both settle.
 
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects, but legend rail icons stay static even when their state

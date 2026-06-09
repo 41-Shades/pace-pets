@@ -39,6 +39,7 @@ export const requiredExtensionFiles = Object.freeze([
   "dashboard-brake-debris-data.js",
   "dashboard-brake-debris-methods.js",
   "dashboard-pace-icon-methods.js",
+  "dashboard-pace-favicon-methods.js",
   "dashboard-splat-fall-methods.js",
   "dashboard-train-roll-methods.js",
   "dashboard-pace-rail-methods.js",

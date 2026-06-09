@@ -60,6 +60,7 @@
     "./dashboard-brake-debris-data.js",
     "./dashboard-brake-debris-methods.js",
     "./dashboard-pace-icon-methods.js",
+    "./dashboard-pace-favicon-methods.js",
     "./dashboard-splat-fall-methods.js",
     "./dashboard-speed-lines-methods.js",
     "./dashboard-sprint-smoke-methods.js",

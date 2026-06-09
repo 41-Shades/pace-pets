@@ -1,3 +1,7 @@
+.pace-card.pace-splat {
+  --splat-fall-duration: 1200ms;
+}
+
 .pace-icon.has-pace-icon-effect-splat-fall.is-splat-fall-running
   > img:not(.splat-fall-image) {
   opacity: 0;
@@ -26,24 +30,51 @@
 
 .pace-card.pace-splat
   .pace-icon.has-pace-icon-effect-splat-fall.is-splat-fall-running::before {
-  animation: splat-ground-shadow 1200ms linear both;
+  animation: splat-ground-shadow var(--splat-fall-duration) linear both;
 }
 
 .pace-icon.has-pace-icon-effect-splat-fall.is-splat-impacting {
   animation: splat-impact-jolt 220ms cubic-bezier(0.2, 0.84, 0.24, 1) both;
 }
 
+.pace-card.pace-splat.is-splat-card-impacting {
+  animation: splat-card-teeter 620ms cubic-bezier(0.16, 0.86, 0.22, 1) both;
+  transform-origin: 52% 72%;
+  will-change: transform;
+}
+
+.pace-card.pace-splat.is-splat-card-impacting .pace-ratio-stat {
+  transform-origin: center;
+}
+
+.pace-card.pace-splat.is-splat-card-impacting .pace-ratio-stat strong {
+  visibility: hidden;
+}
+
+.pace-ratio-splat-pop-clone {
+  animation: splat-ratio-pop var(--splat-fall-duration)
+    cubic-bezier(0.16, 0.86, 0.22, 1) both;
+  backface-visibility: hidden;
+  display: block;
+  pointer-events: none;
+  position: fixed;
+  text-align: right;
+  transform-origin: center bottom;
+  will-change: transform;
+  z-index: 20;
+}
+
 .pace-icon-effect-splat-fall {
   --splat-fall-start-x: 10px;
   --splat-fall-start-y: -100vh;
 
-  animation: splat-fall-layer 1200ms linear both;
+  animation: splat-fall-layer var(--splat-fall-duration) linear both;
   inset: -8px;
   z-index: 4;
 }
 
 .pace-icon-effect-splat-fall .splat-fall-image {
-  animation: splat-fall-tumble 1200ms linear both;
+  animation: splat-fall-tumble var(--splat-fall-duration) linear both;
   display: block;
   height: 112px;
   left: -8px;
@@ -55,7 +86,7 @@
 }
 
 .splat-fall-line {
-  animation: splat-fall-streak 1200ms linear both;
+  animation: splat-fall-streak var(--splat-fall-duration) linear both;
   background: color-mix(in srgb, var(--pace-border) 68%, transparent);
   border-radius: 999px;
   height: 44px;
@@ -128,6 +159,56 @@
   100% {
     opacity: 0;
     transform: translate3d(0, -18px, 0) scale(1.16, 0.74);
+  }
+}
+
+@keyframes splat-card-teeter {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  16% {
+    transform: translate3d(0, 8px, 0) rotate(-4.7deg);
+  }
+
+  32% {
+    transform: translate3d(0, -3.2px, 0) rotate(1.72deg);
+  }
+
+  56% {
+    transform: translate3d(0, 1.6px, 0) rotate(-0.68deg);
+  }
+
+  78% {
+    transform: translate3d(0, -0.4px, 0) rotate(0.24deg);
+  }
+}
+
+@keyframes splat-ratio-pop {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  26% {
+    transform: translate3d(0, -300px, 0) scale(1.12);
+  }
+
+  38% {
+    transform: translate3d(0, -300px, 0) scale(1.12);
+  }
+
+  70% {
+    transform: translate3d(0, 24px, 0) scale(0.985);
+  }
+
+  86% {
+    transform: translate3d(0, -10px, 0) scale(1.004);
+  }
+
+  94% {
+    transform: translate3d(0, 4px, 0) scale(0.998);
   }
 }
 
@@ -220,6 +301,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .pace-card.pace-splat.is-splat-card-impacting,
+  .pace-card.pace-splat.is-splat-card-impacting .pace-ratio-stat strong,
   .pace-icon-effect-splat-fall,
   .splat-fall-image,
   .splat-fall-line,

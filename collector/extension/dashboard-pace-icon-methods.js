@@ -16,16 +16,11 @@
     }
   }
 
-  function svgAttributes(attrs) {
-    return Object.entries(attrs)
-      .map(([name, value]) => `${name}="${String(value)}"`)
-      .join(" ");
-  }
-
-  function svgMarkupForIconParts(iconParts) {
-    return iconParts
-      .map((part) => `<${part.tag} ${svgAttributes(part.attrs)} />`)
-      .join("");
+  function shouldPlaySplatFall({ previousState, state, replay, playOnEntry }) {
+    return (
+      state.key === DATA.PACE_STATES.splat.key &&
+      (replay || (playOnEntry && previousState.key !== state.key))
+    );
   }
 
   Object.assign(Controller.prototype, {
@@ -311,10 +306,11 @@
         container === this.elements.paceIcon &&
         state.key === DATA.PACE_STATES.perfectZero.key &&
         usePerfectZeroPageAperture;
-      const shouldPlaySplatFallIntro =
-        container.dataset.splatFallIntro === "true" &&
-        useEffects &&
-        state.key === DATA.PACE_STATES.splat.key;
+      const shouldPlaySplatFallIntro = [
+        container.dataset.splatFallIntro === "true",
+        useEffects,
+        state.key === DATA.PACE_STATES.splat.key,
+      ].every(Boolean);
 
       this.clearPaceIconEffects(container);
       container.replaceChildren();
@@ -338,6 +334,7 @@
     setPaceLevel(
       level,
       {
+        playSplatFallOnEntry = true,
         replaySplatFall = false,
         updateTabIcon = true,
         updateStateRailActive = true,
@@ -345,9 +342,12 @@
     ) {
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const state = this.paceStateForClassName(level);
-      const playSplatFall =
-        state.key === DATA.PACE_STATES.splat.key &&
-        (replaySplatFall || previousState.key !== state.key);
+      const playSplatFall = shouldPlaySplatFall({
+        playOnEntry: playSplatFallOnEntry,
+        previousState,
+        replay: replaySplatFall,
+        state,
+      });
       if (playSplatFall) {
         this.elements.paceIcon.dataset.splatFallIntro = "true";
       } else {
@@ -376,21 +376,6 @@
           this.elements.paceCard.classList.contains(className),
         ) || DATA.MUTED_PACE_CLASS
       );
-    },
-
-    updateFavicon(level) {
-      if (!this.elements.favicon) {
-        return;
-      }
-
-      const state = this.paceStateForClassName(level);
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-    <rect width="64" height="64" rx="16" fill="${state.favicon.bg}"/>
-    <g transform="translate(8 8) scale(2)" fill="none" stroke="${state.favicon.color}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-      ${svgMarkupForIconParts(state.favicon.iconParts)}
-    </g>
-  </svg>`;
-      this.elements.favicon.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
     },
   });
 })();

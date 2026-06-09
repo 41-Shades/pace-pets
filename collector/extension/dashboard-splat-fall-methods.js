@@ -9,8 +9,11 @@
     );
   }
 
+  const SPLAT_FALL_DURATION_MS = 1200;
   const SPLAT_FALL_CLEANUP_MS = 1105;
+  const SPLAT_CARD_IMPACT_DURATION_MS = SPLAT_FALL_DURATION_MS + 20;
   const SPLAT_FALL_IMPACT_MS = 960;
+  const SPLAT_RATIO_BOUNCE_DURATION_MS = SPLAT_FALL_DURATION_MS;
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
   function prefersReducedMotion() {
@@ -24,8 +27,14 @@
     return -Math.max(viewportHeight, rect.top + rect.height + 28, 180);
   }
 
+  function restartClassAnimation(element, className) {
+    element.classList.remove(className);
+    element.getBoundingClientRect();
+    element.classList.add(className);
+  }
+
   Object.assign(Controller.prototype, {
-    clearSplatFallEffectClasses(container) {
+    clearSplatFallEffectClasses(container, { clearCardImpact = true } = {}) {
       container.classList.remove(
         "has-pace-icon-effect-splat-fall",
         "is-splat-fall-running",
@@ -34,6 +43,9 @@
       container.style.removeProperty("--splat-fall-start-x");
       container.style.removeProperty("--splat-fall-start-y");
       delete container.dataset.splatFallIntro;
+      if (clearCardImpact) {
+        this.elements.paceCard?.classList.remove("is-splat-card-impacting");
+      }
     },
 
     renderSplatFallMotionLines(layer) {
@@ -42,6 +54,43 @@
         line.className = `splat-fall-line splat-fall-line-${lineIndex}`;
         layer.append(line);
       }
+    },
+
+    renderSplatRatioBounceClone() {
+      const source = this.elements.paceRatioValue;
+      const rect = source?.getBoundingClientRect();
+      if (!source || !rect?.width || !rect.height) {
+        return;
+      }
+
+      const computedStyle = globalThis.getComputedStyle(source);
+      const clone = document.createElement("span");
+      clone.className = "pace-ratio-splat-pop-clone";
+      clone.textContent = source.textContent;
+      clone.setAttribute("aria-hidden", "true");
+      clone.style.setProperty(
+        "--splat-fall-duration",
+        `${SPLAT_RATIO_BOUNCE_DURATION_MS}ms`,
+      );
+      Object.assign(clone.style, {
+        color: computedStyle.color,
+        fontFamily: computedStyle.fontFamily,
+        fontSize: computedStyle.fontSize,
+        fontStyle: computedStyle.fontStyle,
+        fontVariantNumeric: computedStyle.fontVariantNumeric,
+        fontWeight: computedStyle.fontWeight,
+        height: `${rect.height}px`,
+        left: `${rect.left}px`,
+        letterSpacing: computedStyle.letterSpacing,
+        lineHeight: computedStyle.lineHeight,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+      });
+
+      const removeClone = () => clone.remove();
+      clone.addEventListener("animationend", removeClone, { once: true });
+      window.setTimeout(removeClone, SPLAT_RATIO_BOUNCE_DURATION_MS + 80);
+      document.body.append(clone);
     },
 
     renderSplatFallEffect(container) {
@@ -65,7 +114,15 @@
       this.renderSplatFallMotionLines(layer);
 
       let finished = false;
-      const finish = () => {
+      let cardImpactTimer = null;
+      const clearCardImpact = () => {
+        window.clearTimeout(cardImpactTimer);
+        cardImpactTimer = null;
+        this.elements.paceCard?.classList.remove("is-splat-card-impacting");
+      };
+      const finish = ({
+        clearCardImpact: shouldClearCardImpact = true,
+      } = {}) => {
         if (finished) {
           return;
         }
@@ -74,13 +131,32 @@
         window.clearTimeout(impactTimer);
         window.clearTimeout(finishTimer);
         layer.remove();
-        this.clearSplatFallEffectClasses(container);
+        this.clearSplatFallEffectClasses(container, {
+          clearCardImpact: shouldClearCardImpact,
+        });
+        if (shouldClearCardImpact) {
+          clearCardImpact();
+        }
         this.paceIconEffectCleanups.delete(container);
       };
       const impactTimer = window.setTimeout(() => {
         container.classList.add("is-splat-impacting");
+        if (this.elements.paceCard) {
+          this.renderSplatRatioBounceClone();
+          restartClassAnimation(
+            this.elements.paceCard,
+            "is-splat-card-impacting",
+          );
+          cardImpactTimer = window.setTimeout(
+            clearCardImpact,
+            SPLAT_CARD_IMPACT_DURATION_MS,
+          );
+        }
       }, SPLAT_FALL_IMPACT_MS);
-      const finishTimer = window.setTimeout(finish, SPLAT_FALL_CLEANUP_MS);
+      const finishTimer = window.setTimeout(
+        () => finish({ clearCardImpact: false }),
+        SPLAT_FALL_CLEANUP_MS,
+      );
 
       container.style.setProperty("--splat-fall-start-x", "10px");
       container.style.setProperty(
@@ -92,8 +168,12 @@
         "is-splat-fall-running",
       );
       container.append(layer);
-      image.addEventListener("animationend", finish, { once: true });
-      this.paceIconEffectCleanups.set(container, finish);
+      image.addEventListener(
+        "animationend",
+        () => finish({ clearCardImpact: false }),
+        { once: true },
+      );
+      this.paceIconEffectCleanups.set(container, () => finish());
     },
   });
 })();
