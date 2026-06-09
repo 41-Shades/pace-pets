@@ -90,6 +90,15 @@ Pace icon motion is status-card-only. The active dashboard status icon may rende
 state-specific effects, but legend rail icons stay static even when their state
 is active or being previewed.
 
+The `ahead` / Pick up speed state uses the dashboard-only speed-lines effect in
+`collector/extension/dashboard-speed-lines-methods.js`,
+`collector/extension/dashboard-speed-lines.css`, and
+`collector/extension/dashboard-speed-tail.css`. Its normal burst keeps the dog in
+a crouch, pauses, runs one tail-wag cycle, pauses again, jumps into the orbit,
+then loops normally. After the first burst in an active Pick up speed state,
+later bursts may use the extreme orbit variant, which extends the tail-wag count
+before launch and uses the larger/wobbling orbit timing.
+
 The forced developer override can also render Singularity for preview and sets
 the reset countdown presentation to `0d 0h 0m`.
 

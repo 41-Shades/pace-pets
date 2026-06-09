@@ -45,6 +45,11 @@ beforeAll(async () => {
   );
   await import(
     pathToFileURL(
+      path.join(projectRoot, "collector/extension/preview-control.js"),
+    )
+  );
+  await import(
+    pathToFileURL(
       path.join(projectRoot, "collector/extension/background-logic.js"),
     )
   );
@@ -173,6 +178,24 @@ describe("PacePetsBackgroundLogic badge selection", () => {
       attentionCandidates: [candidates[1]],
       candidate: candidates[1],
     });
+  });
+
+  it("shows the critical window label instead of the ratio badge", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const atMs = Date.parse("2026-05-25T12:00:00.000Z");
+    const display = logic.badgeDisplayForWindows({
+      atMs,
+      criticalBadgeWindow: true,
+      forcedBadgeState: null,
+      history: null,
+      preferredWindowKey: "weekly",
+      windows: {},
+    });
+
+    expect(display.badgeText).toBe("5h");
+    expect(display.windowKey).toBe("fiveHour");
+    expect(display.badgePaceRatio).toBeCloseTo(0.45);
+    expect(display.title).toBe("Pace Pets - 5h Brake hard! pace 0.45");
   });
 });
 

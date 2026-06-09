@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "pacePetsDeveloperOptions";
   const FORCED_PACE_STATE_KEY = "forcedPaceState";
+  const CRITICAL_BADGE_WINDOW_KEY = "criticalBadgeWindow";
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
 
   const FORCEABLE_PACE_STATE_OPTIONS = Object.freeze([
@@ -33,8 +34,15 @@
     return value === true;
   }
 
+  function normalizeCriticalBadgeWindow(value) {
+    return value === true;
+  }
+
   function normalizeDeveloperOptions(value) {
     return Object.freeze({
+      criticalBadgeWindow: normalizeCriticalBadgeWindow(
+        isPlainObject(value) ? value[CRITICAL_BADGE_WINDOW_KEY] : null,
+      ),
       forcedPaceStateKey: normalizeForcedPaceStateKey(
         isPlainObject(value) ? value[FORCED_PACE_STATE_KEY] : null,
       ),
@@ -49,12 +57,14 @@
   }
 
   root.PacePetsDeveloperOptions = Object.freeze({
+    CRITICAL_BADGE_WINDOW_KEY,
     FORCEABLE_PACE_STATE_KEYS,
     FORCEABLE_PACE_STATE_OPTIONS,
     FORCED_PACE_STATE_KEY,
     MANUAL_REFRESH_LEAD_WINDOW_KEY,
     STORAGE_KEY,
     hasDeveloperOptionsChange,
+    normalizeCriticalBadgeWindow,
     normalizeDeveloperOptions,
     normalizeForcedPaceStateKey,
     normalizeManualRefreshLeadWindow,

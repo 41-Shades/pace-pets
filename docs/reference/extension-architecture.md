@@ -53,7 +53,8 @@ The page controls only display state and feature-preview overrides. It does not
 gate shipped product features. The state choices are grouped the same way as
 the dashboard preview rail: Pace Levels and Perfect States. Choosing a state
 stores `forcedPaceState` under `pacePetsDeveloperOptions` in
-`chrome.storage.local`; enabling the refresh-link preview stores
+`chrome.storage.local`; enabling the brake-hard badge preview stores
+`criticalBadgeWindow`; enabling the refresh-link preview stores
 `manualRefreshLeadWindow`. Returning to live data removes those overrides.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so

@@ -7,6 +7,12 @@
       "Codex usage window contract must load before background-logic.js.",
     );
   }
+  const USAGE_VALUES = root.CodexUsageValues;
+  if (!USAGE_VALUES) {
+    throw new Error(
+      "Codex usage value helpers must load before background-logic.js.",
+    );
+  }
   const INTEGRATION_CONFIG = root.CodexIntegrationConfig;
   if (!INTEGRATION_CONFIG) {
     throw new Error(
@@ -28,6 +34,16 @@
   if (!PRODUCT_METADATA) {
     throw new Error("Product metadata must load before background-logic.js.");
   }
+  const PREVIEW_CONTROL = root.PacePetsPreviewControl;
+  if (!PREVIEW_CONTROL) {
+    throw new Error(
+      "Pace preview controls must load before background-logic.js.",
+    );
+  }
+
+  const ATTENTION_BADGE_PREVIEW_STATE_KEY = "criticalBehind";
+  const ATTENTION_BADGE_PREVIEW_BASE_STATE_KEY = "on";
+  const MS_PER_MINUTE = 60 * 1000;
   const ACCESS_TOKEN_PATHS = Object.freeze([
     Object.freeze(["accessToken"]),
     Object.freeze(["access_token"]),
@@ -84,6 +100,49 @@
 
   function badgeWindowKey(windows, preferredWindowKey) {
     return USAGE_WINDOWS.firstAvailableWindowKey(windows, preferredWindowKey);
+  }
+
+  function badgePreviewWindowData(windowKey, stateKey, atMs) {
+    const spec = USAGE_WINDOWS.WINDOW_SPECS[windowKey];
+    const percentPair = PREVIEW_CONTROL.forcedPercentPairForState(stateKey);
+    if (!spec || !percentPair) {
+      return null;
+    }
+
+    const durationMs = spec.durationMinutes * MS_PER_MINUTE;
+    const resetMs = atMs + (durationMs * percentPair.timePercent) / 100;
+    return Object.freeze({
+      remainingPercent: percentPair.remainingPercent,
+      resetsAt: new Date(resetMs).toISOString(),
+      usedPercent: USAGE_VALUES.percentComplement(percentPair.remainingPercent),
+      windowMinutes: spec.durationMinutes,
+    });
+  }
+
+  function criticalBadgePreviewWindowKey(preferredWindowKey) {
+    const normalizedPreference = normalizeBadgeWindowKey(preferredWindowKey);
+    return (
+      USAGE_WINDOWS.alternateWindowKey(normalizedPreference) ||
+      normalizedPreference
+    );
+  }
+
+  function criticalBadgePreviewWindows(preferredWindowKey, atMs = Date.now()) {
+    const criticalWindowKey = criticalBadgePreviewWindowKey(preferredWindowKey);
+    return Object.freeze(
+      Object.fromEntries(
+        USAGE_WINDOWS.WINDOW_KEYS.map((windowKey) => [
+          windowKey,
+          badgePreviewWindowData(
+            windowKey,
+            windowKey === criticalWindowKey
+              ? ATTENTION_BADGE_PREVIEW_STATE_KEY
+              : ATTENTION_BADGE_PREVIEW_BASE_STATE_KEY,
+            atMs,
+          ),
+        ]).filter((entry) => entry[1]),
+      ),
+    );
   }
 
   function badgeWindowKeys(windows, preferredWindowKey) {
@@ -294,20 +353,24 @@
 
   function badgeDisplayForWindows({
     atMs,
+    criticalBadgeWindow = false,
     forcedBadgeState,
     history,
     preferredWindowKey,
     windows,
   }) {
+    const badgeWindows = criticalBadgeWindow
+      ? criticalBadgePreviewWindows(preferredWindowKey, atMs)
+      : windows;
     const badgeCandidates = badgeCandidatesForWindows(
-      windows,
-      history,
+      badgeWindows,
+      criticalBadgeWindow ? null : history,
       preferredWindowKey,
       atMs,
     );
     return badgeDisplayForSelection({
       ...prioritizedBadgeSelection(badgeCandidates, preferredWindowKey),
-      forcedBadgeState,
+      forcedBadgeState: criticalBadgeWindow ? null : forcedBadgeState,
       preferredWindowKey,
     });
   }
