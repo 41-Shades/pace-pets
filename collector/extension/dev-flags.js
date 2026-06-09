@@ -40,6 +40,7 @@
   let currentForcedPaceStateKey = null;
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
+  let currentMaxPoolFill = false;
   let statusTimer = null;
 
   function setStatus(message) {
@@ -72,6 +73,7 @@
       criticalBadgeWindow: currentCriticalBadgeWindow,
       forcedPaceStateKey: currentForcedPaceStateKey,
       manualRefreshLeadWindow: currentManualRefreshLeadWindow,
+      maxPoolFill: currentMaxPoolFill,
     };
   }
 
@@ -83,6 +85,7 @@
     currentCriticalBadgeWindow = options.criticalBadgeWindow;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
+    currentMaxPoolFill = options.maxPoolFill;
     render();
   }
 
@@ -245,6 +248,7 @@
     currentCriticalBadgeWindow = options.criticalBadgeWindow;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
+    currentMaxPoolFill = options.maxPoolFill;
     render();
   });
 
@@ -253,6 +257,7 @@
       currentCriticalBadgeWindow = options.criticalBadgeWindow;
       currentForcedPaceStateKey = options.forcedPaceStateKey;
       currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
+      currentMaxPoolFill = options.maxPoolFill;
       render();
     })
     .catch((error) => {

@@ -113,6 +113,7 @@
       }
 
       this.clearBrakeWobbleEffectClasses(container);
+      this.clearPushStretchEffectClasses(container);
       this.clearSprintSmokeEffectClasses(container);
       this.clearSplatFallEffectClasses?.(container);
       this.clearSpeedLinesEffectClasses(container);
@@ -209,6 +210,11 @@
     renderPaceIconEffect(container, state) {
       const effect = DATA.PACE_ICON_EFFECTS_BY_STATE[state.key];
       if (!effect) {
+        return;
+      }
+
+      if (effect === "push-stretch") {
+        this.renderPushStretchEffect(container);
         return;
       }
 
@@ -337,6 +343,7 @@
         playSplatFallOnEntry = true,
         replaySplatFall = false,
         updateTabIcon = true,
+        updateStateRailActive = true,
       } = {},
     ) {
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
@@ -361,6 +368,9 @@
         useEffects: true,
         usePerfectZeroPageAperture: pageBackgroundActive,
       });
+      if (updateStateRailActive) {
+        this.updateStateRailActiveSelection?.(state.key);
+      }
       if (updateTabIcon) {
         this.updateFavicon(level);
       }

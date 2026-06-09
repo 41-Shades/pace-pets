@@ -5,6 +5,7 @@
   const FORCED_PACE_STATE_KEY = "forcedPaceState";
   const CRITICAL_BADGE_WINDOW_KEY = "criticalBadgeWindow";
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
+  const MAX_POOL_FILL_KEY = "maxPoolFill";
   const PACE_STATE_DATA = root.PacePetsPaceStateData;
   if (!PACE_STATE_DATA) {
     throw new Error("Pace state data must load before developer-options.js.");
@@ -78,6 +79,13 @@
       label: "Refresh link",
       value: "manual-refresh-lead-window",
     }),
+    featurePreviewOption({
+      disableStatus: "Pool fill returned to sweat.",
+      enableStatus: "Pool fill forced to max.",
+      key: MAX_POOL_FILL_KEY,
+      label: "Max pool fill",
+      value: "max-pool-fill",
+    }),
   ]);
 
   function isPlainObject(value) {
@@ -96,6 +104,10 @@
     return value === true;
   }
 
+  function normalizeMaxPoolFill(value) {
+    return value === true;
+  }
+
   function normalizeDeveloperOptions(value) {
     return Object.freeze({
       criticalBadgeWindow: normalizeCriticalBadgeWindow(
@@ -106,6 +118,9 @@
       ),
       manualRefreshLeadWindow: normalizeManualRefreshLeadWindow(
         isPlainObject(value) ? value[MANUAL_REFRESH_LEAD_WINDOW_KEY] : null,
+      ),
+      maxPoolFill: normalizeMaxPoolFill(
+        isPlainObject(value) ? value[MAX_POOL_FILL_KEY] : null,
       ),
     });
   }
@@ -118,6 +133,7 @@
             [FORCED_PACE_STATE_KEY]:
               options.forcedPaceStateKey ?? options[FORCED_PACE_STATE_KEY],
             [MANUAL_REFRESH_LEAD_WINDOW_KEY]: options.manualRefreshLeadWindow,
+            [MAX_POOL_FILL_KEY]: options.maxPoolFill,
           }
         : null,
     );
@@ -130,6 +146,9 @@
     }
     if (normalized.manualRefreshLeadWindow) {
       value[MANUAL_REFRESH_LEAD_WINDOW_KEY] = true;
+    }
+    if (normalized.maxPoolFill) {
+      value[MAX_POOL_FILL_KEY] = true;
     }
     return Object.freeze(value);
   }
@@ -163,6 +182,7 @@
     FORCEABLE_PACE_STATE_OPTIONS,
     FORCED_PACE_STATE_KEY,
     MANUAL_REFRESH_LEAD_WINDOW_KEY,
+    MAX_POOL_FILL_KEY,
     STORAGE_KEY,
     developerOptionsFromStorageItems,
     developerOptionsStorageItems,
@@ -172,6 +192,7 @@
     normalizeDeveloperOptions,
     normalizeForcedPaceStateKey,
     normalizeManualRefreshLeadWindow,
+    normalizeMaxPoolFill,
     storedDeveloperOptionsValue,
   });
 })(globalThis);

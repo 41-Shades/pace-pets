@@ -16,6 +16,15 @@
     padding: 28px 22px;
   }
 
+  .state-rail {
+    position: static;
+    width: auto;
+  }
+
+  .state-stack {
+    grid-template-columns: repeat(2, var(--state-chip-width));
+  }
+
   .panel-header,
   .metric-main,
   .reset-timing-row,
@@ -167,6 +176,14 @@
 }
 
 @media (width <= 1320px) and (width >= 761px) {
+  .content-grid {
+    gap: 82px;
+  }
+
+  .usage-panel {
+    width: 760px;
+  }
+
   .pace-stat {
     flex-basis: auto;
   }
@@ -280,7 +297,7 @@
   .content-grid {
     align-items: center;
     flex-direction: column;
-    max-width: 820px;
+    max-width: 960px;
   }
 
   .usage-panel {
@@ -288,8 +305,19 @@
     width: 100%;
   }
 
+  .state-rail {
+    align-self: center;
+    padding-top: 0;
+  }
+
   .dashboard-lower-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (width <= 520px) {
+  .state-stack {
+    grid-template-columns: var(--state-chip-width);
   }
 }
 

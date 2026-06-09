@@ -88,6 +88,14 @@
   z-index: 1;
 }
 
+.pace-icon svg {
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.8;
+}
+
 @keyframes sprint-speed-bump {
   0%,
   100% {

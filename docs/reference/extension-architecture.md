@@ -57,7 +57,8 @@ States. Choosing a state stores
 `forcedPaceState` under `pacePetsDeveloperOptions` in
 `chrome.storage.local`; enabling the brake-hard badge preview stores
 `criticalBadgeWindow`; enabling the refresh-link preview stores
-`manualRefreshLeadWindow`. Returning to live data removes those overrides.
+`manualRefreshLeadWindow`; enabling the max-pool-fill preview stores
+`maxPoolFill`. Returning to live data removes those overrides.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, and toolbar badge match

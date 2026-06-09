@@ -16,6 +16,7 @@
       refreshForcedPaceStateOverride:
         controller.refreshForcedPaceStateOverride.bind(controller),
       renderPaceSummary: controller.renderPaceSummary.bind(controller),
+      renderStateRail: controller.renderStateRail.bind(controller),
       setPaceSummary: controller.setPaceSummary.bind(controller),
       setPercent: controller.setPercent.bind(controller),
     });

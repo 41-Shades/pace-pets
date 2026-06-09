@@ -54,6 +54,7 @@
     PACE_CLASSES,
     PACE_ICON_EFFECTS_BY_STATE: Object.freeze({
       [PACE_STATES.wellAhead.key]: "sprint-smoke",
+      [PACE_STATES.strongAhead.key]: "push-stretch",
       [PACE_STATES.ahead.key]: "speed-lines",
       [PACE_STATES.on.key]: "train-roll",
       [PACE_STATES.criticalBehind.key]: "brake-wobble",

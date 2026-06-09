@@ -43,6 +43,7 @@
       paceRatioStat: document.querySelector("#pace-ratio-stat"),
       paceRatioValue: document.querySelector("#pace-ratio-value"),
       paceAltRatio: document.querySelector("#pace-alt-ratio"),
+      paceStateStack: document.querySelector("#pace-state-stack"),
       usagePercent: document.querySelector("#usage-percent"),
       usageBar: document.querySelector("#usage-bar"),
       timePercent: document.querySelector("#time-percent"),
