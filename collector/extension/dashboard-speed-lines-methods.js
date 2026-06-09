@@ -9,14 +9,14 @@
   }
 
   const SPEED_LINE_DELAY_RANGE_MS = Object.freeze([-1000, -80]);
-  const SPEED_LINE_DURATION_RANGE_MS = Object.freeze([1050, 1450]);
+  const SPEED_LINE_DURATION_RANGE_MS = Object.freeze([1250, 1450]);
   const SPEED_LINE_EXTREME_ORBIT_CHANCE_PERCENT = 25;
   const SPEED_LINE_EXTREME_ORBIT_CENTER_Y_RANGE_PX = Object.freeze([-18, 18]);
   const SPEED_LINE_EXTREME_ORBIT_LOOP_COUNT = 18;
   const SPEED_LINE_LAUNCH_DURATION_MS = 390;
   const SPEED_LINE_NORMAL_ORBIT_LOOP_COUNT = 5;
   const SPEED_LINE_ORBIT_DELAY_RANGE_MS = Object.freeze([4000, 7000]);
-  const SPEED_LINE_ORBIT_LOOP_DURATION_MS = 63;
+  const SPEED_LINE_ORBIT_LOOP_DURATION_MS = 150;
   const SPEED_LINE_ORIGIN_BOTTOM = Object.freeze({ x: 11, y: 72 });
   const SPEED_LINE_ORIGIN_INSET_RANGE_PX = Object.freeze([0, 4]);
   const SPEED_LINE_ORIGIN_TOP = Object.freeze({ x: 34, y: 20 });
@@ -24,9 +24,9 @@
   const SPEED_LINE_PROFILES = Object.freeze([
     Object.freeze({ top: [20, 24], width: [12, 20] }),
     Object.freeze({ top: [33, 39], width: [16, 26] }),
-    Object.freeze({ top: [45, 51], width: [8, 15] }),
-    Object.freeze({ top: [56, 63], width: [10, 18] }),
-    Object.freeze({ top: [68, 72], width: [10, 18] }),
+    Object.freeze({ top: [45, 51], width: [9, 12] }),
+    Object.freeze({ top: [56, 63], width: [8, 11] }),
+    Object.freeze({ top: [68, 72], width: [7, 10] }),
   ]);
 
   function decimalString(value) {
