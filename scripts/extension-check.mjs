@@ -252,7 +252,6 @@ assertScriptBefore(
 for (const helper of [
   "background-usage-source.js",
   "background-context-menu.js",
-  "background-badge-preview-schedule.js",
 ]) {
   assertScriptBefore(
     backgroundImports,

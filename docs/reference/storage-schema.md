@@ -79,8 +79,6 @@ The selected usage window is stored in `chrome.storage.local` under the generate
 
 The dashboard theme is stored in extension-page `localStorage` under `codex-usage-theme`. These preferences are not usage history and do not contain account identifiers.
 
-Temporary toolbar badge previews store `pacePetsBadgePreviewExpiresAtMs` in `chrome.storage.local` while a preview is active. The value is a local numeric expiry timestamp paired with the `restore-pace-preview-badge` Chrome alarm, and it is removed when the badge is restored. It does not contain usage content or account identifiers.
-
 Local developer display overrides can be stored under `pacePetsDeveloperOptions` when running the unpacked extension. The settings object can include `forcedPaceState` to force a dashboard and toolbar badge state until cleared, `criticalBadgeWindow` to force the brake-hard badge window-label preview, and `manualRefreshLeadWindow` to force the dashboard refresh link preview before the real reset lead window. The release packager excludes the dev controls page from Chrome Web Store artifacts; packaged releases use live usage data unless local storage is manually edited by the profile owner.
 
 ## Refresh Status

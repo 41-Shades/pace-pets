@@ -154,40 +154,11 @@
   --pace-icon-bg: #e2e8f0;
 }
 
-.state-chip.pace-splat .state-icon img {
-  object-fit: cover;
-  transform: scale(1.08);
-  transform-origin: center;
-}
-
 .pace-card.pace-splat .pace-icon > img {
   transform: translateY(4px) scale(1.1);
   transform-origin: center;
 }
 
-.state-chip.pace-singularity {
-  --state-ratio-font-size: 0.64rem;
-
-  color: var(--pace-color);
-}
-
-.state-chip.pace-singularity:hover,
-.state-chip.pace-singularity:focus-visible,
-.state-chip.pace-singularity.is-previewing {
-  background: color-mix(in srgb, var(--pace-bg) 46%, var(--surface-mix));
-  border-color: var(--pace-color);
-}
-
-.state-chip.pace-singularity strong {
-  color: var(--pace-color);
-}
-
-.state-chip.pace-singularity .state-ratio {
-  color: var(--pace-copy-color);
-  line-height: 1;
-}
-
-.state-chip.pace-singularity .state-meta,
 .pace-card.pace-singularity .pace-copy p,
 .pace-card.pace-singularity .pace-alt-ratio {
   color: var(--pace-copy-color);

@@ -276,18 +276,12 @@ describe("PacePetsLogic presentation", () => {
 });
 
 describe("PacePetsPreviewControl", () => {
-  it("shares regular pace previews while preserving special forced states", () => {
+  it("shares synthetic ratios while preserving special forced states", () => {
     const preview = globalThis.PacePetsPreviewControl;
 
-    expect(preview.previewPaceRatioForState("sync")).toBeNull();
-    expect(preview.previewPaceRatioForState("perfectZero")).toBeNull();
-    expect(preview.previewPaceRatioForState("wellAhead")).toBe(1.8);
-    expect(preview.previewPaceRatioForState("unsupported")).toBeNull();
-
-    expect(preview.previewBadgeState("sync")).toBeNull();
-    expect(preview.previewBadgeState("perfectZero")).toBeNull();
-    expect(preview.previewBadgeState("unsupported")).toBeNull();
     expect(preview.forcedPaceRatioForState("sync")).toBe(1);
+    expect(preview.forcedPaceRatioForState("wellAhead")).toBe(1.8);
+    expect(preview.forcedPaceRatioForState("unsupported")).toBeNull();
     expect(preview.forcedBadgeState("perfectZero")).toMatchObject({
       badgeText: "0.00",
       stateKey: "perfectZero",
@@ -340,39 +334,5 @@ describe("PacePetsPreviewControl", () => {
       usedPercent: 100,
       windowMinutes: 300,
     });
-    expect(preview.previewBadgeMessage("ahead")).toEqual({
-      stateKey: "ahead",
-      type: preview.PREVIEW_BADGE_MESSAGE_TYPE,
-    });
-    expect(preview.previewBadgeMessage("sync")).toBeNull();
-    expect(
-      preview.isPreviewBadgeMessage(preview.previewBadgeMessage("ahead")),
-    ).toBe(true);
-    expect(
-      preview.isPreviewBadgeMessage({
-        stateKey: "sync",
-        type: preview.PREVIEW_BADGE_MESSAGE_TYPE,
-      }),
-    ).toBe(false);
-    expect(preview.isPreviewBadgeMessage({ type: "unknown" })).toBe(false);
-    expect(preview.isRestoreBadgeMessage(preview.restoreBadgeMessage())).toBe(
-      true,
-    );
-    expect(preview.BADGE_PREVIEW_RESTORE_ALARM).toBe(
-      "restore-pace-preview-badge",
-    );
-    expect(preview.BADGE_PREVIEW_EXPIRES_STORAGE_KEY).toBe(
-      "pacePetsBadgePreviewExpiresAtMs",
-    );
-    expect(preview.badgePreviewExpiresAtMs()).toBe(
-      Date.parse("2026-05-25T12:01:00.000Z"),
-    );
-    expect(
-      preview.normalizeBadgePreviewExpiresAtMs(
-        Date.parse("2026-05-25T12:01:00.000Z"),
-      ),
-    ).toBe(Date.parse("2026-05-25T12:01:00.000Z"));
-    expect(preview.normalizeBadgePreviewExpiresAtMs(null)).toBeNull();
-    expect(preview.normalizeBadgePreviewExpiresAtMs("not-a-date")).toBeNull();
   });
 });

@@ -21,9 +21,6 @@
   class DashboardPaceController {
     constructor(options) {
       Object.assign(this, options);
-      this.activePacePreviewKey = null;
-      this.pacePreviewRestoreSnapshot = null;
-      this.pacePreviewRestoreTimer = null;
       this.paceIconEffectCleanups = new WeakMap();
       this.lastForcedPaceStateKey = null;
       this.perfectZeroPageBackgroundScene = null;
@@ -103,14 +100,6 @@
         summaryWindowKey: this.selectedSupportedWindowKey(),
         windowData: previewWindow.windowData,
       });
-    }
-
-    previewPaceRatioForState(stateKey) {
-      return PREVIEW_CONTROL.previewPaceRatioForState(stateKey);
-    }
-
-    previewStateKeyEnabled(stateKey) {
-      return PREVIEW_CONTROL.previewStateKeyEnabled(stateKey);
     }
 
     forcedPaceRatioForState(stateKey) {

@@ -73,4 +73,4 @@ icons directly from its manifest, so those paths have to stay aligned.
 
 `perfect-zero-glow.png` is a dashboard-only variant used when the main
 `PERFECT ZERO` status card renders its animated space background. The normal
-`perfect-zero.png` asset remains the state icon used by the legend rail.
+`perfect-zero.png` asset remains the base state icon.

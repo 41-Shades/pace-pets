@@ -139,48 +139,6 @@ async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
   };
 }
 
-async function previewPaceBadge(stateKey) {
-  const preview = PacePetsPreviewControl.previewBadgeState(stateKey);
-  if (!preview) {
-    return { ok: false };
-  }
-
-  await PacePetsBackgroundBadgePreviewSchedule.scheduleRestore();
-  await setBadge(
-    preview.badgeText,
-    preview.badgeColor,
-    CodexProductMetadata.previewBadgeTitle({
-      badgeText: preview.badgeText,
-      title: preview.state.title,
-    }),
-  );
-  return { ok: true };
-}
-
-async function restorePaceBadgePreview() {
-  await updatePaceBadgeFromHistory({ clearWhenEmpty: true });
-  await PacePetsBackgroundBadgePreviewSchedule.clearRestore();
-  return { ok: true };
-}
-
-async function restoreExpiredPaceBadgePreview() {
-  const expiresAtMs =
-    await PacePetsBackgroundBadgePreviewSchedule.readExpiresAtMs();
-  if (expiresAtMs === null) {
-    return { ok: false };
-  }
-
-  if (expiresAtMs > Date.now()) {
-    await PacePetsBackgroundBadgePreviewSchedule.createAlarm(
-      PacePetsBackgroundBadgePreviewSchedule.RESTORE_ALARM,
-      { when: expiresAtMs },
-    );
-    return { ok: false };
-  }
-
-  return restorePaceBadgePreview();
-}
-
 async function refreshUsage() {
   const rawUsage = await PacePetsBackgroundUsageSource.fetchWhamUsage();
   const payload = CodexWeeklyUsage.normalizeWhamUsage(rawUsage);
@@ -300,32 +258,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  if (PacePetsPreviewControl.isPreviewBadgeMessage(message)) {
-    previewPaceBadge(message.stateKey)
-      .then(sendResponse)
-      .catch((error) => {
-        sendResponse({
-          ok: false,
-          message: CodexRefreshStatus.safeFailureMessage(error),
-        });
-      });
-
-    return true;
-  }
-
-  if (PacePetsPreviewControl.isRestoreBadgeMessage(message)) {
-    restorePaceBadgePreview()
-      .then(sendResponse)
-      .catch((error) => {
-        sendResponse({
-          ok: false,
-          message: CodexRefreshStatus.safeFailureMessage(error),
-        });
-      });
-
-    return true;
-  }
-
   return false;
 });
 chrome.contextMenus?.onClicked?.addListener((info) => {
@@ -349,13 +281,6 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
   });
 });
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === PacePetsBackgroundBadgePreviewSchedule.RESTORE_ALARM) {
-    restoreExpiredPaceBadgePreview().catch((error) => {
-      console.warn("Codex usage badge preview restore failed:", error);
-    });
-    return;
-  }
-
   if (alarm.name === POLL_ALARM) {
     runScheduledRefresh();
   }
@@ -386,8 +311,4 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
       console.warn("Codex usage badge menu sync failed:", error);
     });
   }
-});
-
-restoreExpiredPaceBadgePreview().catch((error) => {
-  console.warn("Codex usage badge preview startup restore failed:", error);
 });

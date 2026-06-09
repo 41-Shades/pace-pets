@@ -337,7 +337,6 @@
         playSplatFallOnEntry = true,
         replaySplatFall = false,
         updateTabIcon = true,
-        updateStateRailActive = true,
       } = {},
     ) {
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
@@ -362,9 +361,6 @@
         useEffects: true,
         usePerfectZeroPageAperture: pageBackgroundActive,
       });
-      if (updateStateRailActive) {
-        this.updateStateRailActiveSelection(state.key);
-      }
       if (updateTabIcon) {
         this.updateFavicon(level);
       }

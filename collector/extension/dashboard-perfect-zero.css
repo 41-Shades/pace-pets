@@ -38,10 +38,6 @@ body.has-perfect-zero-page-background .chart-panel {
   box-shadow: none;
 }
 
-body.has-perfect-zero-page-background .pace-card.is-previewing {
-  box-shadow: none;
-}
-
 body.has-perfect-zero-page-background .chart-frame.empty {
   background: transparent;
   border-color: var(--perfect-zero-space-line-soft);
@@ -54,33 +50,6 @@ body.has-perfect-zero-page-background .window-toggle-option.active,
 body.has-perfect-zero-page-background .theme-toggle {
   background: transparent;
   border-color: var(--perfect-zero-space-line-soft);
-  box-shadow: none;
-}
-
-body.has-perfect-zero-page-background .state-chip {
-  background: transparent;
-  border-color: color-mix(
-    in srgb,
-    var(--pace-border) 42%,
-    var(--perfect-zero-space-line-soft)
-  );
-  border-left-color: color-mix(
-    in srgb,
-    var(--pace-border) 76%,
-    var(--perfect-zero-space-line)
-  );
-  box-shadow: none;
-}
-
-body.has-perfect-zero-page-background .state-chip:hover,
-body.has-perfect-zero-page-background .state-chip:focus-visible,
-body.has-perfect-zero-page-background .state-chip.is-previewing {
-  background: transparent;
-  border-color: color-mix(
-    in srgb,
-    var(--pace-border) 66%,
-    var(--perfect-zero-space-line)
-  );
   box-shadow: none;
 }
 
@@ -150,30 +119,6 @@ body.has-perfect-zero-page-background .pace-muted {
   --pace-icon-bg: #263132;
 }
 
-body.has-perfect-zero-page-background .state-chip.pace-singularity {
-  color: var(--text);
-}
-
-body.has-perfect-zero-page-background .state-chip.pace-singularity:hover,
-body.has-perfect-zero-page-background
-  .state-chip.pace-singularity:focus-visible,
-body.has-perfect-zero-page-background
-  .state-chip.pace-singularity.is-previewing {
-  background: transparent;
-  border-color: var(--pace-border);
-}
-
-body.has-perfect-zero-page-background .state-chip.pace-singularity strong {
-  color: var(--pace-color);
-}
-
-body.has-perfect-zero-page-background
-  .state-chip.pace-singularity
-  .state-ratio {
-  color: var(--subhead);
-}
-
-body.has-perfect-zero-page-background .state-chip.pace-singularity .state-meta,
 body.has-perfect-zero-page-background .pace-card.pace-singularity .pace-copy p,
 body.has-perfect-zero-page-background
   .pace-card.pace-singularity

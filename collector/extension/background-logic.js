@@ -35,8 +35,8 @@
     );
   }
 
-  const ATTENTION_BADGE_PREVIEW_STATE_KEY = "criticalBehind";
-  const ATTENTION_BADGE_PREVIEW_BASE_STATE_KEY = "on";
+  const ATTENTION_BADGE_STATE_KEY = "criticalBehind";
+  const ATTENTION_BADGE_BASE_STATE_KEY = "on";
   const ACCESS_TOKEN_PATHS = Object.freeze([
     Object.freeze(["accessToken"]),
     Object.freeze(["access_token"]),
@@ -95,7 +95,7 @@
     return USAGE_WINDOWS.firstAvailableWindowKey(windows, preferredWindowKey);
   }
 
-  function badgePreviewWindowData(windowKey, stateKey, atMs) {
+  function attentionBadgeWindowData(windowKey, stateKey, atMs) {
     const spec = USAGE_WINDOWS.WINDOW_SPECS[windowKey];
     if (!spec) {
       return null;
@@ -121,11 +121,11 @@
       Object.fromEntries(
         USAGE_WINDOWS.WINDOW_KEYS.map((windowKey) => [
           windowKey,
-          badgePreviewWindowData(
+          attentionBadgeWindowData(
             windowKey,
             windowKey === criticalWindowKey
-              ? ATTENTION_BADGE_PREVIEW_STATE_KEY
-              : ATTENTION_BADGE_PREVIEW_BASE_STATE_KEY,
+              ? ATTENTION_BADGE_STATE_KEY
+              : ATTENTION_BADGE_BASE_STATE_KEY,
             atMs,
           ),
         ]).filter((entry) => entry[1]),

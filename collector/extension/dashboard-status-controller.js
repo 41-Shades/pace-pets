@@ -13,12 +13,6 @@
       "Pace Pets refresh controls must load before dashboard-status-controller.js.",
     );
   }
-  const PREVIEW_CONTROL = globalThis.PacePetsPreviewControl;
-  if (!PREVIEW_CONTROL) {
-    throw new Error(
-      "Pace Pets preview controls must load before dashboard-status-controller.js.",
-    );
-  }
   const STATUS_LOGIC = globalThis.PacePetsDashboardStatusLogic;
   if (!STATUS_LOGIC) {
     throw new Error(
@@ -344,44 +338,15 @@
         this.finishManualRefreshAttempt();
       }
     }
-
-    updateToolbarPreviewBadge(stateKey) {
-      const message = PREVIEW_CONTROL.previewBadgeMessage(stateKey);
-      if (!message) {
-        return;
-      }
-
-      sendRuntimeMessage(message).catch((error) => {
-        STATUS_LOGIC.warnOptionalPreviewMessageFailure(
-          "Codex usage badge preview failed:",
-          error,
-        );
-      });
-    }
-
-    restoreToolbarPreviewBadge() {
-      sendRuntimeMessage(PREVIEW_CONTROL.restoreBadgeMessage()).catch(
-        (error) => {
-          STATUS_LOGIC.warnOptionalPreviewMessageFailure(
-            "Codex usage badge preview restore failed:",
-            error,
-          );
-        },
-      );
-    }
   }
 
   function createController(options) {
     const controller = new DashboardStatusController(options);
     return Object.freeze({
       refreshFailureDetail: controller.refreshFailureDetail.bind(controller),
-      restoreToolbarPreviewBadge:
-        controller.restoreToolbarPreviewBadge.bind(controller),
       runManualRefresh: controller.runManualRefresh.bind(controller),
       setLastCollected: controller.setLastCollected.bind(controller),
       setStatus: controller.setStatus.bind(controller),
-      updateToolbarPreviewBadge:
-        controller.updateToolbarPreviewBadge.bind(controller),
     });
   }
 

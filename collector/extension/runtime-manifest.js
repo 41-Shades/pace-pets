@@ -21,7 +21,6 @@
     "background-logic.js",
     "background-usage-source.js",
     "background-context-menu.js",
-    "background-badge-preview-schedule.js",
   ]);
 
   const DASHBOARD_SCRIPT_SOURCES = Object.freeze([
@@ -65,7 +64,6 @@
     "./dashboard-speed-lines-methods.js",
     "./dashboard-sprint-smoke-methods.js",
     "./dashboard-train-roll-methods.js",
-    "./dashboard-pace-rail-methods.js",
     "./dashboard-pace-summary-methods.js",
     "./dashboard-pace-preview-methods.js",
     "./dashboard-pace-controller.js",

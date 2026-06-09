@@ -9,53 +9,6 @@
   }
 
   Object.assign(App.prototype, {
-    bindPacePreviewEvents() {
-      this.elements.paceStateStack.addEventListener("pointerdown", (event) => {
-        if (event.button !== 0) {
-          return;
-        }
-
-        const chip = this.paceView.stateChipFromEvent(event);
-        if (!chip) {
-          return;
-        }
-
-        this.paceView.showPacePreview(chip.dataset.paceStateKey);
-        this.appTooltips.hide();
-
-        try {
-          chip.setPointerCapture(event.pointerId);
-        } catch {
-          // Pointer capture is best-effort; click still provides timed restore.
-        }
-      });
-      this.elements.paceStateStack.addEventListener(
-        "pointercancel",
-        this.paceView.restorePacePreview,
-      );
-      this.elements.paceStateStack.addEventListener("pointerup", (event) => {
-        const chip = this.paceView.stateChipFromEvent(event);
-        if (
-          !chip ||
-          chip.dataset.paceStateKey !== this.paceView.activePreviewKey
-        ) {
-          return;
-        }
-
-        this.paceView.schedulePacePreviewRestore();
-      });
-      this.elements.paceStateStack.addEventListener("click", (event) => {
-        const chip = this.paceView.stateChipFromEvent(event);
-        if (!chip) {
-          return;
-        }
-
-        this.paceView.showPacePreview(chip.dataset.paceStateKey);
-        this.paceView.schedulePacePreviewRestore();
-        this.appTooltips.releasePointerClickFocus(event, chip);
-      });
-    },
-
     bindControlEvents() {
       this.elements.windowToggle.addEventListener("click", (event) => {
         if (this.toggleUsageWindow()) {
@@ -190,12 +143,6 @@
         return;
       }
 
-      if (this.paceView.activePreviewKey) {
-        this.paceView.restorePacePreview();
-        event.preventDefault();
-        return;
-      }
-
       this.earlyReset.hide();
       this.appTooltips.hide();
     },
@@ -241,15 +188,9 @@
     bindWindowEvents() {
       window.addEventListener("resize", () => this.appTooltips.hide());
       window.addEventListener("scroll", () => this.appTooltips.hide(), true);
-      window.addEventListener("pagehide", () => {
-        if (this.paceView.activePreviewKey) {
-          this.dashboardStatus.restoreToolbarPreviewBadge();
-        }
-      });
     },
 
     bindEvents() {
-      this.bindPacePreviewEvents();
       this.bindControlEvents();
       this.bindInfoPanelEvents();
       this.bindTooltipEvents();

@@ -117,12 +117,6 @@ describe("CodexProductMetadata", () => {
       }),
     ).toBe("Pace Pets - 5h Brake hard! pace 0.42; 7d Brake hard! pace 0.48");
     expect(
-      metadata.previewBadgeTitle({
-        badgeText: "1.00",
-        title: "Perfect sync",
-      }),
-    ).toBe("Pace Pets - Perfect sync preview 1.00");
-    expect(
       metadata.stateOverrideBadgeTitle({
         badgeText: "1.00",
         title: "Perfect sync",
