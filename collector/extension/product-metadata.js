@@ -23,12 +23,6 @@
     return text ? `${NAME} - ${text}` : NAME;
   }
 
-  function previewBadgeTitle({ badgeText, title } = {}) {
-    return badgeText && title
-      ? `${NAME} - ${title} preview ${badgeText}`
-      : NAME;
-  }
-
   function stateOverrideBadgeTitle({ badgeText, title } = {}) {
     return badgeText && title
       ? `${NAME} - ${title} override ${badgeText}`
@@ -44,7 +38,6 @@
     REFRESH_FAILED_TITLE,
     attentionBadgeTitle,
     badgeTitle,
-    previewBadgeTitle,
     stateOverrideBadgeTitle,
   });
 })(globalThis);

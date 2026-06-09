@@ -3,8 +3,8 @@
 Status: reference.
 
 Pace presentation is owned by `collector/extension/pace-logic.js`. The
-dashboard, toolbar badge, chart, favicon, and preview controls reuse that shared
-state model instead of each surface defining its own thresholds.
+dashboard, toolbar badge, chart, favicon, and developer override controls reuse
+that shared state model instead of each surface defining its own thresholds.
 
 When running the unpacked extension, local developer settings can force one pace
 state for the dashboard card and toolbar badge. That display override is owned by
@@ -94,14 +94,13 @@ perfect: sync, perfectZero, singularity
 imperfect: splat
 ```
 
-Preview controls are owned by `collector/extension/preview-control.js`. Only
-regular pace levels are previewable. Their preview ratios are synthetic examples
-based on a default `50%` time remaining. Perfect Sync, Perfect Zero, Splat, and
-Singularity remain visible as legend context, but they are not
-previewable. The toolbar badge preview uses the same preview state and restores
-through the alarm-backed badge-preview contract.
+Preview controls are owned by `collector/extension/preview-control.js`.
+Synthetic preview ratios are based on a default `50%` time remaining. The
+dashboard does not expose clickable pace-state previews; local developer
+controls can still force regular, perfect, and imperfect states for inspection.
+Forced toolbar badge states use the same synthetic ratio model.
 
-Preview and forced developer states use one preview timing model for percent
+Synthetic and forced developer states use one preview timing model for percent
 bars, chart data, reset dates, reset progress, and `Resets in`. Regular
 examples derive reset timing from their synthetic percent pair. Forced Perfect
 Zero uses a small positive pair that displays as `0%` for usage and time, while
@@ -119,8 +118,7 @@ dashboard while Splat is active can replay it once. At the impact moment, the
 status card briefly teeters and the ratio stat pops upward before both settle.
 
 Pace icon motion is status-card-only. The active dashboard status icon may render
-state-specific effects, but legend rail icons stay static even when their state
-is active or being previewed.
+state-specific effects.
 
 The `ahead` / Pick up speed state uses the dashboard-only speed-lines effect in
 `collector/extension/dashboard-speed-lines-methods.js`,
@@ -131,8 +129,8 @@ then loops normally. After the first burst in an active Pick up speed state,
 later bursts may use the extreme orbit variant, which extends the tail-wag count
 before launch and uses the larger/wobbling orbit timing.
 
-The forced developer override can also render the perfect and imperfect context
-states that are not clickable legend previews.
+The forced developer override can also render perfect and imperfect context
+states outside the regular pace levels.
 
 ## Display Caps
 

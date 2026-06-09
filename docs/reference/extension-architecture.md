@@ -17,7 +17,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/usage-values.js` owns shared primitive usage value normalization, date parsing, reset-window time math, and stored-window normalization.
 - `collector/extension/refresh-status.js` owns refresh-status construction, normalization, storage key, and safe observable failure messages.
 - `collector/extension/refresh-control.js` owns the dashboard-to-background manual refresh message contract and manual refresh cooldown constant.
-- `collector/extension/preview-control.js` owns pace-state preview ratios, preview timing, toolbar badge preview expiry state, and the dashboard-to-background toolbar badge preview message contract.
+- `collector/extension/preview-control.js` owns synthetic pace-state ratios and preview timing used by local developer state overrides.
 - `collector/extension/storage-adapter.js` owns Promise-based `chrome.storage.local` reads/writes, shared Chrome `lastError` callback wrapping, and local-storage change helpers shared by history, background, and dashboard code.
 - `collector/extension/usage.js` owns raw-to-safe usage normalization through the default WHAM adapter into supported usage windows.
 - `collector/extension/history-store.js` owns sample normalization, dedupe, retention, and sample caps.
@@ -26,7 +26,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/developer-options.js` owns local developer state-override normalization. `collector/extension/dev-flags.html` is unpacked-extension tooling only and is excluded from Chrome Web Store release packages.
 - `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, inline icon geometry, legend metadata, controlled Perfect Sync/Perfect Zero presentation, and stale-reset guards. Dashboard pace helpers own the dashboard-only Singularity promotion when valid Perfect Zero also reaches the reset-countdown display-zero band.
 - `collector/extension/perfect-zero-space-scene.js` owns the `PERFECT ZERO` canvas scene, including icon and full-bleed profiles, reduced-motion handling, page-visibility pause/resume behavior, and scene teardown.
-- `collector/extension/dashboard.html`, ordered `dashboard*.css` stylesheets, dashboard helper scripts, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and regular pace level previews, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Regular pace level previews update the dashboard card, browser tab, and temporary toolbar badge presentation; the background worker restores the badge through a stored expiry and Chrome alarm. Perfect states remain visible in the legend as special non-previewable states. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture; dashboard Singularity extends Perfect Zero when `Usage`, `Resets In`, and `Time` all display round zero before the reset window ends.
+- `collector/extension/dashboard.html`, ordered `dashboard*.css` stylesheets, dashboard helper scripts, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage, while the minute status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture; dashboard Singularity extends Perfect Zero when `Usage`, `Resets In`, and `Time` all display round zero before the reset window ends.
 - `collector/extension/vendor/chart.umd.min.js` is the optional vendored Chart.js runtime used by the dashboard chart; the rest of the dashboard still renders if the chart asset cannot load.
 
 ## Collection Flow
@@ -50,16 +50,16 @@ extension origin, for example
 `chrome-extension://<local-extension-id>/dev-flags.html`.
 
 The page controls only display state and feature-preview overrides. It does not
-gate shipped product features. The state choices are grouped the same way as
-the dashboard preview rail: Pace Levels and Perfect States. Choosing a state
-stores `forcedPaceState` under `pacePetsDeveloperOptions` in
+gate shipped product features. The state choices are grouped as Pace Levels,
+Perfect States, and Imperfect States. Choosing a state stores
+`forcedPaceState` under `pacePetsDeveloperOptions` in
 `chrome.storage.local`; enabling the brake-hard badge preview stores
 `criticalBadgeWindow`; enabling the refresh-link preview stores
 `manualRefreshLeadWindow`. Returning to live data removes those overrides.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
-the dashboard card, usage/time bars, tab title, toolbar badge, and state rail
-match temporary preview behavior until the override is cleared. This setting is
+the dashboard card, usage/time bars, tab title, and toolbar badge match
+synthetic forced-state behavior until the override is cleared. This setting is
 profile-local for development and is excluded from Chrome Web Store release
 packages.
 

@@ -17,12 +17,6 @@
   padding: 24px var(--dashboard-card-padding-x);
 }
 
-.pace-card.is-previewing {
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--pace-border) 36%, transparent),
-    0 14px 32px rgb(var(--shadow-color) / 8%);
-}
-
 .pace-icon,
 .metric-icon {
   align-items: center;

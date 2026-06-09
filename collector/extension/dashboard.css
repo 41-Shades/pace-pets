@@ -80,7 +80,6 @@ body {
 
 body,
 .usage-panel,
-.state-chip,
 .window-toggle,
 .window-toggle-option,
 .manual-refresh-button,
@@ -233,6 +232,28 @@ body,
   min-height: 100dvh;
   padding: 12px;
   position: relative;
+}
+
+.content-grid {
+  align-items: flex-start;
+  display: flex;
+  justify-content: center;
+  max-width: 820px;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.usage-panel {
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgb(var(--shadow-color) / 8%);
+  flex: 0 1 auto;
+  max-width: calc(100vw - 24px);
+  padding: 26px;
+  position: relative;
+  width: clamp(760px, 50vw, 820px);
 }
 
 .perfect-zero-page-background {

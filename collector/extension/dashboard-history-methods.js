@@ -194,7 +194,7 @@
       });
       this.usageChartView.setEmpty(state.chartCopy);
       this.setLatestMetadata(null, refreshStatus);
-      this.paceView.refreshForcedOverrideOrActivePacePreview();
+      this.paceView.refreshForcedPaceStateOverride();
     },
 
     renderHistoryLoadFailure() {
@@ -225,7 +225,7 @@
         title: this.STATUS_TEXT.checkFailed,
       });
       this.usageChartView.setEmpty("Could not read local history.");
-      this.paceView.refreshForcedOverrideOrActivePacePreview();
+      this.paceView.refreshForcedPaceStateOverride();
     },
 
     isManualRefreshLeadWindow(windowKey, windowData, atMs = Date.now()) {
@@ -391,7 +391,7 @@
         });
       }
       this.setLatestMetadata(latest, refreshStatus);
-      this.paceView.refreshForcedOverrideOrActivePacePreview();
+      this.paceView.refreshForcedPaceStateOverride();
     },
   });
 })();

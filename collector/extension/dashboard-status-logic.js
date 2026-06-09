@@ -33,18 +33,6 @@
     return detail ? `${title}: ${text}. ${detail}` : `${title}: ${text}`;
   }
 
-  function isTransientRuntimeMessageError(error) {
-    return /(?:message port closed|receiving end does not exist|extension context invalidated)/i.test(
-      error?.message || "",
-    );
-  }
-
-  function warnOptionalPreviewMessageFailure(label, error) {
-    if (!isTransientRuntimeMessageError(error)) {
-      console.warn(label, error.message);
-    }
-  }
-
   function isSignInNotFoundStatus(refreshStatus) {
     return refreshStatus?.ok === false && refreshStatus.authFailure === true;
   }
@@ -113,6 +101,5 @@
     isSignInNotFoundStatus,
     refreshFailureDetail,
     statusTooltipText,
-    warnOptionalPreviewMessageFailure,
   });
 })();

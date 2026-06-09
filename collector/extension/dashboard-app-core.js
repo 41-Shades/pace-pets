@@ -71,11 +71,7 @@
         getSelectedWindowKey: () => this.selectedWindowKey,
         renderHistory: (history, refreshStatus, options) =>
           this.renderHistory(history, refreshStatus, options),
-        restoreToolbarPreviewBadge: () =>
-          this.dashboardStatus.restoreToolbarPreviewBadge(),
         selectedSupportedWindowKey: () => this.selectedSupportedWindowKey(),
-        updateToolbarPreviewBadge: (stateKey) =>
-          this.dashboardStatus.updateToolbarPreviewBadge(stateKey),
         usageChartView: this.usageChartView,
         windowSpecs: this.WINDOW_SPECS,
       });
@@ -179,7 +175,6 @@
         developerOptions.manualRefreshLeadWindow;
       this.currentHistory = history;
       this.currentRefreshStatus = refreshStatus;
-      this.paceView.renderStateRail();
       this.renderHistory(this.currentHistory, this.currentRefreshStatus);
     }
 
@@ -227,7 +222,6 @@
       this.loadDashboard().catch((error) =>
         this.renderHistoryLoadFailure(error),
       );
-      this.paceView.renderStateRail();
     }
 
     manualRefreshLeadWindowMs(windowKey) {

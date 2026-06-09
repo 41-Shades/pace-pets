@@ -26,7 +26,6 @@ const requiredDashboardIds = Object.freeze([
   "collector-version",
   "early-reset-button",
   "early-reset-popover",
-  "pace-state-stack",
 ]);
 
 const requiredDashboardScripts = Object.freeze([
@@ -90,8 +89,10 @@ function assertDashboardHtml({
     );
   }
   assert(
-    !/<article\b[^>]*class="[^"]*\bstate-chip\b/i.test(dashboardHtml),
-    "Pace state legend chips must be rendered from shared pace-state metadata.",
+    !dashboardHtml.includes("dashboard-rail.css") &&
+      !dashboardHtml.includes("pace-state-stack") &&
+      !/\bstate-chip\b/.test(dashboardHtml),
+    "Dashboard must not render the retired pace state preview rail.",
   );
   assert(
     /<link\b[^>]*rel="stylesheet"[^>]*href="\.\/dashboard\.css"[^>]*>/s.test(

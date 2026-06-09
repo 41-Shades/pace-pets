@@ -121,7 +121,6 @@ for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
 const dashboardHtml = readText("collector/extension/dashboard.html");
 const backgroundJs = [
   "background.js",
-  "background-badge-preview-schedule.js",
   "background-context-menu.js",
   "background-usage-source.js",
 ]
@@ -194,11 +193,10 @@ assert(
 );
 assert(
   !backgroundJs.includes("badgePreviewRestoreTimer") &&
-    backgroundJs.includes("BADGE_PREVIEW_RESTORE_ALARM") &&
-    backgroundJs.includes("BADGE_PREVIEW_EXPIRES_STORAGE_KEY") &&
-    backgroundJs.includes("restoreExpiredPaceBadgePreview") &&
-    backgroundJs.includes("chrome.alarms.create(alarmName, alarmInfo, done)"),
-  "Toolbar badge previews must use persistent alarm-backed restore state.",
+    !backgroundJs.includes("BADGE_PREVIEW_RESTORE_ALARM") &&
+    !backgroundJs.includes("BADGE_PREVIEW_EXPIRES_STORAGE_KEY") &&
+    !backgroundJs.includes("restoreExpiredPaceBadgePreview"),
+  "Dashboard must not ship temporary toolbar badge preview restore state.",
 );
 assert(
   !/candidateDurationMatches|candidatePathConflicts/.test(

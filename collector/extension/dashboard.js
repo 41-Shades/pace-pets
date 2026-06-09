@@ -68,7 +68,6 @@
       earlyResetPopoverText: document.querySelector(
         "#early-reset-popover .early-reset-popover-text",
       ),
-      paceStateStack: document.querySelector("#pace-state-stack"),
       appTooltip: document.querySelector("#app-tooltip"),
     };
   }
