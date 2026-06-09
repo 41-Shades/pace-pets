@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { checkDashboardAssets } from "./extension-check-dashboard.mjs";
-import { requiredExtensionFiles } from "./extension-check-required-files.mjs";
+import { requiredExtensionFilesFromContracts } from "./extension-check-required-files.mjs";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -96,6 +96,13 @@ assert(productMetadata, "Product metadata must be importable by checks.");
 await import(pathToFileURL(path.join(extensionRoot, "integration-config.js")));
 const integrationConfig = globalThis.CodexIntegrationConfig;
 assert(integrationConfig, "Integration config must be importable by checks.");
+await import(pathToFileURL(path.join(extensionRoot, "usage-windows.js")));
+await import(
+  pathToFileURL(path.join(extensionRoot, "usage-integration-adapters.js"))
+);
+await import(pathToFileURL(path.join(extensionRoot, "usage-providers.js")));
+const usageProviders = globalThis.CodexUsageProviders;
+assert(usageProviders, "Usage providers must be importable by checks.");
 await import(
   pathToFileURL(path.join(extensionRoot, "themes/default/asset-manifest.js"))
 );
@@ -121,7 +128,7 @@ assertExactStringSet(
 );
 assertExactStringSet(
   manifest.host_permissions,
-  [integrationConfig.CHATGPT_HOST_PERMISSION],
+  [usageProviders.DEFAULT_USAGE_PROVIDER.hostPermission],
   "Host permissions",
 );
 assert(
@@ -171,92 +178,30 @@ assert(
   Array.isArray(backgroundImports),
   "Background script sources must be an array.",
 );
-assertScriptBefore(
-  backgroundImports,
-  "product-metadata.js",
-  "background-logic.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "integration-config.js",
-  "usage.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "usage-windows.js",
-  "usage.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "usage-values.js",
-  "usage.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "usage-values.js",
-  "history-store.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "refresh-status.js",
-  "history-store.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "usage-values.js",
-  "pace-logic.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "storage-adapter.js",
-  "usage.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "usage-integration-adapters.js",
-  "usage.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "themes/default/asset-manifest.js",
-  "pace-logic.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "pace-state-art.js",
-  "pace-state-data.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "developer-options.js",
-  "background-logic.js",
-  "Background runtime manifest",
-);
-assertScriptBefore(
-  backgroundImports,
-  "pace-state-data.js",
-  "pace-logic.js",
-  "Background runtime manifest",
-);
-for (const helper of [
-  "background-usage-source.js",
-  "background-context-menu.js",
-]) {
+const backgroundRuntimeOrderPairs = Object.freeze([
+  ["product-metadata.js", "background-logic.js"],
+  ["integration-config.js", "usage.js"],
+  ["usage-windows.js", "usage.js"],
+  ["usage-values.js", "usage.js"],
+  ["usage-values.js", "history-store.js"],
+  ["refresh-status.js", "history-store.js"],
+  ["usage-values.js", "pace-logic.js"],
+  ["storage-adapter.js", "usage.js"],
+  ["usage-integration-adapters.js", "usage-providers.js"],
+  ["usage-providers.js", "usage.js"],
+  ["usage-providers.js", "history-store.js"],
+  ["themes/default/asset-manifest.js", "pace-logic.js"],
+  ["pace-state-art.js", "pace-state-data.js"],
+  ["pace-state-data.js", "developer-options.js"],
+  ["developer-options.js", "background-logic.js"],
+  ["pace-state-data.js", "pace-logic.js"],
+  ["usage-providers.js", "background-usage-source.js"],
+]);
+for (const [before, after] of backgroundRuntimeOrderPairs) {
   assertScriptBefore(
     backgroundImports,
-    "background-logic.js",
-    helper,
+    before,
+    after,
     "Background runtime manifest",
   );
 }
@@ -297,6 +242,14 @@ assert(
   !manifest.externally_connectable,
   "Extension must not accept external connections.",
 );
+const dashboardHtml = readExtensionText("dashboard.html");
+const requiredExtensionFiles = requiredExtensionFilesFromContracts({
+  attributeValue,
+  dashboardHtml,
+  manifest,
+  runtimeManifest,
+  themeAssets,
+});
 for (const requiredExtensionFile of requiredExtensionFiles) {
   assertExtensionFile(requiredExtensionFile);
 }
@@ -333,7 +286,6 @@ for (const variantKey of ["perfectZeroGlow", "splatFreeFall"]) {
   );
 }
 
-const dashboardHtml = readExtensionText("dashboard.html");
 checkDashboardAssets({
   assert,
   assertExtensionFile,

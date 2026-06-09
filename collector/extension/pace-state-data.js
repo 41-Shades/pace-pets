@@ -26,7 +26,6 @@
   function iconParts(parts) {
     return Object.freeze(parts.map(iconPart));
   }
-
   function paceState(state) {
     const stateIconParts = iconParts(state.iconParts);
     return Object.freeze({
@@ -38,7 +37,13 @@
       iconParts: stateIconParts,
     });
   }
-
+  function paceStateGroup(key, stateKeys, displayStateKeys = stateKeys) {
+    return Object.freeze({
+      displayStateKeys: Object.freeze(displayStateKeys),
+      key,
+      stateKeys: Object.freeze(stateKeys),
+    });
+  }
   const PACE_STATES = Object.freeze({
     criticalBehind: paceState({
       key: "criticalBehind",
@@ -350,6 +355,18 @@
     "singularity",
   ]);
   const PACE_IMPERFECT_STATE_KEYS = Object.freeze(["splat"]);
+  const PACE_STATE_GROUPS = Object.freeze([
+    paceStateGroup(
+      "paceLevels",
+      PACE_LEVEL_STATE_KEYS,
+      [...PACE_LEVEL_STATE_KEYS].reverse(),
+    ),
+    paceStateGroup("perfectStates", PACE_PERFECT_STATE_KEYS),
+    paceStateGroup("imperfectStates", PACE_IMPERFECT_STATE_KEYS),
+  ]);
+  const PACE_STATE_GROUPS_BY_KEY = Object.freeze(
+    Object.fromEntries(PACE_STATE_GROUPS.map((group) => [group.key, group])),
+  );
   const PACE_LEGEND_STATE_KEYS = Object.freeze([
     "wellAhead",
     "on",
@@ -374,6 +391,8 @@
     PACE_LEGEND_STATE_KEYS,
     PACE_LEVEL_STATE_KEYS,
     PACE_PERFECT_STATE_KEYS,
+    PACE_STATE_GROUPS,
+    PACE_STATE_GROUPS_BY_KEY,
     PACE_STATES,
     PACE_STATES_BY_CLASS,
   });

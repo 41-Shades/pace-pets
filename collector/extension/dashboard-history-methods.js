@@ -114,61 +114,14 @@
       return { hasResetTiming, staleWindow };
     },
 
-    emptyHistoryState(refreshStatus) {
-      if (this.DASHBOARD_STATUS.isSignInNotFoundStatus(refreshStatus)) {
-        return {
-          statusText: this.STATUS_TEXT.signInNotFound,
-          statusMode: "warning",
-          statusDetail:
-            this.dashboardStatus.refreshFailureDetail(refreshStatus),
-          paceTitle: this.STATUS_TEXT.signInNotFound,
-          paceCopy: this.SIGN_IN_NOT_FOUND_COPY,
-          chartCopy: this.STATUS_TEXT.signInNotFound,
-        };
-      }
-
-      if (this.DASHBOARD_STATUS.isFailedRefreshStatus(refreshStatus)) {
-        return {
-          statusText: this.STATUS_TEXT.checkFailed,
-          statusMode: "error",
-          statusDetail:
-            this.dashboardStatus.refreshFailureDetail(refreshStatus),
-          paceTitle: this.STATUS_TEXT.checkFailed,
-          paceCopy: refreshStatus.message || "The latest usage check failed.",
-          chartCopy: "Waiting for local history.",
-        };
-      }
-
-      return this.defaultEmptyHistoryState(refreshStatus);
-    },
-
-    defaultEmptyHistoryState(refreshStatus) {
-      const refreshNeeded =
-        refreshStatus?.ok === true &&
-        !this.DASHBOARD_STATUS.isRecentRefreshStatus(refreshStatus);
-      return {
-        statusText: refreshNeeded
-          ? this.STATUS_TEXT.refreshNeeded
-          : this.STATUS_TEXT.waiting,
-        statusMode: refreshNeeded ? "stale" : "ok",
-        statusDetail: "",
-        paceTitle: "No history yet",
-        paceCopy: "Waiting for the first automatic usage check.",
-        chartCopy: "Waiting for local history.",
-      };
-    },
-
     renderEmptyHistory(refreshStatus = null) {
       const windowKey = this.selectedSupportedWindowKey();
       const spec = this.WINDOW_SPECS[windowKey];
-      const state = this.emptyHistoryState(refreshStatus);
-      this.dashboardStatus.setStatus(
-        state.statusText,
-        state.statusMode,
-        this.COLLECTION_STATUS_TITLE,
-        state.statusDetail,
-        { manualRefresh: true },
-      );
+      const state = this.DASHBOARD_STATUS.emptyHistoryCollectionState({
+        formatClockTime: this.DASHBOARD_TIME.formatClockTime,
+        refreshStatus,
+      });
+      this.applyHistoryStatus(state.status);
       this.renderWindowControls(windowKey);
       this.elements.priorResetLabel.textContent = spec.priorResetLabel;
       this.elements.scheduledResetLabel.textContent = spec.scheduledResetLabel;
@@ -243,106 +196,6 @@
       );
     },
 
-    failedHistoryStatus(refreshStatus, latest) {
-      if (this.DASHBOARD_STATUS.isSignInNotFoundStatus(refreshStatus)) {
-        return {
-          text: this.STATUS_TEXT.signInNotFound,
-          mode: "warning",
-          detail: this.dashboardStatus.refreshFailureDetail(
-            refreshStatus,
-            latest,
-          ),
-          manualRefresh: true,
-        };
-      }
-      if (this.DASHBOARD_STATUS.isFailedRefreshStatus(refreshStatus)) {
-        return {
-          text: this.STATUS_TEXT.checkFailed,
-          mode: "error",
-          detail: this.dashboardStatus.refreshFailureDetail(
-            refreshStatus,
-            latest,
-          ),
-          manualRefresh: true,
-        };
-      }
-      return null;
-    },
-
-    staleRefreshStatus(refreshStatus) {
-      if (
-        refreshStatus?.ok === true &&
-        !this.DASHBOARD_STATUS.isRecentRefreshStatus(refreshStatus)
-      ) {
-        return {
-          text: this.STATUS_TEXT.refreshNeeded,
-          mode: "stale",
-          detail: "",
-          manualRefresh: true,
-        };
-      }
-      return null;
-    },
-
-    missingWindowStatus(hasAnySupportedWindow, summaryWindow, summaryState) {
-      if (
-        hasAnySupportedWindow &&
-        summaryWindow &&
-        summaryState.hasResetTiming
-      ) {
-        return null;
-      }
-      return {
-        text: this.STATUS_TEXT.waiting,
-        mode: "warning",
-        detail: "",
-        manualRefresh: true,
-      };
-    },
-
-    staleWindowStatus(refreshStatus, summaryState) {
-      if (!summaryState.staleWindow) {
-        return null;
-      }
-      if (
-        refreshStatus?.ok === true &&
-        this.DASHBOARD_STATUS.isRecentRefreshStatus(refreshStatus)
-      ) {
-        return {
-          text: this.STATUS_TEXT.waitingForReading,
-          mode: "live",
-          detail: "",
-        };
-      }
-      return {
-        text: this.STATUS_TEXT.refreshNeeded,
-        mode: "stale",
-        detail: "",
-        manualRefresh: true,
-      };
-    },
-
-    historyStatusState(context) {
-      return (
-        this.failedHistoryStatus(context.refreshStatus, context.latest) ||
-        this.staleRefreshStatus(context.refreshStatus) ||
-        this.missingWindowStatus(
-          context.hasAnySupportedWindow,
-          context.summaryWindow,
-          context.summaryState,
-        ) ||
-        this.staleWindowStatus(context.refreshStatus, context.summaryState) || {
-          text: this.STATUS_TEXT.live,
-          mode: "live",
-          detail: "",
-          manualRefresh: this.isManualRefreshLeadWindow(
-            context.summaryWindowKey,
-            context.summaryWindow,
-          ),
-        }
-      );
-    },
-
     applyHistoryStatus(state) {
       this.dashboardStatus.setStatus(
         state.text,
@@ -371,15 +224,20 @@
         history,
       );
       this.applyHistoryStatus(
-        this.historyStatusState({
+        this.DASHBOARD_STATUS.historyCollectionStatusState({
+          formatClockTime: this.DASHBOARD_TIME.formatClockTime,
           refreshStatus,
           latest,
           hasAnySupportedWindow: this.USAGE_WINDOWS.WINDOW_KEYS.some(
             (windowKey) => windows[windowKey],
           ),
-          summaryWindowKey,
+          hasResetTiming: summaryState.hasResetTiming,
+          manualRefreshLeadWindow: this.isManualRefreshLeadWindow(
+            summaryWindowKey,
+            summaryWindow,
+          ),
           summaryWindow,
-          summaryState,
+          staleWindow: summaryState.staleWindow,
         }),
       );
       if (refreshChart) {

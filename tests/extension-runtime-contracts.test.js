@@ -126,46 +126,6 @@ describe("CodexProductMetadata", () => {
   });
 });
 
-describe("PacePetsDeveloperOptions", () => {
-  it("normalizes local developer state overrides", () => {
-    const options = globalThis.PacePetsDeveloperOptions;
-
-    expect(options.STORAGE_KEY).toBe("pacePetsDeveloperOptions");
-    expect(options.CRITICAL_BADGE_WINDOW_KEY).toBe("criticalBadgeWindow");
-    expect(options.MANUAL_REFRESH_LEAD_WINDOW_KEY).toBe(
-      "manualRefreshLeadWindow",
-    );
-    expect(options.normalizeForcedPaceStateKey("sync")).toBe("sync");
-    expect(options.normalizeForcedPaceStateKey("unsupported")).toBeNull();
-    expect(options.normalizeCriticalBadgeWindow(true)).toBe(true);
-    expect(options.normalizeCriticalBadgeWindow("true")).toBe(false);
-    expect(options.normalizeManualRefreshLeadWindow(true)).toBe(true);
-    expect(options.normalizeManualRefreshLeadWindow("true")).toBe(false);
-    expect(
-      options.normalizeDeveloperOptions({
-        criticalBadgeWindow: true,
-        forcedPaceState: "perfectZero",
-        manualRefreshLeadWindow: true,
-        unsupported: false,
-      }),
-    ).toMatchObject({
-      criticalBadgeWindow: true,
-      forcedPaceStateKey: "perfectZero",
-      manualRefreshLeadWindow: true,
-    });
-    expect(options.normalizeDeveloperOptions(null)).toMatchObject({
-      criticalBadgeWindow: false,
-      forcedPaceStateKey: null,
-      manualRefreshLeadWindow: false,
-    });
-    expect(
-      options.hasDeveloperOptionsChange({
-        pacePetsDeveloperOptions: { newValue: {} },
-      }),
-    ).toBe(true);
-  });
-});
-
 describe("CodexThemeAssets", () => {
   it("exposes app icons and one runtime icon path per playful pace state", () => {
     const assets = globalThis.CodexThemeAssets;

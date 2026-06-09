@@ -85,8 +85,10 @@ percent look like zero.
 
 ## Legend And Preview Order
 
-The dashboard legend uses dashboard-owned level, perfect-state, and
-imperfect-state key lists:
+`collector/extension/pace-state-data.js` owns pace-state group membership and
+display order. Dashboard legend metadata and local developer controls both
+derive their level, perfect-state, and imperfect-state projections from that
+catalog:
 
 ```text
 levels: wellAhead, strongAhead, ahead, on, behind, wellBehind, criticalBehind

@@ -37,10 +37,6 @@
       ]),
     ),
   );
-  const BADGE_REFRESH_MESSAGE = Object.freeze({
-    type: "pacePets.restoreBadge",
-  });
-
   let currentForcedPaceStateKey = null;
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
@@ -54,65 +50,21 @@
     }, 2200);
   }
 
-  function storageValue({
-    criticalBadgeWindow = false,
-    forcedPaceStateKey,
-    manualRefreshLeadWindow = false,
-  } = {}) {
-    const normalizedCriticalBadgeWindow =
-      DEVELOPER_OPTIONS.normalizeCriticalBadgeWindow(criticalBadgeWindow);
-    const normalizedForcedPaceStateKey =
-      DEVELOPER_OPTIONS.normalizeForcedPaceStateKey(forcedPaceStateKey);
-    const normalizedManualRefreshLeadWindow =
-      DEVELOPER_OPTIONS.normalizeManualRefreshLeadWindow(
-        manualRefreshLeadWindow,
-      );
-    const value = {};
-    if (normalizedForcedPaceStateKey) {
-      value[DEVELOPER_OPTIONS.FORCED_PACE_STATE_KEY] =
-        normalizedForcedPaceStateKey;
-    }
-    if (normalizedCriticalBadgeWindow) {
-      value[DEVELOPER_OPTIONS.CRITICAL_BADGE_WINDOW_KEY] = true;
-    }
-    if (normalizedManualRefreshLeadWindow) {
-      value[DEVELOPER_OPTIONS.MANUAL_REFRESH_LEAD_WINDOW_KEY] = true;
-    }
-    return value;
-  }
-
-  function developerOptionsFromStorage(value) {
-    const options = DEVELOPER_OPTIONS.normalizeDeveloperOptions(value);
-    return {
-      criticalBadgeWindow: options.criticalBadgeWindow,
-      forcedPaceStateKey: options.forcedPaceStateKey,
-      manualRefreshLeadWindow: options.manualRefreshLeadWindow,
-    };
-  }
-
   async function readDeveloperOptions() {
     const items = await STORAGE.getLocal(DEVELOPER_OPTIONS.STORAGE_KEY);
-    return developerOptionsFromStorage(items?.[DEVELOPER_OPTIONS.STORAGE_KEY]);
+    return DEVELOPER_OPTIONS.developerOptionsFromStorageItems(items);
   }
 
   async function writeDeveloperOptions(options) {
-    const normalizedValue = storageValue(options);
-    if (Object.keys(normalizedValue).length === 0) {
+    const storageItems =
+      DEVELOPER_OPTIONS.developerOptionsStorageItems(options);
+    if (!storageItems) {
       await STORAGE.removeLocal(DEVELOPER_OPTIONS.STORAGE_KEY);
-      return developerOptionsFromStorage(null);
+      return DEVELOPER_OPTIONS.developerOptionsFromStorageItems(null);
     }
 
-    await STORAGE.setLocal({
-      [DEVELOPER_OPTIONS.STORAGE_KEY]: normalizedValue,
-    });
-    return developerOptionsFromStorage(normalizedValue);
-  }
-
-  async function requestBadgeRefresh() {
-    const response = await chrome.runtime.sendMessage(BADGE_REFRESH_MESSAGE);
-    if (response?.ok !== true) {
-      throw new Error(response?.message || "Badge refresh did not run.");
-    }
+    await STORAGE.setLocal(storageItems);
+    return DEVELOPER_OPTIONS.developerOptionsFromStorageItems(storageItems);
   }
 
   function currentDeveloperOptions() {
@@ -132,7 +84,6 @@
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     render();
-    await requestBadgeRefresh();
   }
 
   function paceStateByKey(stateKey) {
@@ -287,9 +238,10 @@
       return;
     }
 
-    const options = developerOptionsFromStorage(
-      changes[DEVELOPER_OPTIONS.STORAGE_KEY]?.newValue,
-    );
+    const options = DEVELOPER_OPTIONS.developerOptionsFromStorageItems({
+      [DEVELOPER_OPTIONS.STORAGE_KEY]:
+        changes[DEVELOPER_OPTIONS.STORAGE_KEY]?.newValue,
+    });
     currentCriticalBadgeWindow = options.criticalBadgeWindow;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
