@@ -6,21 +6,88 @@
   const CRITICAL_BADGE_WINDOW_KEY = "criticalBadgeWindow";
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
 
-  const FORCEABLE_PACE_STATE_OPTIONS = Object.freeze([
-    Object.freeze({ key: "wellAhead", label: "Sprint faster!" }),
-    Object.freeze({ key: "strongAhead", label: "Push harder" }),
-    Object.freeze({ key: "ahead", label: "Pick up speed" }),
-    Object.freeze({ key: "on", label: "Keep pace" }),
-    Object.freeze({ key: "behind", label: "Ease up" }),
-    Object.freeze({ key: "wellBehind", label: "Slow down" }),
-    Object.freeze({ key: "criticalBehind", label: "Brake hard!" }),
-    Object.freeze({ key: "sync", label: "Perfect sync" }),
-    Object.freeze({ key: "perfectZero", label: "Perfect zero" }),
-    Object.freeze({ key: "singularity", label: "Singularity" }),
+  function paceStateOption(key) {
+    return Object.freeze({ key });
+  }
+
+  function paceStateGroup({ key, listElementId, options }) {
+    return Object.freeze({
+      key,
+      listElementId,
+      options: Object.freeze(options),
+    });
+  }
+
+  function featurePreviewOption({
+    disableStatus,
+    enableStatus,
+    key,
+    label,
+    value,
+  }) {
+    return Object.freeze({
+      disableStatus,
+      enableStatus,
+      key,
+      label,
+      value,
+    });
+  }
+
+  const FORCEABLE_PACE_STATE_GROUPS = Object.freeze([
+    paceStateGroup({
+      key: "paceLevels",
+      listElementId: "pace-level-list",
+      options: [
+        paceStateOption("wellAhead"),
+        paceStateOption("strongAhead"),
+        paceStateOption("ahead"),
+        paceStateOption("on"),
+        paceStateOption("behind"),
+        paceStateOption("wellBehind"),
+        paceStateOption("criticalBehind"),
+      ],
+    }),
+    paceStateGroup({
+      key: "perfectStates",
+      listElementId: "perfect-state-list",
+      options: [
+        paceStateOption("sync"),
+        paceStateOption("perfectZero"),
+        paceStateOption("singularity"),
+      ],
+    }),
+    paceStateGroup({
+      key: "imperfectStates",
+      listElementId: "imperfect-state-list",
+      options: [paceStateOption("splat")],
+    }),
   ]);
+  const FORCEABLE_PACE_STATE_OPTIONS = Object.freeze(
+    FORCEABLE_PACE_STATE_GROUPS.reduce(
+      (options, group) => options.concat(group.options),
+      [],
+    ),
+  );
   const FORCEABLE_PACE_STATE_KEYS = Object.freeze(
     FORCEABLE_PACE_STATE_OPTIONS.map((option) => option.key),
   );
+  const FEATURE_PREVIEW_OPTIONS = Object.freeze([
+    featurePreviewOption({
+      disableStatus: "Brake hard badge returned to live data.",
+      enableStatus: "Brake hard badge forced.",
+      key: CRITICAL_BADGE_WINDOW_KEY,
+      label: "Extension badge",
+      value: "critical-badge-window",
+    }),
+    featurePreviewOption({
+      disableStatus: "Refresh link returned to timing.",
+      enableStatus: "Refresh link forced.",
+      key: MANUAL_REFRESH_LEAD_WINDOW_KEY,
+      label: "Refresh link",
+      value: "manual-refresh-lead-window",
+    }),
+  ]);
 
   function isPlainObject(value) {
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -58,6 +125,8 @@
 
   root.PacePetsDeveloperOptions = Object.freeze({
     CRITICAL_BADGE_WINDOW_KEY,
+    FEATURE_PREVIEW_OPTIONS,
+    FORCEABLE_PACE_STATE_GROUPS,
     FORCEABLE_PACE_STATE_KEYS,
     FORCEABLE_PACE_STATE_OPTIONS,
     FORCED_PACE_STATE_KEY,

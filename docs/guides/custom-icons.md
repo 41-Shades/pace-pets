@@ -22,6 +22,8 @@ collector/extension/themes/default/
     brake-hard.png
     perfect-sync.png
     perfect-zero.png
+    06-slow-down-splat-transparent.png
+    06-slow-down-free-fall-transparent.png
     perfect-zero-glow.png
 ```
 
@@ -67,6 +69,7 @@ icons directly from its manifest, so those paths have to stay aligned.
 - `criticalBehind`: brake hard
 - `sync`: perfect sync
 - `perfectZero`: perfect zero
+- `splat`: splat
 
 `perfect-zero-glow.png` is a dashboard-only variant used when the main
 `PERFECT ZERO` status card renders its animated space background. The normal

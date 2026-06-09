@@ -5,12 +5,17 @@
   if (!THEME_ASSETS) {
     throw new Error("Codex theme assets must load before pace-logic.js.");
   }
+  const STATE_ART = root.PacePetsPaceStateArt;
+  if (!STATE_ART) {
+    throw new Error("Pace state art must load before pace-state-data.js.");
+  }
   const USAGE_VALUES = root.CodexUsageValues;
   if (!USAGE_VALUES) {
     throw new Error(
       "Codex usage value helpers must load before pace-logic.js.",
     );
   }
+
   function iconPart(part) {
     return Object.freeze({
       tag: part.tag,
@@ -154,6 +159,117 @@
         },
       ],
     }),
+    singularity: paceState({
+      key: "singularity",
+      className: "pace-singularity",
+      title: "Singularity",
+      copy: "It all ends in nothingness. Maybe.",
+      ratioLabel: "Usage = Time = Resets In = 0",
+      previewRatioLabel: "The black hole of zero",
+      badgeColor: "#000000",
+      favicon: {
+        bg: "#111827",
+        color: "#f8fafc",
+        iconParts: [
+          {
+            tag: "ellipse",
+            attrs: {
+              cx: "12",
+              cy: "12",
+              rx: "9.3",
+              ry: "3.7",
+              stroke: "#67e8f9",
+              "stroke-width": "2",
+              transform: "rotate(-18 12 12)",
+            },
+          },
+          {
+            tag: "circle",
+            attrs: {
+              fill: "#000000",
+              cx: "12",
+              cy: "12",
+              r: "5",
+              stroke: "#f8fafc",
+              "stroke-width": "1.35",
+            },
+          },
+          {
+            tag: "circle",
+            attrs: {
+              cx: "18.8",
+              cy: "5.7",
+              fill: "#fbbf24",
+              r: "1",
+              stroke: "none",
+            },
+          },
+        ],
+      },
+      iconParts: [
+        {
+          tag: "ellipse",
+          attrs: {
+            cx: "12",
+            cy: "12",
+            rx: "9.5",
+            ry: "3.8",
+            stroke: "#67e8f9",
+            "stroke-width": "2",
+            transform: "rotate(-18 12 12)",
+          },
+        },
+        {
+          tag: "circle",
+          attrs: {
+            cx: "12",
+            cy: "12",
+            r: "5.4",
+            fill: "#000000",
+            stroke: "#f8fafc",
+            "stroke-width": "1.35",
+          },
+        },
+        {
+          tag: "circle",
+          attrs: {
+            cx: "18.8",
+            cy: "5.7",
+            fill: "#fbbf24",
+            r: "1.1",
+            stroke: "none",
+          },
+        },
+      ],
+      playfulImage: STATE_ART.SINGULARITY_ICON_DATA_URL,
+    }),
+    splat: paceState({
+      key: "splat",
+      className: "pace-splat",
+      title: "Splat!",
+      copy: "The gravity of usage defeats you. Try again.",
+      ratioLabel: "Usage = 0. Nice try",
+      badgeColor: "#64748b",
+      favicon: {
+        bg: "#f8fafc",
+        color: "#64748b",
+        iconParts: [
+          { tag: "path", attrs: { d: "M7.5 6.5 16.5 17.5" } },
+          { tag: "path", attrs: { d: "M16.5 6.5 7.5 17.5" } },
+          { tag: "path", attrs: { d: "M12 3.5v3" } },
+          { tag: "path", attrs: { d: "M4.8 8 7 9.4" } },
+          { tag: "path", attrs: { d: "M19.2 8 17 9.4" } },
+        ],
+      },
+      iconParts: [
+        { tag: "path", attrs: { d: "M7.5 6.5 16.5 17.5" } },
+        { tag: "path", attrs: { d: "M16.5 6.5 7.5 17.5" } },
+        { tag: "path", attrs: { d: "M12 3.5v3" } },
+        { tag: "path", attrs: { d: "M4.8 8 7 9.4" } },
+        { tag: "path", attrs: { d: "M19.2 8 17 9.4" } },
+      ],
+      playfulImage: THEME_ASSETS.paceIconPathForState("splat"),
+    }),
     ahead: paceState({
       key: "ahead",
       className: "pace-ahead",
@@ -228,7 +344,12 @@
     "strongAhead",
     "wellAhead",
   ]);
-  const PACE_PERFECT_STATE_KEYS = Object.freeze(["sync", "perfectZero"]);
+  const PACE_PERFECT_STATE_KEYS = Object.freeze([
+    "sync",
+    "perfectZero",
+    "singularity",
+  ]);
+  const PACE_IMPERFECT_STATE_KEYS = Object.freeze(["splat"]);
   const PACE_LEGEND_STATE_KEYS = Object.freeze([
     "wellAhead",
     "on",
@@ -249,6 +370,7 @@
   root.PacePetsPaceStateData = Object.freeze({
     DEFAULT_BADGE_COLORS,
     PACE_CLASS_NAMES,
+    PACE_IMPERFECT_STATE_KEYS,
     PACE_LEGEND_STATE_KEYS,
     PACE_LEVEL_STATE_KEYS,
     PACE_PERFECT_STATE_KEYS,

@@ -37,6 +37,11 @@ beforeAll(async () => {
   );
   await import(
     pathToFileURL(
+      path.join(projectRoot, "collector/extension/pace-state-art.js"),
+    )
+  );
+  await import(
+    pathToFileURL(
       path.join(projectRoot, "collector/extension/pace-state-data.js"),
     )
   );

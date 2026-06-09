@@ -233,6 +233,12 @@ assertScriptBefore(
 );
 assertScriptBefore(
   backgroundImports,
+  "pace-state-art.js",
+  "pace-state-data.js",
+  "Background runtime manifest",
+);
+assertScriptBefore(
+  backgroundImports,
   "developer-options.js",
   "background-logic.js",
   "Background runtime manifest",
@@ -307,6 +313,7 @@ assertExactStringSet(
     "criticalBehind",
     "sync",
     "perfectZero",
+    "splat",
   ],
   "Theme pace icon states",
 );
@@ -315,6 +322,14 @@ for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
     extensionPathFromExtensionPageUrl(
       themeAssets.paceIconPathForState(stateKey),
       `${stateKey} pace icon`,
+    ),
+  );
+}
+for (const variantKey of ["perfectZeroGlow", "splatFreeFall"]) {
+  assertExtensionFile(
+    extensionPathFromExtensionPageUrl(
+      themeAssets.paceIconVariantPath(variantKey),
+      `${variantKey} pace icon variant`,
     ),
   );
 }

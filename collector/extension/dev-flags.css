@@ -120,6 +120,31 @@ input {
   padding: 10px;
 }
 
+.state-subsection {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.state-subsection + .state-subsection {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.state-subsection .option-list {
+  padding: 0;
+}
+
+.state-subsection-title {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  line-height: 1.1;
+  margin: 0;
+  text-transform: uppercase;
+}
+
 .option-row[aria-pressed="true"] {
   background: var(--primary-soft);
   border-color: var(--primary-border);
@@ -157,7 +182,7 @@ input {
 }
 
 .option-label {
-  font-size: 1.08rem;
+  font-size: 1rem;
   font-weight: 750;
   line-height: 1.2;
 }

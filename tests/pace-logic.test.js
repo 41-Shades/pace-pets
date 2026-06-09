@@ -296,9 +296,49 @@ describe("PacePetsPreviewControl", () => {
       remainingPercent: 90,
       timePercent: 50,
     });
+    expect(preview.forcedPercentPairForState("perfectZero")).toEqual({
+      remainingPercent: 0.4,
+      timePercent: 0.4,
+    });
     expect(preview.forcedPercentPairForState("singularity")).toEqual({
       remainingPercent: 0,
       timePercent: 0,
+    });
+    expect(
+      preview.forcedPreviewWindowForState("wellAhead", {
+        atMs: Date.parse("2026-05-25T12:00:00.000Z"),
+        durationMinutes: 300,
+      }),
+    ).toMatchObject({
+      percentPair: {
+        remainingPercent: 90,
+        timePercent: 50,
+      },
+      windowData: {
+        remainingPercent: 90,
+        resetsAt: "2026-05-25T14:30:00.000Z",
+        usedPercent: 10,
+        windowMinutes: 300,
+      },
+    });
+    const liveSplatPreview = preview.forcedPreviewWindowForState("splat", {
+      atMs: Date.parse("2026-05-25T12:00:00.000Z"),
+      durationMinutes: 300,
+      windowData: {
+        remainingPercent: 44,
+        resetsAt: "2026-05-25T13:00:00.000Z",
+        windowMinutes: 300,
+      },
+    });
+    expect(liveSplatPreview.percentPair).toEqual({
+      remainingPercent: 0,
+      timePercent: 20,
+    });
+    expect(liveSplatPreview.windowData).toMatchObject({
+      remainingPercent: 0,
+      resetsAt: "2026-05-25T13:00:00.000Z",
+      usedPercent: 100,
+      windowMinutes: 300,
     });
     expect(preview.previewBadgeMessage("ahead")).toEqual({
       stateKey: "ahead",

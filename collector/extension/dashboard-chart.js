@@ -9,7 +9,6 @@
   }
 
   const DEFAULT_CHART_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-  const MS_PER_MINUTE = 60 * 1000;
 
   function chartWindowRange(windowData) {
     return (
@@ -246,46 +245,12 @@
       );
     }
 
-    previewDurationMinutes(windowKey, windowData) {
-      const windowMinutes = Number(windowData?.windowMinutes);
-      if (Number.isFinite(windowMinutes) && windowMinutes > 0) {
-        return windowMinutes;
-      }
-
-      const specDurationMinutes = Number(
-        this.windowSpecs[windowKey]?.durationMinutes,
-      );
-      return Number.isFinite(specDurationMinutes) && specDurationMinutes > 0
-        ? specDurationMinutes
-        : DEFAULT_CHART_WINDOW_MS / MS_PER_MINUTE;
-    }
-
-    previewWindowData({ atMs, percentPair, summaryWindow, summaryWindowKey }) {
-      const timePercent = Math.max(
-        0,
-        Math.min(100, Number(percentPair?.timePercent) || 0),
-      );
-      const durationMinutes = this.previewDurationMinutes(
-        summaryWindowKey,
-        summaryWindow,
-      );
-      const durationMs = durationMinutes * MS_PER_MINUTE;
-      const resetMs = atMs + (durationMs * timePercent) / 100;
-      return {
-        remainingPercent: percentPair?.remainingPercent,
-        resetsAt: new Date(resetMs).toISOString(),
-        windowMinutes: durationMinutes,
-      };
-    }
-
-    renderPreview({ paceRatio, percentPair, summaryWindow, summaryWindowKey }) {
-      const atMs = Date.now();
-      const windowData = this.previewWindowData({
-        atMs,
-        percentPair,
-        summaryWindow,
-        summaryWindowKey,
-      });
+    renderPreview({
+      atMs = Date.now(),
+      paceRatio,
+      summaryWindowKey,
+      windowData,
+    }) {
       const points = CHART_DATA.previewPaceChartPoints(paceRatio, windowData, {
         atMs,
       });

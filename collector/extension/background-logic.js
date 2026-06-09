@@ -7,12 +7,6 @@
       "Codex usage window contract must load before background-logic.js.",
     );
   }
-  const USAGE_VALUES = root.CodexUsageValues;
-  if (!USAGE_VALUES) {
-    throw new Error(
-      "Codex usage value helpers must load before background-logic.js.",
-    );
-  }
   const INTEGRATION_CONFIG = root.CodexIntegrationConfig;
   if (!INTEGRATION_CONFIG) {
     throw new Error(
@@ -43,7 +37,6 @@
 
   const ATTENTION_BADGE_PREVIEW_STATE_KEY = "criticalBehind";
   const ATTENTION_BADGE_PREVIEW_BASE_STATE_KEY = "on";
-  const MS_PER_MINUTE = 60 * 1000;
   const ACCESS_TOKEN_PATHS = Object.freeze([
     Object.freeze(["accessToken"]),
     Object.freeze(["access_token"]),
@@ -104,19 +97,14 @@
 
   function badgePreviewWindowData(windowKey, stateKey, atMs) {
     const spec = USAGE_WINDOWS.WINDOW_SPECS[windowKey];
-    const percentPair = PREVIEW_CONTROL.forcedPercentPairForState(stateKey);
-    if (!spec || !percentPair) {
+    if (!spec) {
       return null;
     }
 
-    const durationMs = spec.durationMinutes * MS_PER_MINUTE;
-    const resetMs = atMs + (durationMs * percentPair.timePercent) / 100;
-    return Object.freeze({
-      remainingPercent: percentPair.remainingPercent,
-      resetsAt: new Date(resetMs).toISOString(),
-      usedPercent: USAGE_VALUES.percentComplement(percentPair.remainingPercent),
-      windowMinutes: spec.durationMinutes,
-    });
+    return PREVIEW_CONTROL.forcedPreviewWindowForState(stateKey, {
+      atMs,
+      durationMinutes: spec.durationMinutes,
+    })?.windowData;
   }
 
   function criticalBadgePreviewWindowKey(preferredWindowKey) {

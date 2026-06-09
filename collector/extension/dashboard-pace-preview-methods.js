@@ -3,10 +3,11 @@
 
   const DATA = globalThis.PacePetsDashboardPaceData;
   const Controller = globalThis.PacePetsDashboardPaceController;
+  const DASHBOARD_TIME = globalThis.PacePetsDashboardTime;
   const PREVIEW_CONTROL = globalThis.PacePetsPreviewControl;
-  if (!DATA || !Controller || !PREVIEW_CONTROL) {
+  if (!DATA || !Controller || !DASHBOARD_TIME || !PREVIEW_CONTROL) {
     throw new Error(
-      "Pace data, core, and preview controls must load before dashboard-pace-preview-methods.js.",
+      "Pace data, core, time, and preview controls must load before dashboard-pace-preview-methods.js.",
     );
   }
 
@@ -77,8 +78,22 @@
       );
     },
 
-    applyStateResetCountdown(state) {
-      if (state.key !== DATA.DASHBOARD_RAIL_STATES.singularity.key) {
+    applyPreviewResetTiming(state, previewWindow) {
+      const windowKey = this.selectedSupportedWindowKey();
+      const spec =
+        this.windowSpecs[windowKey] || this.windowSpecs[this.defaultWindowKey];
+      DASHBOARD_TIME.setResetParts(
+        this.elements,
+        previewWindow.windowData,
+        spec,
+        previewWindow.atMs,
+      );
+      this.elements.resetsIn.textContent = DASHBOARD_TIME.resetCountdown(
+        previewWindow.windowData?.resetsAt,
+        previewWindow.atMs,
+      );
+
+      if (state.key !== DATA.PACE_STATES.singularity.key) {
         return;
       }
 
@@ -199,6 +214,10 @@
       if (previewPaceRatio === null) {
         return;
       }
+      const previewWindow = this.previewWindowForState(state.key);
+      if (!previewWindow) {
+        return;
+      }
 
       this.setPaceLevel(state.className, { updateStateRailActive: false });
       this.elements.paceCard.classList.add("is-previewing");
@@ -208,10 +227,9 @@
       this.elements.paceRatioStat.hidden = false;
       this.elements.paceRatioValue.textContent =
         PacePetsLogic.formatPaceRatioValue(previewPaceRatio);
-      const percentPair = PREVIEW_CONTROL.forcedPercentPairForState(state.key);
-      this.setPreviewPercentPair(percentPair);
-      this.renderPreviewChart(state.key, previewPaceRatio, percentPair);
-      this.applyStateResetCountdown(state);
+      this.setPreviewPercentPair(previewWindow.percentPair);
+      this.renderPreviewChart(state.key, previewPaceRatio, previewWindow);
+      this.applyPreviewResetTiming(state, previewWindow);
       this.renderPaceAltRatio(state.previewRatioLabel || state.ratioLabel);
       this.updateTabTitle(state.title, previewPaceRatio);
       this.updateStateRailPreviewSelection(state.key);
@@ -236,26 +254,38 @@
     renderForcedPaceStateOverride() {
       const state = this.forcedPaceState();
       if (!state) {
+        this.lastForcedPaceStateKey = null;
         return false;
       }
 
       const forcedPaceRatio = this.forcedPaceRatioForState(state.key);
       if (forcedPaceRatio === null) {
+        this.lastForcedPaceStateKey = null;
+        return false;
+      }
+      const previewWindow = this.previewWindowForState(state.key);
+      if (!previewWindow) {
+        this.lastForcedPaceStateKey = null;
         return false;
       }
 
+      const forcedStateChanged = this.lastForcedPaceStateKey !== state.key;
+      this.lastForcedPaceStateKey = state.key;
       this.clearActivePacePreviewState();
-      this.setPaceLevel(state.className);
+      this.setPaceLevel(state.className, {
+        playSplatFallOnEntry: false,
+        replaySplatFall:
+          forcedStateChanged && state.key === DATA.PACE_STATES.splat.key,
+      });
       this.elements.paceTitle.textContent = state.title;
       this.elements.paceCopy.textContent = state.copy;
       this.elements.paceStats.hidden = false;
       this.elements.paceRatioStat.hidden = false;
       this.elements.paceRatioValue.textContent =
         PacePetsLogic.formatPaceRatioValue(forcedPaceRatio);
-      const percentPair = PREVIEW_CONTROL.forcedPercentPairForState(state.key);
-      this.setPreviewPercentPair(percentPair);
-      this.renderPreviewChart(state.key, forcedPaceRatio, percentPair);
-      this.applyStateResetCountdown(state);
+      this.setPreviewPercentPair(previewWindow.percentPair);
+      this.renderPreviewChart(state.key, forcedPaceRatio, previewWindow);
+      this.applyPreviewResetTiming(state, previewWindow);
       this.renderPaceAltRatio(state.previewRatioLabel || state.ratioLabel);
       this.updateTabTitle(state.title, forcedPaceRatio);
       return true;

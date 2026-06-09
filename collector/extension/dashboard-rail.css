@@ -27,6 +27,7 @@
   --state-chip-gap-y: 10px;
   --state-chip-width: 228px;
   --state-rail-top-inset: 28px;
+  --state-section-gap-y: 18px;
   --state-stack-max-width: calc(
     (var(--state-chip-width) * 2) + var(--state-chip-gap-x)
   );
@@ -51,6 +52,16 @@
 }
 
 .state-column {
+  align-content: start;
+  display: grid;
+  gap: var(--state-chip-gap-y);
+}
+
+.state-column-perfects {
+  gap: var(--state-section-gap-y);
+}
+
+.state-column-section {
   align-content: start;
   display: grid;
   gap: var(--state-chip-gap-y);

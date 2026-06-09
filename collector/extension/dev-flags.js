@@ -3,35 +3,40 @@
 
   const DEVELOPER_OPTIONS = globalThis.PacePetsDeveloperOptions;
   const CURRENT_MODE = globalThis.PacePetsDevFlagsCurrentMode;
+  const PACE_STATE_DATA = globalThis.PacePetsPaceStateData;
   const STORAGE = globalThis.CodexExtensionStorage;
-  if (!CURRENT_MODE || !DEVELOPER_OPTIONS || !STORAGE) {
+  if (!CURRENT_MODE || !DEVELOPER_OPTIONS || !PACE_STATE_DATA || !STORAGE) {
     throw new Error("Dev controls dependencies did not load.");
   }
 
+  function requiredElement(selector) {
+    const element = document.querySelector(selector);
+    if (!element) {
+      throw new Error(`Dev controls element ${selector} is missing.`);
+    }
+    return element;
+  }
+
+  function requiredElementById(id) {
+    return requiredElement(`#${id}`);
+  }
+
   const elements = {
-    currentModePanel: document.querySelector(".current-mode-panel"),
-    currentModeSummary: document.querySelector("#current-mode-summary"),
-    featurePreviewList: document.querySelector("#feature-preview-list"),
-    paceLevelList: document.querySelector("#pace-level-list"),
-    perfectStateList: document.querySelector("#perfect-state-list"),
-    resetAll: document.querySelector("#reset-all"),
-    statusMessage: document.querySelector("#status-message"),
+    currentModePanel: requiredElement(".current-mode-panel"),
+    currentModeSummary: requiredElementById("current-mode-summary"),
+    featurePreviewList: requiredElementById("feature-preview-list"),
+    resetAll: requiredElementById("reset-all"),
+    statusMessage: requiredElementById("status-message"),
   };
 
-  const PACE_LEVEL_STATE_KEYS = Object.freeze([
-    "wellAhead",
-    "strongAhead",
-    "ahead",
-    "on",
-    "behind",
-    "wellBehind",
-    "criticalBehind",
-  ]);
-  const PERFECT_STATE_KEYS = Object.freeze([
-    "sync",
-    "perfectZero",
-    "singularity",
-  ]);
+  const stateGroupElements = Object.freeze(
+    Object.fromEntries(
+      DEVELOPER_OPTIONS.FORCEABLE_PACE_STATE_GROUPS.map((group) => [
+        group.key,
+        requiredElementById(group.listElementId),
+      ]),
+    ),
+  );
   const BADGE_REFRESH_MESSAGE = Object.freeze({
     type: "pacePets.restoreBadge",
   });
@@ -130,35 +135,34 @@
     await requestBadgeRefresh();
   }
 
-  function stateOptionByKey(stateKey) {
-    return (
-      DEVELOPER_OPTIONS.FORCEABLE_PACE_STATE_OPTIONS.find(
-        (option) => option.key === stateKey,
-      ) || null
+  function paceStateByKey(stateKey) {
+    return PACE_STATE_DATA.PACE_STATES[stateKey] || null;
+  }
+
+  function stateLabelForKey(stateKey) {
+    return paceStateByKey(stateKey)?.title || "Unknown state";
+  }
+
+  function activeFeaturePreviewOptions() {
+    const options = currentDeveloperOptions();
+    return DEVELOPER_OPTIONS.FEATURE_PREVIEW_OPTIONS.filter((option) =>
+      Boolean(options[option.key]),
     );
   }
 
   function currentModeLabel() {
     const labels = [];
     if (currentForcedPaceStateKey) {
-      labels.push(
-        stateOptionByKey(currentForcedPaceStateKey)?.label || "Unknown state",
-      );
+      labels.push(stateLabelForKey(currentForcedPaceStateKey));
     }
-    if (currentCriticalBadgeWindow) {
-      labels.push("Brake hard badge");
-    }
-    if (currentManualRefreshLeadWindow) {
-      labels.push("Refresh link");
-    }
+    labels.push(...activeFeaturePreviewOptions().map((option) => option.label));
     return labels.length > 0 ? labels.join(" + ") : "Live data";
   }
 
   function currentModeDetail() {
     const activeCount =
       Number(Boolean(currentForcedPaceStateKey)) +
-      Number(currentCriticalBadgeWindow) +
-      Number(currentManualRefreshLeadWindow);
+      activeFeaturePreviewOptions().length;
     if (activeCount === 0) {
       return "Live data";
     }
@@ -168,8 +172,7 @@
   function hasActiveOverride() {
     return (
       Boolean(currentForcedPaceStateKey) ||
-      currentCriticalBadgeWindow ||
-      currentManualRefreshLeadWindow
+      activeFeaturePreviewOptions().length > 0
     );
   }
 
@@ -192,26 +195,24 @@
     return button;
   }
 
-  function optionRowsForKeys(stateKeys) {
-    return stateKeys
-      .map(stateOptionByKey)
-      .filter(Boolean)
-      .map((state) =>
-        optionButton({
-          labelText: state.label,
-          pressed: currentForcedPaceStateKey === state.key,
-          value: state.key,
-          onClick: async ({ pressed }) => {
-            const forcedPaceStateKey = pressed ? null : state.key;
-            await persistDeveloperOptions({ forcedPaceStateKey });
-            setStatus(
-              forcedPaceStateKey
-                ? `State override: ${state.label}.`
-                : "State override cleared.",
-            );
-          },
-        }),
-      );
+  function optionRowsForStateOptions(stateOptions) {
+    return stateOptions.map((option) => {
+      const label = stateLabelForKey(option.key);
+      return optionButton({
+        labelText: label,
+        pressed: currentForcedPaceStateKey === option.key,
+        value: option.key,
+        onClick: async ({ pressed }) => {
+          const forcedPaceStateKey = pressed ? null : option.key;
+          await persistDeveloperOptions({ forcedPaceStateKey });
+          setStatus(
+            forcedPaceStateKey
+              ? `State override: ${label}.`
+              : "State override cleared.",
+          );
+        },
+      });
+    });
   }
 
   function renderCurrentMode() {
@@ -226,48 +227,28 @@
   }
 
   function renderStateOverrideColumns() {
-    elements.paceLevelList.replaceChildren(
-      ...optionRowsForKeys(PACE_LEVEL_STATE_KEYS),
-    );
-    elements.perfectStateList.replaceChildren(
-      ...optionRowsForKeys(PERFECT_STATE_KEYS),
-    );
+    DEVELOPER_OPTIONS.FORCEABLE_PACE_STATE_GROUPS.forEach((group) => {
+      stateGroupElements[group.key].replaceChildren(
+        ...optionRowsForStateOptions(group.options),
+      );
+    });
   }
 
   function renderFeaturePreviews() {
+    const options = currentDeveloperOptions();
     elements.featurePreviewList.replaceChildren(
-      optionButton({
-        labelText: "Brake hard badge",
-        pressed: currentCriticalBadgeWindow,
-        value: "critical-badge-window",
-        onClick: async ({ pressed }) => {
-          const criticalBadgeWindow = !pressed;
-          await persistDeveloperOptions({
-            criticalBadgeWindow,
-          });
-          setStatus(
-            criticalBadgeWindow
-              ? "Brake hard badge forced."
-              : "Brake hard badge returned to live data.",
-          );
-        },
-      }),
-      optionButton({
-        labelText: "Refresh link",
-        pressed: currentManualRefreshLeadWindow,
-        value: "manual-refresh-lead-window",
-        onClick: async ({ pressed }) => {
-          const manualRefreshLeadWindow = !pressed;
-          await persistDeveloperOptions({
-            manualRefreshLeadWindow,
-          });
-          setStatus(
-            manualRefreshLeadWindow
-              ? "Refresh link forced."
-              : "Refresh link returned to timing.",
-          );
-        },
-      }),
+      ...DEVELOPER_OPTIONS.FEATURE_PREVIEW_OPTIONS.map((preview) =>
+        optionButton({
+          labelText: preview.label,
+          pressed: Boolean(options[preview.key]),
+          value: preview.value,
+          onClick: async ({ pressed }) => {
+            const enabled = !pressed;
+            await persistDeveloperOptions({ [preview.key]: enabled });
+            setStatus(enabled ? preview.enableStatus : preview.disableStatus);
+          },
+        }),
+      ),
     );
   }
 
@@ -281,9 +262,13 @@
 
   async function resetAllOverrides() {
     await persistDeveloperOptions({
-      criticalBadgeWindow: false,
+      ...Object.fromEntries(
+        DEVELOPER_OPTIONS.FEATURE_PREVIEW_OPTIONS.map((option) => [
+          option.key,
+          false,
+        ]),
+      ),
       forcedPaceStateKey: null,
-      manualRefreshLeadWindow: false,
     });
     setStatus("Dev overrides reset.");
   }
