@@ -32,8 +32,12 @@
     "perfectZero",
     "singularity",
   ]);
+  const BADGE_REFRESH_MESSAGE = Object.freeze({
+    type: "pacePets.restoreBadge",
+  });
 
   let currentForcedPaceStateKey = null;
+  let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
   let statusTimer = null;
 
@@ -46,9 +50,12 @@
   }
 
   function storageValue({
+    criticalBadgeWindow = false,
     forcedPaceStateKey,
     manualRefreshLeadWindow = false,
   } = {}) {
+    const normalizedCriticalBadgeWindow =
+      DEVELOPER_OPTIONS.normalizeCriticalBadgeWindow(criticalBadgeWindow);
     const normalizedForcedPaceStateKey =
       DEVELOPER_OPTIONS.normalizeForcedPaceStateKey(forcedPaceStateKey);
     const normalizedManualRefreshLeadWindow =
@@ -60,6 +67,9 @@
       value[DEVELOPER_OPTIONS.FORCED_PACE_STATE_KEY] =
         normalizedForcedPaceStateKey;
     }
+    if (normalizedCriticalBadgeWindow) {
+      value[DEVELOPER_OPTIONS.CRITICAL_BADGE_WINDOW_KEY] = true;
+    }
     if (normalizedManualRefreshLeadWindow) {
       value[DEVELOPER_OPTIONS.MANUAL_REFRESH_LEAD_WINDOW_KEY] = true;
     }
@@ -69,6 +79,7 @@
   function developerOptionsFromStorage(value) {
     const options = DEVELOPER_OPTIONS.normalizeDeveloperOptions(value);
     return {
+      criticalBadgeWindow: options.criticalBadgeWindow,
       forcedPaceStateKey: options.forcedPaceStateKey,
       manualRefreshLeadWindow: options.manualRefreshLeadWindow,
     };
@@ -92,8 +103,16 @@
     return developerOptionsFromStorage(normalizedValue);
   }
 
+  async function requestBadgeRefresh() {
+    const response = await chrome.runtime.sendMessage(BADGE_REFRESH_MESSAGE);
+    if (response?.ok !== true) {
+      throw new Error(response?.message || "Badge refresh did not run.");
+    }
+  }
+
   function currentDeveloperOptions() {
     return {
+      criticalBadgeWindow: currentCriticalBadgeWindow,
       forcedPaceStateKey: currentForcedPaceStateKey,
       manualRefreshLeadWindow: currentManualRefreshLeadWindow,
     };
@@ -104,9 +123,11 @@
       ...currentDeveloperOptions(),
       ...nextOptions,
     });
+    currentCriticalBadgeWindow = options.criticalBadgeWindow;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     render();
+    await requestBadgeRefresh();
   }
 
   function stateOptionByKey(stateKey) {
@@ -124,6 +145,9 @@
         stateOptionByKey(currentForcedPaceStateKey)?.label || "Unknown state",
       );
     }
+    if (currentCriticalBadgeWindow) {
+      labels.push("Brake hard badge");
+    }
     if (currentManualRefreshLeadWindow) {
       labels.push("Refresh link");
     }
@@ -133,6 +157,7 @@
   function currentModeDetail() {
     const activeCount =
       Number(Boolean(currentForcedPaceStateKey)) +
+      Number(currentCriticalBadgeWindow) +
       Number(currentManualRefreshLeadWindow);
     if (activeCount === 0) {
       return "Live data";
@@ -141,7 +166,11 @@
   }
 
   function hasActiveOverride() {
-    return Boolean(currentForcedPaceStateKey) || currentManualRefreshLeadWindow;
+    return (
+      Boolean(currentForcedPaceStateKey) ||
+      currentCriticalBadgeWindow ||
+      currentManualRefreshLeadWindow
+    );
   }
 
   function optionButton({ labelText, onClick, pressed, value }) {
@@ -208,6 +237,22 @@
   function renderFeaturePreviews() {
     elements.featurePreviewList.replaceChildren(
       optionButton({
+        labelText: "Brake hard badge",
+        pressed: currentCriticalBadgeWindow,
+        value: "critical-badge-window",
+        onClick: async ({ pressed }) => {
+          const criticalBadgeWindow = !pressed;
+          await persistDeveloperOptions({
+            criticalBadgeWindow,
+          });
+          setStatus(
+            criticalBadgeWindow
+              ? "Brake hard badge forced."
+              : "Brake hard badge returned to live data.",
+          );
+        },
+      }),
+      optionButton({
         labelText: "Refresh link",
         pressed: currentManualRefreshLeadWindow,
         value: "manual-refresh-lead-window",
@@ -236,6 +281,7 @@
 
   async function resetAllOverrides() {
     await persistDeveloperOptions({
+      criticalBadgeWindow: false,
       forcedPaceStateKey: null,
       manualRefreshLeadWindow: false,
     });
@@ -259,6 +305,7 @@
     const options = developerOptionsFromStorage(
       changes[DEVELOPER_OPTIONS.STORAGE_KEY]?.newValue,
     );
+    currentCriticalBadgeWindow = options.criticalBadgeWindow;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     render();
@@ -266,6 +313,7 @@
 
   readDeveloperOptions()
     .then((options) => {
+      currentCriticalBadgeWindow = options.criticalBadgeWindow;
       currentForcedPaceStateKey = options.forcedPaceStateKey;
       currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
       render();

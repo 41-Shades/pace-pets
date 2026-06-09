@@ -10,7 +10,6 @@ const DEVELOPER_OPTIONS_STORAGE_KEY = PacePetsDeveloperOptions.STORAGE_KEY;
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
-let currentForcedPaceStateKey = null;
 
 async function persistRefreshStatus(refreshState) {
   try {
@@ -50,42 +49,36 @@ async function readDeveloperOptions() {
     const items = await CodexExtensionStorage.getLocal(
       DEVELOPER_OPTIONS_STORAGE_KEY,
     );
-    const options = PacePetsDeveloperOptions.normalizeDeveloperOptions(
+    return PacePetsDeveloperOptions.normalizeDeveloperOptions(
       items?.[DEVELOPER_OPTIONS_STORAGE_KEY],
     );
-    currentForcedPaceStateKey = options.forcedPaceStateKey;
   } catch (error) {
     console.warn("Could not read developer options:", error);
-    currentForcedPaceStateKey = null;
+    return PacePetsDeveloperOptions.normalizeDeveloperOptions(null);
   }
-
-  return {
-    forcedPaceStateKey: currentForcedPaceStateKey,
-  };
 }
 
 async function createBadgeContextMenus() {
-  const selectedWindowKey = await selectedBadgeWindowKey();
   await PacePetsBackgroundContextMenu.createBadgeContextMenus(
-    selectedWindowKey,
+    await selectedBadgeWindowKey(),
   );
 }
 
 async function syncBadgeContextMenuSelection() {
-  const selectedWindowKey = await selectedBadgeWindowKey();
   await PacePetsBackgroundContextMenu.syncBadgeContextMenuSelection(
-    selectedWindowKey,
+    await selectedBadgeWindowKey(),
   );
 }
 
 async function updatePaceBadge(windows, history = null) {
-  const { forcedPaceStateKey } = await readDeveloperOptions();
-  const forcedBadgeState =
-    PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey);
+  const { criticalBadgeWindow, forcedPaceStateKey } =
+    await readDeveloperOptions();
   const preferredWindowKey = await selectedBadgeWindowKey();
   const badgeDisplay = PacePetsBackgroundLogic.badgeDisplayForWindows({
     atMs: Date.now(),
-    forcedBadgeState,
+    criticalBadgeWindow,
+    forcedBadgeState:
+      PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey),
     history,
     preferredWindowKey,
     windows,
@@ -107,9 +100,14 @@ async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
   const history = await CodexUsageHistory.readHistory();
   const sample = CodexUsageHistory.latestSample(history);
   if (!sample) {
-    const { forcedPaceStateKey } = await readDeveloperOptions();
-    const forcedBadgeState =
-      PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey);
+    const developerOptions = await readDeveloperOptions();
+    if (developerOptions.criticalBadgeWindow) {
+      await updatePaceBadge({});
+      return;
+    }
+    const forcedBadgeState = PacePetsPreviewControl.forcedBadgeState(
+      developerOptions.forcedPaceStateKey,
+    );
     if (forcedBadgeState) {
       await setBadge(
         forcedBadgeState.badgeText,
