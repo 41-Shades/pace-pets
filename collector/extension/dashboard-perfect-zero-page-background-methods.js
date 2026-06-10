@@ -2,17 +2,29 @@
   "use strict";
 
   const Controller = globalThis.PacePetsDashboardPaceController;
+  const ECLIPSE_ICON = globalThis.PacePetsDashboardEclipseIcon;
   const PERFECT_ZERO_SPACE = globalThis.PacePetsPerfectZeroSpace;
-  if (!Controller || !PERFECT_ZERO_SPACE) {
+  if (!Controller || !ECLIPSE_ICON || !PERFECT_ZERO_SPACE) {
     throw new Error(
-      "Pace core and perfect-zero scene must load before dashboard-perfect-zero-page-background-methods.js.",
+      "Pace core, eclipse icon, and perfect-zero scene must load before dashboard-perfect-zero-page-background-methods.js.",
     );
   }
 
   Object.assign(Controller.prototype, {
+    perfectZeroEclipseIconController() {
+      if (!this.perfectZeroEclipseIcon && this.elements.themeToggle) {
+        this.perfectZeroEclipseIcon = ECLIPSE_ICON.create(
+          this.elements.themeToggle,
+        );
+      }
+
+      return this.perfectZeroEclipseIcon;
+    },
+
     stopPerfectZeroPageBackgroundScene() {
       this.perfectZeroPageBackgroundScene?.stop();
       this.perfectZeroPageBackgroundScene = null;
+      this.perfectZeroEclipseIcon?.stop();
       if (this.elements.perfectZeroPageBackground) {
         this.elements.perfectZeroPageBackground.hidden = true;
       }
@@ -57,11 +69,13 @@
       }
 
       if (this.perfectZeroPageBackgroundScene) {
+        this.perfectZeroEclipseIconController()?.start();
         return true;
       }
 
       this.elements.perfectZeroPageBackground.hidden = false;
       document.body.classList.add("has-perfect-zero-page-background");
+      this.perfectZeroEclipseIconController()?.start();
       const scene = PERFECT_ZERO_SPACE.create(
         this.elements.shell,
         this.elements.perfectZeroPageBackground,

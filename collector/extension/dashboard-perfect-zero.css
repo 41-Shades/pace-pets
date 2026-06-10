@@ -16,9 +16,19 @@ body.has-perfect-zero-page-background {
   --theme-icon-disc: transparent;
   --theme-icon-hover: rgb(238 244 242 / 8%);
   --theme-icon-crescent: #cbd5e1;
+  --reset-dot-border: rgb(238 244 242 / 18%);
+  --reset-dot-start: rgb(102 207 192 / 72%);
+  --reset-dot-end: rgb(142 182 239 / 70%);
+  --reset-dot-end-border: rgb(238 244 242 / 20%);
+  --reset-track-dot: rgb(148 163 184 / 32%);
   --perfect-zero-space-panel-line: rgb(238 244 242 / 16%);
   --perfect-zero-space-line: rgb(238 244 242 / 24%);
   --perfect-zero-space-line-soft: rgb(238 244 242 / 14%);
+  --perfect-zero-space-text-primary: rgb(238 244 242 / 90%);
+  --perfect-zero-space-text-secondary: rgb(203 213 225 / 70%);
+  --perfect-zero-space-text-tertiary: rgb(148 163 184 / 56%);
+  --perfect-zero-space-text-faint: rgb(148 163 184 / 42%);
+  --perfect-zero-space-entry-duration: 9.5s;
 
   background: #020617;
 }
@@ -53,8 +63,190 @@ body.has-perfect-zero-page-background .theme-toggle {
   box-shadow: none;
 }
 
+body.has-perfect-zero-page-background .theme-toggle {
+  overflow: visible;
+}
+
 body.has-perfect-zero-page-background .theme-toggle:hover {
   background: transparent;
+}
+
+body.has-perfect-zero-page-background .theme-toggle-icon {
+  background: transparent;
+  height: 22px;
+  overflow: visible;
+  position: relative;
+  width: 22px;
+}
+
+body.has-perfect-zero-page-background .theme-toggle-icon::after {
+  content: none;
+}
+
+body.has-perfect-zero-page-background .theme-toggle-eclipse-canvas {
+  display: block;
+  height: 28px;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+}
+
+body.has-perfect-zero-page-background .brand-title h1 {
+  color: var(--perfect-zero-space-text-secondary);
+}
+
+body.has-perfect-zero-page-background .brand-title p,
+body.has-perfect-zero-page-background .collection-meta,
+body.has-perfect-zero-page-background .manual-refresh-button,
+body.has-perfect-zero-page-background .pace-copy p,
+body.has-perfect-zero-page-background .metric-title,
+body.has-perfect-zero-page-background .reset-date-value,
+body.has-perfect-zero-page-background #prior-reset-time,
+body.has-perfect-zero-page-background #scheduled-reset-time {
+  color: var(--perfect-zero-space-text-secondary);
+}
+
+body.has-perfect-zero-page-background .collection-status-label,
+body.has-perfect-zero-page-background .chart-meta h2,
+body.has-perfect-zero-page-background .metric-note,
+body.has-perfect-zero-page-background .pace-alt-ratio,
+body.has-perfect-zero-page-background .reset-note {
+  color: var(--perfect-zero-space-text-tertiary);
+}
+
+body.has-perfect-zero-page-background .pace-stat-label,
+body.has-perfect-zero-page-background .reset-label,
+body.has-perfect-zero-page-background .reset-details dt {
+  color: var(--perfect-zero-space-text-faint);
+}
+
+body.has-perfect-zero-page-background .metric-value {
+  color: color-mix(in srgb, var(--pace-color) 72%, var(--subhead));
+  opacity: 0.78;
+}
+
+body.has-perfect-zero-page-background .reset-progress-fill {
+  opacity: 0.72;
+}
+
+body.has-perfect-zero-page-background #resets-in {
+  color: var(--perfect-zero-space-text-secondary);
+  font-size: 2.05rem;
+  font-weight: 780;
+}
+
+body.has-perfect-zero-page-background .pace-card.pace-perfect-zero #pace-title,
+body.has-perfect-zero-page-background
+  .pace-card.pace-perfect-zero
+  #pace-ratio-value,
+body.has-perfect-zero-page-background .pace-card.pace-perfect-zero #pace-copy {
+  animation: perfect-zero-status-copy-fade
+    var(--perfect-zero-space-entry-duration) linear both;
+}
+
+body.has-perfect-zero-page-background .pace-card.pace-perfect-zero #pace-title,
+body.has-perfect-zero-page-background
+  .pace-card.pace-perfect-zero
+  #pace-ratio-value {
+  --perfect-zero-copy-entry-opacity: 0.14;
+  --perfect-zero-copy-mid-opacity: 0.44;
+  --perfect-zero-copy-rest-opacity: 0.74;
+}
+
+body.has-perfect-zero-page-background .pace-card.pace-perfect-zero #pace-copy {
+  --perfect-zero-copy-entry-opacity: 0.12;
+  --perfect-zero-copy-mid-opacity: 0.34;
+  --perfect-zero-copy-rest-opacity: 0.6;
+}
+
+body.has-perfect-zero-page-background .state-rail {
+  --state-chip-gap-x: 24px;
+  --state-chip-gap-y: 8px;
+  --state-chip-width: 214px;
+  --state-section-gap-y: 14px;
+}
+
+body.has-perfect-zero-page-background .state-column-title {
+  color: rgb(203 213 225 / 54%);
+  font-size: 0.7rem;
+  font-weight: 640;
+  padding-left: 4px;
+}
+
+body.has-perfect-zero-page-background .state-rail .state-chip {
+  --state-icon-size: 30px;
+  --state-image-size: 27px;
+  --state-meta-font-size: 0.62rem;
+  --state-ratio-font-size: 0.6rem;
+  --state-title-font-size: 0.86rem;
+
+  background: rgb(238 244 242 / 4%);
+  border-color: rgb(238 244 242 / 8%);
+  border-left-color: rgb(238 244 242 / 12%);
+  border-left-width: 2px;
+  box-shadow: none;
+  gap: 8px;
+  min-height: 46px;
+  padding: 6px 12px 6px 10px;
+}
+
+body.has-perfect-zero-page-background .state-chip:hover {
+  background: rgb(238 244 242 / 7%);
+  border-color: color-mix(
+    in srgb,
+    var(--pace-border) 28%,
+    var(--perfect-zero-space-line-soft)
+  );
+  border-left-color: color-mix(
+    in srgb,
+    var(--pace-border) 34%,
+    var(--perfect-zero-space-line-soft)
+  );
+}
+
+body.has-perfect-zero-page-background .state-rail .state-icon {
+  color: color-mix(in srgb, var(--pace-color) 45%, #eef4f2);
+  opacity: 0.62;
+}
+
+body.has-perfect-zero-page-background .state-rail .state-icon svg {
+  height: 22px;
+  stroke-width: 2.4;
+  width: 22px;
+}
+
+body.has-perfect-zero-page-background .state-rail .state-icon img {
+  filter: saturate(0.52) brightness(0.86);
+  opacity: 0.64;
+}
+
+body.has-perfect-zero-page-background
+  .state-rail
+  .state-chip.pace-splat
+  .state-icon
+  img {
+  filter: saturate(0.92) contrast(1.45) brightness(0.72)
+    drop-shadow(0 0 1px rgb(238 244 242 / 38%));
+  opacity: 0.96;
+  transform: translateY(1px) scale(1.68);
+}
+
+body.has-perfect-zero-page-background .state-rail .state-chip strong {
+  color: color-mix(in srgb, var(--pace-color) 42%, var(--subhead));
+  font-weight: 660;
+}
+
+body.has-perfect-zero-page-background .state-rail .state-chip .state-meta {
+  color: rgb(203 213 225 / 50%);
+}
+
+body.has-perfect-zero-page-background .state-rail .state-chip .state-ratio {
+  color: color-mix(in srgb, var(--pace-color) 38%, var(--subhead));
+  font-weight: 740;
+  opacity: 0.52;
 }
 
 body.has-perfect-zero-page-background .pace-critical-behind {
@@ -100,6 +292,12 @@ body.has-perfect-zero-page-background .pace-singularity {
   --pace-icon-bg: #000000;
 }
 
+body.has-perfect-zero-page-background .pace-splat {
+  --pace-color: #b8c3cf;
+  --pace-border: #64748b;
+  --pace-icon-bg: #303a42;
+}
+
 body.has-perfect-zero-page-background .pace-ahead {
   --pace-color: #91d9a6;
   --pace-border: #529d69;
@@ -119,9 +317,50 @@ body.has-perfect-zero-page-background .pace-muted {
   --pace-icon-bg: #263132;
 }
 
-body.has-perfect-zero-page-background .pace-card.pace-singularity .pace-copy p,
+body.has-perfect-zero-page-background .pace-card.pace-singularity .pace-copy p {
+  color: var(--perfect-zero-space-text-secondary);
+}
+
 body.has-perfect-zero-page-background
   .pace-card.pace-singularity
   .pace-alt-ratio {
-  color: var(--subhead);
+  color: var(--perfect-zero-space-text-tertiary);
+}
+
+@keyframes perfect-zero-status-copy-fade {
+  0%,
+  42% {
+    filter: blur(0.7px);
+    opacity: var(--perfect-zero-copy-entry-opacity, 0.25);
+    transform: translate3d(0, 1px, 0);
+  }
+
+  70% {
+    filter: blur(0.35px);
+    opacity: var(--perfect-zero-copy-mid-opacity, 0.4);
+    transform: translate3d(0, 0.35px, 0);
+  }
+
+  100% {
+    filter: blur(0);
+    opacity: var(--perfect-zero-copy-rest-opacity, 0.72);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.has-perfect-zero-page-background
+    .pace-card.pace-perfect-zero
+    #pace-title,
+  body.has-perfect-zero-page-background
+    .pace-card.pace-perfect-zero
+    #pace-ratio-value,
+  body.has-perfect-zero-page-background
+    .pace-card.pace-perfect-zero
+    #pace-copy {
+    animation: none;
+    filter: none;
+    opacity: var(--perfect-zero-copy-rest-opacity, 0.72);
+    transform: none;
+  }
 }
