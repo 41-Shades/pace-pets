@@ -7,29 +7,14 @@
       "Pace core must load before dashboard-train-roll-methods.js.",
     );
   }
+  const TRAIN_SMOKE = globalThis.PacePetsDashboardTrainSmoke;
+  if (!TRAIN_SMOKE) {
+    throw new Error(
+      "Train smoke must load before dashboard-train-roll-methods.js.",
+    );
+  }
 
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-  const TRAIN_SMOKE_ORIGIN = Object.freeze({
-    X_PX: 64,
-    Y_PX: 27,
-  });
-  const TRAIN_SMOKE_EMIT_INTERVAL_MS = 340;
-  const TRAIN_SMOKE_EMIT_JITTER_MS = Object.freeze([-35, 35]);
-  const TRAIN_SMOKE_INITIAL_ACTIVE_PUFFS = 12;
-  const TRAIN_SMOKE_MAX_CATCH_UP_EMISSIONS = 4;
-  const TRAIN_SMOKE_PUFF_POOL_SIZE = 20;
-  const TRAIN_SMOKE_SHAPES = Object.freeze(["round", "long", "tall"]);
-  const TRAIN_SMOKE_VARIATION = Object.freeze({
-    DURATION_MS: Object.freeze([4200, 5800]),
-    END_SCALE_PERCENT: Object.freeze([106, 122]),
-    END_X_PX: Object.freeze([-60, -44]),
-    END_Y_PX: Object.freeze([-27, -20]),
-    MID_X_PX: Object.freeze([-5, -1]),
-    MID_Y_PX: Object.freeze([-32, -24]),
-    OPACITY_PERCENT: Object.freeze([52, 72]),
-    SIZE_PX: Object.freeze([12, 19]),
-    TILT_DEG: Object.freeze([-12, 10]),
-  });
 
   function spanWithClass(className) {
     const element = document.createElement("span");
@@ -49,69 +34,6 @@
     return () => mediaQuery.removeListener?.(listener);
   }
 
-  function decimalString(value) {
-    return String(Math.round(value * 100) / 100);
-  }
-
-  function lerp(start, end, progress) {
-    return start + (end - start) * progress;
-  }
-
-  function randomItem(controller, items) {
-    return items[controller.randomIntegerInRange([0, items.length - 1])];
-  }
-
-  function smoothstep(progress) {
-    return progress * progress * (3 - 2 * progress);
-  }
-
-  function quadraticPoint(start, control, end, progress) {
-    const inverse = 1 - progress;
-    return (
-      inverse * inverse * start +
-      2 * inverse * progress * control +
-      progress * progress * end
-    );
-  }
-
-  function arcPosition(puffState, progress) {
-    return {
-      x: quadraticPoint(0, puffState.midX, puffState.endX, progress),
-      y: quadraticPoint(0, puffState.midY, puffState.endY, progress),
-    };
-  }
-
-  function opacityForProgress(progress, peakOpacity) {
-    if (progress < 0.16) {
-      return peakOpacity * smoothstep(progress / 0.16);
-    }
-    if (progress < 0.48) {
-      return peakOpacity;
-    }
-    if (progress < 0.7) {
-      return lerp(
-        peakOpacity,
-        peakOpacity * 0.66,
-        smoothstep((progress - 0.48) / 0.22),
-      );
-    }
-    if (progress < 0.86) {
-      return lerp(
-        peakOpacity * 0.66,
-        peakOpacity * 0.28,
-        smoothstep((progress - 0.7) / 0.16),
-      );
-    }
-    return lerp(peakOpacity * 0.28, 0, smoothstep((progress - 0.86) / 0.14));
-  }
-
-  function clearTrainSmokePuffVariation(puff) {
-    puff.removeAttribute("data-train-smoke-shape");
-    puff.style.removeProperty("--train-smoke-size");
-    puff.style.removeProperty("opacity");
-    puff.style.removeProperty("transform");
-  }
-
   Object.assign(Controller.prototype, {
     clearTrainRollEffectClasses(container) {
       container.classList.remove("has-pace-icon-effect-train-roll");
@@ -124,31 +46,40 @@
     nextTrainSmokeEmissionMs(timeMs) {
       return (
         timeMs +
-        TRAIN_SMOKE_EMIT_INTERVAL_MS +
-        this.randomIntegerInRange(TRAIN_SMOKE_EMIT_JITTER_MS)
+        TRAIN_SMOKE.EMIT_INTERVAL_MS +
+        this.randomIntegerInRange(TRAIN_SMOKE.EMIT_JITTER_MS)
       );
     },
 
     resetTrainSmokePuffState(puffState, startMs) {
-      const variation = TRAIN_SMOKE_VARIATION;
       const { puff } = puffState;
+      const variation = TRAIN_SMOKE.randomVariation(this);
+      const escape = TRAIN_SMOKE.randomEscape(this, puff, variation);
 
-      puff.dataset.trainSmokeShape = randomItem(this, TRAIN_SMOKE_SHAPES);
-      puff.style.setProperty(
-        "--train-smoke-size",
-        `${this.randomIntegerInRange(variation.SIZE_PX)}px`,
-      );
+      puff.dataset.trainSmokeShape = variation.shape;
+      puff.style.setProperty("--train-smoke-size", `${variation.sizePx}px`);
 
       Object.assign(puffState, {
-        durationMs: this.randomIntegerInRange(variation.DURATION_MS),
-        endScale: this.randomIntegerInRange(variation.END_SCALE_PERCENT) / 100,
-        endX: this.randomIntegerInRange(variation.END_X_PX),
-        endY: this.randomIntegerInRange(variation.END_Y_PX),
-        midX: this.randomIntegerInRange(variation.MID_X_PX),
-        midY: this.randomIntegerInRange(variation.MID_Y_PX),
-        opacity: this.randomIntegerInRange(variation.OPACITY_PERCENT) / 100,
+        baseDurationMs: variation.baseDurationMs,
+        durationMs: variation.baseDurationMs + escape.durationMs,
+        endScale: variation.endScale,
+        endX: variation.endX,
+        endY: variation.endY,
+        escapeEndScale: escape.endScale,
+        escapeEndX: escape.endX,
+        escapeEndY: escape.endY,
+        escapeFirstControlX: escape.firstControlX,
+        escapeFirstControlY: escape.firstControlY,
+        escapeSecondControlX: escape.secondControlX,
+        escapeSecondControlY: escape.secondControlY,
+        escapeSpinDeg: escape.spinDeg,
+        escapeTilt: escape.tilt,
+        isEscape: escape.isEscape,
+        midX: variation.midX,
+        midY: variation.midY,
+        opacity: variation.opacity,
         startMs,
-        tilt: this.randomIntegerInRange(variation.TILT_DEG),
+        tilt: variation.tilt,
         isActive: true,
       });
     },
@@ -181,24 +112,19 @@
         return;
       }
 
-      const progress = elapsedMs / puffState.durationMs;
-      const motionProgress = smoothstep(progress);
-      const position = arcPosition(puffState, motionProgress);
-      const opacity = opacityForProgress(progress, puffState.opacity);
-      const scale = lerp(0.58, puffState.endScale, motionProgress);
-      const rotate = lerp(puffState.tilt, 0, motionProgress);
+      const frame = TRAIN_SMOKE.puffFrameValues(puffState, elapsedMs);
 
-      puff.style.opacity = decimalString(opacity);
+      puff.style.opacity = TRAIN_SMOKE.decimalString(frame.opacity);
       const positionText = [
-        `${decimalString(position.x)}px`,
-        `${decimalString(position.y)}px`,
+        `${TRAIN_SMOKE.decimalString(frame.position.x)}px`,
+        `${TRAIN_SMOKE.decimalString(frame.position.y)}px`,
         "0",
       ].join(", ");
       puff.style.transform = [
         "translate(-50%, -50%)",
         `translate3d(${positionText})`,
-        `scale(${decimalString(scale)})`,
-        `rotate(${decimalString(rotate)}deg)`,
+        `scale(${TRAIN_SMOKE.decimalString(frame.scale)})`,
+        `rotate(${TRAIN_SMOKE.decimalString(frame.rotate)}deg)`,
       ].join(" ");
     },
 
@@ -214,7 +140,7 @@
       let emissions = 0;
       while (
         timeMs >= state.nextEmissionMs &&
-        emissions < TRAIN_SMOKE_MAX_CATCH_UP_EMISSIONS
+        emissions < TRAIN_SMOKE.MAX_CATCH_UP_EMISSIONS
       ) {
         const puffState = this.emitTrainSmokePuff(state, state.nextEmissionMs);
         if (puffState) {
@@ -252,29 +178,40 @@
 
       for (const puff of puffs) {
         const puffState = {
+          baseDurationMs: 0,
           durationMs: 0,
           endScale: 1,
           endX: 0,
           endY: 0,
+          escapeEndScale: 1,
+          escapeEndX: 0,
+          escapeEndY: 0,
+          escapeFirstControlX: 0,
+          escapeFirstControlY: 0,
+          escapeSecondControlX: 0,
+          escapeSecondControlY: 0,
+          escapeSpinDeg: 0,
+          escapeTilt: 0,
           midX: 0,
           midY: 0,
           opacity: 0,
           puff,
           startMs: 0,
           tilt: 0,
+          isEscape: false,
           isActive: false,
         };
 
         state.puffs.push(puffState);
-        state.cleanups.push(() => clearTrainSmokePuffVariation(puff));
+        state.cleanups.push(() => TRAIN_SMOKE.clearPuffVariation(puff));
       }
 
       const initialPuffs = Math.min(
-        TRAIN_SMOKE_INITIAL_ACTIVE_PUFFS,
+        TRAIN_SMOKE.INITIAL_ACTIVE_PUFFS,
         state.puffs.length,
       );
       for (let index = 0; index < initialPuffs; index += 1) {
-        const ageMs = (initialPuffs - index - 1) * TRAIN_SMOKE_EMIT_INTERVAL_MS;
+        const ageMs = (initialPuffs - index - 1) * TRAIN_SMOKE.EMIT_INTERVAL_MS;
         this.emitTrainSmokePuff(state, startedAtMs - ageMs);
       }
       state.nextEmissionMs = this.nextTrainSmokeEmissionMs(startedAtMs);
@@ -307,11 +244,11 @@
       smoke.setAttribute("aria-hidden", "true");
       smoke.style.setProperty(
         "--train-smoke-origin-x",
-        `${TRAIN_SMOKE_ORIGIN.X_PX}px`,
+        `${TRAIN_SMOKE.ORIGIN.X_PX}px`,
       );
       smoke.style.setProperty(
         "--train-smoke-origin-y",
-        `${TRAIN_SMOKE_ORIGIN.Y_PX}px`,
+        `${TRAIN_SMOKE.ORIGIN.Y_PX}px`,
       );
 
       container.classList.add("has-pace-icon-effect-train-roll");
@@ -319,7 +256,7 @@
         return;
       }
 
-      for (let index = 0; index < TRAIN_SMOKE_PUFF_POOL_SIZE; index += 1) {
+      for (let index = 0; index < TRAIN_SMOKE.PUFF_POOL_SIZE; index += 1) {
         smoke.append(spanWithClass("pace-train-cloud-puff"));
       }
       container.append(smoke);

@@ -122,6 +122,33 @@ status card briefly teeters and the ratio stat pops upward before both settle.
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects.
 
+For small organic or atmospheric effects, prefer a focused canvas renderer over
+stacked CSS gradients once the visual depends on noisy asymmetry, soft plumes,
+or nonuniform shimmer. CSS works well for flat legend treatment and simple
+transforms, but canvas is a better fit when a tiny control needs to feel
+photographic rather than geometric.
+
+The Perfect Zero dashboard theme control uses
+`collector/extension/dashboard-eclipse-icon.js` to render a total-eclipse icon
+while the full-page Perfect Zero background is active. The renderer appends a
+high-DPI canvas inside the existing theme button icon, draws a soft base corona,
+irregular plumes, low-alpha wispy rays, sparse rim glints, and then a crisp dark
+moon disk on top. The animation remains intentionally subtle: slow plume
+breathing, slight ray shimmer, and rare rim glints. Leaving Perfect Zero removes
+the canvas from the control.
+
+The `behind` / Ease up state uses a dashboard-only CSS effect in
+`collector/extension/dashboard-ease-up-methods.js` and
+`collector/extension/dashboard-ease-up.css`. The active status card visibly
+breathes with separate fill and border layers that bulge at the center while
+keeping the side endpoints anchored; a brief center contraction precedes the
+outward swell. The status icon, copy, and ratio use a smaller synchronized
+transform-only breath with slight vertical drift so they move with the shape
+without affecting layout. The icon layer renders short SVG mug-steam squiggles
+with an in-place shimmer.
+Same-state refreshes preserve the effect, reduced-motion settings disable the
+looping motion, and the legend rail remains static.
+
 The `sync` / Perfect Sync state keeps its existing gentle status-icon float and
 adds a dashboard-only yellow sunburst on the page background layer behind the
 main panel. The canvas renderer in
@@ -210,4 +237,6 @@ Each shipped pace state gets its image path from
 `collector/extension/themes/default/asset-manifest.js`. The muted state has no
 playful image. Perfect Zero also uses the dedicated canvas scene in
 `collector/extension/perfect-zero-space-scene.js` when the main dashboard card
-enters the Perfect Zero presentation.
+enters the Perfect Zero presentation, plus the dashboard-only canvas eclipse in
+`collector/extension/dashboard-eclipse-icon.js` for the theme control while the
+Perfect Zero page background is active.

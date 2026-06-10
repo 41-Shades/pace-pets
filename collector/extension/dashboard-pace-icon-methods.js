@@ -26,10 +26,41 @@
     const image = container.firstElementChild;
     return (
       DATA.USE_PLAYFUL_PACE_ICONS &&
+      container.classList.contains("is-playful") &&
       typeof state.playfulImage === "string" &&
       image?.tagName === "IMG" &&
       image.src === new URL(state.playfulImage, document.baseURI).href
     );
+  }
+
+  function hasMatchingPerfectZeroApertureIcon(container, state) {
+    const image = container.querySelector(":scope > .perfect-zero-cameo");
+    return (
+      container.classList.contains("is-perfect-zero-aperture") &&
+      typeof state.playfulImage === "string" &&
+      image?.tagName === "IMG" &&
+      image.src === new URL(state.playfulImage, document.baseURI).href
+    );
+  }
+
+  function hasMatchingRenderedPaceIcon(
+    container,
+    state,
+    { usePerfectZeroPageAperture },
+  ) {
+    if (usePerfectZeroPageAperture) {
+      return hasMatchingPerfectZeroApertureIcon(container, state);
+    }
+
+    if (container.classList.contains("is-perfect-zero-aperture")) {
+      return false;
+    }
+
+    if (DATA.USE_PLAYFUL_PACE_ICONS && state.playfulImage) {
+      return hasMatchingPlayfulPaceIcon(container, state);
+    }
+
+    return container.firstElementChild?.tagName === "SVG";
   }
 
   function paceIconOrigin(controller) {
@@ -40,25 +71,31 @@
     };
   }
 
-  function shouldPreservePaceIcon(controller, previousState, state) {
-    if (previousState.key !== state.key) {
+  function hasPaceIconEffect(state) {
+    return Boolean(DATA.PACE_ICON_EFFECTS_BY_STATE[state.key]);
+  }
+
+  function shouldPreservePaceIcon(
+    controller,
+    previousState,
+    state,
+    { playEntryAnimation, usePerfectZeroPageAperture },
+  ) {
+    if (previousState.key !== state.key || playEntryAnimation) {
       return false;
     }
 
-    if (state.key === DATA.PACE_STATES.sync.key) {
-      return hasMatchingPlayfulPaceIcon(controller.elements.paceIcon, state);
+    if (controller.paceIconEffectCleanups.has(controller.elements.paceIcon)) {
+      return true;
     }
 
-    if (DATA.PACE_ICON_EFFECTS_BY_STATE[state.key] === "push-stretch") {
-      return controller.paceIconEffectCleanups.has(
-        controller.elements.paceIcon,
-      );
+    if (hasPaceIconEffect(state)) {
+      return false;
     }
 
-    return (
-      DATA.PACE_ICON_EFFECTS_BY_STATE[state.key] === "slow-wobble" &&
-      controller.paceIconEffectCleanups.has(controller.elements.paceIcon)
-    );
+    return hasMatchingRenderedPaceIcon(controller.elements.paceIcon, state, {
+      usePerfectZeroPageAperture,
+    });
   }
 
   function setSplatFallIntro(container, shouldPlay) {
@@ -96,6 +133,46 @@
     }
   }
 
+  const DIRECT_PACE_ICON_EFFECT_RENDERERS = Object.freeze({
+    "brake-wobble": (controller, container) =>
+      controller.startBrakeWobbleEffect(container),
+    "ease-up": (controller, container) =>
+      controller.renderEaseUpEffect(container),
+    "push-stretch": (controller, container) =>
+      controller.renderPushStretchEffect(container),
+    "slow-wobble": (controller, container) =>
+      controller.startSlowWobbleEffect(container),
+    "speed-lines": (controller, container) =>
+      controller.renderSpeedLinesEffect(container),
+    "splat-fall": (controller, container) =>
+      controller.renderSplatFallEffect(container),
+    "train-roll": (controller, container) =>
+      controller.renderTrainRollEffect(container),
+  });
+
+  function renderDirectPaceIconEffect(controller, container, effect) {
+    const renderer = DIRECT_PACE_ICON_EFFECT_RENDERERS[effect];
+    if (!renderer) {
+      return false;
+    }
+
+    renderer(controller, container);
+    return true;
+  }
+
+  function renderLayeredPaceIconEffect(container, effect) {
+    const layer = document.createElement("span");
+    layer.className = `pace-icon-effect pace-icon-effect-${effect}`;
+    layer.setAttribute("aria-hidden", "true");
+    for (let puffIndex = 1; puffIndex <= 5; puffIndex += 1) {
+      const puff = document.createElement("span");
+      puff.className = `pace-smoke-puff pace-smoke-puff-${puffIndex}`;
+      layer.append(puff);
+    }
+    container.append(layer);
+    return layer;
+  }
+
   Object.assign(Controller.prototype, {
     clearBrakeWobbleEffectClasses(container) {
       container.classList.remove(
@@ -124,6 +201,7 @@
       }
 
       this.clearBrakeWobbleEffectClasses?.(container);
+      this.clearEaseUpEffectClasses?.(container);
       this.clearSlowWobbleEffectClasses?.(container);
       this.clearPushStretchEffectClasses?.(container);
       this.clearSprintSmokeEffectClasses?.(container);
@@ -138,46 +216,11 @@
         return;
       }
 
-      if (effect === "push-stretch") {
-        this.renderPushStretchEffect(container);
+      if (renderDirectPaceIconEffect(this, container, effect)) {
         return;
       }
 
-      if (effect === "brake-wobble") {
-        this.startBrakeWobbleEffect(container);
-        return;
-      }
-
-      if (effect === "slow-wobble") {
-        this.startSlowWobbleEffect(container);
-        return;
-      }
-
-      if (effect === "train-roll") {
-        this.renderTrainRollEffect(container);
-        return;
-      }
-
-      if (effect === "speed-lines") {
-        this.renderSpeedLinesEffect(container);
-        return;
-      }
-
-      if (effect === "splat-fall") {
-        this.renderSplatFallEffect(container);
-        return;
-      }
-
-      const layer = document.createElement("span");
-      layer.className = `pace-icon-effect pace-icon-effect-${effect}`;
-      layer.setAttribute("aria-hidden", "true");
-      for (let puffIndex = 1; puffIndex <= 5; puffIndex += 1) {
-        const puff = document.createElement("span");
-        puff.className = `pace-smoke-puff pace-smoke-puff-${puffIndex}`;
-        layer.append(puff);
-      }
-      container.append(layer);
-
+      const layer = renderLayeredPaceIconEffect(container, effect);
       if (effect === "sprint-smoke") {
         this.startSprintSmokeEffect(container, layer);
       }
@@ -278,11 +321,6 @@
     ) {
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const state = this.paceStateForClassName(level);
-      const preservePaceIcon = shouldPreservePaceIcon(
-        this,
-        previousState,
-        state,
-      );
       const playSplatFall = shouldPlaySplatFall({
         playOnEntry: playSplatFallOnEntry,
         previousState,
@@ -298,6 +336,15 @@
         this.setPerfectZeroPageBackgroundActive?.(
           state.key === DATA.PACE_STATES.perfectZero.key,
         ) ?? false;
+      const preservePaceIcon = shouldPreservePaceIcon(
+        this,
+        previousState,
+        state,
+        {
+          playEntryAnimation: playSplatFall,
+          usePerfectZeroPageAperture: pageBackgroundActive,
+        },
+      );
       if (!preservePaceIcon) {
         this.renderPaceIcon(this.elements.paceIcon, level, {
           useEffects: true,

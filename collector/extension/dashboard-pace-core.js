@@ -23,6 +23,7 @@
       Object.assign(this, options);
       this.paceIconEffectCleanups = new WeakMap();
       this.lastForcedPaceStateKey = null;
+      this.perfectZeroEclipseIcon = null;
       this.perfectZeroPageBackgroundScene = null;
       this.syncSunburstPageBackgroundScene = null;
       this.syncSunburstPageBackgroundStartedAtMs = null;

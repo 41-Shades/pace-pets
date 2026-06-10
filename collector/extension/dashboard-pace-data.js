@@ -57,6 +57,7 @@
       [PACE_STATES.strongAhead.key]: "push-stretch",
       [PACE_STATES.ahead.key]: "speed-lines",
       [PACE_STATES.on.key]: "train-roll",
+      [PACE_STATES.behind.key]: "ease-up",
       [PACE_STATES.wellBehind.key]: "slow-wobble",
       [PACE_STATES.criticalBehind.key]: "brake-wobble",
       [PACE_STATES.splat.key]: "splat-fall",

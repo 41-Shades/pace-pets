@@ -1,0 +1,340 @@
+@keyframes ease-up-card-border-exhale {
+  0%,
+  50%,
+  100% {
+    border-radius: 12px;
+    clip-path: polygon(
+      0 0,
+      11% 0,
+      28% 0,
+      50% 0,
+      72% 0,
+      89% 0,
+      100% 0,
+      100% 100%,
+      89% 100%,
+      72% 100%,
+      50% 100%,
+      28% 100%,
+      11% 100%,
+      0 100%
+    );
+    inset: 0;
+  }
+
+  24% {
+    border-radius: 10px;
+    clip-path: polygon(
+      0 0,
+      11% 2%,
+      28% 5%,
+      50% 7%,
+      72% 5%,
+      89% 2%,
+      100% 0,
+      100% 100%,
+      89% 98%,
+      72% 95%,
+      50% 93%,
+      28% 95%,
+      11% 98%,
+      0 100%
+    );
+    inset: 0;
+  }
+
+  74% {
+    border-radius: 34px / 62px;
+    clip-path: polygon(
+      0 8%,
+      11% 6%,
+      28% 2%,
+      50% 0,
+      72% 2%,
+      89% 6%,
+      100% 8%,
+      100% 92%,
+      89% 94%,
+      72% 98%,
+      50% 100%,
+      28% 98%,
+      11% 94%,
+      0 92%
+    );
+    inset: -10px 0;
+  }
+}
+
+@keyframes ease-up-card-fill-exhale {
+  0%,
+  50%,
+  100% {
+    border-radius: 11px;
+    clip-path: polygon(
+      0 0,
+      11% 0,
+      28% 0,
+      50% 0,
+      72% 0,
+      89% 0,
+      100% 0,
+      100% 100%,
+      89% 100%,
+      72% 100%,
+      50% 100%,
+      28% 100%,
+      11% 100%,
+      0 100%
+    );
+    inset: 1px;
+  }
+
+  24% {
+    border-radius: 10px;
+    clip-path: polygon(
+      0 0,
+      11% 2%,
+      28% 5%,
+      50% 7%,
+      72% 5%,
+      89% 2%,
+      100% 0,
+      100% 100%,
+      89% 98%,
+      72% 95%,
+      50% 93%,
+      28% 95%,
+      11% 98%,
+      0 100%
+    );
+    inset: 1px;
+  }
+
+  74% {
+    border-radius: 33px / 60px;
+    clip-path: polygon(
+      0 8%,
+      11% 6%,
+      28% 2%,
+      50% 0,
+      72% 2%,
+      89% 6%,
+      100% 8%,
+      100% 92%,
+      89% 94%,
+      72% 98%,
+      50% 100%,
+      28% 98%,
+      11% 94%,
+      0 92%
+    );
+    inset: -9px 1px;
+  }
+}
+
+@keyframes ease-up-content-exhale {
+  0%,
+  50%,
+  100% {
+    transform: scale(1);
+  }
+
+  24% {
+    transform: translateY(1px) scaleX(0.988) scaleY(0.965);
+  }
+
+  74% {
+    transform: translateY(-1px) scaleX(1.006) scaleY(1.032);
+  }
+}
+
+@keyframes ease-up-steam-shimmer {
+  0% {
+    opacity: var(--steam-low-opacity);
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  34% {
+    opacity: var(--steam-peak-opacity);
+    transform: translate3d(var(--steam-wiggle-x), var(--steam-wiggle-y), 0)
+      rotate(var(--steam-rotate));
+  }
+
+  68% {
+    opacity: var(--steam-mid-opacity);
+    transform: translate3d(
+        var(--steam-wiggle-x-alt),
+        var(--steam-wiggle-y-alt),
+        0
+      )
+      rotate(var(--steam-rotate-alt));
+  }
+
+  100% {
+    opacity: var(--steam-low-opacity);
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes ease-up-steam-layer-float {
+  0%,
+  100% {
+    transform: translateY(1px);
+  }
+
+  48% {
+    transform: translateY(-2px);
+  }
+}
+
+.pace-card.pace-behind.has-pace-ease-up-effect {
+  background: transparent;
+  border-color: transparent;
+  isolation: isolate;
+  position: relative;
+  transform-origin: 50% 50%;
+}
+
+.pace-card.pace-behind.has-pace-ease-up-effect::before,
+.pace-card.pace-behind.has-pace-ease-up-effect::after {
+  border-radius: 12px;
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  transform-origin: 50% 50%;
+  will-change: border-radius, clip-path, inset;
+}
+
+.pace-card.pace-behind.has-pace-ease-up-effect::before {
+  animation: ease-up-card-border-exhale 7.8s linear infinite;
+  background: color-mix(in srgb, var(--pace-border) 86%, var(--pace-color) 14%);
+  filter: drop-shadow(
+    0 4px 10px color-mix(in srgb, var(--pace-color) 10%, transparent)
+  );
+  inset: 0;
+  z-index: 0;
+}
+
+.pace-card.pace-behind.has-pace-ease-up-effect::after {
+  animation: ease-up-card-fill-exhale 7.8s linear infinite;
+  background: var(--pace-bg);
+  inset: 1px;
+  z-index: 1;
+}
+
+.pace-card.pace-behind.has-pace-ease-up-effect > * {
+  animation: ease-up-content-exhale 7.8s linear infinite;
+  position: relative;
+  transform-origin: 50% 50%;
+  will-change: transform;
+  z-index: 2;
+}
+
+.pace-icon.has-pace-icon-effect-ease-up {
+  --ease-up-steam-target-left: 68px;
+  --ease-up-steam-target-top: 67px;
+}
+
+.pace-icon.has-pace-icon-effect-ease-up .pace-ease-up-layer {
+  display: block;
+  z-index: auto;
+}
+
+.pace-ease-up-steam-layer {
+  animation: ease-up-steam-layer-float 5.8s ease-in-out infinite;
+  display: block;
+  height: 32px;
+  inset: auto;
+  left: calc(var(--ease-up-steam-target-left) - 15px);
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  top: calc(var(--ease-up-steam-target-top) - 21px);
+  width: 24px;
+  z-index: 0;
+}
+
+.pace-ease-up-steam {
+  --steam-duration: 3.6s;
+  --steam-low-opacity: 0.22;
+  --steam-mid-opacity: 0.72;
+  --steam-peak-opacity: 0.96;
+  --steam-rotate: -4deg;
+  --steam-rotate-alt: 3deg;
+  --steam-wiggle-x: 0.35px;
+  --steam-wiggle-x-alt: -0.25px;
+  --steam-wiggle-y: -2px;
+  --steam-wiggle-y-alt: 1.3px;
+
+  animation: ease-up-steam-shimmer var(--steam-duration) ease-in-out infinite;
+  animation-delay: var(--steam-delay);
+  fill: none;
+  filter: drop-shadow(0 0.5px 0 rgb(255 255 255 / 64%));
+  opacity: var(--steam-mid-opacity);
+  stroke: #94a3b8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.15;
+  transform-box: fill-box;
+  transform-origin: center;
+  vector-effect: non-scaling-stroke;
+  will-change: opacity, transform;
+}
+
+.pace-ease-up-steam-1 {
+  --steam-delay: -2.7s;
+}
+
+.pace-ease-up-steam-2 {
+  --steam-delay: -1.3s;
+  --steam-duration: 4s;
+  --steam-low-opacity: 0.18;
+  --steam-mid-opacity: 0.64;
+  --steam-peak-opacity: 0.9;
+  --steam-rotate: 4deg;
+  --steam-rotate-alt: -3deg;
+  --steam-wiggle-x: -0.3px;
+  --steam-wiggle-x-alt: 0.25px;
+  --steam-wiggle-y: 1.4px;
+  --steam-wiggle-y-alt: -1.9px;
+}
+
+.pace-ease-up-steam-3 {
+  --steam-delay: -0.2s;
+  --steam-duration: 3.3s;
+  --steam-low-opacity: 0.12;
+  --steam-mid-opacity: 0.5;
+  --steam-peak-opacity: 0.78;
+  --steam-rotate: -3deg;
+  --steam-rotate-alt: 4deg;
+  --steam-wiggle-x: 0.25px;
+  --steam-wiggle-x-alt: -0.35px;
+  --steam-wiggle-y: -1.4px;
+  --steam-wiggle-y-alt: 1.7px;
+
+  stroke-width: 1.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pace-card.pace-behind.has-pace-ease-up-effect,
+  .pace-card.pace-behind.has-pace-ease-up-effect > *,
+  .pace-ease-up-steam {
+    animation: none;
+  }
+
+  .pace-card.pace-behind.has-pace-ease-up-effect {
+    background: var(--pace-bg);
+    border-color: var(--pace-border);
+    transform: none;
+  }
+
+  .pace-card.pace-behind.has-pace-ease-up-effect::before,
+  .pace-card.pace-behind.has-pace-ease-up-effect::after {
+    animation: none;
+    display: none;
+  }
+
+  .pace-ease-up-layer {
+    display: none;
+  }
+}
