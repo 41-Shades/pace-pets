@@ -1,7 +1,6 @@
 ((root) => {
   "use strict";
 
-  const ACCENT_RAY_INNER_RADIUS = 0.035;
   const CORE_FINAL_OPACITY = 0.8;
   const TWO_PI = Math.PI * 2;
 
@@ -49,7 +48,7 @@
     context.arc(frame.origin.x, frame.origin.y, radius, 0, TWO_PI);
     context.fill();
 
-    const bloomRadius = frame.radius * mix(0.04, 0.2, coreProgress);
+    const bloomRadius = frame.radius * mix(0.06, 0.28, coreProgress);
     const bloom = context.createRadialGradient(
       frame.origin.x,
       frame.origin.y,
@@ -105,7 +104,9 @@
       tip.x,
       tip.y,
     );
-    const opacity = frame.opacity * ray.alpha * smooth(rayProgress);
+    const opacityMultiplier = frame.rayOpacityMultipliers?.get(ray) ?? 1;
+    const opacity =
+      frame.opacity * ray.alpha * opacityMultiplier * smooth(rayProgress);
 
     gradient.addColorStop(0, rgba(ray, 99, 0));
     gradient.addColorStop(
@@ -128,83 +129,7 @@
     context.restore();
   }
 
-  function accentRayProgress(frame, accentRay) {
-    const phase = (frame.timestamp / accentRay.cycleMs + accentRay.delay) % 1;
-    if (phase > accentRay.duration) {
-      return 0;
-    }
-    return Math.sin((phase / accentRay.duration) * Math.PI);
-  }
-
-  function drawAccentRay(context, frame, accentRay) {
-    const progress = accentRayProgress(frame, accentRay);
-    if (progress <= 0) {
-      return;
-    }
-
-    const innerRadius = frame.radius * ACCENT_RAY_INNER_RADIUS;
-    const outerRadius = frame.radius * accentRay.length;
-    const innerWidth = accentRay.width * 0.28;
-    const leftInner = pointFor(
-      frame.origin,
-      accentRay.angle - innerWidth,
-      innerRadius,
-    );
-    const rightInner = pointFor(
-      frame.origin,
-      accentRay.angle + innerWidth,
-      innerRadius,
-    );
-    const leftOuter = pointFor(
-      frame.origin,
-      accentRay.angle - accentRay.width,
-      outerRadius,
-    );
-    const rightOuter = pointFor(
-      frame.origin,
-      accentRay.angle + accentRay.width,
-      outerRadius,
-    );
-    const tip = pointFor(frame.origin, accentRay.angle, outerRadius);
-    const gradient = context.createLinearGradient(
-      frame.origin.x,
-      frame.origin.y,
-      tip.x,
-      tip.y,
-    );
-    const opacity = accentRay.alpha * progress;
-    gradient.addColorStop(0, rgba(accentRay, 99, opacity * 0.08));
-    gradient.addColorStop(0.16, rgba(accentRay, 97, opacity * 0.62));
-    gradient.addColorStop(
-      0.54,
-      rgba(accentRay, accentRay.bodyLightness, opacity),
-    );
-    gradient.addColorStop(0.86, rgba(accentRay, 96, opacity * 0.42));
-    gradient.addColorStop(1, rgba(accentRay, 98, 0));
-
-    context.save();
-    context.globalCompositeOperation = "screen";
-    context.filter = "blur(0.2px)";
-    context.fillStyle = gradient;
-    context.beginPath();
-    context.moveTo(leftInner.x, leftInner.y);
-    context.lineTo(leftOuter.x, leftOuter.y);
-    context.lineTo(rightOuter.x, rightOuter.y);
-    context.lineTo(rightInner.x, rightInner.y);
-    context.closePath();
-    context.fill();
-    context.strokeStyle = rgba(accentRay, 96, opacity * 0.64);
-    context.lineCap = "round";
-    context.lineWidth = 1.1;
-    context.beginPath();
-    context.moveTo(frame.origin.x, frame.origin.y);
-    context.lineTo(tip.x, tip.y);
-    context.stroke();
-    context.restore();
-  }
-
   root.PacePetsDashboardSyncSunburstDraw = Object.freeze({
-    drawAccentRay,
     drawCore,
     drawRay,
   });

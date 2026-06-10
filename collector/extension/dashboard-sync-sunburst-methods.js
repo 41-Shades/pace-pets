@@ -45,8 +45,13 @@
       this.syncSunburstPageBackgroundStartedAtMs ??= window.performance.now();
 
       if (this.syncSunburstPageBackgroundScene) {
-        this.syncSunburstPageBackgroundScene.updateOrigin(origin);
+        if (origin) {
+          this.syncSunburstPageBackgroundScene.updateOrigin(origin);
+        }
         return true;
+      }
+      if (!origin) {
+        return false;
       }
 
       const scene = SyncSunburst.create(origin, {

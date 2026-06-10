@@ -11,6 +11,12 @@
   }
 
   const { ICONS, SPILL_PROFILES } = CART_SPILL_DATA;
+  const PILE_BOTTOM_MARGIN_PX = 8;
+  const PILE_GLOBAL_CANDIDATE_COUNT = 4;
+  const PILE_LOCAL_RADIUS_SLOTS = 5;
+  const PILE_STACK_REUSE_CHANCE_PERCENT = 28;
+  const PILE_STACK_REUSE_RADIUS_SLOTS = 7;
+  const TOSS_LANDING_CONTROL_LIFT_PX = 36;
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
   function clamp(value, min, max) {
@@ -25,6 +31,10 @@
     return ICONS[controller.randomIntegerInRange([0, ICONS.length - 1])];
   }
 
+  function randomChance(controller, percent) {
+    return controller.randomIntegerInRange([1, 100]) <= percent;
+  }
+
   function createCartSpillImage(icon) {
     const image = document.createElement("img");
     image.alt = "";
@@ -36,34 +46,165 @@
     return image;
   }
 
-  function flightPath(controller, profile, start) {
+  function flightPath(controller, profile, start, landing) {
+    const endX = Math.round(landing.x - start.x);
+    const endY = Math.round(landing.y - start.y);
+    const lift = controller.randomIntegerInRange(profile.liftRangePx);
+    const firstX = Math.round(endX * 0.22);
+    const firstY = -lift;
+    const secondX = endX;
+    const secondY = Math.round(endY - TOSS_LANDING_CONTROL_LIFT_PX);
+
+    return (
+      `path("M 0 0 C ${firstX} ${firstY} ` +
+      `${secondX} ${secondY} ${endX} ${endY}")`
+    );
+  }
+
+  function pileSlotWidth(sizePx) {
+    return Math.round(sizePx * 0.7);
+  }
+
+  function pileStackStep(sizePx) {
+    return Math.round(sizePx * 0.38);
+  }
+
+  function pileSlotScore(controller, columns, slotIndex, tossSlotIndex) {
+    const stackIndex = columns.get(slotIndex) || 0;
+    const distancePenalty = Math.abs(slotIndex - tossSlotIndex) * 0.42;
+    const randomPenalty = controller.randomIntegerInRange([0, 18]) / 10;
+    return stackIndex * 2.35 + distancePenalty + randomPenalty;
+  }
+
+  function pileCandidateSlots(controller, tossSlotIndex, maxSlot) {
+    const slots = new Set();
+    for (
+      let offset = -PILE_LOCAL_RADIUS_SLOTS;
+      offset <= PILE_LOCAL_RADIUS_SLOTS;
+      offset += 1
+    ) {
+      slots.add(clamp(tossSlotIndex + offset, 0, maxSlot));
+    }
+
+    for (
+      let candidateIndex = 0;
+      candidateIndex < PILE_GLOBAL_CANDIDATE_COUNT;
+      candidateIndex += 1
+    ) {
+      slots.add(controller.randomIntegerInRange([0, maxSlot]));
+    }
+
+    return [...slots];
+  }
+
+  function occupiedPileSlots(columns, tossSlotIndex, maxSlot) {
+    return [...columns.keys()].filter(
+      (slotIndex) =>
+        slotIndex >= 0 &&
+        slotIndex <= maxSlot &&
+        Math.abs(slotIndex - tossSlotIndex) <= PILE_STACK_REUSE_RADIUS_SLOTS,
+    );
+  }
+
+  function choosePileSlot(controller, columns, tossSlotIndex, maxSlot) {
+    const occupiedSlots = occupiedPileSlots(columns, tossSlotIndex, maxSlot);
+    if (
+      occupiedSlots.length > 0 &&
+      randomChance(controller, PILE_STACK_REUSE_CHANCE_PERCENT)
+    ) {
+      return occupiedSlots[
+        controller.randomIntegerInRange([0, occupiedSlots.length - 1])
+      ];
+    }
+
+    let bestSlot = clamp(tossSlotIndex, 0, maxSlot);
+    let bestScore = Infinity;
+    for (const slotIndex of pileCandidateSlots(
+      controller,
+      tossSlotIndex,
+      maxSlot,
+    )) {
+      const score = pileSlotScore(
+        controller,
+        columns,
+        slotIndex,
+        tossSlotIndex,
+      );
+      if (score < bestScore) {
+        bestScore = score;
+        bestSlot = slotIndex;
+      }
+    }
+
+    return bestSlot;
+  }
+
+  function cartSpillTossEnd(controller, profile, start) {
     const direction = start.x > window.innerWidth * 0.62 ? -1 : 1;
     const targetX =
       start.x +
       direction * controller.randomIntegerInRange(profile.targetXRangePx);
     const targetY =
       start.y + controller.randomIntegerInRange(profile.targetYRangePx);
-    const endX = clamp(targetX, 18, window.innerWidth - 54) - start.x;
-    const endY = clamp(targetY, 18, window.innerHeight - 54) - start.y;
-    const lift = controller.randomIntegerInRange(profile.liftRangePx);
-    const firstX = Math.round(endX * 0.22);
-    const secondX = Math.round(endX * 0.72);
-    const firstY = Math.round(endY * 0.16 - lift);
-    const secondY = Math.round(endY * 0.68 - lift * 0.58);
 
-    return (
-      `path("M 0 0 C ${firstX} ${firstY} ` +
-      `${secondX} ${secondY} ${Math.round(endX)} ${Math.round(endY)}")`
-    );
+    return {
+      x: clamp(targetX, 18, window.innerWidth - 54),
+      y: clamp(targetY, 18, window.innerHeight - 54),
+    };
   }
 
-  function createCartSpillItem(controller, profile, origin, remainingMs) {
+  function cartSpillLanding(controller, state, tossEnd, sizePx) {
+    const columns = state.cartSpillPileColumns;
+    const slotWidth = pileSlotWidth(sizePx);
+    const maxSlot = Math.max(
+      0,
+      Math.floor((window.innerWidth - sizePx) / slotWidth),
+    );
+    const tossSlotIndex = Math.round(tossEnd.x / slotWidth);
+    const slotIndex = choosePileSlot(
+      controller,
+      columns,
+      tossSlotIndex,
+      maxSlot,
+    );
+    const stackIndex = columns.get(slotIndex) || 0;
+    columns.set(slotIndex, stackIndex + 1);
+    const halfSizePx = sizePx / 2;
+    const xJitter = controller.randomIntegerInRange([
+      -Math.round(sizePx * 0.22),
+      Math.round(sizePx * 0.22),
+    ]);
+    const yJitter = controller.randomIntegerInRange([-4, 3]);
+
+    return {
+      rotateDeg: controller.randomIntegerInRange([-18, 18]),
+      x: clamp(
+        slotIndex * slotWidth + halfSizePx + xJitter,
+        halfSizePx,
+        window.innerWidth - halfSizePx,
+      ),
+      y:
+        window.innerHeight -
+        PILE_BOTTOM_MARGIN_PX -
+        halfSizePx -
+        stackIndex * pileStackStep(sizePx) +
+        yJitter,
+    };
+  }
+
+  function createCartSpillItem(
+    controller,
+    profile,
+    { origin, remainingMs, state },
+  ) {
     const icon = randomIcon(controller);
     const sizePx = profile.sizePx;
     const start = {
       x: origin.x - sizePx / 2,
       y: origin.y - sizePx / 2,
     };
+    const tossEnd = cartSpillTossEnd(controller, profile, start);
+    const landing = cartSpillLanding(controller, state, tossEnd, sizePx);
     const delayMs = controller.randomIntegerInRange(profile.staggerRangeMs);
     const durationMs = Math.max(
       420,
@@ -72,6 +213,8 @@
         remainingMs + profile.flightTailMs - delayMs,
       ),
     );
+    const endScale =
+      controller.randomIntegerInRange(profile.endScaleRange) / 100;
     const spinDeg = controller.randomIntegerInRange(profile.spinRangeDeg);
     const piece = document.createElement("span");
     piece.className = "cart-spill-item";
@@ -80,7 +223,7 @@
     piece.style.top = `${Math.round(start.y)}px`;
     piece.style.setProperty(
       "offset-path",
-      flightPath(controller, profile, start),
+      flightPath(controller, profile, start, landing),
     );
     piece.style.setProperty("--cart-spill-delay", `${delayMs}ms`);
     piece.style.setProperty("--cart-spill-duration", `${durationMs}ms`);
@@ -89,29 +232,19 @@
       "--cart-spill-start-rotate",
       `${controller.randomIntegerInRange([-18, 18])}deg`,
     );
-    piece.style.setProperty(
-      "--cart-spill-mid-spin",
-      `${Math.round(spinDeg * 0.38)}deg`,
-    );
-    piece.style.setProperty(
-      "--cart-spill-late-spin",
-      `${Math.round(spinDeg * 0.72)}deg`,
-    );
     piece.style.setProperty("--cart-spill-spin", `${spinDeg}deg`);
-    piece.style.setProperty(
-      "--cart-spill-end-scale",
-      String(controller.randomIntegerInRange(profile.endScaleRange) / 100),
-    );
+    piece.style.setProperty("--cart-spill-end-scale", String(endScale));
     piece.append(createCartSpillImage(icon));
 
-    return { animationMs: durationMs + delayMs, piece };
-  }
-
-  function createOriginCrosshair() {
-    const crosshair = document.createElement("span");
-    crosshair.className = "cart-spill-origin-crosshair";
-    crosshair.setAttribute("aria-hidden", "true");
-    return crosshair;
+    return {
+      animationMs: durationMs + delayMs,
+      endScale,
+      icon,
+      landing,
+      piece,
+      sizePx,
+      spinDeg,
+    };
   }
 
   function cartSpillOrigin(container) {
@@ -135,6 +268,49 @@
     layer.remove();
   }
 
+  function pileLayer(state) {
+    if (!state.cartSpillPileLayer) {
+      const layer = document.createElement("span");
+      layer.className = "cart-spill-pile-layer";
+      layer.setAttribute("aria-hidden", "true");
+      document.body.append(layer);
+      state.cartSpillPileLayer = layer;
+    }
+
+    return state.cartSpillPileLayer;
+  }
+
+  function settleCartSpillItem(state, item) {
+    if (!state.isActive || !document.body) {
+      return;
+    }
+
+    const settled = document.createElement("span");
+    settled.className = "cart-spill-settled-item";
+    settled.dataset.cartSpillKind = item.icon.key;
+    settled.style.left = `${Math.round(item.landing.x - item.sizePx / 2)}px`;
+    settled.style.top = `${Math.round(item.landing.y - item.sizePx / 2)}px`;
+    settled.style.setProperty("--cart-spill-size", `${item.sizePx}px`);
+    settled.style.setProperty(
+      "--cart-spill-settle-rotate",
+      `${item.spinDeg}deg`,
+    );
+    settled.style.setProperty(
+      "--cart-spill-settle-scale",
+      String(item.endScale),
+    );
+
+    const image = document.createElement("img");
+    image.alt = "";
+    image.className = "cart-spill-settled-image";
+    image.decoding = "async";
+    image.loading = "eager";
+    image.src = item.icon.src;
+    image.setAttribute("aria-hidden", "true");
+    settled.append(image);
+    pileLayer(state).append(settled);
+  }
+
   Object.assign(Controller.prototype, {
     clearSlowCartSpillLayers(state) {
       for (const timer of state.cartSpillTimers) {
@@ -145,24 +321,9 @@
         layer.remove();
       }
       state.cartSpillLayers.clear();
-      state.cartSpillOriginCrosshair?.remove();
-      state.cartSpillOriginCrosshair = null;
-    },
-
-    showSlowCartSpillOrigin(container, state) {
-      if (!document.body) {
-        return;
-      }
-
-      const origin = cartSpillOrigin(container);
-      if (!origin) {
-        return;
-      }
-
-      if (!state.cartSpillOriginCrosshair) {
-        state.cartSpillOriginCrosshair = createOriginCrosshair();
-        container.append(state.cartSpillOriginCrosshair);
-      }
+      state.cartSpillPileLayer?.remove();
+      state.cartSpillPileLayer = null;
+      state.cartSpillPileColumns?.clear();
     },
 
     launchSlowCartSpill(container, state, { isExtreme = false } = {}) {
@@ -170,12 +331,12 @@
         return;
       }
 
-      const profile = isExtreme ? SPILL_PROFILES.extreme : SPILL_PROFILES.normal;
+      const mode = isExtreme ? "extreme" : "normal";
+      const profile = SPILL_PROFILES[mode];
       if (!profile || !document.body) {
         return;
       }
 
-      this.showSlowCartSpillOrigin(container, state);
       const launchDelayMs = this.randomIntegerInRange(profile.delayRangeMs);
       const launchTimer = window.setTimeout(() => {
         state.cartSpillTimers.delete(launchTimer);
@@ -196,14 +357,19 @@
         const pieceCount = this.randomIntegerInRange(profile.countRange);
         let longestAnimationMs = 0;
         for (let pieceIndex = 0; pieceIndex < pieceCount; pieceIndex += 1) {
-          const { animationMs, piece } = createCartSpillItem(
-            this,
-            profile,
+          const item = createCartSpillItem(this, profile, {
             origin,
             remainingMs,
-          );
-          longestAnimationMs = Math.max(longestAnimationMs, animationMs);
-          layer.append(piece);
+            state,
+          });
+          longestAnimationMs = Math.max(longestAnimationMs, item.animationMs);
+          layer.append(item.piece);
+          const settleTimer = window.setTimeout(() => {
+            state.cartSpillTimers.delete(settleTimer);
+            settleCartSpillItem(state, item);
+            item.piece.remove();
+          }, item.animationMs);
+          state.cartSpillTimers.add(settleTimer);
         }
 
         document.body.append(layer);

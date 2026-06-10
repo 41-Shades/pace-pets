@@ -4,27 +4,15 @@
     opacity: 1;
   }
 
-  84% {
-    opacity: 1;
-  }
-
   100% {
     offset-distance: 100%;
-    opacity: 0;
+    opacity: 1;
   }
 }
 
 @keyframes cart-spill-spin {
   0% {
-    transform: rotate(var(--cart-spill-start-rotate)) scale(0.74);
-  }
-
-  34% {
-    transform: rotate(var(--cart-spill-mid-spin)) scale(1.08);
-  }
-
-  70% {
-    transform: rotate(var(--cart-spill-late-spin)) scale(0.98);
+    transform: rotate(var(--cart-spill-start-rotate)) scale(0.96);
   }
 
   100% {
@@ -32,7 +20,8 @@
   }
 }
 
-.cart-spill-layer {
+.cart-spill-layer,
+.cart-spill-pile-layer {
   contain: layout style;
   height: 100vh;
   inset: 0;
@@ -43,71 +32,17 @@
   z-index: 1100;
 }
 
-.cart-spill-origin-crosshair {
-  --cart-spill-crosshair-color: rgb(239 68 68 / 78%);
-
-  display: block;
-  height: 106%;
-  left: -3%;
-  pointer-events: none;
-  position: absolute;
-  top: -3%;
-  transform-origin: 50% 62%;
-  width: 106%;
-  z-index: 3;
-}
-
-.cart-spill-origin-crosshair::before,
-.cart-spill-origin-crosshair::after {
-  background: var(--cart-spill-crosshair-color);
-  content: "";
-  display: block;
-  left: 55%;
-  position: absolute;
-  top: 52%;
-  transform: translate3d(-50%, -50%, 0);
-}
-
-.cart-spill-origin-crosshair::before {
-  height: 1px;
-  width: 28px;
-}
-
-.cart-spill-origin-crosshair::after {
-  height: 28px;
-  width: 1px;
-}
-
-.pace-icon.has-pace-icon-effect-slow-wobble .cart-spill-origin-crosshair {
-  animation: slow-down-idle-wobble 1450ms ease-in-out infinite;
-}
-
-.pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling
-  .cart-spill-origin-crosshair {
-  animation: slow-down-calm-rock var(--slow-wobble-duration)
-    cubic-bezier(0.36, 0, 0.18, 1) both;
-}
-
-.pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling-extreme
-  .cart-spill-origin-crosshair {
-  animation-name: slow-down-extreme-rock;
-}
-
 .cart-spill-item {
   --cart-spill-delay: 0ms;
   --cart-spill-duration: 2400ms;
   --cart-spill-end-scale: 0.92;
-  --cart-spill-late-spin: 280deg;
-  --cart-spill-mid-spin: 160deg;
   --cart-spill-size: 38px;
   --cart-spill-spin: 480deg;
   --cart-spill-start-rotate: 0deg;
 
-  animation: cart-spill-flight var(--cart-spill-duration)
-    cubic-bezier(0.16, 0.74, 0.24, 1) forwards;
+  animation: cart-spill-flight var(--cart-spill-duration) linear forwards;
   animation-delay: var(--cart-spill-delay);
   display: block;
-  filter: drop-shadow(0 3px 2px rgb(15 23 42 / 26%));
   height: var(--cart-spill-size);
   offset-anchor: 50% 50%;
   offset-distance: 0%;
@@ -121,29 +56,45 @@
 }
 
 .cart-spill-image {
-  animation: cart-spill-spin var(--cart-spill-duration) ease-in-out forwards;
+  animation: cart-spill-spin var(--cart-spill-duration) linear forwards;
   animation-delay: var(--cart-spill-delay);
   display: block;
   height: 100%;
   overflow: visible;
-  transform: rotate(var(--cart-spill-start-rotate)) scale(0.74);
+  transform: rotate(var(--cart-spill-start-rotate)) scale(0.96);
   transform-origin: 50% 50%;
   width: 100%;
   will-change: transform;
 }
 
-.cart-spill-item[data-cart-spill-kind="eggs"] {
-  filter: drop-shadow(0 2px 2px rgb(120 53 15 / 24%));
+.cart-spill-settled-item {
+  --cart-spill-settle-rotate: 0deg;
+  --cart-spill-settle-scale: 1;
+  --cart-spill-size: 36px;
+
+  display: block;
+  height: var(--cart-spill-size);
+  position: absolute;
+  transform: rotate(var(--cart-spill-settle-rotate))
+    scale(var(--cart-spill-settle-scale));
+  transform-origin: 50% 50%;
+  width: var(--cart-spill-size);
+}
+
+.cart-spill-settled-image {
+  display: block;
+  height: 100%;
+  width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cart-spill-layer {
+  .cart-spill-layer,
+  .cart-spill-pile-layer {
     display: none;
   }
 
   .cart-spill-item,
-  .cart-spill-image,
-  .cart-spill-origin-crosshair {
+  .cart-spill-image {
     animation: none;
     will-change: auto;
   }

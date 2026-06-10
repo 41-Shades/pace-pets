@@ -53,7 +53,50 @@
       );
     },
 
-    renderSummaryWindow(windowKey, windowData, windows = {}, history) {
+    applyPaceSummaryResetCountdown(paceSummary, applyPaceSummary) {
+      if (!applyPaceSummary || !paceSummary?.resetCountdownOverride) {
+        return;
+      }
+
+      this.elements.resetsIn.textContent = paceSummary.resetCountdownOverride;
+    },
+
+    renderSummaryWindowPace({
+      applyPaceSummary,
+      history,
+      resetCountdownDisplaysZero,
+      staleWindow,
+      timePercent,
+      windowData,
+      windowKey,
+      windows,
+    }) {
+      const paceSummary = this.paceView.renderPaceSummary(
+        windowData,
+        timePercent,
+        staleWindow,
+        this.alternatePaceRatioSummary(windows, windowKey),
+        {
+          applySummary: applyPaceSummary,
+          allowPerfectZero: PacePetsLogic.allowsPerfectZeroForWindow(
+            history,
+            windowKey,
+            windowData,
+          ),
+          resetCountdownDisplaysZero,
+          waitingForReadingText: this.STATUS_TEXT.waitingForReading,
+        },
+      );
+      this.applyPaceSummaryResetCountdown(paceSummary, applyPaceSummary);
+    },
+
+    renderSummaryWindow(
+      windowKey,
+      windowData,
+      windows = {},
+      history,
+      { applyPaceSummary = true } = {},
+    ) {
       const spec = this.WINDOW_SPECS[windowKey];
       const atMs = Date.now();
       const resetMs = this.DASHBOARD_TIME.dateMs(windowData?.resetsAt);
@@ -92,24 +135,16 @@
         windowData?.resetsAt,
         atMs,
       );
-      const paceSummary = this.paceView.renderPaceSummary(
-        windowData,
-        timePercent,
+      this.renderSummaryWindowPace({
+        applyPaceSummary,
+        history,
+        resetCountdownDisplaysZero,
         staleWindow,
-        this.alternatePaceRatioSummary(windows, windowKey),
-        {
-          allowPerfectZero: PacePetsLogic.allowsPerfectZeroForWindow(
-            history,
-            windowKey,
-            windowData,
-          ),
-          resetCountdownDisplaysZero,
-          waitingForReadingText: this.STATUS_TEXT.waitingForReading,
-        },
-      );
-      if (paceSummary?.resetCountdownOverride) {
-        this.elements.resetsIn.textContent = paceSummary.resetCountdownOverride;
-      }
+        timePercent,
+        windowData,
+        windowKey,
+        windows,
+      });
 
       return { hasResetTiming, staleWindow };
     },
@@ -138,13 +173,15 @@
       );
       this.DASHBOARD_TIME.setResetParts(this.elements, null, spec);
       this.elements.resetsIn.textContent = "--";
-      this.paceView.setPaceSummary({
-        copy: state.paceCopy,
-        level: this.paceView.mutedClassName,
-        remainingPercent: null,
-        timePercent: null,
-        title: state.paceTitle,
-      });
+      if (!this.paceView.hasForcedPaceStateOverride()) {
+        this.paceView.setPaceSummary({
+          copy: state.paceCopy,
+          level: this.paceView.mutedClassName,
+          remainingPercent: null,
+          timePercent: null,
+          title: state.paceTitle,
+        });
+      }
       this.usageChartView.setEmpty(state.chartCopy);
       this.setLatestMetadata(null, refreshStatus);
       this.paceView.refreshForcedPaceStateOverride();
@@ -170,13 +207,15 @@
       );
       this.DASHBOARD_TIME.setResetParts(this.elements, null, spec);
       this.elements.resetsIn.textContent = "--";
-      this.paceView.setPaceSummary({
-        copy: "Could not read local history.",
-        level: this.paceView.mutedClassName,
-        remainingPercent: null,
-        timePercent: null,
-        title: this.STATUS_TEXT.checkFailed,
-      });
+      if (!this.paceView.hasForcedPaceStateOverride()) {
+        this.paceView.setPaceSummary({
+          copy: "Could not read local history.",
+          level: this.paceView.mutedClassName,
+          remainingPercent: null,
+          timePercent: null,
+          title: this.STATUS_TEXT.checkFailed,
+        });
+      }
       this.usageChartView.setEmpty("Could not read local history.");
       this.paceView.refreshForcedPaceStateOverride();
     },
@@ -217,11 +256,14 @@
       const summaryWindowKey = this.selectedSupportedWindowKey();
       const summaryWindow = windows[summaryWindowKey];
       this.renderWindowControls(summaryWindowKey);
+      const forcedPaceStateOverrideActive =
+        this.paceView.hasForcedPaceStateOverride();
       const summaryState = this.renderSummaryWindow(
         summaryWindowKey,
         summaryWindow,
         windows,
         history,
+        { applyPaceSummary: !forcedPaceStateOverrideActive },
       );
       this.applyHistoryStatus(
         this.DASHBOARD_STATUS.historyCollectionStatusState({

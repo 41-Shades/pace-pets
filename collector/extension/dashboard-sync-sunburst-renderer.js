@@ -4,14 +4,21 @@
   const BODY_CLASS = "has-sync-sunburst-page-background";
   const CANVAS_CLASS = "sync-sunburst-page-background";
   const DRAW = root.PacePetsDashboardSyncSunburstDraw;
+  const TURNOVER = root.PacePetsDashboardSyncSunburstTurnover;
   if (!DRAW) {
     throw new Error(
       "Pace sync sunburst draw helpers must load before dashboard-sync-sunburst-renderer.js.",
     );
   }
+  if (!TURNOVER) {
+    throw new Error(
+      "Pace sync sunburst turnover helpers must load before dashboard-sync-sunburst-renderer.js.",
+    );
+  }
 
   const FINISHED_PROGRESS = 1;
   const GROW_DURATION_MS = 30000;
+  const INITIAL_EXTRA_RAY_COUNT = 30;
   const MAX_PIXEL_RATIO = 2;
   const PANEL_BG_END_OPACITY = 0;
   const PANEL_FADE_DELAY = 0.12;
@@ -20,8 +27,7 @@
   const RAY_FINAL_OPACITY = 0.64;
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const RAY_COUNT = 42;
-  const ACCENT_RAY_COUNT = 18;
-  const ACCENT_RAY_FRAME_DELAY_MS = 60;
+  const RAY_TURNOVER_FRAME_DELAY_MS = 33;
   const TWO_PI = Math.PI * 2;
 
   function clamp(value, min = 0, max = 1) {
@@ -36,12 +42,12 @@
     return from + (to - from) * amount;
   }
 
-  function noise(index, salt) {
-    return (Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453) % 1;
+  function randomBetween(from, to) {
+    return mix(from, to, Math.random());
   }
 
-  function positiveNoise(index, salt) {
-    return Math.abs(noise(index, salt));
+  function randomInteger(from, to) {
+    return Math.floor(randomBetween(from, to + 1));
   }
 
   function visibilityFor(progress) {
@@ -63,34 +69,39 @@
   }
 
   function rayKind(index) {
+    const isBroadAnchor = index % 6 === 0 || index % 11 === 4;
+    const isSpikeAnchor = index % 4 === 1 || index % 9 === 2;
+    const isBroad = isBroadAnchor ? Math.random() > 0.18 : Math.random() > 0.9;
     return {
-      isBroad: index % 6 === 0 || index % 11 === 4,
-      isSpike: index % 4 === 1 || index % 9 === 2,
+      isBroad,
+      isSpike:
+        !isBroad &&
+        (isSpikeAnchor ? Math.random() > 0.16 : Math.random() > 0.68),
     };
   }
 
-  function rayWidth(index, kind) {
+  function rayWidth(kind) {
     if (kind.isSpike) {
-      return mix(0.015, 0.03, positiveNoise(index, 2));
+      return randomBetween(0.014, 0.033);
     }
     if (kind.isBroad) {
-      return mix(0.07, 0.12, positiveNoise(index, 3));
+      return randomBetween(0.062, 0.13);
     }
-    return mix(0.035, 0.072, positiveNoise(index, 4));
+    return randomBetween(0.032, 0.078);
   }
 
-  function rayAlpha(index, kind) {
+  function rayAlpha(kind) {
     if (kind.isSpike) {
-      return mix(0.38, 0.68, positiveNoise(index, 5));
+      return randomBetween(0.34, 0.72);
     }
-    return mix(0.2, 0.48, positiveNoise(index, 6));
+    return randomBetween(0.18, 0.52);
   }
 
-  function rayDuration(index, kind) {
+  function rayDuration(kind) {
     if (kind.isSpike) {
-      return mix(0.52, 0.82, positiveNoise(index, 9));
+      return randomBetween(0.5, 0.84);
     }
-    return mix(0.62, 0.98, positiveNoise(index, 10));
+    return randomBetween(0.6, 1);
   }
 
   function rayLayer(kind) {
@@ -100,69 +111,62 @@
     return kind.isSpike ? 2 : 1;
   }
 
-  function rayLength(index, kind) {
+  function rayLength(kind) {
     if (kind.isSpike) {
-      return mix(0.94, 1.08, positiveNoise(index, 12));
+      return randomBetween(0.92, 1.1);
     }
     if (kind.isBroad) {
-      return mix(0.84, 1.02, positiveNoise(index, 13));
+      return randomBetween(0.82, 1.04);
     }
-    return mix(0.82, 1.04, positiveNoise(index, 14));
+    return randomBetween(0.8, 1.06);
   }
 
-  function rayTone(index) {
+  function rayTone() {
     return {
-      bodyLightness: mix(62, 76, positiveNoise(index, 16)),
-      highlightLightness: mix(88, 98, positiveNoise(index, 17)),
-      tipLightness: mix(92, 99, positiveNoise(index, 18)),
+      bodyLightness: randomBetween(62, 78),
+      highlightLightness: randomBetween(88, 99),
+      tipLightness: randomBetween(92, 99),
     };
   }
 
-  function rayProfile(index) {
+  function rayProfile(index, rayCount, angleOffset) {
     const kind = rayKind(index);
-    const tone = rayTone(index);
+    const tone = rayTone();
     return Object.freeze({
-      alpha: rayAlpha(index, kind),
+      alpha: rayAlpha(kind),
       angle:
-        (index / RAY_COUNT) * TWO_PI +
-        mix(-0.07, 0.07, positiveNoise(index, 1)),
-      blur: kind.isBroad ? mix(2, 6, positiveNoise(index, 7)) : 0,
-      delay: mix(0, 0.3, positiveNoise(index, 8)),
-      duration: rayDuration(index, kind),
-      hue: mix(45, 56, positiveNoise(index, 11)),
+        (index / rayCount) * TWO_PI + angleOffset + randomBetween(-0.08, 0.08),
+      blur: kind.isBroad ? randomBetween(2, 6) : 0,
+      delay: randomBetween(0, 0.3),
+      duration: rayDuration(kind),
+      hue: randomBetween(45, 56),
       ...tone,
       innerWidth: kind.isSpike ? 0.12 : 0.24,
       layer: rayLayer(kind),
-      length: rayLength(index, kind),
-      saturation: mix(76, 100, positiveNoise(index, 15)),
-      width: rayWidth(index, kind),
+      length: rayLength(kind),
+      saturation: randomBetween(76, 100),
+      width: rayWidth(kind),
     });
   }
 
-  const RAYS = Object.freeze(
-    Array.from({ length: RAY_COUNT }, (_, index) => rayProfile(index)).sort(
-      (first, second) => first.layer - second.layer,
-    ),
-  );
-
-  function accentRay(index) {
-    return Object.freeze({
-      alpha: mix(0.52, 0.86, positiveNoise(index, 19)),
-      angle: mix(-0.18, 0.64, positiveNoise(index, 20)) * TWO_PI,
-      bodyLightness: mix(76, 88, positiveNoise(index, 21)),
-      cycleMs: mix(2800, 5200, positiveNoise(index, 22)),
-      delay: mix(0, 0.92, positiveNoise(index, 23)),
-      duration: mix(0.2, 0.3, positiveNoise(index, 24)),
-      hue: mix(45, 55, positiveNoise(index, 25)),
-      length: mix(0.42, 1.02, positiveNoise(index, 26)),
-      saturation: mix(82, 100, positiveNoise(index, 27)),
-      width: mix(0.008, 0.018, positiveNoise(index, 28)),
-    });
+  function createRays() {
+    const rayCount = randomInteger(
+      RAY_COUNT - 4 + INITIAL_EXTRA_RAY_COUNT,
+      RAY_COUNT + 4 + INITIAL_EXTRA_RAY_COUNT,
+    );
+    const angleOffset = randomBetween(0, TWO_PI);
+    return Array.from({ length: rayCount }, (_, index) =>
+      rayProfile(index, rayCount, angleOffset),
+    ).sort((first, second) => first.layer - second.layer);
   }
 
-  const ACCENT_RAYS = Object.freeze(
-    Array.from({ length: ACCENT_RAY_COUNT }, (_, index) => accentRay(index)),
-  );
+  function createReplacementRay() {
+    return rayProfile(
+      randomInteger(0, RAY_COUNT - 1),
+      RAY_COUNT,
+      randomBetween(0, TWO_PI),
+    );
+  }
 
   function viewportSize(canvas) {
     const rect = canvas.getBoundingClientRect();
@@ -213,8 +217,10 @@
         startComplete ||
         (startedAtMs !== null && now - startedAtMs >= GROW_DURATION_MS);
       this.origin = origin;
+      this.rayTurnover = TURNOVER.create();
+      this.rayTurnoverTimerId = null;
+      this.rays = createRays();
       this.reducedMotionMedia = root.matchMedia?.(REDUCED_MOTION_QUERY);
-      this.accentRayTimerId = null;
       this.startTimeMs = startComplete ? now - GROW_DURATION_MS : startedAtMs;
       this.stopped = false;
       this.handleMotionChange = this.handleMotionChange.bind(this);
@@ -239,6 +245,7 @@
       const size = configureCanvas(this.canvas, this.context);
       const activeProgress =
         progress === null ? this.progressAt(timestamp) : progress;
+      const isFinishedFrame = activeProgress >= FINISHED_PROGRESS;
       const uiProgress = panelFadeFor(activeProgress);
       this.context.clearRect(0, 0, size.width, size.height);
       root.document.body.style.setProperty(
@@ -254,18 +261,22 @@
         origin: this.origin,
         progress: activeProgress,
         radius: sunburstRadius(size),
+        rayOpacityMultipliers:
+          activeProgress >= 0.5 && !this.reducedMotionMedia?.matches
+            ? this.rayTurnover.opacities(
+                timestamp,
+                this.rays,
+                createReplacementRay,
+                activeProgress,
+              )
+            : null,
         timestamp,
       };
-      for (const ray of RAYS) {
+      for (const ray of this.rays) {
         DRAW.drawRay(this.context, frame, ray);
       }
       DRAW.drawCore(this.context, frame);
-      if (this.finished && !this.reducedMotionMedia?.matches) {
-        for (const accentRayFrame of ACCENT_RAYS) {
-          DRAW.drawAccentRay(this.context, frame, accentRayFrame);
-        }
-      }
-      this.finished = activeProgress >= FINISHED_PROGRESS;
+      this.finished = isFinishedFrame;
     }
 
     renderFrame(timestamp) {
@@ -284,7 +295,7 @@
       if (
         this.stopped ||
         this.animationFrameId !== null ||
-        this.accentRayTimerId !== null ||
+        this.rayTurnoverTimerId !== null ||
         root.document.hidden ||
         this.reducedMotionMedia?.matches
       ) {
@@ -294,10 +305,10 @@
         this.animationFrameId = root.requestAnimationFrame(this.renderFrame);
         return;
       }
-      this.accentRayTimerId = root.setTimeout(() => {
-        this.accentRayTimerId = null;
+      this.rayTurnoverTimerId = root.setTimeout(() => {
+        this.rayTurnoverTimerId = null;
         this.animationFrameId = root.requestAnimationFrame(this.renderFrame);
-      }, ACCENT_RAY_FRAME_DELAY_MS);
+      }, RAY_TURNOVER_FRAME_DELAY_MS);
     }
 
     handleMotionChange() {
@@ -315,8 +326,8 @@
           root.cancelAnimationFrame(this.animationFrameId);
           this.animationFrameId = null;
         }
-        root.clearTimeout(this.accentRayTimerId);
-        this.accentRayTimerId = null;
+        root.clearTimeout(this.rayTurnoverTimerId);
+        this.rayTurnoverTimerId = null;
         return;
       }
       this.requestFrame();
@@ -350,7 +361,7 @@
       if (this.animationFrameId !== null) {
         root.cancelAnimationFrame(this.animationFrameId);
       }
-      root.clearTimeout(this.accentRayTimerId);
+      root.clearTimeout(this.rayTurnoverTimerId);
       this.reducedMotionMedia?.removeEventListener?.(
         "change",
         this.handleMotionChange,

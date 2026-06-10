@@ -11,6 +11,28 @@
   }
 
   Object.assign(Controller.prototype, {
+    forcedPaceStatePreview() {
+      const state = this.forcedPaceState();
+      if (!state) {
+        return null;
+      }
+
+      const forcedPaceRatio = this.forcedPaceRatioForState(state.key);
+      if (forcedPaceRatio === null) {
+        return null;
+      }
+      const previewWindow = this.previewWindowForState(state.key);
+      if (!previewWindow) {
+        return null;
+      }
+
+      return { forcedPaceRatio, previewWindow, state };
+    },
+
+    hasForcedPaceStateOverride() {
+      return this.forcedPaceStatePreview() !== null;
+    },
+
     applyPreviewResetTiming(state, previewWindow) {
       const windowKey = this.selectedSupportedWindowKey();
       const spec =
@@ -39,22 +61,12 @@
     },
 
     renderForcedPaceStateOverride() {
-      const state = this.forcedPaceState();
-      if (!state) {
+      const preview = this.forcedPaceStatePreview();
+      if (!preview) {
         this.lastForcedPaceStateKey = null;
         return false;
       }
-
-      const forcedPaceRatio = this.forcedPaceRatioForState(state.key);
-      if (forcedPaceRatio === null) {
-        this.lastForcedPaceStateKey = null;
-        return false;
-      }
-      const previewWindow = this.previewWindowForState(state.key);
-      if (!previewWindow) {
-        this.lastForcedPaceStateKey = null;
-        return false;
-      }
+      const { forcedPaceRatio, previewWindow, state } = preview;
 
       const forcedStateChanged = this.lastForcedPaceStateKey !== state.key;
       this.lastForcedPaceStateKey = state.key;

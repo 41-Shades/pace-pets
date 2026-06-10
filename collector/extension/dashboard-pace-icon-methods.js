@@ -22,6 +22,74 @@
     );
   }
 
+  function hasMatchingPlayfulPaceIcon(container, state) {
+    const image = container.firstElementChild;
+    return (
+      DATA.USE_PLAYFUL_PACE_ICONS &&
+      typeof state.playfulImage === "string" &&
+      image?.tagName === "IMG" &&
+      image.src === new URL(state.playfulImage, document.baseURI).href
+    );
+  }
+
+  function paceIconOrigin(controller) {
+    const iconRect = controller.elements.paceIcon.getBoundingClientRect();
+    return {
+      x: iconRect.left + iconRect.width / 2,
+      y: iconRect.top + iconRect.height / 2,
+    };
+  }
+
+  function shouldPreservePaceIcon(controller, previousState, state) {
+    if (previousState.key !== state.key) {
+      return false;
+    }
+
+    if (state.key === DATA.PACE_STATES.sync.key) {
+      return hasMatchingPlayfulPaceIcon(controller.elements.paceIcon, state);
+    }
+
+    return (
+      DATA.PACE_ICON_EFFECTS_BY_STATE[state.key] === "slow-wobble" &&
+      controller.paceIconEffectCleanups.has(controller.elements.paceIcon)
+    );
+  }
+
+  function setSplatFallIntro(container, shouldPlay) {
+    if (shouldPlay) {
+      container.dataset.splatFallIntro = "true";
+      return;
+    }
+
+    delete container.dataset.splatFallIntro;
+  }
+
+  function setSyncSunburstPageBackground(controller, previousState, state) {
+    if (state.key !== DATA.PACE_STATES.sync.key) {
+      controller.setSyncSunburstPageBackgroundActive?.(false);
+      return;
+    }
+
+    const sceneActive = Boolean(controller.syncSunburstPageBackgroundScene);
+    const shouldUpdateOrigin = previousState.key !== state.key || !sceneActive;
+    controller.setSyncSunburstPageBackgroundActive?.(
+      true,
+      shouldUpdateOrigin ? paceIconOrigin(controller) : null,
+    );
+  }
+
+  function updatePaceLevelSideEffects(
+    controller,
+    { level, state, updateStateRailActive, updateTabIcon },
+  ) {
+    if (updateStateRailActive) {
+      controller.updateStateRailActiveSelection?.(state.key);
+    }
+    if (updateTabIcon) {
+      controller.updateFavicon(level);
+    }
+  }
+
   Object.assign(Controller.prototype, {
     clearBrakeWobbleEffectClasses(container) {
       container.classList.remove(
@@ -49,153 +117,13 @@
         return;
       }
 
-      this.clearBrakeWobbleEffectClasses(container);
-      this.clearSlowWobbleEffectClasses(container);
-      this.clearPushStretchEffectClasses(container);
-      this.clearSprintSmokeEffectClasses(container);
+      this.clearBrakeWobbleEffectClasses?.(container);
+      this.clearSlowWobbleEffectClasses?.(container);
+      this.clearPushStretchEffectClasses?.(container);
+      this.clearSprintSmokeEffectClasses?.(container);
       this.clearSplatFallEffectClasses?.(container);
-      this.clearSpeedLinesEffectClasses(container);
-      this.clearTrainRollEffectClasses(container);
-    },
-
-    scheduleBrakeWobbleBurst(container, state, delayRange) {
-      state.delayTimer = window.setTimeout(() => {
-        state.delayTimer = null;
-        this.runBrakeWobbleBurst(container, state);
-      }, this.randomIntegerInRange(delayRange));
-    },
-
-    clearBrakeWobbleBurstClasses(container) {
-      container.classList.remove("is-brake-wobbling");
-      container.removeAttribute("data-brake-wobble-shakes");
-      container.removeAttribute("data-brake-wobble-range");
-    },
-
-    brakeWobbleBurstState(state) {
-      const shakeCount = this.randomIntegerInRange([1, 3]);
-      const isWideBurst = state.burstsUntilWide <= 1;
-      const isEscapeBurst = isWideBurst && state.nextWideBurstEscapes;
-      if (isWideBurst) {
-        state.nextWideBurstEscapes = !state.nextWideBurstEscapes;
-      }
-      state.burstsUntilWide = isWideBurst
-        ? this.randomIntegerInRange(DATA.BRAKE_WOBBLE_WIDE_BURST_INTERVAL_RANGE)
-        : state.burstsUntilWide - 1;
-      return { isEscapeBurst, isWideBurst, shakeCount };
-    },
-
-    runBrakeWobbleBurst(container, state) {
-      if (!state.isActive) {
-        return;
-      }
-
-      const burst = this.brakeWobbleBurstState(state);
-      const durationMs =
-        DATA.BRAKE_WOBBLE_DURATION_MS_BY_SHAKE_COUNT[burst.shakeCount] ||
-        DATA.BRAKE_WOBBLE_DURATION_MS_BY_SHAKE_COUNT[2];
-      container.dataset.brakeWobbleShakes = String(burst.shakeCount);
-      if (burst.isWideBurst) {
-        container.dataset.brakeWobbleRange = burst.isEscapeBurst
-          ? "escape"
-          : "wide";
-      }
-      container.classList.add("is-brake-wobbling");
-      this.launchBrakeDebrisBurst(container, burst, state);
-
-      state.settleTimer = window.setTimeout(() => {
-        state.settleTimer = null;
-        this.clearBrakeWobbleBurstClasses(container);
-        if (state.isActive) {
-          this.scheduleBrakeWobbleBurst(
-            container,
-            state,
-            DATA.BRAKE_WOBBLE_REPEAT_DELAY_RANGE_MS,
-          );
-        }
-      }, durationMs);
-    },
-
-    startBrakeWobbleEffect(container) {
-      const state = {
-        burstsUntilWide: this.randomIntegerInRange(
-          DATA.BRAKE_WOBBLE_WIDE_BURST_INTERVAL_RANGE,
-        ),
-        debrisLayers: new Set(),
-        debrisTimers: new Set(),
-        delayTimer: null,
-        isActive: true,
-        nextWideBurstEscapes: false,
-        settleTimer: null,
-      };
-
-      this.clearBrakeWobbleEffectClasses(container);
-      container.classList.add("has-pace-icon-effect-brake-wobble");
-      this.scheduleBrakeWobbleBurst(
-        container,
-        state,
-        DATA.BRAKE_WOBBLE_INITIAL_DELAY_RANGE_MS,
-      );
-
-      this.paceIconEffectCleanups.set(container, () => {
-        state.isActive = false;
-        window.clearTimeout(state.delayTimer);
-        window.clearTimeout(state.settleTimer);
-        this.clearBrakeDebrisLayers(state);
-        this.clearBrakeWobbleEffectClasses(container);
-      });
-    },
-
-    startSlowWobbleEffect(container) {
-      const state = {
-        cartSpillLayers: new Set(),
-        cartSpillTimers: new Set(),
-        delayTimer: null,
-        isActive: true,
-        settleTimer: null,
-      };
-
-      this.clearSlowWobbleEffectClasses(container);
-      container.classList.add("has-pace-icon-effect-slow-wobble");
-      container.style.setProperty(
-        "--slow-wobble-duration",
-        `${DATA.SLOW_WOBBLE_DURATION_MS}ms`,
-      );
-      this.showSlowCartSpillOrigin?.(container, state);
-      this.scheduleSlowWobbleBurst(container, state);
-
-      this.paceIconEffectCleanups.set(container, () => {
-        state.isActive = false;
-        window.clearTimeout(state.delayTimer);
-        window.clearTimeout(state.settleTimer);
-        this.clearSlowCartSpillLayers?.(state);
-        this.clearSlowWobbleEffectClasses(container);
-      });
-    },
-
-    scheduleSlowWobbleBurst(container, state) {
-      state.delayTimer = window.setTimeout(() => {
-        state.delayTimer = null;
-        this.runSlowWobbleBurst(container, state);
-      }, this.randomIntegerInRange(DATA.SLOW_WOBBLE_DELAY_RANGE_MS));
-    },
-
-    runSlowWobbleBurst(container, state) {
-      if (!state.isActive) {
-        return;
-      }
-
-      const isExtreme = Math.random() < DATA.SLOW_WOBBLE_EXTREME_CHANCE;
-      container.classList.toggle("is-slow-wobbling-extreme", isExtreme);
-      container.classList.add("is-slow-wobbling");
-      this.launchSlowCartSpill?.(container, state, { isExtreme });
-      state.settleTimer = window.setTimeout(() => {
-        state.settleTimer = null;
-        container.classList.remove(
-          "is-slow-wobbling-extreme",
-          "is-slow-wobbling",
-        );
-      }, DATA.SLOW_WOBBLE_DURATION_MS);
-      this.scheduleSlowWobbleBurst(container, state);
+      this.clearSpeedLinesEffectClasses?.(container);
+      this.clearTrainRollEffectClasses?.(container);
     },
 
     renderPaceIconEffect(container, state) {
@@ -344,41 +272,38 @@
     ) {
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const state = this.paceStateForClassName(level);
+      const preservePaceIcon = shouldPreservePaceIcon(
+        this,
+        previousState,
+        state,
+      );
       const playSplatFall = shouldPlaySplatFall({
         playOnEntry: playSplatFallOnEntry,
         previousState,
         replay: replaySplatFall,
         state,
       });
-      if (playSplatFall) {
-        this.elements.paceIcon.dataset.splatFallIntro = "true";
-      } else {
-        delete this.elements.paceIcon.dataset.splatFallIntro;
-      }
-      const iconRect = this.elements.paceIcon.getBoundingClientRect();
-      this.setSyncSunburstPageBackgroundActive(
-        state.key === DATA.PACE_STATES.sync.key,
-        {
-          x: iconRect.left + iconRect.width / 2,
-          y: iconRect.top + iconRect.height / 2,
-        },
-      );
+      setSplatFallIntro(this.elements.paceIcon, playSplatFall);
+      setSyncSunburstPageBackground(this, previousState, state);
       const staleClasses = DATA.PACE_CLASSES.filter((name) => name !== level);
       this.elements.paceCard.classList.remove(...staleClasses);
       this.elements.paceCard.classList.add(level);
-      const pageBackgroundActive = this.setPerfectZeroPageBackgroundActive(
-        state.key === DATA.PACE_STATES.perfectZero.key,
-      );
-      this.renderPaceIcon(this.elements.paceIcon, level, {
-        useEffects: true,
-        usePerfectZeroPageAperture: pageBackgroundActive,
+      const pageBackgroundActive =
+        this.setPerfectZeroPageBackgroundActive?.(
+          state.key === DATA.PACE_STATES.perfectZero.key,
+        ) ?? false;
+      if (!preservePaceIcon) {
+        this.renderPaceIcon(this.elements.paceIcon, level, {
+          useEffects: true,
+          usePerfectZeroPageAperture: pageBackgroundActive,
+        });
+      }
+      updatePaceLevelSideEffects(this, {
+        level,
+        state,
+        updateStateRailActive,
+        updateTabIcon,
       });
-      if (updateStateRailActive) {
-        this.updateStateRailActiveSelection?.(state.key);
-      }
-      if (updateTabIcon) {
-        this.updateFavicon(level);
-      }
     },
 
     currentPaceLevel() {

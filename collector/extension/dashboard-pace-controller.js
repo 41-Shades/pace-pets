@@ -12,6 +12,8 @@
   function createController(options) {
     const controller = new Controller(options);
     return Object.freeze({
+      hasForcedPaceStateOverride:
+        controller.hasForcedPaceStateOverride.bind(controller),
       mutedClassName: DATA.MUTED_PACE_CLASS,
       refreshForcedPaceStateOverride:
         controller.refreshForcedPaceStateOverride.bind(controller),
