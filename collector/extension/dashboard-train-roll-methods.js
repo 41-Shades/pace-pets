@@ -8,6 +8,7 @@
     );
   }
 
+  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const TRAIN_SMOKE_ORIGIN = Object.freeze({
     X_PX: 64,
     Y_PX: 27,
@@ -34,6 +35,18 @@
     const element = document.createElement("span");
     element.className = className;
     return element;
+  }
+
+  function addMediaChangeListener(mediaQuery, listener) {
+    if (!mediaQuery) {
+      return () => {};
+    }
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", listener);
+      return () => mediaQuery.removeEventListener("change", listener);
+    }
+    mediaQuery.addListener?.(listener);
+    return () => mediaQuery.removeListener?.(listener);
   }
 
   function decimalString(value) {
@@ -102,6 +115,10 @@
   Object.assign(Controller.prototype, {
     clearTrainRollEffectClasses(container) {
       container.classList.remove("has-pace-icon-effect-train-roll");
+    },
+
+    trainSmokeReducedMotionMedia() {
+      return window.matchMedia?.(REDUCED_MOTION_QUERY) || null;
     },
 
     nextTrainSmokeEmissionMs(timeMs) {
@@ -225,6 +242,11 @@
         nextEmissionMs: 0,
         puffs: [],
       };
+      const reducedMotionMedia = this.trainSmokeReducedMotionMedia();
+      if (reducedMotionMedia?.matches) {
+        return;
+      }
+
       const puffs = smoke.querySelectorAll(".pace-train-cloud-puff");
       const startedAtMs = window.performance.now();
 
@@ -260,6 +282,15 @@
       state.animationFrameId = window.requestAnimationFrame((timeMs) =>
         this.renderTrainSmokeFrame(state, timeMs),
       );
+      state.cleanups.push(
+        addMediaChangeListener(reducedMotionMedia, (event) => {
+          if (event.matches) {
+            const cleanup = this.paceIconEffectCleanups.get(container);
+            cleanup?.();
+            this.paceIconEffectCleanups.delete(container);
+          }
+        }),
+      );
 
       this.paceIconEffectCleanups.set(container, () => {
         state.isActive = false;
@@ -282,11 +313,15 @@
         "--train-smoke-origin-y",
         `${TRAIN_SMOKE_ORIGIN.Y_PX}px`,
       );
+
+      container.classList.add("has-pace-icon-effect-train-roll");
+      if (this.trainSmokeReducedMotionMedia()?.matches) {
+        return;
+      }
+
       for (let index = 0; index < TRAIN_SMOKE_PUFF_POOL_SIZE; index += 1) {
         smoke.append(spanWithClass("pace-train-cloud-puff"));
       }
-
-      container.classList.add("has-pace-icon-effect-train-roll");
       container.append(smoke);
       this.startTrainSmokeEffect(container, smoke);
     },
