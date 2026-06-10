@@ -25,6 +25,10 @@
       this.lastForcedPaceStateKey = null;
       this.perfectZeroEclipseIcon = null;
       this.perfectZeroPageBackgroundScene = null;
+      this.singularityTransitionInFlight = false;
+      this.singularityTransitionPending = false;
+      this.singularityTransitionRunId = 0;
+      this.singularityTransitionScene = null;
       this.syncSunburstPageBackgroundScene = null;
       this.syncSunburstPageBackgroundStartedAtMs = null;
       this.syncSunburstPageBackgroundStopTimer = null;

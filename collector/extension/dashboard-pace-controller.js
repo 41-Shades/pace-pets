@@ -15,6 +15,8 @@
       hasForcedPaceStateOverride:
         controller.hasForcedPaceStateOverride.bind(controller),
       mutedClassName: DATA.MUTED_PACE_CLASS,
+      playPendingSingularityTransition:
+        controller.playPendingSingularityTransition.bind(controller),
       refreshForcedPaceStateOverride:
         controller.refreshForcedPaceStateOverride.bind(controller),
       renderPaceSummary: controller.renderPaceSummary.bind(controller),

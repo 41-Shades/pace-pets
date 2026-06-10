@@ -92,6 +92,22 @@ function assertRuntimeOrder({ assertScriptBefore, dashboardRuntimeScripts }) {
       "./dashboard-push-water-renderer.js",
       "./dashboard-push-stretch-methods.js",
     ],
+    [
+      "./dashboard-singularity-transition-data.js",
+      "./dashboard-singularity-transition-motion.js",
+    ],
+    [
+      "./dashboard-singularity-transition-motion.js",
+      "./dashboard-singularity-transition-draw.js",
+    ],
+    [
+      "./dashboard-singularity-transition-draw.js",
+      "./dashboard-singularity-transition-renderer.js",
+    ],
+    [
+      "./dashboard-singularity-transition-renderer.js",
+      "./dashboard-singularity-transition-methods.js",
+    ],
     ["./dashboard-pace-icon-methods.js", "./dashboard-pace-rail-methods.js"],
     ["./dashboard-pace-core.js", "./dashboard-pace-controller.js"],
     ["./dashboard-pace-rail-methods.js", "./dashboard-pace-controller.js"],

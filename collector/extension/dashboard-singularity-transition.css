@@ -1,0 +1,25 @@
+.singularity-transition-overlay {
+  background: #010104;
+  cursor: progress;
+  display: block;
+  height: 100vh;
+  inset: 0;
+  pointer-events: auto;
+  position: fixed;
+  width: 100vw;
+  z-index: 2147483646;
+}
+
+body.is-singularity-transitioning {
+  overflow: hidden;
+}
+
+body.is-singularity-transitioning .shell {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .singularity-transition-overlay {
+    cursor: default;
+  }
+}

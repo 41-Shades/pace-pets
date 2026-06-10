@@ -123,7 +123,7 @@ assert(
 );
 assertExactStringSet(
   manifest.permissions,
-  ["alarms", "contextMenus", "storage"],
+  ["activeTab", "alarms", "contextMenus", "storage"],
   "Permissions",
 );
 assertExactStringSet(

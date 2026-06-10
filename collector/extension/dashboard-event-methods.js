@@ -187,6 +187,9 @@
     bindWindowEvents() {
       window.addEventListener("resize", () => this.appTooltips.hide());
       window.addEventListener("scroll", () => this.appTooltips.hide(), true);
+      document.addEventListener("visibilitychange", () => {
+        this.paceView.playPendingSingularityTransition?.();
+      });
     },
 
     bindEvents() {

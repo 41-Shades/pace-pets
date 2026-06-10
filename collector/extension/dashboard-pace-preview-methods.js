@@ -67,6 +67,7 @@
         return false;
       }
       const { forcedPaceRatio, previewWindow, state } = preview;
+      const previousState = this.paceStateForClassName(this.currentPaceLevel());
 
       const forcedStateChanged = this.lastForcedPaceStateKey !== state.key;
       this.lastForcedPaceStateKey = state.key;
@@ -86,6 +87,7 @@
       this.applyPreviewResetTiming(state, previewWindow);
       this.renderPaceAltRatio(state.previewRatioLabel || state.ratioLabel);
       this.updateTabTitle(state.title, forcedPaceRatio);
+      this.updateSingularityTransitionState?.(previousState, state);
       return true;
     },
 
