@@ -3,10 +3,9 @@
 
   const DATA = globalThis.PacePetsDashboardPaceData;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  const PERFECT_ZERO_SPACE = globalThis.PacePetsPerfectZeroSpace;
-  if (!DATA || !Controller || !PERFECT_ZERO_SPACE) {
+  if (!DATA || !Controller) {
     throw new Error(
-      "Pace data, core, and perfect-zero scene must load before dashboard-pace-icon-methods.js.",
+      "Pace data and core must load before dashboard-pace-icon-methods.js.",
     );
   }
 
@@ -24,77 +23,6 @@
   }
 
   Object.assign(Controller.prototype, {
-    stopPerfectZeroPageBackgroundScene() {
-      this.perfectZeroPageBackgroundScene?.stop();
-      this.perfectZeroPageBackgroundScene = null;
-      if (this.elements.perfectZeroPageBackground) {
-        this.elements.perfectZeroPageBackground.hidden = true;
-      }
-      document.body.classList.remove("has-perfect-zero-page-background");
-    },
-
-    perfectZeroPageFeaturedPlanets() {
-      if (!this.elements.paceIcon || !this.elements.perfectZeroPageBackground) {
-        return [];
-      }
-
-      const iconRect = this.elements.paceIcon.getBoundingClientRect();
-      const canvasRect =
-        this.elements.perfectZeroPageBackground.getBoundingClientRect();
-      if (
-        iconRect.width <= 0 ||
-        iconRect.height <= 0 ||
-        canvasRect.width <= 0 ||
-        canvasRect.height <= 0
-      ) {
-        return [];
-      }
-
-      return [
-        {
-          minSize: 15,
-          originX: iconRect.left + iconRect.width / 2 - canvasRect.left,
-          originY: iconRect.top + iconRect.height / 2 - canvasRect.top,
-          type: "ringedPlanet",
-        },
-      ];
-    },
-
-    setPerfectZeroPageBackgroundActive(active) {
-      if (!this.elements.shell || !this.elements.perfectZeroPageBackground) {
-        return false;
-      }
-
-      if (!active) {
-        this.stopPerfectZeroPageBackgroundScene();
-        return false;
-      }
-
-      if (this.perfectZeroPageBackgroundScene) {
-        return true;
-      }
-
-      this.elements.perfectZeroPageBackground.hidden = false;
-      document.body.classList.add("has-perfect-zero-page-background");
-      const scene = PERFECT_ZERO_SPACE.create(
-        this.elements.shell,
-        this.elements.perfectZeroPageBackground,
-        {
-          profile: PERFECT_ZERO_SPACE.profiles.fullBleed,
-          scene: {
-            featuredPlanets: this.perfectZeroPageFeaturedPlanets(),
-          },
-        },
-      );
-      if (!scene) {
-        this.stopPerfectZeroPageBackgroundScene();
-        return false;
-      }
-
-      this.perfectZeroPageBackgroundScene = scene;
-      return true;
-    },
-
     clearBrakeWobbleEffectClasses(container) {
       container.classList.remove(
         "has-pace-icon-effect-brake-wobble",
@@ -102,6 +30,15 @@
       );
       container.removeAttribute("data-brake-wobble-shakes");
       container.removeAttribute("data-brake-wobble-range");
+    },
+
+    clearSlowWobbleEffectClasses(container) {
+      container.classList.remove(
+        "has-pace-icon-effect-slow-wobble",
+        "is-slow-wobbling-extreme",
+        "is-slow-wobbling",
+      );
+      container.style.removeProperty("--slow-wobble-duration");
     },
 
     clearPaceIconEffects(container) {
@@ -113,6 +50,7 @@
       }
 
       this.clearBrakeWobbleEffectClasses(container);
+      this.clearSlowWobbleEffectClasses(container);
       this.clearPushStretchEffectClasses(container);
       this.clearSprintSmokeEffectClasses(container);
       this.clearSplatFallEffectClasses?.(container);
@@ -207,6 +145,59 @@
       });
     },
 
+    startSlowWobbleEffect(container) {
+      const state = {
+        cartSpillLayers: new Set(),
+        cartSpillTimers: new Set(),
+        delayTimer: null,
+        isActive: true,
+        settleTimer: null,
+      };
+
+      this.clearSlowWobbleEffectClasses(container);
+      container.classList.add("has-pace-icon-effect-slow-wobble");
+      container.style.setProperty(
+        "--slow-wobble-duration",
+        `${DATA.SLOW_WOBBLE_DURATION_MS}ms`,
+      );
+      this.showSlowCartSpillOrigin?.(container, state);
+      this.scheduleSlowWobbleBurst(container, state);
+
+      this.paceIconEffectCleanups.set(container, () => {
+        state.isActive = false;
+        window.clearTimeout(state.delayTimer);
+        window.clearTimeout(state.settleTimer);
+        this.clearSlowCartSpillLayers?.(state);
+        this.clearSlowWobbleEffectClasses(container);
+      });
+    },
+
+    scheduleSlowWobbleBurst(container, state) {
+      state.delayTimer = window.setTimeout(() => {
+        state.delayTimer = null;
+        this.runSlowWobbleBurst(container, state);
+      }, this.randomIntegerInRange(DATA.SLOW_WOBBLE_DELAY_RANGE_MS));
+    },
+
+    runSlowWobbleBurst(container, state) {
+      if (!state.isActive) {
+        return;
+      }
+
+      const isExtreme = Math.random() < DATA.SLOW_WOBBLE_EXTREME_CHANCE;
+      container.classList.toggle("is-slow-wobbling-extreme", isExtreme);
+      container.classList.add("is-slow-wobbling");
+      this.launchSlowCartSpill?.(container, state, { isExtreme });
+      state.settleTimer = window.setTimeout(() => {
+        state.settleTimer = null;
+        container.classList.remove(
+          "is-slow-wobbling-extreme",
+          "is-slow-wobbling",
+        );
+      }, DATA.SLOW_WOBBLE_DURATION_MS);
+      this.scheduleSlowWobbleBurst(container, state);
+    },
+
     renderPaceIconEffect(container, state) {
       const effect = DATA.PACE_ICON_EFFECTS_BY_STATE[state.key];
       if (!effect) {
@@ -220,6 +211,11 @@
 
       if (effect === "brake-wobble") {
         this.startBrakeWobbleEffect(container);
+        return;
+      }
+
+      if (effect === "slow-wobble") {
+        this.startSlowWobbleEffect(container);
         return;
       }
 
@@ -359,7 +355,16 @@
       } else {
         delete this.elements.paceIcon.dataset.splatFallIntro;
       }
-      this.elements.paceCard.classList.remove(...DATA.PACE_CLASSES);
+      const iconRect = this.elements.paceIcon.getBoundingClientRect();
+      this.setSyncSunburstPageBackgroundActive(
+        state.key === DATA.PACE_STATES.sync.key,
+        {
+          x: iconRect.left + iconRect.width / 2,
+          y: iconRect.top + iconRect.height / 2,
+        },
+      );
+      const staleClasses = DATA.PACE_CLASSES.filter((name) => name !== level);
+      this.elements.paceCard.classList.remove(...staleClasses);
       this.elements.paceCard.classList.add(level);
       const pageBackgroundActive = this.setPerfectZeroPageBackgroundActive(
         state.key === DATA.PACE_STATES.perfectZero.key,

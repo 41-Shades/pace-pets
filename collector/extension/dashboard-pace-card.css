@@ -222,6 +222,22 @@
   animation-name: brake-hard-wobble-escape-3;
 }
 
+.pace-icon.has-pace-icon-effect-slow-wobble img {
+  animation: slow-down-idle-wobble 1450ms ease-in-out infinite;
+  transform-origin: 50% 62%;
+  will-change: transform;
+}
+
+.pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling img {
+  animation: slow-down-calm-rock var(--slow-wobble-duration)
+    cubic-bezier(0.36, 0, 0.18, 1) both;
+  will-change: transform;
+}
+
+.pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling-extreme img {
+  animation-name: slow-down-extreme-rock;
+}
+
 .pace-card.pace-sync .pace-icon {
   animation: pace-sync-float 5.2s ease-in-out infinite;
   will-change: transform;
