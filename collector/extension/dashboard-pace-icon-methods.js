@@ -114,10 +114,12 @@
     }
 
     const sceneActive = Boolean(controller.syncSunburstPageBackgroundScene);
+    const enteredSync = previousState.key !== DATA.PACE_STATES.sync.key;
     const shouldUpdateOrigin = previousState.key !== state.key || !sceneActive;
     controller.setSyncSunburstPageBackgroundActive?.(
       true,
       shouldUpdateOrigin ? paceIconOrigin(controller) : null,
+      { enteredSync },
     );
   }
 

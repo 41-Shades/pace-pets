@@ -29,6 +29,10 @@
       this.singularityTransitionPending = false;
       this.singularityTransitionRunId = 0;
       this.singularityTransitionScene = null;
+      this.syncMonkEscapeEnteredAtMs = null;
+      this.syncMonkEscapeLaunchedForEnteredAtMs = null;
+      this.syncMonkEscapeLaunchTimer = null;
+      this.syncMonkEscapeScene = null;
       this.syncSunburstPageBackgroundScene = null;
       this.syncSunburstPageBackgroundStartedAtMs = null;
       this.syncSunburstPageBackgroundStopTimer = null;

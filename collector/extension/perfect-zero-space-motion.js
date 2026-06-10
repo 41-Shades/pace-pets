@@ -1,37 +1,18 @@
 (function attachPacePetsPerfectZeroSpaceMotion(root) {
   "use strict";
 
+  const BOUNCE = root.PacePetsBouncingBoxMotion;
   const FACTORY = root.PacePetsPerfectZeroSpaceFactory;
-  if (!FACTORY) {
+  if (!BOUNCE || !FACTORY) {
     throw new Error(
-      "Perfect-zero scene factory must load before perfect-zero-space-motion.js.",
+      "Bouncing-box motion and perfect-zero scene factory must load before perfect-zero-space-motion.js.",
     );
   }
   const { cometDelayMs, createComet, sparkleDelayMs } = FACTORY;
 
   function updateShapeMotion(shape, width, height, deltaSeconds) {
-    const maxX = Math.max(width - shape.size, 0);
-    const maxY = Math.max(height - shape.size, 0);
-
-    shape.x += shape.vx * deltaSeconds;
-    shape.y += shape.vy * deltaSeconds;
+    BOUNCE.updateBouncingBox(shape, width, height, deltaSeconds);
     shape.rotation += shape.rotationSpeed * deltaSeconds;
-
-    if (shape.x < 0) {
-      shape.x = -shape.x;
-      shape.vx *= -1;
-    } else if (shape.x > maxX) {
-      shape.x = maxX - (shape.x - maxX);
-      shape.vx *= -1;
-    }
-
-    if (shape.y < 0) {
-      shape.y = -shape.y;
-      shape.vy *= -1;
-    } else if (shape.y > maxY) {
-      shape.y = maxY - (shape.y - maxY);
-      shape.vy *= -1;
-    }
   }
 
   function updateComet(scene, sceneState, elapsedMs) {
