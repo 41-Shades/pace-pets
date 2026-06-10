@@ -56,12 +56,23 @@
 }
 
 .manual-refresh-button {
+  --manual-refresh-text: color-mix(
+    in srgb,
+    var(--subhead) 64%,
+    var(--collection-live-dot)
+  );
+  --manual-refresh-text-hover: color-mix(
+    in srgb,
+    var(--subhead) 50%,
+    var(--collection-live-dot)
+  );
+
   align-items: center;
   appearance: none;
   background: transparent;
   border: 0;
   border-radius: 3px;
-  color: var(--subhead);
+  color: var(--manual-refresh-text);
   cursor: pointer;
   display: inline-flex;
   flex: 0 0 auto;
@@ -72,6 +83,7 @@
   margin: 0 4px 0 0;
   padding: 0;
   text-decoration: none;
+  text-decoration-color: currentcolor;
   transition:
     color 180ms ease,
     opacity 180ms ease;
@@ -125,9 +137,10 @@
 }
 
 .manual-refresh-button:hover:not([aria-disabled="true"]) {
-  color: var(--subhead);
+  color: var(--manual-refresh-text-hover);
   opacity: 1;
   text-decoration: underline;
+  text-decoration-color: currentcolor;
   text-underline-offset: 2px;
 }
 

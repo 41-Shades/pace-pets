@@ -334,7 +334,8 @@
       this.elements.paceCard.classList.add(level);
       const pageBackgroundActive =
         this.setPerfectZeroPageBackgroundActive?.(
-          state.key === DATA.PACE_STATES.perfectZero.key,
+          state.key === DATA.PACE_STATES.perfectZero.key ||
+            state.key === DATA.PACE_STATES.singularity.key,
         ) ?? false;
       const preservePaceIcon = shouldPreservePaceIcon(
         this,

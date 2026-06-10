@@ -54,5 +54,8 @@ npm run vendor:chart
 - The session token is not persisted, logged, or stored in local history.
 - No extension code is injected into ChatGPT pages; refreshes happen from the
   extension background worker.
+- The rare Singularity dashboard transition may briefly capture the visible Pace
+  Pets dashboard in memory as local render input. The image is not persisted,
+  logged, uploaded, or used for collection.
 - This uses an undocumented ChatGPT web endpoint, so the collector may need
   updates if that endpoint or response shape changes.

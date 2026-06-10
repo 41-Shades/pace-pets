@@ -97,6 +97,7 @@
         paceRatioDisplayOverride === null
           ? paceRatio
           : paceRatioDisplayOverride;
+      const previousState = this.paceStateForClassName(this.currentPaceLevel());
 
       this.setPaceLevel(level);
       this.elements.paceTitle.textContent = title;
@@ -109,6 +110,10 @@
           : PacePetsLogic.formatPaceRatioValue(paceRatioForDisplay);
       this.renderPaceAltRatio(comparisonPaceRatio);
       this.updateTabTitle(title, paceRatioForDisplay);
+      this.updateSingularityTransitionState?.(
+        previousState,
+        this.paceStateForClassName(level),
+      );
     },
 
     waitingPaceSummary() {

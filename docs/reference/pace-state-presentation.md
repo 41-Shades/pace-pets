@@ -210,6 +210,22 @@ before launch and uses the larger/wobbling orbit timing.
 The forced developer override can also render perfect and imperfect context
 states outside the regular pace levels.
 
+The `singularity` state runs a dashboard-only transition when the dashboard
+enters that state from any other state. The background worker accepts the
+ephemeral capture request only from `dashboard.html`, captures the visible
+dashboard tab for render input, and returns the image data URL to the dashboard
+renderer. `collector/extension/dashboard-singularity-transition-renderer.js`
+uses that image in memory to break the dashboard into canvas tiles, pull them
+into a black-hole center, hold on a small singularity point, and expand into a
+brief big-bang reveal. Same-state refreshes do not replay the transition.
+If Singularity is selected from the separate developer controls while the
+dashboard tab is hidden, the transition is queued and plays when the dashboard
+becomes visible. Reduced-motion users get a short non-fragmenting pulse. The
+renderer removes the overlay and releases the capture references when the
+sequence ends or the state changes. See
+`docs/reference/singularity-transition.md` for the full architecture and
+lifecycle contract.
+
 ## Display Caps
 
 Dashboard pace text uses `PacePetsLogic.formatPaceRatioValue()` with a display

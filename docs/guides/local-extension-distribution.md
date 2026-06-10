@@ -31,8 +31,9 @@ Unpacked source install:
 - Each installed extension instance works only with the current user's own Chrome profile and signed-in browser session.
 - The extension may read a ChatGPT session token in memory only to call the upstream usage endpoint as the signed-in user.
 - The extension must not persist cookies, auth headers, access tokens, raw upstream responses, raw HTML, raw page text, screenshots, or account identifiers.
-- The extension does not inject code into ChatGPT pages, read ChatGPT chats or page contents, or capture screenshots.
-- The extension does not request `tabs`, `activeTab`, `scripting`, `tabCapture`, or `desktopCapture`.
+- The extension does not inject code into ChatGPT pages or read ChatGPT chats or page contents.
+- The extension may briefly capture its own visible dashboard in memory for the Singularity visual transition, but it does not store or upload screenshots.
+- The extension requests `activeTab` for that local dashboard effect. It does not request `tabs`, `scripting`, `tabCapture`, or `desktopCapture`.
 - Durable history stays in `chrome.storage.local` for that user's local extension install.
 - Persisted history is limited to normalized safe usage fields: timestamps, supported window keys, remaining/used percentages, reset timestamps, window duration, and source/version markers.
 

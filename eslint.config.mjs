@@ -94,6 +94,7 @@ export default [
         PacePetsBackgroundContextMenu: "readonly",
         PacePetsBackgroundLogic: "readonly",
         PacePetsBackgroundUsageSource: "readonly",
+        PacePetsDashboardCaptureControl: "readonly",
         PacePetsDeveloperOptions: "readonly",
         PacePetsLogic: "readonly",
         PacePetsPreviewControl: "readonly",

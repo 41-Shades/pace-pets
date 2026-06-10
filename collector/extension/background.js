@@ -11,6 +11,43 @@ let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
 
+function isDashboardSenderUrl(url) {
+  if (typeof url !== "string") {
+    return false;
+  }
+
+  const dashboardUrl = chrome.runtime.getURL(DASHBOARD_PATH);
+  return (
+    url === dashboardUrl ||
+    url.startsWith(`${dashboardUrl}?`) ||
+    url.startsWith(`${dashboardUrl}#`)
+  );
+}
+
+async function captureVisibleDashboard(sender) {
+  if (!isDashboardSenderUrl(sender?.url)) {
+    return {
+      dataUrl: null,
+      message: "Dashboard capture is only available to dashboard pages.",
+      ok: false,
+    };
+  }
+
+  if (!Number.isInteger(sender?.tab?.windowId)) {
+    return {
+      dataUrl: null,
+      message: "Dashboard capture requires a visible dashboard tab.",
+      ok: false,
+    };
+  }
+
+  const dataUrl = await chrome.tabs.captureVisibleTab(
+    sender.tab.windowId,
+    PacePetsDashboardCaptureControl.captureImageDetails(),
+  );
+  return { dataUrl, ok: true };
+}
+
 async function persistRefreshStatus(refreshState) {
   try {
     await CodexUsageHistory.writeRefreshStatus(refreshState);
@@ -240,7 +277,7 @@ function openDashboard() {
 chrome.runtime.onInstalled.addListener(initializeExtension);
 chrome.runtime.onStartup.addListener(initializeExtension);
 chrome.action.onClicked.addListener(openDashboard);
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (PacePetsRefreshControl.isRefreshNowMessage(message)) {
     runManualRefresh()
       .then((response) => {
@@ -251,6 +288,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           ok: false,
           refreshStatus: null,
           message: CodexRefreshStatus.safeFailureMessage(error),
+        });
+      });
+
+    return true;
+  }
+
+  if (
+    PacePetsDashboardCaptureControl.isCaptureVisibleDashboardMessage(message)
+  ) {
+    captureVisibleDashboard(sender)
+      .then((response) => {
+        sendResponse(response);
+      })
+      .catch((error) => {
+        sendResponse({
+          dataUrl: null,
+          message: error.message,
+          ok: false,
         });
       });
 

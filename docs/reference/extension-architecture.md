@@ -6,7 +6,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 
 ## Runtime Pieces
 
-- `collector/extension/manifest.json` declares the extension, the background service worker, toolbar action, storage permission, alarms permission, context-menu permission, and current upstream host permission.
+- `collector/extension/manifest.json` declares the extension, the background service worker, toolbar action, storage permission, alarms permission, context-menu permission, temporary `activeTab` permission for local dashboard visual capture, and current upstream host permission.
 - `collector/extension/runtime-manifest.js` owns the shared runtime script prefix plus background-only and dashboard-only script tails, deriving both target script orders from one script-loading contract.
 - `collector/extension/dashboard-loader.js` loads the dashboard runtime scripts from `runtime-manifest.js` in dependency order and continues past optional dashboard asset failures declared by the runtime manifest.
 - `collector/extension/product-metadata.js` owns shared runtime product labels, dashboard path, dashboard description, context-menu title, and badge titles.
@@ -28,6 +28,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, pace-state group metadata, inline icon geometry, legend metadata, controlled Perfect Sync/Perfect Zero presentation, and stale-reset guards. Dashboard pace helpers own the dashboard-only Singularity promotion when valid Perfect Zero also reaches the reset-countdown display-zero band.
 - `collector/extension/perfect-zero-space-scene.js` owns the `PERFECT ZERO` canvas scene, including icon and full-bleed profiles, reduced-motion handling, page-visibility pause/resume behavior, and scene teardown. `collector/extension/dashboard-eclipse-icon.js` owns the smaller Perfect Zero theme-control canvas, which uses canvas for organic corona plumes, wispy shimmer, and sparse rim glints where CSS gradients proved too uniform.
 - `collector/extension/dashboard.html`, ordered `dashboard*.css` stylesheets, dashboard helper scripts, and `dashboard.js` own the extension dashboard UI. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and the tab-scoped dashboard window selection, while the 60-second status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Because that tick reapplies the current pace summary, `collector/extension/dashboard-pace-icon-methods.js` preserves same-state long-running icon effects that own live canvas state instead of tearing them down and recreating them. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture; dashboard Singularity extends Perfect Zero when `Usage`, `Resets In`, and `Time` all display round zero before the reset window ends.
+- `collector/extension/dashboard-capture-control.js` owns the message contract for ephemeral dashboard visual capture. The background worker accepts that request only from the extension dashboard URL, captures the currently visible dashboard tab, and returns the image data URL to the requesting dashboard page. The image is used only as in-memory input for `collector/extension/dashboard-singularity-transition-renderer.js`, then the renderer drops its image, canvas, and data URL references during teardown.
 - `collector/extension/vendor/chart.umd.min.js` is the optional vendored Chart.js runtime used by the dashboard chart; the rest of the dashboard still renders if the chart asset cannot load.
 
 ## Collection Flow
@@ -69,8 +70,8 @@ packages.
 ## Boundaries
 
 - No extension code is injected into ChatGPT pages.
-- No chat content, page content, or screenshot collection path exists.
-- The manifest does not request `tabs`, `activeTab`, `scripting`, `tabCapture`, or `desktopCapture`.
+- No chat content, arbitrary page content, or durable screenshot collection path exists.
+- The manifest requests `activeTab` only for the rare Singularity dashboard visual transition. It does not request `tabs`, `scripting`, `tabCapture`, or `desktopCapture`.
 - No cookies, auth headers, access tokens, raw upstream responses, raw HTML, raw page text, screenshots, or account identifiers are persisted.
 - Runtime host permissions should only include origins the extension actually fetches.
 - Durable product behavior should use code constants, not environment-variable overrides.
