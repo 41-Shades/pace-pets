@@ -67,26 +67,6 @@
   will-change: transform;
 }
 
-.cart-spill-settled-item {
-  --cart-spill-settle-rotate: 0deg;
-  --cart-spill-settle-scale: 1;
-  --cart-spill-size: 36px;
-
-  display: block;
-  height: var(--cart-spill-size);
-  position: absolute;
-  transform: rotate(var(--cart-spill-settle-rotate))
-    scale(var(--cart-spill-settle-scale));
-  transform-origin: 50% 50%;
-  width: var(--cart-spill-size);
-}
-
-.cart-spill-settled-image {
-  display: block;
-  height: 100%;
-  width: 100%;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .cart-spill-layer,
   .cart-spill-pile-layer {

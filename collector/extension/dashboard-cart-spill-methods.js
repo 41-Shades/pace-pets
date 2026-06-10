@@ -4,9 +4,10 @@
   const DATA = globalThis.PacePetsDashboardPaceData;
   const Controller = globalThis.PacePetsDashboardPaceController;
   const CART_SPILL_DATA = globalThis.PacePetsDashboardCartSpillData;
-  if (!DATA || !Controller || !CART_SPILL_DATA) {
+  const PILE_RENDERER = globalThis.PacePetsDashboardCartSpillPileRenderer;
+  if (!DATA || !Controller || !CART_SPILL_DATA || !PILE_RENDERER) {
     throw new Error(
-      "Pace data, core, and cart spill data must load before dashboard-cart-spill-methods.js.",
+      "Pace data, core, and cart spill renderers must load before dashboard-cart-spill-methods.js.",
     );
   }
 
@@ -234,12 +235,13 @@
     );
     piece.style.setProperty("--cart-spill-spin", `${spinDeg}deg`);
     piece.style.setProperty("--cart-spill-end-scale", String(endScale));
-    piece.append(createCartSpillImage(icon));
+    const image = createCartSpillImage(icon);
+    piece.append(image);
 
     return {
       animationMs: durationMs + delayMs,
       endScale,
-      icon,
+      image,
       landing,
       piece,
       sizePx,
@@ -268,49 +270,6 @@
     layer.remove();
   }
 
-  function pileLayer(state) {
-    if (!state.cartSpillPileLayer) {
-      const layer = document.createElement("span");
-      layer.className = "cart-spill-pile-layer";
-      layer.setAttribute("aria-hidden", "true");
-      document.body.append(layer);
-      state.cartSpillPileLayer = layer;
-    }
-
-    return state.cartSpillPileLayer;
-  }
-
-  function settleCartSpillItem(state, item) {
-    if (!state.isActive || !document.body) {
-      return;
-    }
-
-    const settled = document.createElement("span");
-    settled.className = "cart-spill-settled-item";
-    settled.dataset.cartSpillKind = item.icon.key;
-    settled.style.left = `${Math.round(item.landing.x - item.sizePx / 2)}px`;
-    settled.style.top = `${Math.round(item.landing.y - item.sizePx / 2)}px`;
-    settled.style.setProperty("--cart-spill-size", `${item.sizePx}px`);
-    settled.style.setProperty(
-      "--cart-spill-settle-rotate",
-      `${item.spinDeg}deg`,
-    );
-    settled.style.setProperty(
-      "--cart-spill-settle-scale",
-      String(item.endScale),
-    );
-
-    const image = document.createElement("img");
-    image.alt = "";
-    image.className = "cart-spill-settled-image";
-    image.decoding = "async";
-    image.loading = "eager";
-    image.src = item.icon.src;
-    image.setAttribute("aria-hidden", "true");
-    settled.append(image);
-    pileLayer(state).append(settled);
-  }
-
   Object.assign(Controller.prototype, {
     clearSlowCartSpillLayers(state) {
       for (const timer of state.cartSpillTimers) {
@@ -321,9 +280,7 @@
         layer.remove();
       }
       state.cartSpillLayers.clear();
-      state.cartSpillPileLayer?.remove();
-      state.cartSpillPileLayer = null;
-      state.cartSpillPileColumns?.clear();
+      PILE_RENDERER.clearCartSpillPile(state);
     },
 
     launchSlowCartSpill(container, state, { isExtreme = false } = {}) {
@@ -366,7 +323,7 @@
           layer.append(item.piece);
           const settleTimer = window.setTimeout(() => {
             state.cartSpillTimers.delete(settleTimer);
-            settleCartSpillItem(state, item);
+            PILE_RENDERER.settleCartSpillItem(state, item);
             item.piece.remove();
           }, item.animationMs);
           state.cartSpillTimers.add(settleTimer);

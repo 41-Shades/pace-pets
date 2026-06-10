@@ -59,6 +59,7 @@
     "./dashboard-pace-wobble-methods.js",
     "./dashboard-pace-icon-methods.js",
     "./dashboard-cart-spill-data.js",
+    "./dashboard-cart-spill-pile-renderer.js",
     "./dashboard-cart-spill-methods.js",
     "./dashboard-pace-favicon-methods.js",
     "./dashboard-splat-fall-methods.js",
