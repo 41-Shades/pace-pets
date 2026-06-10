@@ -71,6 +71,10 @@
     };
   }
 
+  function hasPaceIconEffect(state) {
+    return Boolean(DATA.PACE_ICON_EFFECTS_BY_STATE[state.key]);
+  }
+
   function shouldPreservePaceIcon(
     controller,
     previousState,
@@ -83,6 +87,10 @@
 
     if (controller.paceIconEffectCleanups.has(controller.elements.paceIcon)) {
       return true;
+    }
+
+    if (hasPaceIconEffect(state)) {
+      return false;
     }
 
     return hasMatchingRenderedPaceIcon(controller.elements.paceIcon, state, {
