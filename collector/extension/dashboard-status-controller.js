@@ -299,7 +299,7 @@
         this.setCurrentRefreshStatus(response.refreshStatus);
       }
 
-      await this.loadDashboard({ refreshWindowPreference: false });
+      await this.loadDashboard({ refreshWindowSelection: false });
 
       if (refreshFailed) {
         this.showManualRefreshFailure(response?.refreshStatus);

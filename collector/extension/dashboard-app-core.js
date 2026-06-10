@@ -2,6 +2,7 @@
   "use strict";
 
   const DASHBOARD_STATUS_REFRESH_INTERVAL_MS = 60 * 1000;
+  const DASHBOARD_WINDOW_SESSION_KEY = "pace-pets-dashboard-window";
   const MS_PER_MINUTE = 60 * 1000;
 
   class PacePetsDashboardApp {
@@ -9,7 +10,9 @@
       Object.assign(this, dependencies);
       this.elements = elements;
       this.DEFAULT_WINDOW_KEY = this.USAGE_WINDOWS.DEFAULT_WINDOW_KEY;
-      this.WINDOW_STORAGE_KEY = this.USAGE_WINDOWS.WINDOW_STORAGE_KEY;
+      this.BADGE_WINDOW_STORAGE_KEY =
+        this.USAGE_WINDOWS.BADGE_WINDOW_STORAGE_KEY;
+      this.DASHBOARD_WINDOW_SESSION_KEY = DASHBOARD_WINDOW_SESSION_KEY;
       this.DEVELOPER_OPTIONS_STORAGE_KEY = this.DEVELOPER_OPTIONS.STORAGE_KEY;
       this.COLLECTION_STATUS_TITLE =
         this.DASHBOARD_STATUS.COLLECTION_STATUS_TITLE;
@@ -92,16 +95,55 @@
       return this.USAGE_WINDOWS.normalizeWindowKey(value);
     }
 
-    async readStoredWindowKey() {
+    readSessionWindowKey() {
+      try {
+        const windowKey = sessionStorage.getItem(
+          this.DASHBOARD_WINDOW_SESSION_KEY,
+        );
+        return this.USAGE_WINDOWS.isSupportedWindowKey(windowKey)
+          ? windowKey
+          : null;
+      } catch (error) {
+        console.warn(
+          "Could not read dashboard window preference:",
+          error.message,
+        );
+        return null;
+      }
+    }
+
+    storeSessionWindowKey(windowKey) {
+      try {
+        sessionStorage.setItem(this.DASHBOARD_WINDOW_SESSION_KEY, windowKey);
+      } catch (error) {
+        console.warn(
+          "Could not store dashboard window preference:",
+          error.message,
+        );
+      }
+    }
+
+    async readBadgeWindowKey() {
       try {
         const items = await this.EXTENSION_STORAGE.getLocal(
-          this.WINDOW_STORAGE_KEY,
+          this.BADGE_WINDOW_STORAGE_KEY,
         );
-        return this.normalizedWindowKey(items[this.WINDOW_STORAGE_KEY]);
+        return this.normalizedWindowKey(items[this.BADGE_WINDOW_STORAGE_KEY]);
       } catch (error) {
-        console.warn("Could not read usage window preference:", error.message);
+        console.warn("Could not read badge window preference:", error.message);
         return this.DEFAULT_WINDOW_KEY;
       }
+    }
+
+    async readDashboardWindowKey() {
+      const sessionWindowKey = this.readSessionWindowKey();
+      if (sessionWindowKey) {
+        return sessionWindowKey;
+      }
+
+      const badgeWindowKey = await this.readBadgeWindowKey();
+      this.storeSessionWindowKey(badgeWindowKey);
+      return badgeWindowKey;
     }
 
     async readDeveloperOptions() {
@@ -114,14 +156,6 @@
         console.warn("Could not read developer options:", error.message);
         return this.DEVELOPER_OPTIONS.normalizeDeveloperOptions(null);
       }
-    }
-
-    storeWindowKey(windowKey) {
-      this.EXTENSION_STORAGE.setLocal({
-        [this.WINDOW_STORAGE_KEY]: windowKey,
-      }).catch((error) => {
-        console.warn("Could not store usage window preference:", error.message);
-      });
     }
 
     selectedSupportedWindowKey() {
@@ -157,18 +191,18 @@
       });
     }
 
-    async loadDashboard({ refreshWindowPreference = true } = {}) {
-      const [history, refreshStatus, storedWindowKeyValue, developerOptions] =
+    async loadDashboard({ refreshWindowSelection = true } = {}) {
+      const [history, refreshStatus, dashboardWindowKey, developerOptions] =
         await Promise.all([
           CodexUsageHistory.readHistory(),
           CodexUsageHistory.readRefreshStatus(),
-          refreshWindowPreference
-            ? this.readStoredWindowKey()
+          refreshWindowSelection
+            ? this.readDashboardWindowKey()
             : Promise.resolve(null),
           this.readDeveloperOptions(),
         ]);
-      if (refreshWindowPreference) {
-        this.selectedWindowKey = storedWindowKeyValue;
+      if (refreshWindowSelection) {
+        this.selectedWindowKey = dashboardWindowKey;
       }
       this.currentForcedPaceStateKey = developerOptions.forcedPaceStateKey;
       this.currentManualRefreshLeadWindow =
@@ -208,8 +242,8 @@
       }
 
       this.selectedWindowKey = windowKey;
-      this.storeWindowKey(windowKey);
-      this.loadDashboard({ refreshWindowPreference: false }).catch((error) =>
+      this.storeSessionWindowKey(windowKey);
+      this.loadDashboard({ refreshWindowSelection: false }).catch((error) =>
         this.renderHistoryLoadFailure(error),
       );
       return true;

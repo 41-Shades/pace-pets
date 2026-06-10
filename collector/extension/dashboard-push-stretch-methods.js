@@ -12,36 +12,59 @@
   }
 
   const {
-    EXTREME_INTERVAL_RANGE,
     EXTREME_PROFILE,
     NORMAL_PROFILE,
     PULSE_DURATION_MS,
+    RARE_PROFILE,
     createRenderer,
     pulseAmount,
   } = PushStretch;
-  const EXTREME_TRAIL_PHASE = 0.32;
+  const PULSE_LEVEL_WEIGHTS = Object.freeze([
+    Object.freeze({ level: "normal", weight: 75 }),
+    Object.freeze({ level: "extreme", weight: 20 }),
+    Object.freeze({ level: "rare", weight: 5 }),
+  ]);
+  const PULSE_LEVEL_WEIGHT_TOTAL = PULSE_LEVEL_WEIGHTS.reduce(
+    (sum, entry) => sum + entry.weight,
+    0,
+  );
+
+  function profileForPulseLevel(level) {
+    if (level === "rare") {
+      return RARE_PROFILE;
+    }
+    if (level === "extreme") {
+      return EXTREME_PROFILE;
+    }
+    return NORMAL_PROFILE;
+  }
+
+  function pulseLevelForCycle(controller, cycleIndex) {
+    if (cycleIndex <= 0) {
+      return "normal";
+    }
+    let bucket = controller.randomIntegerInRange([1, PULSE_LEVEL_WEIGHT_TOTAL]);
+    for (const { level, weight } of PULSE_LEVEL_WEIGHTS) {
+      bucket -= weight;
+      if (bucket <= 0) {
+        return level;
+      }
+    }
+    return "normal";
+  }
 
   function updatePulseCycle(controller, state, cycleIndex) {
     if (state.cycleIndex === cycleIndex) {
       return;
     }
     const previousCycleIndex = state.cycleIndex;
+    const hasPreviousCycle = previousCycleIndex === cycleIndex - 1;
     state.cycleIndex = cycleIndex;
-    state.previousCycleWasExtreme = false;
-    if (state.isExtreme) {
-      state.isExtreme = false;
-      state.previousExtremeCycleIndex = previousCycleIndex;
-      state.previousCycleWasExtreme = true;
-      state.normalPulseCount = 0;
-      state.pulsesUntilExtreme = controller.randomIntegerInRange(
-        EXTREME_INTERVAL_RANGE,
-      );
-    }
-    if (state.normalPulseCount >= state.pulsesUntilExtreme) {
-      state.isExtreme = true;
-      return;
-    }
-    state.normalPulseCount += 1;
+    state.previousCycleIndex = hasPreviousCycle ? previousCycleIndex : -1;
+    state.previousProfile = hasPreviousCycle ? state.profile : null;
+    state.previousPulseLevel = hasPreviousCycle ? state.pulseLevel : null;
+    state.pulseLevel = pulseLevelForCycle(controller, cycleIndex);
+    state.profile = profileForPulseLevel(state.pulseLevel);
   }
 
   function attachPushWaterLayer(container) {
@@ -90,16 +113,14 @@
     return { layer, stretchCanvas, sweatCanvas };
   }
 
-  function createPushStretchPulseState(controller) {
+  function createPushStretchPulseState() {
     return {
       cycleIndex: -1,
-      isExtreme: false,
-      normalPulseCount: 0,
-      previousExtremeCycleIndex: -1,
-      previousCycleWasExtreme: false,
-      pulsesUntilExtreme: controller.randomIntegerInRange(
-        EXTREME_INTERVAL_RANGE,
-      ),
+      previousCycleIndex: -1,
+      previousProfile: null,
+      previousPulseLevel: null,
+      profile: NORMAL_PROFILE,
+      pulseLevel: "normal",
       startTime: null,
       stopped: false,
     };
@@ -129,7 +150,7 @@
       let renderer = null;
       let waterState = null;
       let sweatRenderer = null;
-      const pulseState = createPushStretchPulseState(this);
+      const pulseState = createPushStretchPulseState();
       const renderFrame = (timestamp) => {
         if (pulseState.stopped || !renderer) {
           return;
@@ -142,22 +163,19 @@
           Math.floor(elapsed / PULSE_DURATION_MS),
         );
         const phase = (elapsed % PULSE_DURATION_MS) / PULSE_DURATION_MS;
-        const profile = pulseState.isExtreme ? EXTREME_PROFILE : NORMAL_PROFILE;
+        const profile = pulseState.profile;
         const amount = pulseAmount(profile, phase);
-        const renderExtremeTrail =
-          pulseState.previousCycleWasExtreme && phase <= EXTREME_TRAIL_PHASE;
         renderer.render(profile, amount);
         const sweatLoad = sweatRenderer?.render({
           cycleIndex: pulseState.cycleIndex,
-          extremeCycleIndex: pulseState.isExtreme
-            ? pulseState.cycleIndex
-            : pulseState.previousExtremeCycleIndex,
           iconRenderer: renderer,
           profile,
           amount,
           phase,
-          isExtreme: pulseState.isExtreme,
-          renderExtremeTrail,
+          previousCycleIndex: pulseState.previousCycleIndex,
+          previousProfile: pulseState.previousProfile,
+          previousPulseLevel: pulseState.previousPulseLevel,
+          pulseLevel: pulseState.pulseLevel,
         });
         updatePushWaterLayer(
           waterState,

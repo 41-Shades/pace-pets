@@ -30,7 +30,7 @@
 
 .pace-push-stretch-layer {
   display: block;
-  inset: -300%;
+  inset: -800%;
   z-index: 8;
 }
 

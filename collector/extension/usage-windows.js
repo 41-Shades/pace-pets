@@ -1,7 +1,7 @@
 (function attachCodexUsageWindows(root) {
   "use strict";
 
-  const WINDOW_STORAGE_KEY = "codex-usage-window";
+  const BADGE_WINDOW_STORAGE_KEY = "codex-usage-window";
   const DEFAULT_WINDOW_KEY = "weekly";
   const WEEK_MINUTES = 7 * 24 * 60;
   const FIVE_HOUR_MINUTES = 5 * 60;
@@ -70,12 +70,12 @@
 
   root.CodexUsageWindows = Object.freeze({
     DEFAULT_WINDOW_KEY,
+    BADGE_WINDOW_STORAGE_KEY,
     FIVE_HOUR_MINUTES,
     WEEK_MINUTES,
     WINDOW_BADGE_LABELS,
     WINDOW_KEYS,
     WINDOW_SPECS,
-    WINDOW_STORAGE_KEY,
     alternateWindowKey,
     firstAvailableWindowKey,
     isSupportedWindowKey,

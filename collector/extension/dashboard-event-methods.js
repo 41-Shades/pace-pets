@@ -165,7 +165,6 @@
         this.EXTENSION_STORAGE.hasAnyChange(changes, [
           CodexUsageHistory.HISTORY_STORAGE_KEY,
           CodexUsageHistory.REFRESH_STATUS_STORAGE_KEY,
-          this.WINDOW_STORAGE_KEY,
           this.DEVELOPER_OPTIONS_STORAGE_KEY,
         ])
       );

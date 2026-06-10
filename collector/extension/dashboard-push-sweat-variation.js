@@ -33,6 +33,30 @@
     return result;
   }
 
+  function randomIntegerInRange(random, [min, max]) {
+    return Math.floor(random() * (max - min + 1)) + min;
+  }
+
+  function selectedTrackCount(random, options) {
+    if (options.countRange) {
+      return randomIntegerInRange(random, options.countRange);
+    }
+    return options.count || null;
+  }
+
+  function selectTracks(sourceTracks, random, count) {
+    if (!count) {
+      return sourceTracks;
+    }
+    const result = [];
+    while (result.length < count) {
+      result.push(...shuffledTracks(sourceTracks, random));
+    }
+    return result
+      .slice(0, count)
+      .sort((first, second) => first.start - second.start);
+  }
+
   function variedTrack(track, random, variation) {
     return {
       ...track,
@@ -52,11 +76,11 @@
 
   function buildTracks(sourceTracks, seed, options) {
     const random = randomSource(seed);
-    const selectedTracks = options.count
-      ? shuffledTracks(sourceTracks, random)
-          .slice(0, options.count)
-          .sort((first, second) => first.start - second.start)
-      : sourceTracks;
+    const selectedTracks = selectTracks(
+      sourceTracks,
+      random,
+      selectedTrackCount(random, options),
+    );
     return Object.freeze(
       selectedTracks.map((sourceTrack) =>
         Object.freeze(variedTrack(sourceTrack, random, options.variation)),
