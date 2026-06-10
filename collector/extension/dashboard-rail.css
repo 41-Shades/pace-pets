@@ -13,7 +13,7 @@
 .state-rail {
   --state-chip-gap-x: 28px;
   --state-chip-gap-y: 10px;
-  --state-chip-width: 228px;
+  --state-chip-width: 234px;
   --state-rail-top-inset: 28px;
   --state-section-gap-y: 18px;
   --state-stack-max-width: calc(

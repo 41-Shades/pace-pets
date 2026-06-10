@@ -13,7 +13,6 @@
   const DROP_STROKE = "#243044";
   const DROP_DESCENT_ANGLE = 0;
   const DROP_LAUNCH_TURN = -Math.PI;
-  const EXTREME_SIZE_BOOST = 0.95;
   const EXTREME_VARIATION = Object.freeze({
     angle: 0.13,
     lift: 0.16,
@@ -23,9 +22,6 @@
     sway: 0.012,
     travel: 0.05,
   });
-  const NORMAL_DROP_COUNT = 3;
-  const NORMAL_SIZE_BOOST = 0.32;
-  const NORMAL_TRAIL_PHASE = 0.24;
   const NORMAL_VARIATION = Object.freeze({
     angle: 0.09,
     lift: 0.08,
@@ -35,6 +31,7 @@
     sway: 0.012,
     travel: 0.14,
   });
+  const RARE_EXIT_TRAIL_PHASE = 0.12;
   const SWEAT_ORIGIN = Object.freeze({ x: 0.69, y: 0.18 });
 
   function track([
@@ -93,6 +90,32 @@
       [0.88, 0.54, 0.38, 0.34, 0.5, 0.024, 0.02, 0.72, 0.028, 1.1],
     ].map(track),
   );
+  const LEVEL_CONFIGS = Object.freeze({
+    extreme: Object.freeze({
+      countRange: Object.freeze([4, 6]),
+      salt: 0x7f4a7c15,
+      sizeBoost: 0.58,
+      sourceTracks: EXTREME_TRACKS,
+      trailPhase: 0.34,
+      variation: EXTREME_VARIATION,
+    }),
+    normal: Object.freeze({
+      countRange: Object.freeze([1, 3]),
+      salt: 0x9e3779b9,
+      sizeBoost: 0.32,
+      sourceTracks: NORMAL_TRACKS,
+      trailPhase: 0.24,
+      variation: NORMAL_VARIATION,
+    }),
+    rare: Object.freeze({
+      countRange: Object.freeze([75, 125]),
+      salt: 0x85ebca6b,
+      sizeBoost: 0.95,
+      sourceTracks: EXTREME_TRACKS,
+      trailPhase: 0.44,
+      variation: EXTREME_VARIATION,
+    }),
+  });
 
   function clamp(value, min = 0, max = 1) {
     return Math.max(min, Math.min(max, value));
@@ -124,8 +147,18 @@
     return progress;
   }
 
-  function sizeBoost(isExtreme, amount) {
-    const maxBoost = isExtreme ? EXTREME_SIZE_BOOST : NORMAL_SIZE_BOOST;
+  function configForLevel(level) {
+    return LEVEL_CONFIGS[level] || LEVEL_CONFIGS.normal;
+  }
+
+  function trailPhaseForTransition(previousLevel, currentLevel) {
+    if (previousLevel === "rare" && currentLevel !== "rare") {
+      return RARE_EXIT_TRAIL_PHASE;
+    }
+    return configForLevel(previousLevel).trailPhase;
+  }
+
+  function sizeBoost(maxBoost, amount) {
     return 1 + maxBoost * amount;
   }
 
@@ -137,7 +170,7 @@
         launchAmount,
         track.emitter,
       ),
-      sizeBoost: sizeBoost(frame.isExtreme, launchAmount),
+      sizeBoost: sizeBoost(frame.sizeBoost, launchAmount),
       unit: frame.iconRenderer.imageUnit(),
     };
   }
@@ -257,30 +290,38 @@
     return sweatLoad;
   }
 
+  function createTrackCaches() {
+    return Object.freeze(
+      Object.fromEntries(
+        Object.entries(LEVEL_CONFIGS).map(([level, config]) => [
+          level,
+          SweatVariation.createTrackCache(config.sourceTracks, {
+            countRange: config.countRange,
+            salt: config.salt,
+            variation: config.variation,
+          }),
+        ]),
+      ),
+    );
+  }
+
   function createRenderer(canvas, groundElement) {
     const context = canvas.getContext("2d");
     if (!context) {
       return null;
     }
-    const normalTracks = SweatVariation.createTrackCache(NORMAL_TRACKS, {
-      count: NORMAL_DROP_COUNT,
-      salt: 0x9e3779b9,
-      variation: NORMAL_VARIATION,
-    });
-    const extremeTracks = SweatVariation.createTrackCache(EXTREME_TRACKS, {
-      salt: 0x85ebca6b,
-      variation: EXTREME_VARIATION,
-    });
+    const trackCaches = createTrackCaches();
     return {
       render({
         cycleIndex,
-        extremeCycleIndex,
         iconRenderer,
         profile,
         amount,
         phase,
-        isExtreme,
-        renderExtremeTrail,
+        previousCycleIndex,
+        previousProfile,
+        previousPulseLevel,
+        pulseLevel,
       }) {
         const dimensions = resizeCanvas(canvas);
         const frame = {
@@ -288,49 +329,36 @@
           dimensions,
           groundY: groundY(canvas, groundElement, dimensions),
           iconRenderer,
-          isExtreme,
           phase,
           profile,
           allowPhaseWrap: true,
         };
-        const currentNormalFrame = {
+        const currentConfig = configForLevel(pulseLevel);
+        const currentFrame = {
           ...frame,
           allowPhaseWrap: false,
-        };
-        const previousNormalFrame = {
-          ...frame,
-          allowPhaseWrap: true,
-          isExtreme: false,
-          profile: PushStretch.NORMAL_PROFILE,
-        };
-        const extremeFrame = {
-          ...frame,
-          allowPhaseWrap: renderExtremeTrail,
-          isExtreme: true,
-          profile: PushStretch.EXTREME_PROFILE,
+          sizeBoost: currentConfig.sizeBoost,
         };
         context.clearRect(0, 0, dimensions.width, dimensions.height);
         let sweatLoad = drawTracks(
           context,
-          currentNormalFrame,
-          normalTracks.forCycle(cycleIndex),
+          currentFrame,
+          trackCaches[pulseLevel].forCycle(cycleIndex),
         );
+        const previousConfig = configForLevel(previousPulseLevel);
         if (
-          cycleIndex > 0 &&
-          !renderExtremeTrail &&
-          phase <= NORMAL_TRAIL_PHASE
+          previousCycleIndex >= 0 &&
+          phase <= trailPhaseForTransition(previousPulseLevel, pulseLevel)
         ) {
           sweatLoad += drawTracks(
             context,
-            previousNormalFrame,
-            normalTracks.forCycle(cycleIndex - 1),
-          );
-        }
-        if (isExtreme || renderExtremeTrail) {
-          sweatLoad += drawTracks(
-            context,
-            extremeFrame,
-            extremeTracks.forCycle(extremeCycleIndex),
+            {
+              ...frame,
+              allowPhaseWrap: true,
+              profile: previousProfile || PushStretch.NORMAL_PROFILE,
+              sizeBoost: previousConfig.sizeBoost,
+            },
+            trackCaches[previousPulseLevel].forCycle(previousCycleIndex),
           );
         }
         return sweatLoad;

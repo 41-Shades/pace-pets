@@ -147,15 +147,27 @@ function assertDashboardSource({
     "Dashboard script must read pace icon paths from shared pace-state metadata.",
   );
   assert(
-    !/localStorage\.(?:getItem|setItem)\(\s*this\.WINDOW_STORAGE_KEY\b/.test(
+    !/localStorage\.(?:getItem|setItem)\(\s*this\.(?:BADGE_)?WINDOW_STORAGE_KEY\b/.test(
       dashboardSource,
     ),
-    "Selected usage window preference must use chrome.storage.local, not localStorage.",
+    "Dashboard window selection must not use localStorage.",
+  );
+  assert(
+    dashboardSource.includes("sessionStorage.getItem(") &&
+      dashboardSource.includes("sessionStorage.setItem(") &&
+      dashboardSource.includes("this.DASHBOARD_WINDOW_SESSION_KEY"),
+    "Dashboard selected window must be scoped to the current page session.",
   );
   assert(
     dashboardSource.includes("this.EXTENSION_STORAGE.getLocal(") &&
-      dashboardSource.includes("this.WINDOW_STORAGE_KEY"),
-    "Dashboard must read selected usage window preference through the storage adapter.",
+      dashboardSource.includes("this.BADGE_WINDOW_STORAGE_KEY"),
+    "New dashboard pages must seed selected window from the badge preference through the storage adapter.",
+  );
+  assert(
+    !/hasAnyChange\(changes,\s*\[[\s\S]*?this\.BADGE_WINDOW_STORAGE_KEY[\s\S]*?\]\s*\)/.test(
+      dashboardSource,
+    ),
+    "Open dashboard pages must not resync their selected window from badge preference changes.",
   );
   assert(
     dashboardSource.includes("this.currentHistory = null;") &&

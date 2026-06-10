@@ -100,7 +100,7 @@ describe("PacePetsBackgroundLogic auth", () => {
 describe("PacePetsBackgroundLogic badge selection", () => {
   it("selects badge windows from valid stored preferences and available data", () => {
     const logic = globalThis.PacePetsBackgroundLogic;
-    const storageKey = globalThis.CodexUsageWindows.WINDOW_STORAGE_KEY;
+    const storageKey = globalThis.CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
 
     expect(logic.selectedBadgeWindowKeyFromItems({}, storageKey)).toBe(
       "weekly",

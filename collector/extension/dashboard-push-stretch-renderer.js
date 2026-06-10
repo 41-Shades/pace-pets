@@ -3,22 +3,70 @@
 
   const AXIS_ANGLE_RAD = (-52 * Math.PI) / 180;
   const AXIS_LENGTH = 0.69;
-  const EXTREME_INTERVAL_RANGE = Object.freeze([4, 6]);
   const IMAGE_OUTSET = 0.03;
-  const LAYER_OUTSET = 3;
+  const LAYER_OUTSET = 8;
   const MESH_COLUMNS = 28;
   const MESH_ROWS = 28;
   const PULSE_DURATION_MS = 2150;
   const ROOT = Object.freeze({ x: 0.2, y: 0.84 });
-  const AXIS = Object.freeze({
-    x: Math.cos(AXIS_ANGLE_RAD),
-    y: Math.sin(AXIS_ANGLE_RAD),
+  const NORMAL_AXIS_DELTA = Object.freeze({
+    x: Math.cos(AXIS_ANGLE_RAD) * AXIS_LENGTH,
+    y: Math.sin(AXIS_ANGLE_RAD) * AXIS_LENGTH,
   });
-  const PERP = Object.freeze({ x: -AXIS.y, y: AXIS.x });
+  const EXTREME_AXIS_DELTA = Object.freeze({
+    x: NORMAL_AXIS_DELTA.x * 2.5,
+    y: NORMAL_AXIS_DELTA.y * 2.1,
+  });
+  const RARE_AXIS_DELTA = Object.freeze({
+    x: NORMAL_AXIS_DELTA.x * 9.210915,
+    y: NORMAL_AXIS_DELTA.y * 5.534298,
+  });
+
+  function createScaleGeometry(delta) {
+    const length = Math.hypot(delta.x, delta.y) || 1;
+    const axis = Object.freeze({
+      x: delta.x / length,
+      y: delta.y / length,
+    });
+    return Object.freeze({
+      axis,
+      perp: Object.freeze({ x: -axis.y, y: axis.x }),
+      progressLength: AXIS_LENGTH,
+    });
+  }
+
+  function createAttachedGeometry(delta) {
+    const source = createScaleGeometry(NORMAL_AXIS_DELTA);
+    const target = createScaleGeometry(delta);
+    const sourceLength = AXIS_LENGTH;
+    const targetLength = Math.hypot(delta.x, delta.y) || 1;
+    return Object.freeze({
+      coneWidthGrowth: targetLength / sourceLength - 1,
+      mode: "attached",
+      sourceAxis: source.axis,
+      sourceLength,
+      sourcePerp: source.perp,
+      targetAxis: target.axis,
+      targetLength,
+      targetPerp: target.perp,
+    });
+  }
+
+  const ATTACHED_KEYFRAMES = Object.freeze([
+    [0, 0],
+    [0.16, 0],
+    [0.28, 0.2],
+    [0.52, 1],
+    [0.68, 0.46],
+    [0.82, 0.08],
+    [0.9, 0],
+    [1, 0],
+  ]);
   const NORMAL_PROFILE = Object.freeze({
     activeStart: 0.08,
     axisScale: 0.38,
     exponent: 1.28,
+    geometry: createScaleGeometry(NORMAL_AXIS_DELTA),
     keyframes: Object.freeze([
       [0, 0],
       [0.18, 0],
@@ -33,19 +81,15 @@
   });
   const EXTREME_PROFILE = Object.freeze({
     activeStart: 0.18,
-    axisScale: 1.68,
     exponent: 0.72,
-    keyframes: Object.freeze([
-      [0, 0],
-      [0.16, 0],
-      [0.28, 0.2],
-      [0.52, 1],
-      [0.68, 0.46],
-      [0.82, 0.08],
-      [0.9, 0],
-      [1, 0],
-    ]),
-    perpScale: 1.05,
+    geometry: createAttachedGeometry(EXTREME_AXIS_DELTA),
+    keyframes: ATTACHED_KEYFRAMES,
+  });
+  const RARE_PROFILE = Object.freeze({
+    activeStart: 0.18,
+    exponent: 0.72,
+    geometry: createAttachedGeometry(RARE_AXIS_DELTA),
+    keyframes: ATTACHED_KEYFRAMES,
   });
   const VERTEX_SHADER_SOURCE = `
     attribute vec2 a_position;
@@ -102,23 +146,61 @@
     return activeProgress ** profile.exponent;
   }
 
-  function transformLayerPoint(rect, profile, amount, x, y) {
+  function transformScaleLayerPoint(rect, profile, amount, x, y) {
+    const { axis, perp, progressLength } = profile.geometry;
     const root = {
       x: rect.x + ROOT.x * rect.size,
       y: rect.y + ROOT.y * rect.size,
     };
     const dx = x - root.x;
     const dy = y - root.y;
-    const along = dx * AXIS.x + dy * AXIS.y;
-    const across = dx * PERP.x + dy * PERP.y;
-    const progress = clamp(along / (AXIS_LENGTH * rect.size));
+    const along = dx * axis.x + dy * axis.y;
+    const across = dx * perp.x + dy * perp.y;
+    const progress = clamp(along / (progressLength * rect.size));
     const strength = strengthForProgress(progress, profile) * amount;
     const stretchedAlong = along * (1 + profile.axisScale * strength);
     const stretchedAcross = across * (1 + profile.perpScale * strength);
     return {
-      x: root.x + AXIS.x * stretchedAlong + PERP.x * stretchedAcross,
-      y: root.y + AXIS.y * stretchedAlong + PERP.y * stretchedAcross,
+      x: root.x + axis.x * stretchedAlong + perp.x * stretchedAcross,
+      y: root.y + axis.y * stretchedAlong + perp.y * stretchedAcross,
     };
+  }
+
+  function transformLineAttachedLayerPoint(rect, profile, amount, x, y) {
+    const geometry = profile.geometry;
+    const root = {
+      x: rect.x + ROOT.x * rect.size,
+      y: rect.y + ROOT.y * rect.size,
+    };
+    const dx = x - root.x;
+    const dy = y - root.y;
+    const along = dx * geometry.sourceAxis.x + dy * geometry.sourceAxis.y;
+    const across = dx * geometry.sourcePerp.x + dy * geometry.sourcePerp.y;
+    const progress = clamp(along / (geometry.sourceLength * rect.size));
+    const strength = strengthForProgress(progress, profile) * amount;
+    const targetAlong = along * (geometry.targetLength / geometry.sourceLength);
+    const targetAcross = across * (1 + geometry.coneWidthGrowth * progress);
+    const target = {
+      x:
+        root.x +
+        geometry.targetAxis.x * targetAlong +
+        geometry.targetPerp.x * targetAcross,
+      y:
+        root.y +
+        geometry.targetAxis.y * targetAlong +
+        geometry.targetPerp.y * targetAcross,
+    };
+    return {
+      x: interpolate(x, target.x, strength),
+      y: interpolate(y, target.y, strength),
+    };
+  }
+
+  function transformLayerPoint(rect, profile, amount, x, y) {
+    if (profile.geometry.mode === "attached") {
+      return transformLineAttachedLayerPoint(rect, profile, amount, x, y);
+    }
+    return transformScaleLayerPoint(rect, profile, amount, x, y);
   }
 
   function transformImagePoint(rect, profile, amount, point) {
@@ -304,10 +386,10 @@
   }
 
   root.PacePetsDashboardPushStretch = Object.freeze({
-    EXTREME_INTERVAL_RANGE,
     EXTREME_PROFILE,
     NORMAL_PROFILE,
     PULSE_DURATION_MS,
+    RARE_PROFILE,
     createRenderer,
     pulseAmount,
   });

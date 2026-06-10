@@ -49,6 +49,12 @@
       return hasMatchingPlayfulPaceIcon(controller.elements.paceIcon, state);
     }
 
+    if (DATA.PACE_ICON_EFFECTS_BY_STATE[state.key] === "push-stretch") {
+      return controller.paceIconEffectCleanups.has(
+        controller.elements.paceIcon,
+      );
+    }
+
     return (
       DATA.PACE_ICON_EFFECTS_BY_STATE[state.key] === "slow-wobble" &&
       controller.paceIconEffectCleanups.has(controller.elements.paceIcon)

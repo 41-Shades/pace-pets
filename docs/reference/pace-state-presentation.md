@@ -149,15 +149,27 @@ effect in `collector/extension/dashboard-push-stretch-methods.js` and
 `collector/extension/dashboard-push-stretch.css`. The main status icon texture is
 warped along the lower-left-foot-to-head axis so the root stays pinned while the
 head end expands more. A matching 2D canvas layer emits small sweat beads from
-the transformed head area. Normal pulses choose three beads from a small seeded
-track pool so launch timing, bead size, lift, spin, and travel vary per pulse
-without frame-to-frame jitter. Extreme pulses emit a wider seeded burst. The
-status card also renders a clipped canvas water layer behind the content so the
-falling drops land into a slowly rising shimmer pool. The local developer
-controls include a max-pool-fill preview that forces that water layer to its
-configured cap for inspection. The legend rail remains static. After every four
-to six normal pulses, the status icon runs one extreme pulse with a longer
-expansion range and larger head stretch before returning to the normal loop.
+the transformed head area. Pulse levels choose seeded bead-count ranges: normal
+uses one to three beads, extreme uses four to six, and rare uses seventy-five to
+one hundred twenty-five. Launch timing, bead size, lift, spin, and travel vary per
+pulse without frame-to-frame jitter, with larger levels using larger bead boosts
+and longer previous-pulse trail windows. Rare keeps its full carry-over only when
+the next pulse is also rare; transitions from rare into normal or extreme use a
+short carry-over so stale rare geometry does not flash during the shorter stretch.
+The status card also renders a clipped canvas water layer behind the content so
+the falling drops land into a slowly rising shimmer pool. The pool starts empty
+when Push harder is entered or the dashboard page is loaded, rises toward its cap,
+and does not loop back to empty while Push harder remains the active pace state.
+The dashboard's 60-second time-sensitive refresh reapplies the pace summary, so
+the active Push harder effect is preserved across same-state refreshes to keep
+the pool from resetting. Leaving Push harder or reloading the dashboard tears
+down the effect and resets the pool. The local developer controls include a
+max-pool-fill preview that forces that water layer to its configured cap for
+inspection. The legend rail remains static. The first pulse after entering Push
+harder is normal; each later pulse chooses normal, extreme, or rare at
+75% / 20% / 5% odds.
+Extreme and rare pulses use progressively longer expansion lines and larger
+cone-shaped head stretch.
 
 The `ahead` / Pick up speed state uses the dashboard-only speed-lines effect in
 `collector/extension/dashboard-speed-lines-methods.js`,
