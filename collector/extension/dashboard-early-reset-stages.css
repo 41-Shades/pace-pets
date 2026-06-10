@@ -241,6 +241,10 @@
     will-change: auto;
   }
 
+  .pace-icon.has-pace-icon-effect-slow-wobble img {
+    will-change: auto;
+  }
+
   .pace-icon.has-pace-icon-effect-sprint-smoke img {
     will-change: auto;
   }
@@ -267,6 +271,8 @@
   .pace-icon.has-pace-icon-effect-speed-lines img,
   .pace-icon.has-pace-icon-effect-sprint-smoke img,
   .pace-icon.has-pace-icon-effect-brake-wobble img,
+  .pace-icon.has-pace-icon-effect-slow-wobble img,
+  .pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling img,
   .pace-icon.has-pace-icon-effect-brake-wobble.is-brake-wobbling img,
   .pace-speed-line,
   .pace-speed-tail-ghost,

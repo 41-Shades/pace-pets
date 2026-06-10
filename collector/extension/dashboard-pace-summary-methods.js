@@ -249,6 +249,7 @@
       staleWindow,
       comparisonPaceRatio = null,
       {
+        applySummary = true,
         allowPerfectZero = true,
         resetCountdownDisplaysZero = false,
         waitingForReadingText = "Waiting",
@@ -263,7 +264,9 @@
         timePercent,
         waitingForReadingText,
       });
-      this.setPaceSummary(summary);
+      if (applySummary) {
+        this.setPaceSummary(summary);
+      }
       return summary;
     },
   });

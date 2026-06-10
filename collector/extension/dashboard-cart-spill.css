@@ -1,0 +1,81 @@
+@keyframes cart-spill-flight {
+  0% {
+    offset-distance: 0%;
+    opacity: 1;
+  }
+
+  100% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes cart-spill-spin {
+  0% {
+    transform: rotate(var(--cart-spill-start-rotate)) scale(0.96);
+  }
+
+  100% {
+    transform: rotate(var(--cart-spill-spin)) scale(var(--cart-spill-end-scale));
+  }
+}
+
+.cart-spill-layer,
+.cart-spill-pile-layer {
+  contain: layout style;
+  height: 100vh;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  position: fixed;
+  width: 100vw;
+  z-index: 1100;
+}
+
+.cart-spill-item {
+  --cart-spill-delay: 0ms;
+  --cart-spill-duration: 2400ms;
+  --cart-spill-end-scale: 0.92;
+  --cart-spill-size: 38px;
+  --cart-spill-spin: 480deg;
+  --cart-spill-start-rotate: 0deg;
+
+  animation: cart-spill-flight var(--cart-spill-duration) linear forwards;
+  animation-delay: var(--cart-spill-delay);
+  display: block;
+  height: var(--cart-spill-size);
+  offset-anchor: 50% 50%;
+  offset-distance: 0%;
+  offset-path: path("M 0 0 C 90 -210 280 -240 420 -90");
+  offset-rotate: 0deg;
+  opacity: 0;
+  position: absolute;
+  transform-origin: 50% 50%;
+  width: var(--cart-spill-size);
+  will-change: offset-distance, opacity;
+}
+
+.cart-spill-image {
+  animation: cart-spill-spin var(--cart-spill-duration) linear forwards;
+  animation-delay: var(--cart-spill-delay);
+  display: block;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(var(--cart-spill-start-rotate)) scale(0.96);
+  transform-origin: 50% 50%;
+  width: 100%;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-spill-layer,
+  .cart-spill-pile-layer {
+    display: none;
+  }
+
+  .cart-spill-item,
+  .cart-spill-image {
+    animation: none;
+    will-change: auto;
+  }
+}

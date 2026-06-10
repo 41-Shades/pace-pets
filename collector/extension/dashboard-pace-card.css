@@ -169,10 +169,28 @@
   will-change: transform;
 }
 
+.pace-icon.has-pace-icon-effect-slow-wobble img {
+  --slow-wobble-duration: 1150ms;
+
+  animation: slow-down-idle-wobble 1450ms ease-in-out infinite;
+  transform-origin: 50% 62%;
+  will-change: transform;
+}
+
 .pace-icon.has-pace-icon-effect-brake-wobble img {
   animation: brake-hard-idle-shake 840ms steps(1, end) infinite;
   transform-origin: 50% 56%;
   will-change: transform;
+}
+
+.pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling img {
+  animation: slow-down-calm-rock var(--slow-wobble-duration)
+    cubic-bezier(0.36, 0, 0.18, 1) both;
+  will-change: transform;
+}
+
+.pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling-extreme img {
+  animation-name: slow-down-extreme-rock;
 }
 
 .pace-icon.has-pace-icon-effect-brake-wobble.is-brake-wobbling img {

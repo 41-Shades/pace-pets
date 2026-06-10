@@ -122,6 +122,28 @@ status card briefly teeters and the ratio stat pops upward before both settle.
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects.
 
+The `sync` / Perfect Sync state keeps its existing gentle status-icon float and
+adds a dashboard-only yellow sunburst on the page background layer behind the
+main panel. The canvas renderer in
+`collector/extension/dashboard-sync-sunburst-renderer.js` centers the sunburst
+near the status icon position and slowly grows it from a point to a panel-scale
+glow over a single 30-second entry animation. Each new sunburst gets a fresh
+bounded-random ray field, so the final burst is slightly larger than the main
+panel with varied ray placement, widths, bright yellow tones, and a relatively
+even outer ray length. A broader center bloom sits behind the status icon with a
+softened resting opacity. The main usage panel background fades to transparent
+after a slight delay so the page-layer sunburst establishes first, then becomes
+increasingly visible behind the UI without fading panel contents. Secondary
+inner dashboard cards render transparent with warm softened borders in this
+state; the tinted `sync` pace status container background fades on the same
+curve while keeping a slightly stronger warm outline. The sunburst rise is a
+one-time page-session animation; re-renders continue from the original start
+time instead of restarting the rise. After it completes, the ray field remains
+alive while old rays fade out and new rays fade in faster from the same
+bounded-random sunburst parameters unless reduced motion is enabled. The
+turnover starts lightly midway through the rise, ramps up near the end, and uses
+the full-strength turnover after the rise completes.
+
 The `strongAhead` / Push harder state uses a dashboard-only WebGL canvas mesh
 effect in `collector/extension/dashboard-push-stretch-methods.js` and
 `collector/extension/dashboard-push-stretch.css`. The main status icon texture is

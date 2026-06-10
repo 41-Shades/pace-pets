@@ -24,6 +24,9 @@
       this.paceIconEffectCleanups = new WeakMap();
       this.lastForcedPaceStateKey = null;
       this.perfectZeroPageBackgroundScene = null;
+      this.syncSunburstPageBackgroundScene = null;
+      this.syncSunburstPageBackgroundStartedAtMs = null;
+      this.syncSunburstPageBackgroundStopTimer = null;
     }
 
     randomIntegerInRange(range) {
