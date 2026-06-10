@@ -59,7 +59,9 @@ States. Choosing a state stores
 `chrome.storage.local`; enabling the brake-hard badge preview stores
 `criticalBadgeWindow`; enabling the refresh-link preview stores
 `manualRefreshLeadWindow`; enabling the max-pool-fill preview stores
-`maxPoolFill`. Returning to live data removes those overrides.
+`maxPoolFill`. Returning to live data removes those overrides. The monk escape
+feature preview is a one-shot dev action: it sends a runtime message to open
+dashboard pages and does not store developer option state.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, and toolbar badge match

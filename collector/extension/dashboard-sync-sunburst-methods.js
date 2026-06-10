@@ -19,6 +19,7 @@
 
     stopSyncSunburstPageBackground() {
       this.clearSyncSunburstPageBackgroundStopTimer();
+      this.setSyncMonkEscapeActive?.(false);
       this.syncSunburstPageBackgroundScene?.stop();
       this.syncSunburstPageBackgroundScene = null;
     },
@@ -35,25 +36,17 @@
       }, STOP_DELAY_MS);
     },
 
-    setSyncSunburstPageBackgroundActive(active, origin) {
-      if (!active) {
-        this.scheduleSyncSunburstPageBackgroundStop();
-        return false;
-      }
+    deactivateSyncSunburstPageBackground() {
+      this.setSyncMonkEscapeActive?.(false);
+      this.scheduleSyncSunburstPageBackgroundStop();
+      return false;
+    },
 
-      this.clearSyncSunburstPageBackgroundStopTimer();
-      this.syncSunburstPageBackgroundStartedAtMs ??= window.performance.now();
+    activateSyncMonkEscape(enteredSync) {
+      this.setSyncMonkEscapeActive?.(true, { entered: enteredSync });
+    },
 
-      if (this.syncSunburstPageBackgroundScene) {
-        if (origin) {
-          this.syncSunburstPageBackgroundScene.updateOrigin(origin);
-        }
-        return true;
-      }
-      if (!origin) {
-        return false;
-      }
-
+    createSyncSunburstPageBackgroundScene(origin, enteredSync) {
       const scene = SyncSunburst.create(origin, {
         startedAtMs: this.syncSunburstPageBackgroundStartedAtMs,
       });
@@ -63,7 +56,38 @@
       }
 
       this.syncSunburstPageBackgroundScene = scene;
+      this.activateSyncMonkEscape(enteredSync);
       return true;
+    },
+
+    updateSyncSunburstPageBackgroundScene(origin, enteredSync) {
+      if (origin) {
+        this.syncSunburstPageBackgroundScene.updateOrigin(origin);
+      }
+      this.activateSyncMonkEscape(enteredSync);
+      return true;
+    },
+
+    setSyncSunburstPageBackgroundActive(
+      active,
+      origin,
+      { enteredSync = false } = {},
+    ) {
+      if (!active) {
+        return this.deactivateSyncSunburstPageBackground();
+      }
+
+      this.clearSyncSunburstPageBackgroundStopTimer();
+      this.syncSunburstPageBackgroundStartedAtMs ??= window.performance.now();
+
+      if (this.syncSunburstPageBackgroundScene) {
+        return this.updateSyncSunburstPageBackgroundScene(origin, enteredSync);
+      }
+      if (!origin) {
+        return false;
+      }
+
+      return this.createSyncSunburstPageBackgroundScene(origin, enteredSync);
     },
   });
 })();

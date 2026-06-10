@@ -81,6 +81,7 @@
   border-left: 3px solid color-mix(in srgb, var(--pace-border) 58%, var(--line));
   border-radius: 8px;
   color: inherit;
+  cursor: default;
   display: flex;
   font: inherit;
   gap: 9px;

@@ -4,10 +4,26 @@
   const DEVELOPER_OPTIONS = globalThis.PacePetsDeveloperOptions;
   const CURRENT_MODE = globalThis.PacePetsDevFlagsCurrentMode;
   const PACE_STATE_DATA = globalThis.PacePetsPaceStateData;
+  const SYNC_MONK_ESCAPE_PREVIEW =
+    globalThis.PacePetsSyncMonkEscapePreviewControl;
   const STORAGE = globalThis.CodexExtensionStorage;
-  if (!CURRENT_MODE || !DEVELOPER_OPTIONS || !PACE_STATE_DATA || !STORAGE) {
+  if (
+    !CURRENT_MODE ||
+    !DEVELOPER_OPTIONS ||
+    !PACE_STATE_DATA ||
+    !STORAGE ||
+    !SYNC_MONK_ESCAPE_PREVIEW
+  ) {
     throw new Error("Dev controls dependencies did not load.");
   }
+
+  const FEATURE_PREVIEW_ACTIONS = Object.freeze([
+    Object.freeze({
+      label: "Monk escape",
+      status: "Monk escape launch requested.",
+      value: "sync-monk-escape-launch",
+    }),
+  ]);
 
   function requiredElement(selector) {
     const element = document.querySelector(selector);
@@ -130,12 +146,22 @@
     );
   }
 
-  function optionButton({ labelText, onClick, pressed, value }) {
+  function optionButton({
+    action = false,
+    indicator = true,
+    labelText,
+    onClick,
+    pressed,
+    value,
+  }) {
     const button = document.createElement("button");
     button.className = "option-row";
+    button.classList.toggle("has-option-indicator", indicator);
     button.type = "button";
     button.value = value;
-    button.setAttribute("aria-pressed", String(pressed));
+    if (!action) {
+      button.setAttribute("aria-pressed", String(pressed));
+    }
     button.addEventListener("click", () => {
       onClick({ pressed }).catch((error) => {
         setStatus(error.message || "Could not update.");
@@ -147,6 +173,14 @@
     text.textContent = labelText;
     button.append(text);
     return button;
+  }
+
+  function requestSyncMonkEscapeLaunch() {
+    if (!chrome?.runtime?.sendMessage) {
+      throw new Error("Runtime messaging is unavailable.");
+    }
+
+    chrome.runtime.sendMessage(SYNC_MONK_ESCAPE_PREVIEW.launchMessage());
   }
 
   function optionRowsForStateOptions(stateOptions) {
@@ -193,6 +227,7 @@
     elements.featurePreviewList.replaceChildren(
       ...DEVELOPER_OPTIONS.FEATURE_PREVIEW_OPTIONS.map((preview) =>
         optionButton({
+          indicator: false,
           labelText: preview.label,
           pressed: Boolean(options[preview.key]),
           value: preview.value,
@@ -200,6 +235,18 @@
             const enabled = !pressed;
             await persistDeveloperOptions({ [preview.key]: enabled });
             setStatus(enabled ? preview.enableStatus : preview.disableStatus);
+          },
+        }),
+      ),
+      ...FEATURE_PREVIEW_ACTIONS.map((preview) =>
+        optionButton({
+          action: true,
+          indicator: false,
+          labelText: preview.label,
+          value: preview.value,
+          onClick: async () => {
+            requestSyncMonkEscapeLaunch();
+            setStatus(preview.status);
           },
         }),
       ),

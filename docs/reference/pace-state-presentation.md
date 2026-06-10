@@ -170,6 +170,12 @@ alive while old rays fade out and new rays fade in faster from the same
 bounded-random sunburst parameters unless reduced motion is enabled. The
 turnover starts lightly midway through the rise, ramps up near the end, and uses
 the full-strength turnover after the rise completes.
+After 60 continuous seconds in Perfect Sync, the dashboard clones the status
+monk into a fixed page layer, hides the in-card icon, and launches the clone
+through a bounded-random 70-degree upward cone. The escaped monk uses the same
+mirrored viewport wall-bounce motion as the Perfect Zero planets. Leaving Sync
+tears down the clone and resets the 60-second entry clock. Reduced-motion
+settings skip the escape.
 
 The `strongAhead` / Push harder state uses a dashboard-only WebGL canvas mesh
 effect in `collector/extension/dashboard-push-stretch-methods.js` and

@@ -165,7 +165,7 @@ input {
     0 0 0 3px rgb(15 118 110 / 14%);
 }
 
-.option-row::before {
+.option-row.has-option-indicator::before {
   background: transparent;
   border: 2px solid var(--border-strong);
   border-radius: 999px;
@@ -175,7 +175,7 @@ input {
   width: 12px;
 }
 
-.option-row[aria-pressed="true"]::before {
+.option-row.has-option-indicator[aria-pressed="true"]::before {
   background: var(--primary);
   border-color: var(--primary);
   box-shadow: inset 0 0 0 3px var(--primary-soft);
