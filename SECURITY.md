@@ -21,10 +21,12 @@ The supported security posture is:
   from `collector/extension/`
 - no hosted backend, telemetry, cloud sync, or account linking
 - one current ChatGPT host permission matching runtime fetches
+- `activeTab` for the dashboard-only Singularity visual transition
 - local storage of normalized safe usage fields only
 - no content scripts injected into ChatGPT pages
-- no `tabs`, `activeTab`, `scripting`, `tabCapture`, or `desktopCapture`
-- no chat-content, page-content, or screenshot collection path
+- no `tabs`, `scripting`, `tabCapture`, or `desktopCapture`
+- no chat-content, page-content, arbitrary-site capture, or durable screenshot
+  collection path
 
 ## Dependency And Upstream Notes
 
