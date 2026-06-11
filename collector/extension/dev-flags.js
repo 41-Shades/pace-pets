@@ -4,15 +4,18 @@
   const DEVELOPER_OPTIONS = globalThis.PacePetsDeveloperOptions;
   const CURRENT_MODE = globalThis.PacePetsDevFlagsCurrentMode;
   const PACE_STATE_DATA = globalThis.PacePetsPaceStateData;
-  const SYNC_MONK_ESCAPE_PREVIEW =
-    globalThis.PacePetsSyncMonkEscapePreviewControl;
+  const PREVIEW_ACTIONS = globalThis.PacePetsDevFlagsPreviewActions;
+  const RENDERING = globalThis.PacePetsDevFlagsRendering;
+  const SINGULARITY_CONTROLS = globalThis.PacePetsDevFlagsSingularityControls;
   const STORAGE = globalThis.CodexExtensionStorage;
   if (
     !CURRENT_MODE ||
     !DEVELOPER_OPTIONS ||
     !PACE_STATE_DATA ||
-    !STORAGE ||
-    !SYNC_MONK_ESCAPE_PREVIEW
+    !PREVIEW_ACTIONS ||
+    !RENDERING ||
+    !SINGULARITY_CONTROLS ||
+    !STORAGE
   ) {
     throw new Error("Dev controls dependencies did not load.");
   }
@@ -21,27 +24,25 @@
     Object.freeze({
       label: "Monk escape",
       status: "Monk escape launch requested.",
-      value: "sync-monk-escape-launch",
     }),
   ]);
 
-  function requiredElement(selector) {
-    const element = document.querySelector(selector);
-    if (!element) {
-      throw new Error(`Dev controls element ${selector} is missing.`);
-    }
-    return element;
-  }
-
-  function requiredElementById(id) {
-    return requiredElement(`#${id}`);
-  }
+  const { optionButton, requiredElement, requiredElementById } = RENDERING;
 
   const elements = {
     currentModePanel: requiredElement(".current-mode-panel"),
     currentModeSummary: requiredElementById("current-mode-summary"),
     featurePreviewList: requiredElementById("feature-preview-list"),
     resetAll: requiredElementById("reset-all"),
+    singularityTransitionPreviewList: requiredElementById(
+      "singularity-transition-preview-list",
+    ),
+    singularityTransitionVersionList: requiredElementById(
+      "singularity-transition-version-list",
+    ),
+    sprintIntensityPreviewList: requiredElementById(
+      "sprint-intensity-preview-list",
+    ),
     statusMessage: requiredElementById("status-message"),
   };
 
@@ -57,6 +58,10 @@
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
   let currentMaxPoolFill = false;
+  let currentSingularityTransitionVersion =
+    DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_TRANSITION_VERSION;
+  let currentSprintIntensityPreview = null;
+  let singularityTransitionPreviewActive = false;
   let statusTimer = null;
 
   function setStatus(message) {
@@ -90,6 +95,8 @@
       forcedPaceStateKey: currentForcedPaceStateKey,
       manualRefreshLeadWindow: currentManualRefreshLeadWindow,
       maxPoolFill: currentMaxPoolFill,
+      singularityTransitionVersion: currentSingularityTransitionVersion,
+      sprintIntensityPreview: currentSprintIntensityPreview,
     };
   }
 
@@ -98,11 +105,17 @@
       ...currentDeveloperOptions(),
       ...nextOptions,
     });
+    applyDeveloperOptions(options);
+    render();
+  }
+
+  function applyDeveloperOptions(options) {
     currentCriticalBadgeWindow = options.criticalBadgeWindow;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     currentMaxPoolFill = options.maxPoolFill;
-    render();
+    currentSingularityTransitionVersion = options.singularityTransitionVersion;
+    currentSprintIntensityPreview = options.sprintIntensityPreview;
   }
 
   function paceStateByKey(stateKey) {
@@ -120,10 +133,41 @@
     );
   }
 
+  function activeSingularityTransitionVersionOption() {
+    if (
+      currentSingularityTransitionVersion ===
+      DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_TRANSITION_VERSION
+    ) {
+      return null;
+    }
+
+    return (
+      DEVELOPER_OPTIONS.SINGULARITY_TRANSITION_VERSION_OPTIONS.find(
+        (option) => option.value === currentSingularityTransitionVersion,
+      ) || null
+    );
+  }
+
+  function activeSprintIntensityPreviewOption() {
+    return (
+      DEVELOPER_OPTIONS.SPRINT_INTENSITY_PREVIEW_OPTIONS.find(
+        (option) => option.value === currentSprintIntensityPreview,
+      ) || null
+    );
+  }
+
   function currentModeLabel() {
     const labels = [];
     if (currentForcedPaceStateKey) {
       labels.push(stateLabelForKey(currentForcedPaceStateKey));
+    }
+    const transitionVersion = activeSingularityTransitionVersionOption();
+    if (transitionVersion) {
+      labels.push(transitionVersion.label);
+    }
+    const sprintIntensityPreview = activeSprintIntensityPreviewOption();
+    if (sprintIntensityPreview) {
+      labels.push(sprintIntensityPreview.label);
     }
     labels.push(...activeFeaturePreviewOptions().map((option) => option.label));
     return labels.length > 0 ? labels.join(" + ") : "Live data";
@@ -132,6 +176,8 @@
   function currentModeDetail() {
     const activeCount =
       Number(Boolean(currentForcedPaceStateKey)) +
+      Number(Boolean(activeSingularityTransitionVersionOption())) +
+      Number(Boolean(activeSprintIntensityPreviewOption())) +
       activeFeaturePreviewOptions().length;
     if (activeCount === 0) {
       return "Live data";
@@ -142,57 +188,34 @@
   function hasActiveOverride() {
     return (
       Boolean(currentForcedPaceStateKey) ||
+      Boolean(activeSingularityTransitionVersionOption()) ||
+      Boolean(activeSprintIntensityPreviewOption()) ||
       activeFeaturePreviewOptions().length > 0
     );
   }
 
-  function optionButton({
-    action = false,
-    indicator = true,
-    labelText,
-    onClick,
-    pressed,
-    value,
-  }) {
-    const button = document.createElement("button");
-    button.className = "option-row";
-    button.classList.toggle("has-option-indicator", indicator);
-    button.type = "button";
-    button.value = value;
-    if (!action) {
-      button.setAttribute("aria-pressed", String(pressed));
-    }
-    button.addEventListener("click", () => {
-      onClick({ pressed }).catch((error) => {
+  function optionRow(options) {
+    return optionButton({
+      ...options,
+      onError(error) {
         setStatus(error.message || "Could not update.");
         render();
-      });
+      },
     });
-    const text = document.createElement("span");
-    text.className = "option-label";
-    text.textContent = labelText;
-    button.append(text);
-    return button;
-  }
-
-  function requestSyncMonkEscapeLaunch() {
-    if (!chrome?.runtime?.sendMessage) {
-      throw new Error("Runtime messaging is unavailable.");
-    }
-
-    chrome.runtime.sendMessage(SYNC_MONK_ESCAPE_PREVIEW.launchMessage());
   }
 
   function optionRowsForStateOptions(stateOptions) {
     return stateOptions.map((option) => {
       const label = stateLabelForKey(option.key);
-      return optionButton({
+      return optionRow({
         labelText: label,
         pressed: currentForcedPaceStateKey === option.key,
-        value: option.key,
         onClick: async ({ pressed }) => {
           const forcedPaceStateKey = pressed ? null : option.key;
-          await persistDeveloperOptions({ forcedPaceStateKey });
+          await persistDeveloperOptions({
+            forcedPaceStateKey,
+            sprintIntensityPreview: null,
+          });
           setStatus(
             forcedPaceStateKey
               ? `State override: ${label}.`
@@ -210,6 +233,7 @@
       modeDetail: currentModeDetail(),
       modeLabel: currentModeLabel(),
       panel: elements.currentModePanel,
+      resetButton: elements.resetAll,
       summary: elements.currentModeSummary,
     });
   }
@@ -222,15 +246,58 @@
     });
   }
 
+  function setSingularityTransitionPreviewActive(active) {
+    singularityTransitionPreviewActive = active;
+    render();
+  }
+
+  function renderSingularityControls() {
+    SINGULARITY_CONTROLS.render({
+      currentVersion: currentSingularityTransitionVersion,
+      optionRow,
+      persistDeveloperOptions,
+      previewActions: PREVIEW_ACTIONS,
+      previewActive: singularityTransitionPreviewActive,
+      previewList: elements.singularityTransitionPreviewList,
+      setPreviewActive: setSingularityTransitionPreviewActive,
+      setStatus,
+      versionList: elements.singularityTransitionVersionList,
+      versionOptions: DEVELOPER_OPTIONS.SINGULARITY_TRANSITION_VERSION_OPTIONS,
+    });
+  }
+
+  function renderSprintIntensityPreviews() {
+    const sprintStateKey = PACE_STATE_DATA.PACE_STATES.wellAhead.key;
+    elements.sprintIntensityPreviewList.replaceChildren(
+      ...DEVELOPER_OPTIONS.SPRINT_INTENSITY_PREVIEW_OPTIONS.map((preview) =>
+        optionRow({
+          indicator: false,
+          labelText: preview.label,
+          pressed: currentSprintIntensityPreview === preview.value,
+          onClick: async ({ pressed }) => {
+            if (pressed) {
+              return;
+            }
+
+            await persistDeveloperOptions({
+              forcedPaceStateKey: sprintStateKey,
+              sprintIntensityPreview: preview.value,
+            });
+            setStatus(preview.status);
+          },
+        }),
+      ),
+    );
+  }
+
   function renderFeaturePreviews() {
     const options = currentDeveloperOptions();
     elements.featurePreviewList.replaceChildren(
       ...DEVELOPER_OPTIONS.FEATURE_PREVIEW_OPTIONS.map((preview) =>
-        optionButton({
+        optionRow({
           indicator: false,
           labelText: preview.label,
           pressed: Boolean(options[preview.key]),
-          value: preview.value,
           onClick: async ({ pressed }) => {
             const enabled = !pressed;
             await persistDeveloperOptions({ [preview.key]: enabled });
@@ -239,13 +306,12 @@
         }),
       ),
       ...FEATURE_PREVIEW_ACTIONS.map((preview) =>
-        optionButton({
+        optionRow({
           action: true,
           indicator: false,
           labelText: preview.label,
-          value: preview.value,
           onClick: async () => {
-            requestSyncMonkEscapeLaunch();
+            PREVIEW_ACTIONS.requestSyncMonkEscapeLaunch();
             setStatus(preview.status);
           },
         }),
@@ -256,6 +322,8 @@
   function render() {
     renderCurrentMode();
     renderStateOverrideColumns();
+    renderSingularityControls();
+    renderSprintIntensityPreviews();
     renderFeaturePreviews();
     elements.resetAll.hidden = !hasActiveOverride();
     elements.resetAll.disabled = !hasActiveOverride();
@@ -270,6 +338,9 @@
         ]),
       ),
       forcedPaceStateKey: null,
+      singularityTransitionVersion:
+        DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_TRANSITION_VERSION,
+      sprintIntensityPreview: null,
     });
     setStatus("Dev overrides reset.");
   }
@@ -292,19 +363,13 @@
       [DEVELOPER_OPTIONS.STORAGE_KEY]:
         changes[DEVELOPER_OPTIONS.STORAGE_KEY]?.newValue,
     });
-    currentCriticalBadgeWindow = options.criticalBadgeWindow;
-    currentForcedPaceStateKey = options.forcedPaceStateKey;
-    currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
-    currentMaxPoolFill = options.maxPoolFill;
+    applyDeveloperOptions(options);
     render();
   });
 
   readDeveloperOptions()
     .then((options) => {
-      currentCriticalBadgeWindow = options.criticalBadgeWindow;
-      currentForcedPaceStateKey = options.forcedPaceStateKey;
-      currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
-      currentMaxPoolFill = options.maxPoolFill;
+      applyDeveloperOptions(options);
       render();
     })
     .catch((error) => {

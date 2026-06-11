@@ -25,6 +25,9 @@
       this.currentForcedPaceStateKey = null;
       this.currentManualRefreshLeadWindow = false;
       this.currentMaxPoolFill = false;
+      this.currentSingularityTransitionVersion =
+        this.DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_TRANSITION_VERSION;
+      this.currentSprintIntensityPreview = null;
       this.selectedWindowKey = this.DEFAULT_WINDOW_KEY;
       this.createControllers();
       this.applyProductMetadata();
@@ -73,6 +76,10 @@
         getCurrentHistory: () => this.currentHistory,
         getCurrentMaxPoolFill: () => this.currentMaxPoolFill,
         getCurrentRefreshStatus: () => this.currentRefreshStatus,
+        getCurrentSingularityTransitionVersion: () =>
+          this.currentSingularityTransitionVersion,
+        getCurrentSprintIntensityPreview: () =>
+          this.currentSprintIntensityPreview,
         getSelectedWindowKey: () => this.selectedWindowKey,
         renderHistory: (history, refreshStatus, options) =>
           this.renderHistory(history, refreshStatus, options),
@@ -202,6 +209,10 @@
       this.currentManualRefreshLeadWindow =
         developerOptions.manualRefreshLeadWindow;
       this.currentMaxPoolFill = developerOptions.maxPoolFill;
+      this.currentSingularityTransitionVersion =
+        developerOptions.singularityTransitionVersion;
+      this.currentSprintIntensityPreview =
+        developerOptions.sprintIntensityPreview;
       this.currentHistory = history;
       this.currentRefreshStatus = refreshStatus;
       this.paceView.renderStateRail();

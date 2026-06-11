@@ -1,10 +1,7 @@
 (() => {
   "use strict";
 
-  const ORIGIN = Object.freeze({
-    X_PX: 64,
-    Y_PX: 27,
-  });
+  const ORIGIN = Object.freeze({ X_PX: 64, Y_PX: 27 });
   const EMIT_INTERVAL_MS = 340;
   const EMIT_JITTER_MS = Object.freeze([-35, 35]);
   const INITIAL_ACTIVE_PUFFS = 12;
@@ -31,8 +28,11 @@
     DURATION_MS: Object.freeze([5600, 7600]),
     END_X_PX: Object.freeze([-104, -62]),
     END_Y_PX: Object.freeze([-40, -14]),
+    MID_OPACITY_RATIO: 0.42,
     MID_X_PX: Object.freeze([-17, -5]),
     MID_Y_PX: Object.freeze([-40, -25]),
+    PEAK_OPACITY_RATIO: 0.9,
+    THIN_OPACITY_RATIO: 0.12,
   });
   const SHAPES = Object.freeze(["round", "long", "tall"]);
   const VARIATION = Object.freeze({
@@ -159,6 +159,43 @@
     );
   }
 
+  function extendedOpacityForProgress(
+    progress,
+    peakOpacity,
+    endOpacityRatio = 0,
+  ) {
+    const adjustedPeakOpacity = peakOpacity * EXTENDED_PATH.PEAK_OPACITY_RATIO;
+    const thinOpacityRatio = Math.max(
+      EXTENDED_PATH.THIN_OPACITY_RATIO,
+      endOpacityRatio,
+    );
+    if (progress < 0.14) {
+      return adjustedPeakOpacity * smoothstep(progress / 0.14);
+    }
+    if (progress < 0.36) {
+      return adjustedPeakOpacity;
+    }
+    if (progress < 0.68) {
+      return lerp(
+        adjustedPeakOpacity,
+        peakOpacity * EXTENDED_PATH.MID_OPACITY_RATIO,
+        smoothstep((progress - 0.36) / 0.32),
+      );
+    }
+    if (progress < 0.86) {
+      return lerp(
+        peakOpacity * EXTENDED_PATH.MID_OPACITY_RATIO,
+        peakOpacity * thinOpacityRatio,
+        smoothstep((progress - 0.68) / 0.18),
+      );
+    }
+    return lerp(
+      peakOpacity * thinOpacityRatio,
+      peakOpacity * endOpacityRatio,
+      smoothstep((progress - 0.86) / 0.14),
+    );
+  }
+
   function clearPuffVariation(puff) {
     puff.removeAttribute("data-train-smoke-shape");
     puff.style.removeProperty("--train-smoke-size");
@@ -166,18 +203,15 @@
     puff.style.removeProperty("transform");
   }
 
-  function shouldUseExtendedPath(controller) {
-    return (
-      controller.randomIntegerInRange([1, 100]) <= EXTENDED_PATH.CHANCE_PERCENT
-    );
-  }
-
   function randomPathVariation(controller) {
-    if (!shouldUseExtendedPath(controller)) {
+    if (
+      controller.randomIntegerInRange([1, 100]) > EXTENDED_PATH.CHANCE_PERCENT
+    ) {
       return {
         baseDurationMs: controller.randomIntegerInRange(VARIATION.DURATION_MS),
         endX: controller.randomIntegerInRange(VARIATION.END_X_PX),
         endY: controller.randomIntegerInRange(VARIATION.END_Y_PX),
+        isExtendedPath: false,
         midX: controller.randomIntegerInRange(VARIATION.MID_X_PX),
         midY: controller.randomIntegerInRange(VARIATION.MID_Y_PX),
       };
@@ -189,6 +223,7 @@
       ),
       endX: controller.randomIntegerInRange(EXTENDED_PATH.END_X_PX),
       endY: controller.randomIntegerInRange(EXTENDED_PATH.END_Y_PX),
+      isExtendedPath: true,
       midX: controller.randomIntegerInRange(EXTENDED_PATH.MID_X_PX),
       midY: controller.randomIntegerInRange(EXTENDED_PATH.MID_Y_PX),
     };
@@ -296,8 +331,11 @@
   }
 
   function baseFrameValues(puffState, phase) {
+    const opacityForBasePath = puffState.isExtendedPath
+      ? extendedOpacityForProgress
+      : opacityForProgress;
     return {
-      opacity: opacityForProgress(
+      opacity: opacityForBasePath(
         phase.progress,
         puffState.opacity,
         baseEndOpacityRatio(puffState),

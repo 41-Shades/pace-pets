@@ -45,6 +45,16 @@
   z-index: 35;
 }
 
+.brake-extreme-canvas-layer {
+  contain: strict;
+  height: 100vh;
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  width: 100vw;
+  z-index: 35;
+}
+
 .brake-debris-piece {
   --brake-debris-delay: 0ms;
   --brake-debris-duration: 1200ms;

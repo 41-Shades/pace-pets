@@ -71,14 +71,18 @@ async function syncBadgeContextMenuSelection() {
 }
 
 async function updatePaceBadge(windows, history = null) {
-  const { criticalBadgeWindow, forcedPaceStateKey } =
+  const { criticalBadgeWindow, forcedPaceStateKey, sprintIntensityPreview } =
     await readDeveloperOptions();
   const preferredWindowKey = await selectedBadgeWindowKey();
   const badgeDisplay = PacePetsBackgroundLogic.badgeDisplayForWindows({
     atMs: Date.now(),
     criticalBadgeWindow,
-    forcedBadgeState:
-      PacePetsPreviewControl.forcedBadgeState(forcedPaceStateKey),
+    forcedBadgeState: PacePetsPreviewControl.forcedBadgeState(
+      forcedPaceStateKey,
+      {
+        sprintIntensityPreview,
+      },
+    ),
     history,
     preferredWindowKey,
     windows,
@@ -107,6 +111,9 @@ async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
     }
     const forcedBadgeState = PacePetsPreviewControl.forcedBadgeState(
       developerOptions.forcedPaceStateKey,
+      {
+        sprintIntensityPreview: developerOptions.sprintIntensityPreview,
+      },
     );
     if (forcedBadgeState) {
       await setBadge(

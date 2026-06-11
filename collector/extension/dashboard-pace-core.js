@@ -90,6 +90,7 @@
       const windowKey = this.selectedSupportedWindowKey();
       return PREVIEW_CONTROL.forcedPreviewWindowForState(stateKey, {
         durationMinutes: this.windowSpecs[windowKey]?.durationMinutes,
+        sprintIntensityPreview: this.getCurrentSprintIntensityPreview?.(),
         windowData: this.selectedSummaryWindowForChartPreview(),
       });
     }
@@ -115,7 +116,9 @@
     }
 
     forcedPaceRatioForState(stateKey) {
-      return PREVIEW_CONTROL.forcedPaceRatioForState(stateKey);
+      return PREVIEW_CONTROL.forcedPaceRatioForState(stateKey, {
+        sprintIntensityPreview: this.getCurrentSprintIntensityPreview?.(),
+      });
     }
 
     paceStateForClassName(className) {

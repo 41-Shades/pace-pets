@@ -3,11 +3,30 @@
 
   const DATA = globalThis.PacePetsDashboardPaceData;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !Controller) {
+  const SPRINT_INTENSITY = globalThis.PacePetsSprintIntensity;
+  if (!DATA || !Controller || !SPRINT_INTENSITY) {
     throw new Error(
-      "Pace data and core must load before dashboard-sprint-smoke-methods.js.",
+      "Pace data, sprint intensity, and core must load before dashboard-sprint-smoke-methods.js.",
     );
   }
+
+  const SPRINT_SMOKE_CONTAINER_VARIABLES = Object.freeze([
+    "--sprint-ratio-intensity",
+    "--sprint-bounce-duration",
+    "--sprint-speed-bump-duration",
+    "--sprint-speed-bump-y-dip-small",
+    "--sprint-speed-bump-y-lift-peak",
+    "--sprint-speed-bump-y-lift-mid",
+    "--sprint-speed-bump-y-dip-land",
+    "--sprint-speed-bump-y-lift-settle",
+    "--sprint-speed-bump-y-dip-settle",
+    "--sprint-speed-bump-rotate-dip-small",
+    "--sprint-speed-bump-rotate-lift-peak",
+    "--sprint-speed-bump-rotate-lift-mid",
+    "--sprint-speed-bump-rotate-land",
+    "--sprint-speed-bump-rotate-settle-lift",
+    "--sprint-speed-bump-rotate-settle-dip",
+  ]);
 
   function boundedNumber(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -38,24 +57,6 @@
     return `${Math.round(value)}ms`;
   }
 
-  function sprintIntensityForRatio(paceRatio) {
-    const numericRatio = Number(paceRatio);
-    if (!Number.isFinite(numericRatio)) {
-      return 0;
-    }
-
-    const [floorRatio, capRatio] = DATA.SPRINT_INTENSITY.RATIO_RANGE;
-    if (capRatio <= floorRatio) {
-      return 0;
-    }
-
-    return boundedNumber(
-      (numericRatio - floorRatio) / (capRatio - floorRatio),
-      0,
-      1,
-    );
-  }
-
   function baseVariablesForPuff(puff) {
     return {
       blur: cssNumber(puff, "--smoke-blur", 0.1),
@@ -81,9 +82,37 @@
   }
 
   function clearSprintSmokeInlineVariables(container) {
-    container.style.removeProperty("--sprint-ratio-intensity");
-    container.style.removeProperty("--sprint-bounce-duration");
-    container.style.removeProperty("--sprint-speed-bump-duration");
+    for (const variableName of SPRINT_SMOKE_CONTAINER_VARIABLES) {
+      container.style.removeProperty(variableName);
+    }
+  }
+
+  function setSprintSpeedBumpTransformVariables(
+    container,
+    dropScale,
+    liftScale,
+    tiltScale,
+  ) {
+    const transformVariables = [
+      ["--sprint-speed-bump-y-dip-small", 4 * dropScale, "px"],
+      ["--sprint-speed-bump-y-lift-peak", -22 * liftScale, "px"],
+      ["--sprint-speed-bump-y-lift-mid", -16 * liftScale, "px"],
+      ["--sprint-speed-bump-y-dip-land", 5 * dropScale, "px"],
+      ["--sprint-speed-bump-y-lift-settle", -7 * liftScale, "px"],
+      ["--sprint-speed-bump-y-dip-settle", 2 * dropScale, "px"],
+      ["--sprint-speed-bump-rotate-dip-small", 0.8 * tiltScale, "deg"],
+      ["--sprint-speed-bump-rotate-lift-peak", -4.2 * tiltScale, "deg"],
+      ["--sprint-speed-bump-rotate-lift-mid", -2.4 * tiltScale, "deg"],
+      ["--sprint-speed-bump-rotate-land", 2.2 * tiltScale, "deg"],
+      ["--sprint-speed-bump-rotate-settle-lift", -1.1 * tiltScale, "deg"],
+      ["--sprint-speed-bump-rotate-settle-dip", 0.5 * tiltScale, "deg"],
+    ];
+    for (const [variableName, value, unit] of transformVariables) {
+      container.style.setProperty(
+        variableName,
+        `${decimalString(value)}${unit}`,
+      );
+    }
   }
 
   Object.assign(Controller.prototype, {
@@ -157,15 +186,15 @@
       );
       puff.style.setProperty(
         "--smoke-duration",
-        `${decimalString(boundedNumber(duration, 0.95, 2.1))}s`,
+        `${decimalString(boundedNumber(duration, 0.78, 2.1))}s`,
       );
       puff.style.setProperty(
         "--smoke-end-scale",
-        decimalString(boundedNumber(endScale, 1.24, 1.94)),
+        decimalString(boundedNumber(endScale, 1.24, 2.3)),
       );
       puff.style.setProperty(
         "--smoke-mid-opacity",
-        decimalString(boundedNumber(midOpacity, 0.44, 0.88)),
+        decimalString(boundedNumber(midOpacity, 0.44, 0.94)),
       );
       puff.style.setProperty(
         "--smoke-peak-opacity",
@@ -245,7 +274,7 @@
     },
 
     applySprintSmokeIntensity(container, state, paceRatio) {
-      const intensity = sprintIntensityForRatio(paceRatio);
+      const intensity = SPRINT_INTENSITY.intensityForRatio(paceRatio);
       const sprint = DATA.SPRINT_INTENSITY;
       const baseBounceDurationMs = cssNumber(
         container,
@@ -270,6 +299,18 @@
           (sprint.SPEED_BUMP_DURATION_MS - DATA.SPRINT_SPEED_BUMP_DURATION_MS) *
             intensity,
       );
+      const speedBumpDropScale = interpolate(
+        sprint.SPEED_BUMP_DROP_SCALE_RANGE,
+        intensity,
+      );
+      const speedBumpLiftScale = interpolate(
+        sprint.SPEED_BUMP_LIFT_SCALE_RANGE,
+        intensity,
+      );
+      const speedBumpTiltScale = interpolate(
+        sprint.SPEED_BUMP_TILT_SCALE_RANGE,
+        intensity,
+      );
 
       container.style.setProperty(
         "--sprint-ratio-intensity",
@@ -282,6 +323,12 @@
       container.style.setProperty(
         "--sprint-speed-bump-duration",
         millisecondsString(state.speedBumpDurationMs),
+      );
+      setSprintSpeedBumpTransformVariables(
+        container,
+        speedBumpDropScale,
+        speedBumpLiftScale,
+        speedBumpTiltScale,
       );
       state.applyPuffVariations?.();
     },

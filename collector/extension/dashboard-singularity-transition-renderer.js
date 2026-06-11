@@ -19,20 +19,6 @@
     return { bangEnd, gravityEnd, holdEnd, intakeEnd, tunnelEnd };
   }
 
-  function loadCaptureImage(dataUrl) {
-    if (!dataUrl) {
-      return Promise.resolve(null);
-    }
-
-    return new Promise((resolve) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.addEventListener("load", () => resolve(image), { once: true });
-      image.addEventListener("error", () => resolve(null), { once: true });
-      image.src = dataUrl;
-    });
-  }
-
   function canvasSize() {
     return {
       height: Math.max(1, root.innerHeight || 1),
@@ -65,17 +51,15 @@
   }
 
   class SingularityTransitionRenderer {
-    constructor({ captureDataUrl, origin, reducedMotion = false }) {
+    constructor({ origin, reducedMotion = false }) {
       this.animationFrameId = null;
       this.bangParticles = [];
-      this.captureDataUrl = captureDataUrl;
       this.center = origin || {
         x: root.innerWidth / 2,
         y: root.innerHeight / 2,
       };
       this.context = null;
       this.done = null;
-      this.image = null;
       this.overlay = null;
       this.reducedMotion = reducedMotion;
       this.resolveDone = null;
@@ -92,9 +76,6 @@
       this.done = new Promise((resolve) => {
         this.resolveDone = resolve;
       });
-      this.image = this.reducedMotion
-        ? null
-        : await loadCaptureImage(this.captureDataUrl);
       if (this.stopped) {
         this.finish(false);
         return this.done;
@@ -168,9 +149,7 @@
       this.stopped = true;
       this.overlay?.remove();
       document.body.classList.remove(DATA.BODY_CLASS);
-      this.captureDataUrl = null;
       this.context = null;
-      this.image = null;
       this.overlay = null;
       this.tiles = [];
       this.streaks = [];

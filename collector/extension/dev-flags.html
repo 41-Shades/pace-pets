@@ -15,38 +15,90 @@
       </header>
 
       <div class="dev-controls-layout">
-        <aside class="current-mode-panel" aria-live="polite">
+        <section class="current-mode-panel" aria-live="polite">
           <div class="current-mode-summary" id="current-mode-summary"></div>
           <button class="live-data-button" id="reset-all" type="button" hidden>
             Return to live data
           </button>
-        </aside>
+        </section>
 
         <section class="state-columns" aria-label="State override">
-          <section class="state-column" aria-labelledby="pace-levels-title">
-            <h2 id="pace-levels-title">Pace Levels</h2>
-            <div class="option-list" id="pace-level-list"></div>
-          </section>
+          <div class="state-overrides-row">
+            <section
+              class="state-column state-column-wrap-options"
+              aria-labelledby="pace-levels-title"
+            >
+              <h2 id="pace-levels-title">Pace Levels</h2>
+              <div class="option-list" id="pace-level-list"></div>
+            </section>
 
-          <section class="state-column" aria-labelledby="special-states-title">
-            <h2 id="special-states-title">Special States</h2>
-            <div class="state-subsection">
-              <h3 class="state-subsection-title">Perfect</h3>
-              <div class="option-list" id="perfect-state-list"></div>
-            </div>
-            <div class="state-subsection">
-              <h3 class="state-subsection-title">Imperfect</h3>
-              <div class="option-list" id="imperfect-state-list"></div>
-            </div>
-          </section>
+            <section
+              class="state-column state-column-wrap-options"
+              aria-labelledby="special-states-title"
+            >
+              <h2 id="special-states-title">Special States</h2>
+              <div class="state-subsection">
+                <h3 class="state-subsection-title">Perfect</h3>
+                <div class="option-list" id="perfect-state-list"></div>
+              </div>
+              <div class="state-subsection">
+                <h3 class="state-subsection-title">Imperfect</h3>
+                <div class="option-list" id="imperfect-state-list"></div>
+              </div>
+            </section>
+          </div>
 
-          <section
-            class="state-column"
-            aria-labelledby="feature-previews-title"
-          >
-            <h2 id="feature-previews-title">Feature Previews</h2>
-            <div class="option-list" id="feature-preview-list"></div>
-          </section>
+          <div class="state-preview-row">
+            <section
+              class="state-column"
+              aria-labelledby="singularity-previews-title"
+            >
+              <h2 id="singularity-previews-title">Singularity</h2>
+              <div class="state-subsection state-subsection-wrap-options">
+                <h3 class="state-subsection-title">Transition Version</h3>
+                <div
+                  class="option-list"
+                  id="singularity-transition-version-list"
+                ></div>
+              </div>
+              <div class="state-subsection">
+                <h3 class="state-subsection-title">Singularity Preview</h3>
+                <div
+                  class="option-list"
+                  id="singularity-transition-preview-list"
+                ></div>
+              </div>
+              <div class="state-subsection">
+                <h3 class="state-subsection-title">Sequence Checklist</h3>
+                <ol class="singularity-checklist">
+                  <li>Start from any active state except Singularity.</li>
+                  <li>Keep Singularity V2 selected.</li>
+                  <li>Click Run from current state.</li>
+                  <li>Switch to the dashboard tab if queued.</li>
+                  <li>
+                    Watch fade out, space fade in, chrome fade in, then black
+                    hole approach.
+                  </li>
+                </ol>
+              </div>
+            </section>
+
+            <section
+              class="state-column state-column-wrap-options"
+              aria-labelledby="sprint-intensity-title"
+            >
+              <h2 id="sprint-intensity-title">Sprint Intensity</h2>
+              <div class="option-list" id="sprint-intensity-preview-list"></div>
+            </section>
+
+            <section
+              class="state-column state-column-wrap-options"
+              aria-labelledby="other-previews-title"
+            >
+              <h2 id="other-previews-title">Other Previews</h2>
+              <div class="option-list" id="feature-preview-list"></div>
+            </section>
+          </div>
         </section>
       </div>
 

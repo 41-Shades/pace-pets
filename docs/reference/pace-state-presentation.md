@@ -129,7 +129,10 @@ motion effect in `collector/extension/dashboard-sprint-smoke-methods.js` and
 state for all ratios above `1.55`; within that state, the actual ratio
 continuously increases a capped animation intensity. Higher Sprint faster ratios
 shorten scooter bounce and smoke durations, lengthen smoke drift, and make speed
-bump bursts more frequent without replaying the effect on same-state refreshes.
+bump bursts more frequent, taller, and slightly more tilted without replaying
+the effect on same-state refreshes.
+Local dev controls can force Sprint faster at exact preview ratios `1.55`,
+`2.00`, `3.00`, `4.00`, `5.00`, `6.00`, and `7.00`.
 
 The `on` / Keep pace state uses the dashboard-only train roll and smoke effect
 in `collector/extension/dashboard-train-roll-methods.js`,
@@ -137,10 +140,12 @@ in `collector/extension/dashboard-train-roll-methods.js`,
 `collector/extension/dashboard-train-smoke.js`. Puffs emit from a fixed train
 stack origin, follow bounded-random quadratic arcs, and occasionally use a
 longer normal arc with a matching longer duration so the smoke extends farther
-without speeding up. A rare separate escape profile continues selected puffs
-onto a much longer cubic float up and away path. Same-state refreshes preserve
-the running effect, reduced-motion settings disable smoke, and the legend rail
-remains static.
+without speeding up. Those longer normal arcs use a lower peak opacity and an
+earlier fade so they dissipate with the train's visual orientation instead of
+reading as detached smoke bubbles. A rare separate escape profile continues
+selected puffs onto a much longer cubic float up and away path. Same-state
+refreshes preserve the running effect, reduced-motion settings disable smoke,
+and the legend rail remains static.
 
 For small organic or atmospheric effects, prefer a focused canvas renderer over
 stacked CSS gradients once the visual depends on noisy asymmetry, soft plumes,
@@ -239,18 +244,16 @@ The forced developer override can also render perfect and imperfect context
 states outside the regular pace levels.
 
 The `singularity` state runs a dashboard-only transition when the dashboard
-enters that state from any other state. The background worker accepts the
-ephemeral capture request only from `dashboard.html`, captures the visible
-dashboard tab for render input, and returns the image data URL to the dashboard
-renderer. `collector/extension/dashboard-singularity-transition-renderer.js`
-uses that image in memory to break the dashboard into canvas tiles, pull them
-into a black-hole center, hold on a small singularity point, and expand into a
-brief big-bang reveal. Same-state refreshes do not replay the transition.
-If Singularity is selected from the separate developer controls while the
-dashboard tab is hidden, the transition is queued and plays when the dashboard
-becomes visible. Reduced-motion users get a short non-fragmenting pulse. The
-renderer removes the overlay and releases the capture references when the
-sequence ends or the state changes. See
+enters that state from any other state. The transition uses generated
+in-memory canvas fragments, pulls them into a black-hole center, holds on a
+small singularity point, and expands into a brief big-bang reveal. Same-state
+refreshes do not replay the transition. If Singularity is selected from the
+separate developer controls while the dashboard tab is hidden, the transition
+is queued and plays when the dashboard becomes visible. Reduced-motion users
+get a short non-fragmenting pulse. The renderer removes the overlay and clears
+generated scene references when the sequence ends or the state changes. Local
+developer controls can select the V1 or V2 transition renderer without adding a
+second pace state. See
 `docs/reference/singularity-transition.md` for the full architecture and
 lifecycle contract.
 

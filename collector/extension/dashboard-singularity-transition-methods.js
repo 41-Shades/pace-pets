@@ -3,9 +3,10 @@
 
   const DATA = globalThis.PacePetsDashboardPaceData;
   const TRANSITION_DATA = globalThis.PacePetsDashboardSingularityTransitionData;
-  const RENDERER = globalThis.PacePetsDashboardSingularityTransitionRenderer;
+  const TRANSITION_VERSIONS =
+    globalThis.PacePetsDashboardSingularityTransitionVersions;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !TRANSITION_DATA || !RENDERER || !Controller) {
+  if (!DATA || !TRANSITION_DATA || !TRANSITION_VERSIONS || !Controller) {
     throw new Error(
       "Pace and Singularity transition helpers must load before transition methods.",
     );
@@ -92,10 +93,10 @@
       this.singularityTransitionPending = false;
 
       const reducedMotion = prefersReducedMotion();
-      const scene = RENDERER.create({
-        captureDataUrl: null,
+      const scene = TRANSITION_VERSIONS.create({
         origin: paceIconOrigin(this),
         reducedMotion,
+        version: this.getCurrentSingularityTransitionVersion?.(),
       });
       this.singularityTransitionScene = scene;
       await scene.play();

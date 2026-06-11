@@ -36,7 +36,7 @@ input {
 
 .dev-flags-shell {
   margin: 0 auto;
-  max-width: 1240px;
+  max-width: 1440px;
   padding: 42px 28px;
 }
 
@@ -65,10 +65,8 @@ input {
 }
 
 .dev-controls-layout {
-  align-items: start;
   display: grid;
-  gap: 26px;
-  grid-template-columns: minmax(390px, 460px) minmax(0, 1fr);
+  gap: 18px;
 }
 
 .current-mode-panel,
@@ -100,10 +98,10 @@ input {
   cursor: pointer;
   display: flex;
   font-weight: 750;
-  gap: 14px;
+  gap: 10px;
   justify-content: flex-start;
-  min-height: 56px;
-  padding: 10px 14px;
+  min-height: 38px;
+  padding: 7px 10px;
   text-align: left;
   width: 100%;
 }
@@ -111,6 +109,20 @@ input {
 .state-columns {
   display: grid;
   gap: 18px;
+}
+
+.state-overrides-row,
+.state-preview-row {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+}
+
+.state-overrides-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.state-preview-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -135,6 +147,21 @@ input {
   padding: 0;
 }
 
+.state-column-wrap-options > .option-list,
+.state-subsection-wrap-options .option-list,
+.state-column-wrap-options .state-subsection .option-list {
+  align-items: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.state-column-wrap-options .option-row,
+.state-subsection-wrap-options .option-row {
+  flex: 0 0 160px;
+  width: auto;
+}
+
 .state-subsection-title {
   color: var(--muted);
   font-size: 0.76rem;
@@ -145,7 +172,23 @@ input {
   text-transform: uppercase;
 }
 
-.option-row[aria-pressed="true"] {
+.singularity-checklist {
+  color: var(--muted);
+  display: grid;
+  font-size: 0.88rem;
+  gap: 7px;
+  line-height: 1.35;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.singularity-checklist li::marker {
+  color: var(--primary);
+  font-weight: 750;
+}
+
+.option-row[aria-pressed="true"],
+.option-row.is-active {
   background: var(--primary-soft);
   border-color: var(--primary-border);
   box-shadow: inset 0 0 0 1px rgb(15 118 110 / 10%);
@@ -182,9 +225,9 @@ input {
 }
 
 .option-label {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 750;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .dev-controls-status {
@@ -199,14 +242,19 @@ input {
     padding: 28px 18px;
   }
 
-  .dev-controls-layout {
-    grid-template-columns: 1fr;
+  .state-preview-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (width <= 820px) {
-  .state-columns {
+  .state-overrides-row,
+  .state-preview-row {
     grid-template-columns: 1fr;
+  }
+
+  .state-column-wrap-options .option-row {
+    flex-basis: 100%;
   }
 }
 

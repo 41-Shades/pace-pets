@@ -30,7 +30,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, pace-state group metadata, inline icon geometry, legend metadata, controlled Perfect Sync/Perfect Zero presentation, and stale-reset guards. Dashboard pace helpers own the dashboard-only Singularity promotion when valid Perfect Zero also reaches the reset-countdown display-zero band.
 - `collector/extension/perfect-zero-space-scene.js` owns the `PERFECT ZERO` canvas scene, including icon and full-bleed profiles, reduced-motion handling, page-visibility pause/resume behavior, and scene teardown. `collector/extension/dashboard-eclipse-icon.js` owns the smaller Perfect Zero theme-control canvas, which uses canvas for organic corona plumes, wispy shimmer, and sparse rim glints where CSS gradients proved too uniform.
 - `collector/extension/dashboard.html`, ordered `dashboard*.css` stylesheets, dashboard helper scripts, and `dashboard.js` own the extension dashboard UI. `collector/extension/dashboard-dom-contract.js` owns the dashboard selector map, required element IDs, and element collection helper shared by dashboard bootstrap and static smoke checks. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and the tab-scoped dashboard window selection, while the 60-second status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Because that tick reapplies the current pace summary, `collector/extension/dashboard-pace-icon-methods.js` preserves same-state long-running icon effects that own live canvas state instead of tearing them down and recreating them. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture; dashboard Singularity extends Perfect Zero when `Usage`, `Resets In`, and `Time` all display round zero before the reset window ends.
-- `collector/extension/dashboard-singularity-transition-renderer.js` owns the rare Singularity overlay canvas. It draws generated in-memory fragments and does not request Chrome tab screenshots.
+- `collector/extension/dashboard-singularity-transition-renderer.js`, `collector/extension/dashboard-singularity-transition-v2-renderer.js`, and `collector/extension/dashboard-singularity-transition-versions.js` own the rare Singularity transition implementations and local version selection. V1 draws generated in-memory fragments; V2 performs a space-only hold followed by a dashboard chrome fade-in. Neither version requests Chrome tab screenshots.
 - `collector/extension/vendor/chart.umd.min.js` is the optional vendored Chart.js runtime used by the dashboard chart; the rest of the dashboard still renders if the chart asset cannot load.
 
 ## Collection Flow
@@ -62,9 +62,13 @@ States. Choosing a state stores
 `chrome.storage.local`; enabling the brake-hard badge preview stores
 `criticalBadgeWindow`; enabling the refresh-link preview stores
 `manualRefreshLeadWindow`; enabling the max-pool-fill preview stores
-`maxPoolFill`. Returning to live data removes those overrides. The monk escape
-feature preview is a one-shot dev action: it sends a runtime message to open
-dashboard pages and does not store developer option state.
+`maxPoolFill`. Choosing a Sprint faster intensity preview stores
+`forcedPaceState` as `wellAhead` plus `sprintIntensityPreview` as an exact
+ratio string from `1.55` through `7.00`. Choosing Singularity V1 stores
+`singularityTransitionVersion`; V2 is the default and is not stored. Returning
+to live data removes those overrides. The Singularity `Run from current state`
+preview and monk escape feature preview are one-shot dev actions: they send
+runtime messages to dashboard pages and do not store developer option state.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, and toolbar badge match

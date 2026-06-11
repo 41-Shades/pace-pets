@@ -75,6 +75,7 @@
         escapeSpinDeg: escape.spinDeg,
         escapeTilt: escape.tilt,
         isEscape: escape.isEscape,
+        isExtendedPath: variation.isExtendedPath,
         midX: variation.midX,
         midY: variation.midY,
         opacity: variation.opacity,
@@ -199,6 +200,7 @@
           startMs: 0,
           tilt: 0,
           isEscape: false,
+          isExtendedPath: false,
           isActive: false,
         };
 

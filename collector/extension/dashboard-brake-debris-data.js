@@ -14,6 +14,21 @@
       "smoke",
       "outline",
     ]),
+    extreme: Object.freeze([
+      "fin",
+      "fin",
+      "panel",
+      "panel",
+      "panel",
+      "panel",
+      "spark",
+      "spark",
+      "spark",
+      "spark",
+      "smoke",
+      "smoke",
+      "outline",
+    ]),
     wide: Object.freeze(["fin", "panel", "panel", "spark", "smoke", "outline"]),
   });
   const SHAPES = Object.freeze({
