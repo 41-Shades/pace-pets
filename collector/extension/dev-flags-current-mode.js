@@ -2,11 +2,6 @@
   "use strict";
 
   const SVG_NS = "http://www.w3.org/2000/svg";
-  const COPY = Object.freeze({
-    liveFooter: "Default operating mode",
-    liveNotice: "Live sensors streaming normally.",
-    overrideNotice: "Manual override replaces live data.",
-  });
 
   function textElement(tagName, className, textContent) {
     const element = document.createElement(tagName);
@@ -44,54 +39,7 @@
       return svg;
     }
 
-    if (name === "warning") {
-      appendSvgElement(svg, "path", {
-        d: "M12 3 22 20H2L12 3Z",
-      });
-      appendSvgElement(svg, "path", {
-        d: "M12 9v5",
-      });
-      appendSvgElement(svg, "circle", {
-        class: "current-mode-icon-dot",
-        cx: "12",
-        cy: "17",
-        r: "0.8",
-      });
-      return svg;
-    }
-
-    if (name === "terminal") {
-      appendSvgElement(svg, "path", {
-        d: "m6 8 4 4-4 4",
-      });
-      appendSvgElement(svg, "path", {
-        d: "M12 16h6",
-      });
-      return svg;
-    }
-
-    if (name === "shield") {
-      appendSvgElement(svg, "path", {
-        d: "M12 3 19 6v5c0 4.5-2.8 8.1-7 10-4.2-1.9-7-5.5-7-10V6l7-3Z",
-      });
-      return svg;
-    }
-
-    appendSvgElement(svg, "circle", {
-      cx: "12",
-      cy: "12",
-      r: "9",
-    });
-    appendSvgElement(svg, "path", {
-      d: "M12 11v5",
-    });
-    appendSvgElement(svg, "circle", {
-      class: "current-mode-icon-dot",
-      cx: "12",
-      cy: "8",
-      r: "0.7",
-    });
-    return svg;
+    throw new Error(`Unknown current mode icon: ${name}`);
   }
 
   function modeBadge(text) {
@@ -102,69 +50,37 @@
     return badge;
   }
 
-  function modeNotice(message) {
-    const notice = document.createElement("div");
-    notice.className = "current-mode-notice";
-    notice.append(
-      modeIcon("info"),
-      textElement("span", "current-mode-notice-text", message),
-    );
-    return notice;
-  }
-
-  function renderOverrideMode({ modeLabel, summary }) {
-    const body = document.createElement("div");
-    const command = document.createElement("div");
-    body.className = "current-mode-body";
-    command.className = "current-mode-command";
-    command.append(
-      modeIcon("terminal"),
-      textElement("span", "current-mode-command-text", modeLabel),
-    );
-    body.append(command, modeNotice(COPY.overrideNotice));
-    summary.append(body);
-  }
-
-  function renderLiveMode(summary) {
-    const body = document.createElement("div");
-    const footer = document.createElement("footer");
-    body.className = "current-mode-body";
-    footer.className = "current-mode-footer";
-    footer.append(
-      modeIcon("shield"),
-      textElement("span", "current-mode-footer-text", COPY.liveFooter),
-    );
-    body.append(modeNotice(COPY.liveNotice));
-    summary.append(body, footer);
-  }
-
   function renderCurrentMode({
     hasOverride,
     modeDetail,
     modeLabel,
     panel,
+    resetButton,
     summary,
   }) {
     panel.classList.toggle("has-override", hasOverride);
     panel.classList.toggle("is-live", !hasOverride);
-    panel.setAttribute("aria-labelledby", "current-mode-title");
+    panel.setAttribute("aria-label", modeDetail);
+    panel.removeAttribute("aria-labelledby");
 
-    const header = document.createElement("header");
-    const title = textElement("h2", "current-mode-title", modeDetail);
-    header.className = "current-mode-header";
-    title.id = "current-mode-title";
-    header.append(
-      modeIcon(hasOverride ? "warning" : "check"),
-      title,
-      modeBadge(hasOverride ? "OVERRIDE" : "LIVE"),
+    const primary = document.createElement("div");
+    const detail = document.createElement("div");
+    primary.className = "current-mode-cell current-mode-primary";
+    detail.className = "current-mode-cell current-mode-detail";
+    detail.append(
+      textElement("span", "current-mode-label", "Current source"),
+      textElement("span", "current-mode-value", modeLabel),
     );
 
-    summary.replaceChildren(header);
     if (hasOverride) {
-      renderOverrideMode({ modeLabel, summary });
-      return;
+      primary.classList.add("has-reset-action");
+      primary.append(resetButton, modeBadge("OVERRIDE"));
+    } else {
+      const title = textElement("h2", "current-mode-title", modeDetail);
+      title.id = "current-mode-title";
+      primary.append(modeIcon("check"), title, modeBadge("LIVE"));
     }
-    renderLiveMode(summary);
+    summary.replaceChildren(primary, detail);
   }
 
   root.PacePetsDevFlagsCurrentMode = Object.freeze({

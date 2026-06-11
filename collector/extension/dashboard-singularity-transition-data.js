@@ -11,7 +11,6 @@
   });
 
   root.PacePetsDashboardSingularityTransitionData = Object.freeze({
-    BACKDROP_FADE_OPACITY: 0.96,
     BODY_CLASS: "is-singularity-transitioning",
     MAX_PIXEL_RATIO: 1.5,
     MIN_TILE_SIZE_PX: 18,

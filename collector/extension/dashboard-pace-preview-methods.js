@@ -33,6 +33,17 @@
       return this.forcedPaceStatePreview() !== null;
     },
 
+    forcedPaceRatioLabel(state, forcedPaceRatio) {
+      if (
+        state.key === DATA.PACE_STATES.wellAhead.key &&
+        this.getCurrentSprintIntensityPreview?.()
+      ) {
+        return `Pace ${PacePetsLogic.formatPaceRatioValue(forcedPaceRatio)}`;
+      }
+
+      return state.previewRatioLabel || state.ratioLabel;
+    },
+
     applyPreviewResetTiming(state, previewWindow) {
       const windowKey = this.selectedSupportedWindowKey();
       const spec =
@@ -86,7 +97,9 @@
       this.setPreviewPercentPair(previewWindow.percentPair);
       this.renderPreviewChart(state.key, forcedPaceRatio, previewWindow);
       this.applyPreviewResetTiming(state, previewWindow);
-      this.renderPaceAltRatio(state.previewRatioLabel || state.ratioLabel);
+      this.renderPaceAltRatio(
+        this.forcedPaceRatioLabel(state, forcedPaceRatio),
+      );
       this.updateTabTitle(state.title, forcedPaceRatio);
       this.updateSingularityTransitionState?.(previousState, state);
       return true;

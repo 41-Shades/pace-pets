@@ -17,6 +17,15 @@
     );
   }
   const PACE_STATES = PACE_LOGIC.PACE_STATES;
+  const SPRINT_INTENSITY = root.PacePetsSprintIntensity;
+  if (!SPRINT_INTENSITY) {
+    throw new Error(
+      "Sprint intensity controls must load before preview-control.js.",
+    );
+  }
+  const SPRINT_INTENSITY_PREVIEW_TIME_PERCENT = Math.floor(
+    100 / SPRINT_INTENSITY.RATIO_RANGE[1],
+  );
   const LIVE_TIMING_PREVIEW_STATE_KEYS = Object.freeze([PACE_STATES.splat.key]);
 
   function pacePreviewPercentPair(
@@ -63,6 +72,26 @@
     return LIVE_TIMING_PREVIEW_STATE_KEYS.includes(stateKey);
   }
 
+  function sprintIntensityPercentPair(sprintIntensityPreview) {
+    const sprintRatio = SPRINT_INTENSITY.previewRatioForValue(
+      sprintIntensityPreview,
+    );
+    return sprintRatio === null
+      ? null
+      : pacePreviewPercentPair(sprintRatio, {
+          timePercent: SPRINT_INTENSITY_PREVIEW_TIME_PERCENT,
+        });
+  }
+
+  function forcedPercentPairOverrideForState(
+    stateKey,
+    { sprintIntensityPreview = null } = {},
+  ) {
+    return stateKey === PACE_STATES.wellAhead.key
+      ? sprintIntensityPercentPair(sprintIntensityPreview)
+      : null;
+  }
+
   function livePreviewTimePercent(stateKey, windowData, atMs) {
     if (!usesLivePreviewTiming(stateKey)) {
       return null;
@@ -101,10 +130,17 @@
 
   function forcedPercentPairForState(
     stateKey,
-    { atMs = Date.now(), windowData = null } = {},
+    {
+      atMs = Date.now(),
+      sprintIntensityPreview = null,
+      windowData = null,
+    } = {},
   ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    const percentPair = FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey];
+    const percentPair =
+      forcedPercentPairOverrideForState(normalizedStateKey, {
+        sprintIntensityPreview,
+      }) || FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey];
     if (!percentPair) {
       return null;
     }
@@ -153,11 +189,17 @@
 
   function forcedPreviewWindowForState(
     stateKey,
-    { atMs = Date.now(), durationMinutes = null, windowData = null } = {},
+    {
+      atMs = Date.now(),
+      durationMinutes = null,
+      sprintIntensityPreview = null,
+      windowData = null,
+    } = {},
   ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
     const percentPair = forcedPercentPairForState(normalizedStateKey, {
       atMs,
+      sprintIntensityPreview,
       windowData,
     });
     const previewWindowData = previewWindowDataForPercentPair(
@@ -174,9 +216,14 @@
       : null;
   }
 
-  function forcedPaceRatioForState(stateKey) {
+  function forcedPaceRatioForState(
+    stateKey,
+    { sprintIntensityPreview = null } = {},
+  ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    const percentPair = forcedPercentPairForState(normalizedStateKey);
+    const percentPair = forcedPercentPairForState(normalizedStateKey, {
+      sprintIntensityPreview,
+    });
     if (!percentPair) {
       return null;
     }
@@ -194,14 +241,16 @@
     );
   }
 
-  function forcedBadgeState(stateKey) {
+  function forcedBadgeState(stateKey, { sprintIntensityPreview = null } = {}) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
     const state = PACE_STATES[normalizedStateKey];
     if (!state) {
       return null;
     }
 
-    const paceRatio = forcedPaceRatioForState(normalizedStateKey);
+    const paceRatio = forcedPaceRatioForState(normalizedStateKey, {
+      sprintIntensityPreview,
+    });
     if (paceRatio === null) {
       return null;
     }

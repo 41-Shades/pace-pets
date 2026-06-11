@@ -199,6 +199,7 @@
       this.bindDocumentEvents();
       this.bindStorageEvents();
       this.bindWindowEvents();
+      this.bindSingularityTransitionPreviewRequests?.();
     },
   });
 })();

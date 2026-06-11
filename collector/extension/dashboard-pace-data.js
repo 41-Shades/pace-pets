@@ -5,9 +5,10 @@
   const PACE_CLASSES = PacePetsLogic.PACE_CLASS_NAMES;
   const PACE_STATE_GROUPS = PacePetsLogic.PACE_STATE_GROUPS_BY_KEY;
   const THEME_ASSETS = globalThis.CodexThemeAssets;
-  if (!THEME_ASSETS) {
+  const SPRINT_INTENSITY = globalThis.PacePetsSprintIntensity;
+  if (!SPRINT_INTENSITY || !THEME_ASSETS) {
     throw new Error(
-      "Codex theme assets must load before dashboard-pace-data.js.",
+      "Sprint intensity and theme assets must load before dashboard-pace-data.js.",
     );
   }
 
@@ -16,6 +17,29 @@
       1: 320,
       2: 520,
       3: 720,
+      4: 980,
+      5: 1200,
+    }),
+    BRAKE_WOBBLE_EXTREME_SHAKE_COUNT_RANGE: Object.freeze([4, 5]),
+    BRAKE_WOBBLE_SHAKE_COUNT_RANGE: Object.freeze([1, 3]),
+    BRAKE_WOBBLE_BURST_CHANCES_PERCENT: Object.freeze([
+      Object.freeze({ rangeKey: "normal", chancePercent: 60 }),
+      Object.freeze({ rangeKey: "wide", chancePercent: 25 }),
+      Object.freeze({ rangeKey: "escape", chancePercent: 12 }),
+      Object.freeze({ rangeKey: "extreme", chancePercent: 3 }),
+    ]),
+    BRAKE_EXTREME_CANVAS_BURST_PROFILE: Object.freeze({
+      ANGLE_RANGE_DEG: Object.freeze([145, 395]),
+      COUNT_MULTIPLIER: 100,
+      DELAY_RANGE_MS: Object.freeze([0, 240]),
+      DPR_MAX: 2,
+      DRIFT_RANGE_PX_PER_SECOND: Object.freeze([-85, 85]),
+      DURATION_RANGE_MS: Object.freeze([2700, 3900]),
+      GRAVITY_RANGE_PX_PER_SECOND_SQUARED: Object.freeze([520, 1120]),
+      ORIGIN_JITTER_RANGE_PX: Object.freeze([-26, 26]),
+      SIZE_RANGE_PX: Object.freeze([1, 5]),
+      SPEED_RANGE_PX_PER_SECOND: Object.freeze([360, 1360]),
+      SPIN_RANGE_DEG_PER_SECOND: Object.freeze([-920, 920]),
     }),
     BRAKE_DEBRIS_BURST_PROFILES: Object.freeze({
       escape: Object.freeze({
@@ -49,7 +73,6 @@
     }),
     BRAKE_WOBBLE_INITIAL_DELAY_RANGE_MS: Object.freeze([650, 1400]),
     BRAKE_WOBBLE_REPEAT_DELAY_RANGE_MS: Object.freeze([1600, 3400]),
-    BRAKE_WOBBLE_WIDE_BURST_INTERVAL_RANGE: Object.freeze([2, 4]),
     MUTED_PACE_CLASS: PACE_STATES.muted.className,
     PACE_CLASSES,
     PACE_ICON_EFFECTS_BY_STATE: Object.freeze({
@@ -66,16 +89,19 @@
     SLOW_WOBBLE_DURATION_MS: 1150,
     SLOW_WOBBLE_EXTREME_CHANCE: 0.15,
     SPRINT_INTENSITY: Object.freeze({
-      BOUNCE_DURATION_SCALE_RANGE: Object.freeze([1, 0.72]),
-      RATIO_RANGE: Object.freeze([1.55, 3.25]),
-      SMOKE_DRIFT_X_SCALE_RANGE: Object.freeze([1, 1.38]),
-      SMOKE_DRIFT_Y_SCALE_RANGE: Object.freeze([1, 1.16]),
-      SMOKE_DURATION_SCALE_RANGE: Object.freeze([1, 0.76]),
-      SMOKE_END_SCALE_BONUS_RANGE: Object.freeze([0, 0.12]),
-      SMOKE_MID_OPACITY_BONUS_RANGE: Object.freeze([0, 0.08]),
-      SMOKE_PEAK_OPACITY_BONUS_RANGE: Object.freeze([0, 0.04]),
-      SPEED_BUMP_DELAY_RANGE_MS: Object.freeze([4200, 7000]),
-      SPEED_BUMP_DURATION_MS: 640,
+      BOUNCE_DURATION_SCALE_RANGE: Object.freeze([1, 0.5]),
+      RATIO_RANGE: SPRINT_INTENSITY.RATIO_RANGE,
+      SMOKE_DRIFT_X_SCALE_RANGE: Object.freeze([1, 2.2]),
+      SMOKE_DRIFT_Y_SCALE_RANGE: Object.freeze([1, 1.55]),
+      SMOKE_DURATION_SCALE_RANGE: Object.freeze([1, 0.58]),
+      SMOKE_END_SCALE_BONUS_RANGE: Object.freeze([0, 0.28]),
+      SMOKE_MID_OPACITY_BONUS_RANGE: Object.freeze([0, 0.14]),
+      SMOKE_PEAK_OPACITY_BONUS_RANGE: Object.freeze([0, 0.08]),
+      SPEED_BUMP_DELAY_RANGE_MS: Object.freeze([2400, 4600]),
+      SPEED_BUMP_DROP_SCALE_RANGE: Object.freeze([1, 1.45]),
+      SPEED_BUMP_DURATION_MS: 520,
+      SPEED_BUMP_LIFT_SCALE_RANGE: Object.freeze([1, 2.7]),
+      SPEED_BUMP_TILT_SCALE_RANGE: Object.freeze([1, 1.25]),
     }),
     SPRINT_BOUNCE_PROFILE_DELAY_RANGE_MS: Object.freeze([700, 1500]),
     SPRINT_SPEED_BUMP_DELAY_RANGE_MS: Object.freeze([8000, 12000]),

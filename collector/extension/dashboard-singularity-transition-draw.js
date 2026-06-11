@@ -13,27 +13,8 @@
     const context = scene.context;
     const left = -tile.w / 2;
     const top = -tile.h / 2;
-    if (!scene.image) {
-      context.fillStyle = "rgb(228 235 244 / 0.82)";
-      context.fillRect(left, top, tile.w, tile.h);
-      return;
-    }
-
-    const sourceX = (tile.x / scene.size.width) * scene.image.width;
-    const sourceY = (tile.y / scene.size.height) * scene.image.height;
-    const sourceW = (tile.w / scene.size.width) * scene.image.width;
-    const sourceH = (tile.h / scene.size.height) * scene.image.height;
-    context.drawImage(
-      scene.image,
-      sourceX,
-      sourceY,
-      sourceW,
-      sourceH,
-      left,
-      top,
-      tile.w,
-      tile.h,
-    );
+    context.fillStyle = "rgb(228 235 244 / 0.82)";
+    context.fillRect(left, top, tile.w, tile.h);
   }
 
   function drawTile(scene, tile, elapsedMs, intro) {
@@ -73,25 +54,6 @@
 
   function drawIntake(scene, elapsedMs) {
     const intro = MOTION.phase(elapsedMs, 0, DATA.TIMELINE.gravityMs);
-    const intake = MOTION.phase(
-      elapsedMs,
-      DATA.TIMELINE.gravityMs,
-      DATA.TIMELINE.intakeMs,
-    );
-    const backdropOpacity = 1 - intake * DATA.BACKDROP_FADE_OPACITY;
-
-    if (scene.image) {
-      scene.context.globalAlpha = backdropOpacity;
-      scene.context.drawImage(
-        scene.image,
-        0,
-        0,
-        scene.size.width,
-        scene.size.height,
-      );
-      scene.context.globalAlpha = 1;
-    }
-
     for (const tile of scene.tiles) {
       drawTile(scene, tile, elapsedMs, intro);
     }

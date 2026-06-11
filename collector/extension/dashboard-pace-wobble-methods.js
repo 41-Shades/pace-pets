@@ -9,6 +9,33 @@
     );
   }
 
+  function burstChancePercentValue(chancePercent) {
+    const numericChance = Number(chancePercent);
+    return Number.isFinite(numericChance)
+      ? Math.min(100, Math.max(0, numericChance))
+      : 0;
+  }
+
+  function brakeWobbleRangeKeyForRoll(controller) {
+    const roll = controller.randomIntegerInRange([1, 100]);
+    let cumulativeChance = 0;
+    for (const entry of DATA.BRAKE_WOBBLE_BURST_CHANCES_PERCENT) {
+      cumulativeChance += burstChancePercentValue(entry.chancePercent);
+      if (roll <= cumulativeChance) {
+        return entry.rangeKey;
+      }
+    }
+    return "normal";
+  }
+
+  function brakeWobbleShakeCountForRange(controller, rangeKey) {
+    const shakeRange =
+      rangeKey === "extreme"
+        ? DATA.BRAKE_WOBBLE_EXTREME_SHAKE_COUNT_RANGE
+        : DATA.BRAKE_WOBBLE_SHAKE_COUNT_RANGE;
+    return controller.randomIntegerInRange(shakeRange);
+  }
+
   Object.assign(Controller.prototype, {
     scheduleBrakeWobbleBurst(container, state, delayRange) {
       state.delayTimer = window.setTimeout(() => {
@@ -24,16 +51,12 @@
     },
 
     brakeWobbleBurstState(state) {
-      const shakeCount = this.randomIntegerInRange([1, 3]);
-      const isWideBurst = state.burstsUntilWide <= 1;
-      const isEscapeBurst = isWideBurst && state.nextWideBurstEscapes;
-      if (isWideBurst) {
-        state.nextWideBurstEscapes = !state.nextWideBurstEscapes;
-      }
-      state.burstsUntilWide = isWideBurst
-        ? this.randomIntegerInRange(DATA.BRAKE_WOBBLE_WIDE_BURST_INTERVAL_RANGE)
-        : state.burstsUntilWide - 1;
-      return { isEscapeBurst, isWideBurst, shakeCount };
+      const rangeKey = state.isFirstBurst
+        ? "normal"
+        : brakeWobbleRangeKeyForRoll(this);
+      state.isFirstBurst = false;
+      const shakeCount = brakeWobbleShakeCountForRange(this, rangeKey);
+      return { rangeKey, shakeCount };
     },
 
     runBrakeWobbleBurst(container, state) {
@@ -46,10 +69,8 @@
         DATA.BRAKE_WOBBLE_DURATION_MS_BY_SHAKE_COUNT[burst.shakeCount] ||
         DATA.BRAKE_WOBBLE_DURATION_MS_BY_SHAKE_COUNT[2];
       container.dataset.brakeWobbleShakes = String(burst.shakeCount);
-      if (burst.isWideBurst) {
-        container.dataset.brakeWobbleRange = burst.isEscapeBurst
-          ? "escape"
-          : "wide";
+      if (burst.rangeKey !== "normal") {
+        container.dataset.brakeWobbleRange = burst.rangeKey;
       }
       container.classList.add("is-brake-wobbling");
       this.launchBrakeDebrisBurst(container, burst, state);
@@ -69,14 +90,12 @@
 
     startBrakeWobbleEffect(container) {
       const state = {
-        burstsUntilWide: this.randomIntegerInRange(
-          DATA.BRAKE_WOBBLE_WIDE_BURST_INTERVAL_RANGE,
-        ),
+        debrisAnimationCleanups: new Set(),
         debrisLayers: new Set(),
         debrisTimers: new Set(),
         delayTimer: null,
+        isFirstBurst: true,
         isActive: true,
-        nextWideBurstEscapes: false,
         settleTimer: null,
       };
 

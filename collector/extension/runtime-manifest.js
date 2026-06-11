@@ -10,6 +10,7 @@
     "refresh-status.js",
     "refresh-control.js",
     "sync-monk-escape-preview-control.js",
+    "singularity-transition-preview-control.js",
     "storage-adapter.js",
     "usage-integration-adapters.js",
     "usage-providers.js",
@@ -18,6 +19,7 @@
     "themes/default/asset-manifest.js",
     "pace-state-art.js",
     "pace-state-data.js",
+    "sprint-intensity.js",
     "developer-options.js",
     "pace-logic.js",
     "preview-control.js",
@@ -52,6 +54,7 @@
     "./dashboard-perfect-zero-page-background-methods.js",
     "./dashboard-brake-debris-data.js",
     "./dashboard-brake-debris-methods.js",
+    "./dashboard-brake-extreme-canvas-methods.js",
     "./dashboard-push-stretch-renderer.js",
     "./dashboard-push-sweat-variation.js",
     "./dashboard-push-sweat-renderer.js",
@@ -68,6 +71,10 @@
     "./dashboard-singularity-transition-motion.js",
     "./dashboard-singularity-transition-draw.js",
     "./dashboard-singularity-transition-renderer.js",
+    "./dashboard-singularity-v2-black-hole-draw.js",
+    "./dashboard-singularity-v2-black-hole-scene.js",
+    "./dashboard-singularity-transition-v2-renderer.js",
+    "./dashboard-singularity-transition-versions.js",
     "./dashboard-singularity-transition-methods.js",
     "./dashboard-pace-wobble-methods.js",
     "./dashboard-ease-up-methods.js",
@@ -86,6 +93,7 @@
     "./dashboard-pace-preview-methods.js",
     "./dashboard-pace-controller.js",
     "./dashboard-app-core.js",
+    "./dashboard-singularity-transition-preview-methods.js",
     "./dashboard-history-methods.js",
     "./dashboard-event-methods.js",
     "./dashboard-dom-contract.js",
@@ -93,7 +101,10 @@
   ]);
 
   const DEV_FLAGS_ONLY_SCRIPT_SOURCES = Object.freeze([
+    "./dev-flags-rendering.js",
     "./dev-flags-current-mode.js",
+    "./dev-flags-singularity-controls.js",
+    "./dev-flags-preview-actions.js",
     "./dev-flags.js",
   ]);
 
@@ -155,8 +166,12 @@
     dependencyEdge("usage-providers.js", "history-store.js"),
     dependencyEdge("themes/default/asset-manifest.js", "pace-logic.js"),
     dependencyEdge("pace-state-art.js", "pace-state-data.js"),
+    dependencyEdge("sprint-intensity.js", "developer-options.js"),
+    dependencyEdge("sprint-intensity.js", "preview-control.js"),
     dependencyEdge("pace-state-data.js", "developer-options.js"),
     dependencyEdge("pace-state-data.js", "pace-logic.js"),
+    dependencyEdge("pace-logic.js", "preview-control.js"),
+    dependencyEdge("usage-values.js", "preview-control.js"),
   ]);
 
   const BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
@@ -184,6 +199,19 @@
     dependencyEdge(
       "./dashboard-status-logic.js",
       "./dashboard-status-controller.js",
+    ),
+    dependencyEdge("./sprint-intensity.js", "./dashboard-pace-data.js"),
+    dependencyEdge(
+      "./dashboard-pace-data.js",
+      "./dashboard-brake-extreme-canvas-methods.js",
+    ),
+    dependencyEdge(
+      "./dashboard-pace-core.js",
+      "./dashboard-brake-extreme-canvas-methods.js",
+    ),
+    dependencyEdge(
+      "./dashboard-brake-debris-data.js",
+      "./dashboard-brake-extreme-canvas-methods.js",
     ),
     dependencyEdge(
       "./dashboard-push-stretch-renderer.js",
@@ -218,12 +246,36 @@
       "./dashboard-singularity-transition-renderer.js",
     ),
     dependencyEdge(
+      "./developer-options.js",
+      "./dashboard-singularity-transition-versions.js",
+    ),
+    dependencyEdge(
       "./dashboard-singularity-transition-renderer.js",
+      "./dashboard-singularity-transition-versions.js",
+    ),
+    dependencyEdge(
+      "./dashboard-singularity-v2-black-hole-draw.js",
+      "./dashboard-singularity-v2-black-hole-scene.js",
+    ),
+    dependencyEdge(
+      "./dashboard-singularity-v2-black-hole-scene.js",
+      "./dashboard-singularity-transition-v2-renderer.js",
+    ),
+    dependencyEdge(
+      "./dashboard-singularity-transition-v2-renderer.js",
+      "./dashboard-singularity-transition-versions.js",
+    ),
+    dependencyEdge(
+      "./dashboard-singularity-transition-versions.js",
       "./dashboard-singularity-transition-methods.js",
     ),
     dependencyEdge(
       "./dashboard-pace-icon-methods.js",
       "./dashboard-pace-rail-methods.js",
+    ),
+    dependencyEdge(
+      "./sprint-intensity.js",
+      "./dashboard-sprint-smoke-methods.js",
     ),
     dependencyEdge(
       "./dashboard-pace-core.js",
@@ -234,6 +286,22 @@
       "./dashboard-pace-controller.js",
     ),
     dependencyEdge("./dashboard-pace-controller.js", "./dashboard-app-core.js"),
+    dependencyEdge(
+      "./singularity-transition-preview-control.js",
+      "./dashboard-singularity-transition-preview-methods.js",
+    ),
+    dependencyEdge(
+      "./dashboard-pace-data.js",
+      "./dashboard-singularity-transition-preview-methods.js",
+    ),
+    dependencyEdge(
+      "./dashboard-app-core.js",
+      "./dashboard-singularity-transition-preview-methods.js",
+    ),
+    dependencyEdge(
+      "./dashboard-singularity-transition-preview-methods.js",
+      "./dashboard-event-methods.js",
+    ),
     dependencyEdge("./dashboard-app-core.js", "./dashboard.js"),
     dependencyEdge("./dashboard-history-methods.js", "./dashboard.js"),
     dependencyEdge("./dashboard-event-methods.js", "./dashboard.js"),
@@ -241,10 +309,24 @@
   ]);
 
   const DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
+    dependencyEdge("./dev-flags-rendering.js", "./dev-flags.js"),
+    dependencyEdge(
+      "./dev-flags-rendering.js",
+      "./dev-flags-singularity-controls.js",
+    ),
     dependencyEdge("./dev-flags-current-mode.js", "./dev-flags.js"),
+    dependencyEdge("./dev-flags-singularity-controls.js", "./dev-flags.js"),
     dependencyEdge("./developer-options.js", "./dev-flags.js"),
     dependencyEdge("./pace-state-data.js", "./dev-flags.js"),
-    dependencyEdge("./sync-monk-escape-preview-control.js", "./dev-flags.js"),
+    dependencyEdge(
+      "./singularity-transition-preview-control.js",
+      "./dev-flags-preview-actions.js",
+    ),
+    dependencyEdge(
+      "./sync-monk-escape-preview-control.js",
+      "./dev-flags-preview-actions.js",
+    ),
+    dependencyEdge("./dev-flags-preview-actions.js", "./dev-flags.js"),
     dependencyEdge("./storage-adapter.js", "./dev-flags.js"),
   ]);
 

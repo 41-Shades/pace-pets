@@ -178,6 +178,10 @@
       window.clearTimeout(timer);
     }
     state.debrisTimers.clear();
+    for (const cleanup of [...(state.debrisAnimationCleanups || [])]) {
+      cleanup();
+    }
+    state.debrisAnimationCleanups?.clear();
     for (const layer of state.debrisLayers) {
       layer.remove();
     }
@@ -190,11 +194,16 @@
     },
 
     launchBrakeDebrisBurst(container, burst, state) {
-      if (!burst.isWideBurst || prefersReducedMotion()) {
+      if (burst.rangeKey === "normal" || prefersReducedMotion()) {
         return;
       }
 
-      const rangeKey = burst.isEscapeBurst ? "escape" : "wide";
+      const rangeKey = burst.rangeKey;
+      if (rangeKey === "extreme") {
+        this.launchBrakeExtremeDebrisBurst?.(container, state);
+        return;
+      }
+
       const profile = DATA.BRAKE_DEBRIS_BURST_PROFILES[rangeKey];
       const rect = container.getBoundingClientRect();
       if (!profile || !document.body || rect.width <= 0 || rect.height <= 0) {

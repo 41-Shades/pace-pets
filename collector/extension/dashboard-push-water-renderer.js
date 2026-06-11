@@ -3,7 +3,7 @@
 
   const BASE_LEVEL = 0;
   const MAX_LEVEL = 0.85;
-  const RISE_RATE = 0.0025;
+  const RISE_RATE = 0.005;
 
   function clamp(value, min = 0, max = 1) {
     return Math.max(min, Math.min(max, value));

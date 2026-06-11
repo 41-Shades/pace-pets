@@ -10,6 +10,17 @@
   z-index: 2147483646;
 }
 
+.singularity-v2-black-hole-scene {
+  display: block;
+  height: 100vh;
+  height: 100dvh;
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  width: 100vw;
+  z-index: 0;
+}
+
 body.is-singularity-transitioning {
   overflow: hidden;
 }
@@ -18,8 +29,64 @@ body.is-singularity-transitioning .shell {
   visibility: hidden;
 }
 
+body.is-singularity-v2-space-hold,
+body.is-singularity-v2-entry-exit,
+body.is-singularity-v2-space-reveal {
+  overflow: hidden;
+}
+
+body.is-singularity-v2-entry-exit .content-grid,
+body.is-singularity-v2-space-hold .content-grid,
+body.is-singularity-v2-space-reveal .content-grid {
+  pointer-events: none;
+}
+
+body.is-singularity-v2-entry-exit .content-grid {
+  opacity: 0;
+  transition: opacity 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+body.is-singularity-v2-space-enter::before {
+  background: var(--bg);
+  content: "";
+  display: block;
+  height: 100vh;
+  inset: 0;
+  opacity: 1;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+  width: 100vw;
+  z-index: 2147483645;
+}
+
+body.is-singularity-v2-space-enter.is-singularity-v2-space-enter-visible::before {
+  opacity: 0;
+}
+
+body.is-singularity-v2-space-hold .content-grid {
+  opacity: 0;
+}
+
+body.is-singularity-v2-space-reveal .content-grid {
+  opacity: 1;
+  transition: opacity 5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .singularity-transition-overlay {
     cursor: default;
+  }
+
+  body.is-singularity-v2-space-reveal .content-grid {
+    transition: none;
+  }
+
+  body.is-singularity-v2-entry-exit .content-grid {
+    transition: none;
+  }
+
+  body.is-singularity-v2-space-enter::before {
+    transition: none;
   }
 }

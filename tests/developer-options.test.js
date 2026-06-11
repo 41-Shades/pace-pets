@@ -47,6 +47,20 @@ describe("PacePetsDeveloperOptions storage", () => {
       "manualRefreshLeadWindow",
     );
     expect(options.MAX_POOL_FILL_KEY).toBe("maxPoolFill");
+    expect(options.SINGULARITY_TRANSITION_VERSION_KEY).toBe(
+      "singularityTransitionVersion",
+    );
+    expect(options.SPRINT_INTENSITY_PREVIEW_KEY).toBe("sprintIntensityPreview");
+    expect(options.SPRINT_INTENSITY_PREVIEW_VALUES).toEqual([
+      "1.55",
+      "2.00",
+      "3.00",
+      "4.00",
+      "5.00",
+      "6.00",
+      "7.00",
+    ]);
+    expect(options.DEFAULT_SINGULARITY_TRANSITION_VERSION).toBe("v2");
     expect(options.normalizeForcedPaceStateKey("sync")).toBe("sync");
     expect(options.normalizeForcedPaceStateKey("unsupported")).toBeNull();
     expect(options.normalizeCriticalBadgeWindow(true)).toBe(true);
@@ -55,44 +69,84 @@ describe("PacePetsDeveloperOptions storage", () => {
     expect(options.normalizeManualRefreshLeadWindow("true")).toBe(false);
     expect(options.normalizeMaxPoolFill(true)).toBe(true);
     expect(options.normalizeMaxPoolFill("true")).toBe(false);
+    expect(options.normalizeSingularityTransitionVersion("v2")).toBe("v2");
+    expect(options.normalizeSingularityTransitionVersion("unsupported")).toBe(
+      "v2",
+    );
+    expect(options.normalizeSprintIntensityPreview("4.00")).toBe("4.00");
+    expect(options.normalizeSprintIntensityPreview("unsupported")).toBeNull();
     expect(
       options.normalizeDeveloperOptions({
         criticalBadgeWindow: true,
-        forcedPaceState: "perfectZero",
+        forcedPaceState: "wellAhead",
         manualRefreshLeadWindow: true,
         maxPoolFill: true,
+        singularityTransitionVersion: "v2",
+        sprintIntensityPreview: "4.00",
         unsupported: false,
       }),
     ).toMatchObject({
       criticalBadgeWindow: true,
-      forcedPaceStateKey: "perfectZero",
+      forcedPaceStateKey: "wellAhead",
       manualRefreshLeadWindow: true,
       maxPoolFill: true,
+      singularityTransitionVersion: "v2",
+      sprintIntensityPreview: "4.00",
+    });
+    expect(
+      options.normalizeDeveloperOptions({
+        forcedPaceState: "perfectZero",
+        sprintIntensityPreview: "7.00",
+      }),
+    ).toMatchObject({
+      forcedPaceStateKey: "perfectZero",
+      sprintIntensityPreview: null,
     });
     expect(options.normalizeDeveloperOptions(null)).toMatchObject({
       criticalBadgeWindow: false,
       forcedPaceStateKey: null,
       manualRefreshLeadWindow: false,
       maxPoolFill: false,
+      singularityTransitionVersion: "v2",
+      sprintIntensityPreview: null,
     });
   });
+});
 
+describe("PacePetsDeveloperOptions stored value shape", () => {
   it("owns the stored developer-options value shape", () => {
     const options = globalThis.PacePetsDeveloperOptions;
 
     expect(
       options.storedDeveloperOptionsValue({
         criticalBadgeWindow: true,
-        forcedPaceStateKey: "perfectZero",
+        forcedPaceStateKey: "wellAhead",
         manualRefreshLeadWindow: true,
         maxPoolFill: true,
+        singularityTransitionVersion: "v1",
+        sprintIntensityPreview: "7.00",
       }),
     ).toEqual({
       criticalBadgeWindow: true,
-      forcedPaceState: "perfectZero",
+      forcedPaceState: "wellAhead",
       manualRefreshLeadWindow: true,
       maxPoolFill: true,
+      singularityTransitionVersion: "v1",
+      sprintIntensityPreview: "7.00",
     });
+    expect(
+      options.storedDeveloperOptionsValue({
+        forcedPaceStateKey: "perfectZero",
+        sprintIntensityPreview: "7.00",
+      }),
+    ).toEqual({
+      forcedPaceState: "perfectZero",
+    });
+    expect(
+      options.storedDeveloperOptionsValue({
+        singularityTransitionVersion: "v2",
+      }),
+    ).toEqual({});
     expect(
       options.developerOptionsStorageItems({
         criticalBadgeWindow: true,
