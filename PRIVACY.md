@@ -12,12 +12,9 @@ or account-linking service.
   it can call the usage endpoint as the signed-in browser session.
 - The extension does not inject code into ChatGPT pages.
 - The extension does not read ChatGPT chats or page contents.
-- The rare Singularity dashboard transition may briefly capture the visible Pace
-  Pets dashboard in memory as local render input. It is not stored, uploaded, or
-  used for collection.
-- The extension requests `activeTab` for that dashboard-only visual effect. It
-  does not request `tabs`, `scripting`, or capture-related permissions such as
-  `tabCapture` or `desktopCapture`.
+- The rare Singularity dashboard transition uses generated in-memory canvas
+  fragments and does not capture screenshots.
+- The extension does not request browser tab or screen capture permissions.
 
 ## What The Extension Stores
 

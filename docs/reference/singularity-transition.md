@@ -12,10 +12,8 @@ reset window has not quite ended" state.
 - The effect runs only for the dashboard `singularity` state.
 - The effect does not run for Perfect Sync, Perfect Zero, threshold states, or
   regular page navigation.
-- The effect captures only the visible Pace Pets dashboard tab.
-- The capture is ephemeral render input: it stays in memory, is never written to
-  `chrome.storage.local`, disk, logs, reports, or generated artifacts, and is
-  released when the transition tears down.
+- The effect does not capture screenshots. It uses generated in-memory canvas
+  fragments as transition texture.
 - The extension still does not inject code into ChatGPT pages, read ChatGPT chat
   contents, capture arbitrary websites, or persist screenshots.
 
@@ -24,13 +22,12 @@ reset window has not quite ended" state.
 When the dashboard enters Singularity from any other state, a fixed full-window
 canvas overlay takes over:
 
-1. The visible dashboard frame is captured as the source texture.
-2. The captured frame breaks into tile fragments.
-3. Fragments spiral into a black-hole center near the pace icon.
-4. The scene compresses into a dark tunnel and a small singularity point.
-5. A brief hold creates a pause at the point.
-6. A big-bang flash, shockwave, and particle burst expands outward.
-7. The overlay fades away and reveals the live Singularity dashboard.
+1. Generated dashboard-colored fragments appear across the overlay.
+2. The fragments spiral into a black-hole center near the pace icon.
+3. The scene compresses into a dark tunnel and a small singularity point.
+4. A brief hold creates a pause at the point.
+5. A big-bang flash, shockwave, and particle burst expands outward.
+6. The overlay fades away and reveals the live Singularity dashboard.
 
 Same-state refreshes do not replay the sequence. To replay it in development,
 force a different pace state first, then force Singularity again.
@@ -66,34 +63,24 @@ If the dashboard tab is hidden when developer controls set Singularity, the
 transition is queued with `singularityTransitionPending` and plays from the
 dashboard `visibilitychange` handler when the dashboard becomes visible.
 
-## Capture Flow
+## Render Flow
 
-`collector/extension/dashboard-capture-control.js` owns the message contract:
+The dashboard starts the transition directly from
+`playSingularityTransition()`:
 
 ```text
 dashboard page
-  -> chrome.runtime.sendMessage({ type: "pacePets.captureVisibleDashboard" })
-background worker
-  -> verify sender.url is dashboard.html
-  -> verify sender.tab.windowId is present
-  -> chrome.tabs.captureVisibleTab(sender.tab.windowId, imageDetails)
-  -> return dataUrl to the dashboard page
+  -> playSingularityTransition()
+  -> SingularityTransitionRenderer.create({ captureDataUrl: null, ... })
+  -> fixed overlay canvas renders generated fragments
+  -> overlay fades and tears down
 ```
 
-The background worker refuses capture requests from non-dashboard senders. It
-also refuses requests without a visible sender tab/window instead of falling back
-to the current browser window.
-
-The manifest requests `activeTab` because Chrome requires either `<all_urls>` or
-`activeTab` for `chrome.tabs.captureVisibleTab()`. Pace Pets uses `activeTab`
-because it is narrower and does not add broad host access.
+The manifest does not request `activeTab`, `<all_urls>`, `tabs`, `tabCapture`,
+or `desktopCapture` for this effect.
 
 ## Runtime Files
 
-- `collector/extension/dashboard-capture-control.js`: shared capture message
-  type, image details, and dashboard-side request wrapper.
-- `collector/extension/background.js`: dashboard sender validation and
-  `chrome.tabs.captureVisibleTab()` call.
 - `collector/extension/dashboard-singularity-transition-data.js`: timeline,
   tile, reduced-motion, z-index, and body-class constants.
 - `collector/extension/dashboard-singularity-transition-motion.js`: easing,
@@ -114,19 +101,18 @@ methods.
 
 ## Lifecycle And Cleanup
 
-The renderer creates the overlay only after capture returns so the overlay is not
-captured into its own source frame. During playback, the live dashboard shell is
-hidden behind the overlay. Near the end of the sequence, the body class is
-removed and the overlay fades out so the live Singularity dashboard is revealed
-underneath.
+The renderer creates the overlay at playback start. During playback, the live
+dashboard shell is hidden behind the overlay. Near the end of the sequence, the
+body class is removed and the overlay fades out so the live Singularity
+dashboard is revealed underneath.
 
 Teardown removes the canvas, clears animation frames, removes the body class,
-sets the data URL and decoded image reference to `null`, and clears generated
-tile, streak, and particle arrays.
+sets decoded image references to `null`, and clears generated tile, streak, and
+particle arrays.
 
 Leaving Singularity increments the transition run ID, stops any active scene,
-clears queued playback, and prevents stale async capture/image work from
-starting a scene after the state changed.
+clears queued playback, and prevents stale transition work from continuing after
+the state changed.
 
 ## Validation Notes
 

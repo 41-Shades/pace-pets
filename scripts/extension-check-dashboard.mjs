@@ -54,68 +54,17 @@ function assertDashboardProductMetadata({
   );
 }
 
-function assertRuntimeOrder({ assertScriptBefore, dashboardRuntimeScripts }) {
-  const orderedPairs = [
-    ["./product-metadata.js", "./dashboard.js"],
-    ["./integration-config.js", "./usage.js"],
-    ["./usage-windows.js", "./usage.js"],
-    ["./usage-values.js", "./usage.js"],
-    ["./usage-values.js", "./history-store.js"],
-    ["./refresh-status.js", "./history-store.js"],
-    ["./usage-values.js", "./pace-logic.js"],
-    ["./storage-adapter.js", "./usage.js"],
-    ["./usage-integration-adapters.js", "./usage-providers.js"],
-    ["./usage-providers.js", "./usage.js"],
-    ["./usage-providers.js", "./history-store.js"],
-    ["./themes/default/asset-manifest.js", "./pace-logic.js"],
-    ["./pace-state-data.js", "./developer-options.js"],
-    ["./developer-options.js", "./dashboard.js"],
-    ["./integration-config.js", "./dashboard-chart-data.js"],
-    ["./pace-logic.js", "./dashboard-chart-data.js"],
-    ["./dashboard-chart-data.js", "./dashboard-chart.js"],
-    ["./pace-logic.js", "./dashboard-chart.js"],
-    ["./perfect-zero-space-draw.js", "./perfect-zero-space-scene.js"],
-    ["./dashboard-status-logic.js", "./dashboard-status-controller.js"],
-    [
-      "./dashboard-push-stretch-renderer.js",
-      "./dashboard-push-stretch-methods.js",
-    ],
-    [
-      "./dashboard-push-sweat-variation.js",
-      "./dashboard-push-sweat-renderer.js",
-    ],
-    [
-      "./dashboard-push-sweat-renderer.js",
-      "./dashboard-push-stretch-methods.js",
-    ],
-    [
-      "./dashboard-push-water-renderer.js",
-      "./dashboard-push-stretch-methods.js",
-    ],
-    [
-      "./dashboard-singularity-transition-data.js",
-      "./dashboard-singularity-transition-motion.js",
-    ],
-    [
-      "./dashboard-singularity-transition-motion.js",
-      "./dashboard-singularity-transition-draw.js",
-    ],
-    [
-      "./dashboard-singularity-transition-draw.js",
-      "./dashboard-singularity-transition-renderer.js",
-    ],
-    [
-      "./dashboard-singularity-transition-renderer.js",
-      "./dashboard-singularity-transition-methods.js",
-    ],
-    ["./dashboard-pace-icon-methods.js", "./dashboard-pace-rail-methods.js"],
-    ["./dashboard-pace-core.js", "./dashboard-pace-controller.js"],
-    ["./dashboard-pace-rail-methods.js", "./dashboard-pace-controller.js"],
-    ["./dashboard-pace-controller.js", "./dashboard-app-core.js"],
-    ["./dashboard-app-core.js", "./dashboard.js"],
-    ["./dashboard-history-methods.js", "./dashboard.js"],
-    ["./dashboard-event-methods.js", "./dashboard.js"],
-  ];
+function assertRuntimeOrder({
+  assert,
+  assertScriptBefore,
+  dashboardRuntimeScripts,
+  runtimeManifest,
+}) {
+  const orderedPairs = runtimeManifest.DASHBOARD_RUNTIME_DEPENDENCY_EDGES;
+  assert(
+    Array.isArray(orderedPairs),
+    "Dashboard runtime dependency edges must be an array.",
+  );
   for (const [before, after] of orderedPairs) {
     assertScriptBefore(
       dashboardRuntimeScripts,

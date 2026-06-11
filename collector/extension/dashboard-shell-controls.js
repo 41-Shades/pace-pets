@@ -1,9 +1,14 @@
 (() => {
   "use strict";
 
-  const THEME_STORAGE_KEY = "codex-usage-theme";
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  if (!DASHBOARD_PREFERENCES) {
+    throw new Error(
+      "Pace Pets dashboard preferences must load before dashboard-shell-controls.js.",
+    );
+  }
+
   const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)";
-  const THEME_VALUES = new Set(["light", "dark"]);
   const INFO_PANEL_FOCUSABLE_SELECTOR = [
     "a[href]",
     "button:not([disabled])",
@@ -14,20 +19,11 @@
   ].join(",");
 
   function storedThemePreference() {
-    try {
-      const value = window.localStorage.getItem(THEME_STORAGE_KEY);
-      return THEME_VALUES.has(value) ? value : null;
-    } catch {
-      return null;
-    }
+    return DASHBOARD_PREFERENCES.readThemePreference().value;
   }
 
   function storeThemePreference(theme) {
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch {
-      // Local storage can be unavailable in strict browser contexts.
-    }
+    DASHBOARD_PREFERENCES.storeThemePreference(theme);
   }
 
   function isInputLike(element) {

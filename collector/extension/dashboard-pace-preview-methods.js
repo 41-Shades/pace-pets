@@ -76,6 +76,7 @@
         replaySplatFall:
           forcedStateChanged && state.key === DATA.PACE_STATES.splat.key,
       });
+      this.updateSprintSmokeIntensity?.(forcedPaceRatio);
       this.elements.paceTitle.textContent = state.title;
       this.elements.paceCopy.textContent = state.copy;
       this.elements.paceStats.hidden = false;

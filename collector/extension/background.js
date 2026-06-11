@@ -2,7 +2,9 @@ importScripts("runtime-manifest.js");
 importScripts(...CodexExtensionRuntime.BACKGROUND_SCRIPT_SOURCES);
 
 const POLL_ALARM = "refresh-codex-weekly-usage";
+const BADGE_PRESENTATION_ALARM = "refresh-pace-badge-presentation";
 const POLL_MINUTES = 5;
+const BADGE_PRESENTATION_MINUTES = 1;
 const INITIAL_REFRESH_DELAY_MINUTES = 1;
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
@@ -10,43 +12,6 @@ const DEVELOPER_OPTIONS_STORAGE_KEY = PacePetsDeveloperOptions.STORAGE_KEY;
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
-
-function isDashboardSenderUrl(url) {
-  if (typeof url !== "string") {
-    return false;
-  }
-
-  const dashboardUrl = chrome.runtime.getURL(DASHBOARD_PATH);
-  return (
-    url === dashboardUrl ||
-    url.startsWith(`${dashboardUrl}?`) ||
-    url.startsWith(`${dashboardUrl}#`)
-  );
-}
-
-async function captureVisibleDashboard(sender) {
-  if (!isDashboardSenderUrl(sender?.url)) {
-    return {
-      dataUrl: null,
-      message: "Dashboard capture is only available to dashboard pages.",
-      ok: false,
-    };
-  }
-
-  if (!Number.isInteger(sender?.tab?.windowId)) {
-    return {
-      dataUrl: null,
-      message: "Dashboard capture requires a visible dashboard tab.",
-      ok: false,
-    };
-  }
-
-  const dataUrl = await chrome.tabs.captureVisibleTab(
-    sender.tab.windowId,
-    PacePetsDashboardCaptureControl.captureImageDetails(),
-  );
-  return { dataUrl, ok: true };
-}
 
 async function persistRefreshStatus(refreshState) {
   try {
@@ -222,35 +187,41 @@ function runScheduledRefresh() {
   return scheduledRefreshPromise;
 }
 
-function refreshNowResponse(refreshState) {
-  const refreshStatus = CodexRefreshStatus.normalizeRefreshStatus(refreshState);
-  return {
-    ok: refreshStatus?.ok === true,
-    refreshStatus,
-  };
+function shouldSkipBadgePresentationRefresh() {
+  return (
+    scheduledRefreshPromise !== null ||
+    (lastRefreshState.refreshedAt && lastRefreshState.ok === false)
+  );
+}
+
+function runBadgePresentationRefresh() {
+  if (shouldSkipBadgePresentationRefresh()) {
+    return Promise.resolve();
+  }
+
+  return updatePaceBadgeFromHistory();
 }
 
 function manualRefreshCooldownRemainingMs() {
-  return Math.max(0, manualRefreshCooldownUntilMs - Date.now());
-}
-
-function manualRefreshCooldownResponse(remainingMs) {
-  return {
-    ok: false,
-    refreshStatus: CodexRefreshStatus.normalizeRefreshStatus(lastRefreshState),
-    cooldownRemainingMs: remainingMs,
-  };
+  return PacePetsRefreshControl.cooldownRemainingMs(
+    manualRefreshCooldownUntilMs,
+  );
 }
 
 function runManualRefresh() {
   const remainingMs = manualRefreshCooldownRemainingMs();
   if (remainingMs > 0) {
-    return Promise.resolve(manualRefreshCooldownResponse(remainingMs));
+    return Promise.resolve(
+      PacePetsRefreshControl.manualRefreshCooldownResponse(
+        lastRefreshState,
+        remainingMs,
+      ),
+    );
   }
 
   manualRefreshCooldownUntilMs =
     Date.now() + PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS;
-  return runScheduledRefresh().then(refreshNowResponse);
+  return runScheduledRefresh().then(PacePetsRefreshControl.refreshNowResponse);
 }
 
 function scheduleRefresh() {
@@ -258,7 +229,11 @@ function scheduleRefresh() {
     delayInMinutes: INITIAL_REFRESH_DELAY_MINUTES,
     periodInMinutes: POLL_MINUTES,
   });
-  updatePaceBadgeFromHistory().catch((error) => {
+  chrome.alarms.create(BADGE_PRESENTATION_ALARM, {
+    delayInMinutes: BADGE_PRESENTATION_MINUTES,
+    periodInMinutes: BADGE_PRESENTATION_MINUTES,
+  });
+  runBadgePresentationRefresh().catch((error) => {
     console.warn("Codex usage badge restore failed:", error);
   });
 }
@@ -284,29 +259,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse(response);
       })
       .catch((error) => {
-        sendResponse({
-          ok: false,
-          refreshStatus: null,
-          message: CodexRefreshStatus.safeFailureMessage(error),
-        });
-      });
-
-    return true;
-  }
-
-  if (
-    PacePetsDashboardCaptureControl.isCaptureVisibleDashboardMessage(message)
-  ) {
-    captureVisibleDashboard(sender)
-      .then((response) => {
-        sendResponse(response);
-      })
-      .catch((error) => {
-        sendResponse({
-          dataUrl: null,
-          message: error.message,
-          ok: false,
-        });
+        sendResponse(PacePetsRefreshControl.refreshErrorResponse(error));
       });
 
     return true;
@@ -337,6 +290,13 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === POLL_ALARM) {
     runScheduledRefresh();
+    return;
+  }
+
+  if (alarm.name === BADGE_PRESENTATION_ALARM) {
+    runBadgePresentationRefresh().catch((error) => {
+      console.warn("Codex usage badge presentation update failed:", error);
+    });
   }
 });
 

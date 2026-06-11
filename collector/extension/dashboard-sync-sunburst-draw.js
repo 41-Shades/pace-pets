@@ -75,7 +75,9 @@
     }
 
     const innerRadius = frame.radius * 0.03 * rayProgress;
-    const outerRadius = frame.radius * ray.length * rayProgress;
+    const lengthMultiplier = frame.rayLengthMultipliers?.get(ray) ?? 1;
+    const outerRadius =
+      frame.radius * ray.length * lengthMultiplier * rayProgress;
     const innerWidth = ray.width * ray.innerWidth;
     const leftInner = pointFor(
       frame.origin,

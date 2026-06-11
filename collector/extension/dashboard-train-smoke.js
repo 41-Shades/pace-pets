@@ -26,6 +26,14 @@
     TILT_DEG: Object.freeze([-8, 8]),
     TOP_MARGIN_PX: 120,
   });
+  const EXTENDED_PATH = Object.freeze({
+    CHANCE_PERCENT: 27,
+    DURATION_MS: Object.freeze([5600, 7600]),
+    END_X_PX: Object.freeze([-104, -62]),
+    END_Y_PX: Object.freeze([-40, -14]),
+    MID_X_PX: Object.freeze([-17, -5]),
+    MID_Y_PX: Object.freeze([-40, -25]),
+  });
   const SHAPES = Object.freeze(["round", "long", "tall"]);
   const VARIATION = Object.freeze({
     DURATION_MS: Object.freeze([4200, 5800]),
@@ -158,15 +166,40 @@
     puff.style.removeProperty("transform");
   }
 
-  function randomVariation(controller) {
+  function shouldUseExtendedPath(controller) {
+    return (
+      controller.randomIntegerInRange([1, 100]) <= EXTENDED_PATH.CHANCE_PERCENT
+    );
+  }
+
+  function randomPathVariation(controller) {
+    if (!shouldUseExtendedPath(controller)) {
+      return {
+        baseDurationMs: controller.randomIntegerInRange(VARIATION.DURATION_MS),
+        endX: controller.randomIntegerInRange(VARIATION.END_X_PX),
+        endY: controller.randomIntegerInRange(VARIATION.END_Y_PX),
+        midX: controller.randomIntegerInRange(VARIATION.MID_X_PX),
+        midY: controller.randomIntegerInRange(VARIATION.MID_Y_PX),
+      };
+    }
+
     return {
-      baseDurationMs: controller.randomIntegerInRange(VARIATION.DURATION_MS),
+      baseDurationMs: controller.randomIntegerInRange(
+        EXTENDED_PATH.DURATION_MS,
+      ),
+      endX: controller.randomIntegerInRange(EXTENDED_PATH.END_X_PX),
+      endY: controller.randomIntegerInRange(EXTENDED_PATH.END_Y_PX),
+      midX: controller.randomIntegerInRange(EXTENDED_PATH.MID_X_PX),
+      midY: controller.randomIntegerInRange(EXTENDED_PATH.MID_Y_PX),
+    };
+  }
+
+  function randomVariation(controller) {
+    const path = randomPathVariation(controller);
+    return {
+      ...path,
       endScale:
         controller.randomIntegerInRange(VARIATION.END_SCALE_PERCENT) / 100,
-      endX: controller.randomIntegerInRange(VARIATION.END_X_PX),
-      endY: controller.randomIntegerInRange(VARIATION.END_Y_PX),
-      midX: controller.randomIntegerInRange(VARIATION.MID_X_PX),
-      midY: controller.randomIntegerInRange(VARIATION.MID_Y_PX),
       opacity: controller.randomIntegerInRange(VARIATION.OPACITY_PERCENT) / 100,
       shape: randomItem(controller, SHAPES),
       sizePx: controller.randomIntegerInRange(VARIATION.SIZE_PX),
@@ -304,6 +337,7 @@
     EMIT_INTERVAL_MS,
     EMIT_JITTER_MS,
     ESCAPE,
+    EXTENDED_PATH,
     INITIAL_ACTIVE_PUFFS,
     MAX_CATCH_UP_EMISSIONS,
     ORIGIN,

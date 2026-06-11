@@ -60,6 +60,13 @@ function extensionPathFromDashboardScript(src) {
   return src.slice(2);
 }
 
+function extensionPageScriptSources(html) {
+  const scriptTags = html.match(/<script\b[\s\S]*?<\/script>/gi) || [];
+  return scriptTags
+    .map((scriptTag) => attributeValue(scriptTag, "src"))
+    .filter(Boolean);
+}
+
 function extensionPathFromExtensionPageUrl(src, label) {
   assert(
     src.startsWith("./") && !/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src),
@@ -108,6 +115,11 @@ await import(
 );
 const themeAssets = globalThis.CodexThemeAssets;
 assert(themeAssets, "Theme asset manifest must be importable by checks.");
+await import(pathToFileURL(path.join(extensionRoot, "usage-values.js")));
+await import(pathToFileURL(path.join(extensionRoot, "pace-state-art.js")));
+await import(pathToFileURL(path.join(extensionRoot, "pace-state-data.js")));
+const paceStateData = globalThis.PacePetsPaceStateData;
+assert(paceStateData, "Pace state catalog must be importable by checks.");
 
 const manifest = readJson("manifest.json");
 const expectedExtensionCsp = "script-src 'self'; object-src 'self';";
@@ -123,7 +135,7 @@ assert(
 );
 assertExactStringSet(
   manifest.permissions,
-  ["activeTab", "alarms", "contextMenus", "storage"],
+  ["alarms", "contextMenus", "storage"],
   "Permissions",
 );
 assertExactStringSet(
@@ -178,26 +190,14 @@ assert(
   Array.isArray(backgroundImports),
   "Background script sources must be an array.",
 );
-const backgroundRuntimeOrderPairs = Object.freeze([
-  ["product-metadata.js", "background-logic.js"],
-  ["integration-config.js", "usage.js"],
-  ["usage-windows.js", "usage.js"],
-  ["usage-values.js", "usage.js"],
-  ["usage-values.js", "history-store.js"],
-  ["refresh-status.js", "history-store.js"],
-  ["usage-values.js", "pace-logic.js"],
-  ["storage-adapter.js", "usage.js"],
-  ["usage-integration-adapters.js", "usage-providers.js"],
-  ["usage-providers.js", "usage.js"],
-  ["usage-providers.js", "history-store.js"],
-  ["themes/default/asset-manifest.js", "pace-logic.js"],
-  ["pace-state-art.js", "pace-state-data.js"],
-  ["pace-state-data.js", "developer-options.js"],
-  ["developer-options.js", "background-logic.js"],
-  ["pace-state-data.js", "pace-logic.js"],
-  ["usage-providers.js", "background-usage-source.js"],
-]);
-for (const [before, after] of backgroundRuntimeOrderPairs) {
+assert(
+  Array.isArray(runtimeManifest.BACKGROUND_RUNTIME_DEPENDENCY_EDGES),
+  "Background runtime dependency edges must be an array.",
+);
+for (const [
+  before,
+  after,
+] of runtimeManifest.BACKGROUND_RUNTIME_DEPENDENCY_EDGES) {
   assertScriptBefore(
     backgroundImports,
     before,
@@ -211,6 +211,43 @@ for (const src of backgroundImports) {
     `Background importScripts source must be extension-local: ${src}`,
   );
   assertExtensionFile(src);
+}
+const devFlagsHtml = readExtensionText("dev-flags.html");
+const devFlagsBootstrapScripts = extensionPageScriptSources(devFlagsHtml);
+assert(
+  devFlagsBootstrapScripts.length === 2 &&
+    devFlagsBootstrapScripts[0] === "./runtime-manifest.js" &&
+    devFlagsBootstrapScripts[1] === "./dev-flags-loader.js",
+  "Dev controls HTML must bootstrap only the runtime manifest and dev flags loader.",
+);
+assertExtensionFile("dev-flags-loader.js");
+assert(
+  Array.isArray(runtimeManifest.DEV_FLAGS_SCRIPT_SOURCES),
+  "Dev controls script sources must be an array.",
+);
+assert(
+  Array.isArray(runtimeManifest.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES),
+  "Dev controls runtime dependency edges must be an array.",
+);
+for (const [
+  before,
+  after,
+] of runtimeManifest.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES) {
+  assertScriptBefore(
+    runtimeManifest.DEV_FLAGS_SCRIPT_SOURCES,
+    before,
+    after,
+    "Dev controls runtime manifest",
+  );
+}
+for (const src of runtimeManifest.DEV_FLAGS_SCRIPT_SOURCES) {
+  assert(
+    src.startsWith("./") && !/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src),
+    `Dev controls runtime source must be extension-local: ${src}`,
+  );
+  assertExtensionFile(
+    extensionPathFromExtensionPageUrl(src, "Dev controls script"),
+  );
 }
 for (const size of ["16", "32", "48", "128"]) {
   const iconPath = extensionPathFromExtensionPageUrl(
@@ -255,18 +292,7 @@ for (const requiredExtensionFile of requiredExtensionFiles) {
 }
 assertExactStringSet(
   Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE),
-  [
-    "wellAhead",
-    "strongAhead",
-    "ahead",
-    "on",
-    "behind",
-    "wellBehind",
-    "criticalBehind",
-    "sync",
-    "perfectZero",
-    "splat",
-  ],
+  themeAssets.packagedPaceIconStateKeys(paceStateData.PACE_STATES),
   "Theme pace icon states",
 );
 for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
@@ -277,7 +303,7 @@ for (const stateKey of Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE)) {
     ),
   );
 }
-for (const variantKey of ["perfectZeroGlow", "splatFreeFall"]) {
+for (const variantKey of Object.keys(themeAssets.PACE_ICON_VARIANT_FILES)) {
   assertExtensionFile(
     extensionPathFromExtensionPageUrl(
       themeAssets.paceIconVariantPath(variantKey),

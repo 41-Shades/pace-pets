@@ -22,7 +22,7 @@
   }) {
     return (
       PacePetsLogic.isPerfectZeroPercentPair(remainingPercent, timePercent) &&
-      !PacePetsLogic.isUsageAbsoluteZeroWithTimeRemaining(
+      !PacePetsLogic.isUsageAbsoluteZeroBeforeFinalTimeBand(
         remainingPercent,
         timePercent,
       ) &&
@@ -100,6 +100,7 @@
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
 
       this.setPaceLevel(level);
+      this.updateSprintSmokeIntensity?.(paceRatio);
       this.elements.paceTitle.textContent = title;
       this.elements.paceCopy.textContent = copy;
       this.elements.paceStats.hidden = paceRatioForDisplay === null;

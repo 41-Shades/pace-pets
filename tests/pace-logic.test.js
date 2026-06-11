@@ -71,6 +71,16 @@ describe("PacePetsLogic controlled presentations", () => {
     expect(zeroPresentation.displayRatio).toBe(0);
     expect(zeroPresentation.paceRatio).toBeNull();
 
+    const finalBandExactZeroPresentation =
+      globalThis.PacePetsLogic.controlledPacePresentationForValues(0, 0.4);
+    expect(finalBandExactZeroPresentation.state.key).toBe("perfectZero");
+    expect(finalBandExactZeroPresentation.displayRatio).toBe(0);
+
+    const earlyExactZeroPresentation =
+      globalThis.PacePetsLogic.controlledPacePresentationForValues(0, 0.6);
+    expect(earlyExactZeroPresentation.state.key).toBe("splat");
+    expect(earlyExactZeroPresentation.displayRatio).toBe(0);
+
     const activeZeroWindow = {
       remainingPercent: 0.4,
       resetsAt: "2026-05-25T12:01:00.000Z",

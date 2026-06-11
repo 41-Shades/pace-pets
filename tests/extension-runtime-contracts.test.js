@@ -127,14 +127,27 @@ describe("CodexProductMetadata", () => {
 });
 
 describe("CodexThemeAssets", () => {
-  it("exposes app icons and one runtime icon path per playful pace state", () => {
+  it("exposes app icons and derives packaged pace icons from the pace-state catalog", () => {
     const assets = globalThis.CodexThemeAssets;
+    const paceStateData = globalThis.PacePetsPaceStateData;
     const paceIconFiles = Object.values(assets.PACE_ICON_FILES_BY_STATE);
+    const packagedStateKeys = assets.packagedPaceIconStateKeys(
+      paceStateData.PACE_STATES,
+    );
 
     expect(assets.PACE_ICON_FILES).toEqual(paceIconFiles);
     expect(new Set(assets.PACE_ICON_FILES).size).toBe(
       assets.PACE_ICON_FILES.length,
     );
+    expect(new Set(packagedStateKeys)).toEqual(
+      new Set(Object.keys(assets.PACE_ICON_FILES_BY_STATE)),
+    );
+    expect(assets.isPackagedPaceIconState("wellAhead")).toBe(true);
+    expect(assets.isPackagedPaceIconState("singularity")).toBe(false);
+    expect(assets.PACE_ICON_STATE_EXCLUSIONS).toEqual({
+      muted: "No playful image.",
+      singularity: "Uses generated in-memory art.",
+    });
     expect(assets.appIconPathForSize(32)).toBe(
       `${assets.THEME_BASE_PATH}/${assets.APP_ICON_FILES_BY_SIZE["32"]}`,
     );
