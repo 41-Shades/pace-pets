@@ -73,19 +73,20 @@
     );
   }
 
-  function isUsageAbsoluteZeroWithTimeRemaining(remainingPercent, timePercent) {
+  function isUsageAbsoluteZeroBeforeFinalTimeBand(
+    remainingPercent,
+    timePercent,
+  ) {
     const numericRemainingPercent =
       remainingPercent === null ||
       remainingPercent === undefined ||
       remainingPercent === ""
         ? null
         : Number(remainingPercent);
-    const boundedTimePercent = boundedPercent(timePercent);
-    return (
-      numericRemainingPercent === 0 &&
-      boundedTimePercent !== null &&
-      boundedTimePercent > 0
-    );
+    const displayTimePercent = roundedDisplayPercent(timePercent);
+    return numericRemainingPercent === 0 && displayTimePercent !== null
+      ? displayTimePercent > 0
+      : false;
   }
 
   function controlledPaceDisplayRatio(state) {
@@ -100,7 +101,7 @@
     timePercent,
     { allowPerfectZero = true } = {},
   ) {
-    if (isUsageAbsoluteZeroWithTimeRemaining(remainingPercent, timePercent)) {
+    if (isUsageAbsoluteZeroBeforeFinalTimeBand(remainingPercent, timePercent)) {
       return {
         displayRatio: controlledPaceDisplayRatio(PACE_STATES.splat),
         paceRatio: paceRatioForValues(remainingPercent, timePercent),
@@ -316,7 +317,7 @@
     formatPaceRatioValue,
     isPerfectSyncPercentPair,
     isPerfectZeroPercentPair,
-    isUsageAbsoluteZeroWithTimeRemaining,
+    isUsageAbsoluteZeroBeforeFinalTimeBand,
     isResetWindowStale,
     paceStateForClassName,
     paceStatePresentationForRatio,

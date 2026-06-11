@@ -66,22 +66,23 @@ Perfect Zero wins over Perfect Sync when the matching rounded percent is zero.
 Perfect presentation is suppressed when the reset window is stale, meaning
 `resetsAt` is at or before the current time. Perfect Zero can also be disallowed
 for a current reset window when history shows usage already reached displayed
-zero while time still remained in that same window. Singularity inherits that
-Perfect Zero guard and also requires the countdown display-zero band, not an
-ended window.
+zero while rounded time still displayed above zero in that same window.
+Singularity inherits that Perfect Zero guard and also requires the countdown
+display-zero band, not an ended window.
 
 ## Imperfect State Contract
 
-Splat is an imperfect special state. It uses exact source usage, not display
-rounding.
+Splat is an imperfect special state. It uses source-reported zero usage, but it
+only wins before the final rounded time band because upstream source precision
+can be whole-percent at the low end.
 
-| State           | Surface                     | Rule                                                           | Presentation                                                      |
-| --------------- | --------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Splat (`splat`) | Dashboard and toolbar badge | Remaining usage percent is exactly `0` and time remains `> 0`. | Uses the `splat` state with a controlled display ratio of `0.00`. |
+| State           | Surface                     | Rule                                                                                    | Presentation                                                      |
+| --------------- | --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Splat (`splat`) | Dashboard and toolbar badge | Remaining usage percent is reported as `0` and rounded time-remaining percent is `> 0`. | Uses the `splat` state with a controlled display ratio of `0.00`. |
 
-Splat wins over Perfect Zero when usage is exactly zero and the reset window
-still has time remaining, even if display rounding would otherwise make the time
-percent look like zero.
+Perfect Zero wins when both usage and time display as zero. That avoids treating
+a provider-rounded usage `0` as absolute exhaustion during the final rounded time
+band.
 
 ## Legend And Preview Order
 
@@ -121,6 +122,25 @@ status card briefly teeters and the ratio stat pops upward before both settle.
 
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects.
+
+The `wellAhead` / Sprint faster state uses the dashboard-only smoke and scooter
+motion effect in `collector/extension/dashboard-sprint-smoke-methods.js` and
+`collector/extension/dashboard-pace-card.css`. Sprint faster remains one pace
+state for all ratios above `1.55`; within that state, the actual ratio
+continuously increases a capped animation intensity. Higher Sprint faster ratios
+shorten scooter bounce and smoke durations, lengthen smoke drift, and make speed
+bump bursts more frequent without replaying the effect on same-state refreshes.
+
+The `on` / Keep pace state uses the dashboard-only train roll and smoke effect
+in `collector/extension/dashboard-train-roll-methods.js`,
+`collector/extension/dashboard-train-roll.css`, and
+`collector/extension/dashboard-train-smoke.js`. Puffs emit from a fixed train
+stack origin, follow bounded-random quadratic arcs, and occasionally use a
+longer normal arc with a matching longer duration so the smoke extends farther
+without speeding up. A rare separate escape profile continues selected puffs
+onto a much longer cubic float up and away path. Same-state refreshes preserve
+the running effect, reduced-motion settings disable smoke, and the legend rail
+remains static.
 
 For small organic or atmospheric effects, prefer a focused canvas renderer over
 stacked CSS gradients once the visual depends on noisy asymmetry, soft plumes,
@@ -167,9 +187,11 @@ curve while keeping a slightly stronger warm outline. The sunburst rise is a
 one-time page-session animation; re-renders continue from the original start
 time instead of restarting the rise. After it completes, the ray field remains
 alive while old rays fade out and new rays fade in faster from the same
-bounded-random sunburst parameters unless reduced motion is enabled. The
-turnover starts lightly midway through the rise, ramps up near the end, and uses
-the full-strength turnover after the rise completes.
+bounded-random sunburst parameters unless reduced motion is enabled. Fully risen
+rays also apply their own slow bounded length motion, so individual ray tips
+subtly extend and recede without changing the sunburst center or restarting the
+entry animation. The turnover starts lightly midway through the rise, ramps up
+near the end, and uses the full-strength turnover after the rise completes.
 After 60 continuous seconds in Perfect Sync, the dashboard clones the status
 monk into a fixed page layer, hides the in-card icon, and launches the clone
 through a bounded-random 70-degree upward cone. The escaped monk uses the same
@@ -248,6 +270,11 @@ state's badge color, while the tooltip carries the exact critical pace value.
 When both windows are critical, the lower pace ratio wins; equal ratios prefer
 the stored badge window.
 
+The toolbar badge recomputes its presentation from stored history once per
+minute, separately from the five-minute usage collection alarm. That keeps
+time-derived pace ratios aligned with the dashboard's minute-level cached
+history refresh without making extra usage endpoint requests.
+
 The chart clamps plotted pace values to `0..50` through
 `PacePetsLogic.chartPaceRatio()`. `dashboard.js` narrows the visible y-axis for
 normal ranges, expands high ranges in coarser steps, and marks capped tooltip
@@ -256,8 +283,10 @@ values when raw pace is outside the plotted bounds.
 ## Asset Ownership
 
 Each shipped pace state gets its image path from
-`collector/extension/themes/default/asset-manifest.js`. The muted state has no
-playful image. Perfect Zero also uses the dedicated canvas scene in
+`collector/extension/themes/default/asset-manifest.js`. The same manifest owns
+the explicit non-packaged pace-state exceptions used by static checks; the
+muted state has no playful image, and Singularity uses generated in-memory art.
+Perfect Zero also uses the dedicated canvas scene in
 `collector/extension/perfect-zero-space-scene.js` when the main dashboard card
 enters the Perfect Zero presentation, plus the dashboard-only canvas eclipse in
 `collector/extension/dashboard-eclipse-icon.js` for the theme control while the

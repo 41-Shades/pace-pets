@@ -1,14 +1,13 @@
 (() => {
   "use strict";
 
-  const CAPTURE = globalThis.PacePetsDashboardCaptureControl;
   const DATA = globalThis.PacePetsDashboardPaceData;
   const TRANSITION_DATA = globalThis.PacePetsDashboardSingularityTransitionData;
   const RENDERER = globalThis.PacePetsDashboardSingularityTransitionRenderer;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!CAPTURE || !DATA || !TRANSITION_DATA || !RENDERER || !Controller) {
+  if (!DATA || !TRANSITION_DATA || !RENDERER || !Controller) {
     throw new Error(
-      "Capture, pace, and Singularity transition helpers must load before transition methods.",
+      "Pace and Singularity transition helpers must load before transition methods.",
     );
   }
 
@@ -93,23 +92,8 @@
       this.singularityTransitionPending = false;
 
       const reducedMotion = prefersReducedMotion();
-      const capture = reducedMotion
-        ? { dataUrl: null, ok: false }
-        : await CAPTURE.captureVisibleDashboard();
-      if (this.singularityTransitionRunId !== runId) {
-        this.singularityTransitionInFlight = false;
-        return;
-      }
-
-      if (!reducedMotion && !capture.ok) {
-        console.warn(
-          "Pace Pets dashboard visual capture failed:",
-          capture.message,
-        );
-      }
-
       const scene = RENDERER.create({
-        captureDataUrl: capture.dataUrl,
+        captureDataUrl: null,
         origin: paceIconOrigin(this),
         reducedMotion,
       });

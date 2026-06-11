@@ -40,7 +40,7 @@ Usage history is stored only in `chrome.storage.local` for the user's local exte
 
 Stored samples contain only normalized safe usage fields: collection timestamps, source/version markers, supported window keys, remaining/used percentages, reset timestamps, and window duration. See [Storage Schema](docs/reference/storage-schema.md).
 
-Pace Pets does not inject code into ChatGPT pages or read ChatGPT chats or page contents. The rare Singularity dashboard transition may briefly capture the visible Pace Pets dashboard in memory as local render input; it does not store or upload screenshots. The extension requests `activeTab` for that local dashboard effect, and does not request `tabs`, `scripting`, `tabCapture`, or `desktopCapture`.
+Pace Pets does not inject code into ChatGPT pages or read ChatGPT chats or page contents. The rare Singularity dashboard transition uses generated in-memory canvas fragments and does not capture, store, or upload screenshots. The extension does not request browser tab or screen capture permissions.
 
 The selected usage window is also stored locally so the dashboard, toolbar badge, and badge-view menu stay in sync. The dashboard theme preference stays in extension-page `localStorage`.
 
@@ -88,7 +88,7 @@ and scope.
 - Do not store browser cookies, auth headers, access tokens, raw HTML, raw page text, screenshots, raw network responses, or account identifiers.
 - Keep real usage history local to Chrome extension storage.
 - Store only normalized usage windows, collection timestamps, reset timestamps, source/version markers, and derived percentages.
-- Keep extension permissions limited to hosts the runtime code actually calls, plus `activeTab` for the dashboard-only Singularity visual transition.
+- Keep extension permissions limited to hosts and Chrome APIs the runtime code actually uses.
 
 ## License
 

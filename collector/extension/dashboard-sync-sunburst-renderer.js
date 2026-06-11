@@ -4,10 +4,16 @@
   const BODY_CLASS = "has-sync-sunburst-page-background";
   const CANVAS_CLASS = "sync-sunburst-page-background";
   const DRAW = root.PacePetsDashboardSyncSunburstDraw;
+  const RAYS = root.PacePetsDashboardSyncSunburstRays;
   const TURNOVER = root.PacePetsDashboardSyncSunburstTurnover;
   if (!DRAW) {
     throw new Error(
       "Pace sync sunburst draw helpers must load before dashboard-sync-sunburst-renderer.js.",
+    );
+  }
+  if (!RAYS) {
+    throw new Error(
+      "Pace sync sunburst ray helpers must load before dashboard-sync-sunburst-renderer.js.",
     );
   }
   if (!TURNOVER) {
@@ -18,7 +24,6 @@
 
   const FINISHED_PROGRESS = 1;
   const GROW_DURATION_MS = 30000;
-  const INITIAL_EXTRA_RAY_COUNT = 30;
   const MAX_PIXEL_RATIO = 2;
   const PANEL_BG_END_OPACITY = 0;
   const PANEL_FADE_DELAY = 0.12;
@@ -26,9 +31,7 @@
   const PANEL_SELECTOR = ".usage-panel";
   const RAY_FINAL_OPACITY = 0.64;
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-  const RAY_COUNT = 42;
   const RAY_TURNOVER_FRAME_DELAY_MS = 33;
-  const TWO_PI = Math.PI * 2;
 
   function clamp(value, min = 0, max = 1) {
     return Math.max(min, Math.min(max, value));
@@ -40,14 +43,6 @@
 
   function mix(from, to, amount) {
     return from + (to - from) * amount;
-  }
-
-  function randomBetween(from, to) {
-    return mix(from, to, Math.random());
-  }
-
-  function randomInteger(from, to) {
-    return Math.floor(randomBetween(from, to + 1));
   }
 
   function visibilityFor(progress) {
@@ -65,106 +60,6 @@
       PANEL_BG_START_OPACITY,
       PANEL_BG_END_OPACITY,
       panelFadeFor(progress),
-    );
-  }
-
-  function rayKind(index) {
-    const isBroadAnchor = index % 6 === 0 || index % 11 === 4;
-    const isSpikeAnchor = index % 4 === 1 || index % 9 === 2;
-    const isBroad = isBroadAnchor ? Math.random() > 0.18 : Math.random() > 0.9;
-    return {
-      isBroad,
-      isSpike:
-        !isBroad &&
-        (isSpikeAnchor ? Math.random() > 0.16 : Math.random() > 0.68),
-    };
-  }
-
-  function rayWidth(kind) {
-    if (kind.isSpike) {
-      return randomBetween(0.014, 0.033);
-    }
-    if (kind.isBroad) {
-      return randomBetween(0.062, 0.13);
-    }
-    return randomBetween(0.032, 0.078);
-  }
-
-  function rayAlpha(kind) {
-    if (kind.isSpike) {
-      return randomBetween(0.34, 0.72);
-    }
-    return randomBetween(0.18, 0.52);
-  }
-
-  function rayDuration(kind) {
-    if (kind.isSpike) {
-      return randomBetween(0.5, 0.84);
-    }
-    return randomBetween(0.6, 1);
-  }
-
-  function rayLayer(kind) {
-    if (kind.isBroad) {
-      return 0;
-    }
-    return kind.isSpike ? 2 : 1;
-  }
-
-  function rayLength(kind) {
-    if (kind.isSpike) {
-      return randomBetween(0.92, 1.1);
-    }
-    if (kind.isBroad) {
-      return randomBetween(0.82, 1.04);
-    }
-    return randomBetween(0.8, 1.06);
-  }
-
-  function rayTone() {
-    return {
-      bodyLightness: randomBetween(62, 78),
-      highlightLightness: randomBetween(88, 99),
-      tipLightness: randomBetween(92, 99),
-    };
-  }
-
-  function rayProfile(index, rayCount, angleOffset) {
-    const kind = rayKind(index);
-    const tone = rayTone();
-    return Object.freeze({
-      alpha: rayAlpha(kind),
-      angle:
-        (index / rayCount) * TWO_PI + angleOffset + randomBetween(-0.08, 0.08),
-      blur: kind.isBroad ? randomBetween(2, 6) : 0,
-      delay: randomBetween(0, 0.3),
-      duration: rayDuration(kind),
-      hue: randomBetween(45, 56),
-      ...tone,
-      innerWidth: kind.isSpike ? 0.12 : 0.24,
-      layer: rayLayer(kind),
-      length: rayLength(kind),
-      saturation: randomBetween(76, 100),
-      width: rayWidth(kind),
-    });
-  }
-
-  function createRays() {
-    const rayCount = randomInteger(
-      RAY_COUNT - 4 + INITIAL_EXTRA_RAY_COUNT,
-      RAY_COUNT + 4 + INITIAL_EXTRA_RAY_COUNT,
-    );
-    const angleOffset = randomBetween(0, TWO_PI);
-    return Array.from({ length: rayCount }, (_, index) =>
-      rayProfile(index, rayCount, angleOffset),
-    ).sort((first, second) => first.layer - second.layer);
-  }
-
-  function createReplacementRay() {
-    return rayProfile(
-      randomInteger(0, RAY_COUNT - 1),
-      RAY_COUNT,
-      randomBetween(0, TWO_PI),
     );
   }
 
@@ -202,6 +97,44 @@
     return clamp(panelWidth * 1.18, minDiameter, maxDiameter) / 2;
   }
 
+  function finishedAtMsFor(currentFinishedAtMs, isFinishedFrame, timestamp) {
+    if (isFinishedFrame && currentFinishedAtMs === null) {
+      return timestamp;
+    }
+    return currentFinishedAtMs;
+  }
+
+  function rayLengthMultipliersFor({
+    finishedAtMs,
+    isFinishedFrame,
+    rays,
+    reducedMotionMedia,
+    timestamp,
+  }) {
+    if (!isFinishedFrame || reducedMotionMedia?.matches) {
+      return null;
+    }
+    return RAYS.lengthMultipliers(timestamp, rays, finishedAtMs);
+  }
+
+  function rayOpacityMultipliersFor({
+    activeProgress,
+    rayTurnover,
+    rays,
+    reducedMotionMedia,
+    timestamp,
+  }) {
+    if (activeProgress < 0.5 || reducedMotionMedia?.matches) {
+      return null;
+    }
+    return rayTurnover.opacities(
+      timestamp,
+      rays,
+      RAYS.createReplacement,
+      activeProgress,
+    );
+  }
+
   class SyncSunburstScene {
     constructor(
       canvas,
@@ -210,18 +143,25 @@
       { startedAtMs = null, startComplete = false } = {},
     ) {
       const now = root.performance.now();
+      const initialStartTimeMs = startComplete
+        ? now - GROW_DURATION_MS
+        : startedAtMs;
+      const initiallyFinished =
+        startComplete ||
+        (startedAtMs !== null && now - startedAtMs >= GROW_DURATION_MS);
       this.animationFrameId = null;
       this.canvas = canvas;
       this.context = context;
-      this.finished =
-        startComplete ||
-        (startedAtMs !== null && now - startedAtMs >= GROW_DURATION_MS);
+      this.finished = initiallyFinished;
+      this.finishedAtMs = initiallyFinished
+        ? initialStartTimeMs + GROW_DURATION_MS
+        : null;
       this.origin = origin;
       this.rayTurnover = TURNOVER.create();
       this.rayTurnoverTimerId = null;
-      this.rays = createRays();
+      this.rays = RAYS.create();
       this.reducedMotionMedia = root.matchMedia?.(REDUCED_MOTION_QUERY);
-      this.startTimeMs = startComplete ? now - GROW_DURATION_MS : startedAtMs;
+      this.startTimeMs = initialStartTimeMs;
       this.stopped = false;
       this.handleMotionChange = this.handleMotionChange.bind(this);
       this.handleResize = this.handleResize.bind(this);
@@ -246,6 +186,11 @@
       const activeProgress =
         progress === null ? this.progressAt(timestamp) : progress;
       const isFinishedFrame = activeProgress >= FINISHED_PROGRESS;
+      this.finishedAtMs = finishedAtMsFor(
+        this.finishedAtMs,
+        isFinishedFrame,
+        timestamp,
+      );
       const uiProgress = panelFadeFor(activeProgress);
       this.context.clearRect(0, 0, size.width, size.height);
       root.document.body.style.setProperty(
@@ -261,15 +206,20 @@
         origin: this.origin,
         progress: activeProgress,
         radius: sunburstRadius(size),
-        rayOpacityMultipliers:
-          activeProgress >= 0.5 && !this.reducedMotionMedia?.matches
-            ? this.rayTurnover.opacities(
-                timestamp,
-                this.rays,
-                createReplacementRay,
-                activeProgress,
-              )
-            : null,
+        rayLengthMultipliers: rayLengthMultipliersFor({
+          finishedAtMs: this.finishedAtMs,
+          isFinishedFrame,
+          rays: this.rays,
+          reducedMotionMedia: this.reducedMotionMedia,
+          timestamp,
+        }),
+        rayOpacityMultipliers: rayOpacityMultipliersFor({
+          activeProgress,
+          rayTurnover: this.rayTurnover,
+          rays: this.rays,
+          reducedMotionMedia: this.reducedMotionMedia,
+          timestamp,
+        }),
         timestamp,
       };
       for (const ray of this.rays) {

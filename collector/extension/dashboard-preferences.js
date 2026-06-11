@@ -1,0 +1,96 @@
+(() => {
+  "use strict";
+
+  const USAGE_WINDOWS = globalThis.CodexUsageWindows;
+  if (!USAGE_WINDOWS) {
+    throw new Error(
+      "Codex usage window contract must load before dashboard-preferences.js.",
+    );
+  }
+
+  const DASHBOARD_WINDOW_SESSION_KEY = "pace-pets-dashboard-window";
+  const THEME_STORAGE_KEY = "codex-usage-theme";
+  const THEME_VALUES = Object.freeze(["light", "dark"]);
+  const LOCAL_PREFERENCES = Object.freeze([
+    Object.freeze({
+      key: DASHBOARD_WINDOW_SESSION_KEY,
+      scope: "sessionStorage",
+      values: "supported usage-window keys",
+    }),
+    Object.freeze({
+      key: THEME_STORAGE_KEY,
+      scope: "localStorage",
+      values: THEME_VALUES.map((theme) => `\`${theme}\``).join(", "),
+    }),
+  ]);
+
+  function readResult(value, error = null) {
+    return Object.freeze({ error, value });
+  }
+
+  function writeResult(ok, error = null) {
+    return Object.freeze({ error, ok });
+  }
+
+  function normalizeTheme(value) {
+    return THEME_VALUES.includes(value) ? value : null;
+  }
+
+  function readDashboardWindowPreference(storage = sessionStorage) {
+    try {
+      const windowKey = storage.getItem(DASHBOARD_WINDOW_SESSION_KEY);
+      return readResult(
+        USAGE_WINDOWS.isSupportedWindowKey(windowKey) ? windowKey : null,
+      );
+    } catch (error) {
+      return readResult(null, error);
+    }
+  }
+
+  function storeDashboardWindowPreference(windowKey, storage = sessionStorage) {
+    if (!USAGE_WINDOWS.isSupportedWindowKey(windowKey)) {
+      return writeResult(false);
+    }
+
+    try {
+      storage.setItem(DASHBOARD_WINDOW_SESSION_KEY, windowKey);
+      return writeResult(true);
+    } catch (error) {
+      return writeResult(false, error);
+    }
+  }
+
+  function readThemePreference(storage = globalThis.localStorage) {
+    try {
+      return readResult(normalizeTheme(storage.getItem(THEME_STORAGE_KEY)));
+    } catch (error) {
+      return readResult(null, error);
+    }
+  }
+
+  function storeThemePreference(theme, storage = globalThis.localStorage) {
+    const normalizedTheme = normalizeTheme(theme);
+    if (!normalizedTheme) {
+      return writeResult(false);
+    }
+
+    try {
+      storage.setItem(THEME_STORAGE_KEY, normalizedTheme);
+      return writeResult(true);
+    } catch (error) {
+      return writeResult(false, error);
+    }
+  }
+
+  globalThis.PacePetsDashboardPreferences = Object.freeze({
+    DASHBOARD_WINDOW_SESSION_KEY,
+    LOCAL_PREFERENCES,
+    THEME_STORAGE_KEY,
+    THEME_VALUES,
+    normalizeTheme,
+    readDashboardWindowPreference,
+    readThemePreference,
+    storeDashboardWindowPreference,
+    storeThemePreference,
+  });
+})();

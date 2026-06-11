@@ -27,6 +27,10 @@
     perfectZeroGlow: "pace-icons/perfect-zero-glow.png",
     splatFreeFall: "pace-icons/06-slow-down-free-fall-transparent.png",
   });
+  const PACE_ICON_STATE_EXCLUSIONS = Object.freeze({
+    muted: "No playful image.",
+    singularity: "Uses generated in-memory art.",
+  });
 
   const APP_ICON_FILES = Object.freeze(Object.values(APP_ICON_FILES_BY_SIZE));
   const PACE_ICON_FILES = Object.freeze(
@@ -61,6 +65,24 @@
     return themedPath(paceIconVariantFile(variantKey));
   }
 
+  function isPackagedPaceIconState(stateKey) {
+    return (
+      Boolean(stateKey) &&
+      !Object.prototype.hasOwnProperty.call(
+        PACE_ICON_STATE_EXCLUSIONS,
+        stateKey,
+      )
+    );
+  }
+
+  function packagedPaceIconStateKeys(paceStatesByKey) {
+    return Object.freeze(
+      Object.values(paceStatesByKey || {})
+        .map((state) => state?.key || "")
+        .filter(isPackagedPaceIconState),
+    );
+  }
+
   root.CodexThemeAssets = Object.freeze({
     THEME_ID,
     THEME_BASE_PATH,
@@ -68,9 +90,12 @@
     APP_ICON_FILES_BY_SIZE,
     PACE_ICON_FILES,
     PACE_ICON_FILES_BY_STATE,
+    PACE_ICON_STATE_EXCLUSIONS,
     PACE_ICON_VARIANT_FILES,
     appIconFileForSize,
     appIconPathForSize,
+    isPackagedPaceIconState,
+    packagedPaceIconStateKeys,
     paceIconVariantFile,
     paceIconVariantPath,
     paceIconFileForState,

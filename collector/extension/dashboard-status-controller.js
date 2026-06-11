@@ -81,7 +81,9 @@
     }
 
     manualRefreshCooldownRemainingMs() {
-      return Math.max(0, this.manualRefreshCooldownUntilMs - Date.now());
+      return REFRESH_CONTROL.cooldownRemainingMs(
+        this.manualRefreshCooldownUntilMs,
+      );
     }
 
     clearManualRefreshCooldownTimer() {
@@ -277,18 +279,14 @@
     }
 
     applyManualRefreshCooldown(response) {
-      if (Number.isFinite(response?.cooldownRemainingMs)) {
-        this.manualRefreshCooldownUntilMs =
-          Date.now() + Math.max(0, response.cooldownRemainingMs);
+      const cooldownUntilMs = REFRESH_CONTROL.responseCooldownUntilMs(response);
+      if (cooldownUntilMs !== null) {
+        this.manualRefreshCooldownUntilMs = cooldownUntilMs;
       }
     }
 
     manualRefreshResponseFailed(response) {
-      return (
-        response?.refreshStatus?.ok === false ||
-        (response?.ok === false &&
-          !Number.isFinite(response?.cooldownRemainingMs))
-      );
+      return REFRESH_CONTROL.manualRefreshResponseFailed(response);
     }
 
     async applyManualRefreshResponse(response) {
@@ -328,9 +326,9 @@
       this.startManualRefreshAttempt();
 
       try {
-        const response = await sendRuntimeMessage({
-          type: REFRESH_CONTROL.REFRESH_NOW_MESSAGE_TYPE,
-        });
+        const response = await sendRuntimeMessage(
+          REFRESH_CONTROL.refreshNowMessage(),
+        );
         await this.applyManualRefreshResponse(response);
       } catch (error) {
         this.handleManualRefreshError(error);

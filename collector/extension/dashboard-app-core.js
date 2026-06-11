@@ -2,7 +2,6 @@
   "use strict";
 
   const DASHBOARD_STATUS_REFRESH_INTERVAL_MS = 60 * 1000;
-  const DASHBOARD_WINDOW_SESSION_KEY = "pace-pets-dashboard-window";
   const MS_PER_MINUTE = 60 * 1000;
 
   class PacePetsDashboardApp {
@@ -12,7 +11,8 @@
       this.DEFAULT_WINDOW_KEY = this.USAGE_WINDOWS.DEFAULT_WINDOW_KEY;
       this.BADGE_WINDOW_STORAGE_KEY =
         this.USAGE_WINDOWS.BADGE_WINDOW_STORAGE_KEY;
-      this.DASHBOARD_WINDOW_SESSION_KEY = DASHBOARD_WINDOW_SESSION_KEY;
+      this.DASHBOARD_WINDOW_SESSION_KEY =
+        this.DASHBOARD_PREFERENCES.DASHBOARD_WINDOW_SESSION_KEY;
       this.DEVELOPER_OPTIONS_STORAGE_KEY = this.DEVELOPER_OPTIONS.STORAGE_KEY;
       this.COLLECTION_STATUS_TITLE =
         this.DASHBOARD_STATUS.COLLECTION_STATUS_TITLE;
@@ -96,29 +96,23 @@
     }
 
     readSessionWindowKey() {
-      try {
-        const windowKey = sessionStorage.getItem(
-          this.DASHBOARD_WINDOW_SESSION_KEY,
-        );
-        return this.USAGE_WINDOWS.isSupportedWindowKey(windowKey)
-          ? windowKey
-          : null;
-      } catch (error) {
+      const result = this.DASHBOARD_PREFERENCES.readDashboardWindowPreference();
+      if (result.error) {
         console.warn(
           "Could not read dashboard window preference:",
-          error.message,
+          result.error.message,
         );
-        return null;
       }
+      return result.value;
     }
 
     storeSessionWindowKey(windowKey) {
-      try {
-        sessionStorage.setItem(this.DASHBOARD_WINDOW_SESSION_KEY, windowKey);
-      } catch (error) {
+      const result =
+        this.DASHBOARD_PREFERENCES.storeDashboardWindowPreference(windowKey);
+      if (result.error) {
         console.warn(
           "Could not store dashboard window preference:",
-          error.message,
+          result.error.message,
         );
       }
     }

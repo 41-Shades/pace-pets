@@ -23,6 +23,10 @@
       "Codex usage value helpers must load before history-store.js.",
     );
   }
+  const PERSISTED_TEXT = root.CodexPersistedText;
+  if (!PERSISTED_TEXT) {
+    throw new Error("Codex persisted text must load before history-store.js.");
+  }
   const REFRESH_STATUS = root.CodexRefreshStatus;
   if (!REFRESH_STATUS) {
     throw new Error(
@@ -46,13 +50,7 @@
   const PLATEAU_SAMPLE_INTERVAL_MS =
     PLATEAU_SAMPLE_INTERVAL_MINUTES * 60 * 1000;
   const { dateMs, isoDate, normalizeStoredWindow } = USAGE_VALUES;
-
-  function safeText(value, fallback = "") {
-    return String(value || fallback)
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 80);
-  }
+  const { safeText } = PERSISTED_TEXT;
 
   function collectorVersion() {
     return chrome.runtime.getManifest?.().version || "";

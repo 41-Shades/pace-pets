@@ -7,38 +7,21 @@
       "Codex usage value helpers must load before refresh-status.js.",
     );
   }
+  const PERSISTED_TEXT = root.CodexPersistedText;
+  if (!PERSISTED_TEXT) {
+    throw new Error("Codex persisted text must load before refresh-status.js.");
+  }
 
   const REFRESH_STATUS_STORAGE_KEY = "codexUsageRefreshStatus";
   const INITIAL_MESSAGE = "Waiting for first refresh.";
   const SUCCESS_STORED_MESSAGE = "Stored usage history locally.";
   const SUCCESS_UNCHANGED_MESSAGE = "Usage unchanged; history already current.";
   const FAILURE_MESSAGE = "Refresh failed.";
-  const SECRET_MESSAGE_REPLACEMENTS = Object.freeze([
-    Object.freeze({
-      pattern:
-        /\b(access[_-]?token|authorization)\s*[:=]\s*(?:Bearer\s+)?[-A-Za-z0-9._~+/=]+/gi,
-      replacement: (_match, label) => `${label}: [redacted]`,
-    }),
-    Object.freeze({
-      pattern: /\bBearer\s+[-A-Za-z0-9._~+/=]+/gi,
-      replacement: "Bearer [redacted]",
-    }),
-  ]);
   const { isoDate } = USAGE_VALUES;
-
-  function safeText(value, fallback = "") {
-    return String(value || fallback)
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 80);
-  }
+  const { safeRedactedText, safeText } = PERSISTED_TEXT;
 
   function safeFailureMessage(error) {
-    let message = String(error?.message || FAILURE_MESSAGE);
-    for (const { pattern, replacement } of SECRET_MESSAGE_REPLACEMENTS) {
-      message = message.replace(pattern, replacement);
-    }
-    return safeText(message, FAILURE_MESSAGE);
+    return safeRedactedText(error?.message, FAILURE_MESSAGE);
   }
 
   function normalizeStatusCode(value) {

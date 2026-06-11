@@ -25,6 +25,7 @@ const sourceOnlyFiles = new Set([
   "dev-flags.css",
   "dev-flags.html",
   "dev-flags.js",
+  "dev-flags-loader.js",
 ]);
 const allowedPackagedExtensions = new Set([
   ".css",
@@ -188,9 +189,7 @@ function dosTimestamp(date) {
     (date.getUTCMinutes() << 5) |
     Math.floor(date.getUTCSeconds() / 2);
   const dosDate =
-    ((year - 1980) << 9) |
-    ((date.getUTCMonth() + 1) << 5) |
-    date.getUTCDate();
+    ((year - 1980) << 9) | ((date.getUTCMonth() + 1) << 5) | date.getUTCDate();
   return { dosDate, dosTime };
 }
 

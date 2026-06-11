@@ -128,8 +128,10 @@
 }
 
 .pace-icon.has-pace-icon-effect-sprint-smoke {
+  --sprint-ratio-intensity: 0;
   --sprint-speed-bump-duration: 920ms;
-  --sprint-bounce-duration: 640ms;
+  --sprint-bounce-base-duration: 640ms;
+  --sprint-bounce-duration: var(--sprint-bounce-base-duration);
   --sprint-bounce-step-1: translate3d(1px, -2px, 0) rotate(-0.7deg);
   --sprint-bounce-step-2: translate3d(0, 1px, 0) rotate(0.35deg);
   --sprint-bounce-step-3: translate3d(1px, -3px, 0) rotate(0.55deg);
@@ -138,7 +140,7 @@
 }
 
 .pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-bounce-profile="2"] {
-  --sprint-bounce-duration: 560ms;
+  --sprint-bounce-base-duration: 560ms;
   --sprint-bounce-step-1: translate3d(-1px, -1px, 0) rotate(0.4deg);
   --sprint-bounce-step-2: translate3d(1px, -3px, 0) rotate(-0.65deg);
   --sprint-bounce-step-3: translate3d(0, 1px, 0) rotate(0.28deg);
@@ -147,7 +149,7 @@
 }
 
 .pace-icon.has-pace-icon-effect-sprint-smoke[data-sprint-bounce-profile="3"] {
-  --sprint-bounce-duration: 720ms;
+  --sprint-bounce-base-duration: 720ms;
   --sprint-bounce-step-1: translate3d(1px, -3px, 0) rotate(-0.6deg);
   --sprint-bounce-step-2: translate3d(-1px, 0, 0) rotate(0.3deg);
   --sprint-bounce-step-3: translate3d(0, -1px, 0) rotate(-0.2deg);

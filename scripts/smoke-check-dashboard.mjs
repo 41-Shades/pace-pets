@@ -1,39 +1,9 @@
-const requiredDashboardIds = Object.freeze([
-  "collection-pulse",
-  "collection-status-label",
-  "pace-card",
-  "pace-icon",
-  "pace-title",
-  "pace-copy",
-  "pace-ratio-stat",
-  "pace-ratio-value",
-  "pace-state-stack",
-  "usage-percent",
-  "time-percent",
-  "usage-bar",
-  "time-bar",
-  "prior-reset-label",
-  "prior-reset-date",
-  "prior-reset-time",
-  "resets-in",
-  "scheduled-reset-label",
-  "scheduled-reset-date",
-  "scheduled-reset-time",
-  "chart-frame",
-  "usage-chart",
-  "chart-state",
-  "last-collected",
-  "manual-refresh-button",
-  "collector-version",
-  "early-reset-button",
-  "early-reset-popover",
-]);
-
-function assertRuntimeOrder(assert, sources, orderedPairs) {
-  for (const [before, after, message] of orderedPairs) {
+function assertRuntimeOrder(assert, sources, orderedPairs, label) {
+  assert(Array.isArray(orderedPairs), `${label} edges must be an array.`);
+  for (const [before, after] of orderedPairs) {
     assert(
       sources.indexOf(before) < sources.indexOf(after),
-      message || `Runtime manifest must load ${before} before ${after}.`,
+      `${label} must load ${before} before ${after}.`,
     );
   }
 }
@@ -42,6 +12,7 @@ function assertDashboardHtml({
   assert,
   assertIncludes,
   dashboardHtml,
+  dashboardDomContract,
   extensionDocsHtml,
   productMetadata,
   themeAssets,
@@ -64,7 +35,11 @@ function assertDashboardHtml({
     !/>\s*Unknown\s*<\/span>/i.test(dashboardHtml),
     "Dashboard placeholders must not render Unknown.",
   );
-  for (const requiredId of requiredDashboardIds) {
+  assert(
+    Array.isArray(dashboardDomContract?.REQUIRED_DASHBOARD_ELEMENT_IDS),
+    "Dashboard DOM required ID contract must be an array.",
+  );
+  for (const requiredId of dashboardDomContract.REQUIRED_DASHBOARD_ELEMENT_IDS) {
     assertIncludes(
       dashboardHtml,
       `id="${requiredId}"`,
@@ -108,60 +83,29 @@ function assertRuntimeManifest({ assert, runtimeManifest }) {
     ),
     "Chart.js must be optional so the dashboard can still load without charts.",
   );
-  assertRuntimeOrder(assert, runtimeManifest.DASHBOARD_SCRIPT_SOURCES, [
-    ["./product-metadata.js", "./dashboard.js"],
-    ["./integration-config.js", "./usage.js"],
-    ["./usage-windows.js", "./usage.js"],
-    ["./usage-values.js", "./usage.js"],
-    ["./usage-values.js", "./history-store.js"],
-    ["./refresh-status.js", "./history-store.js"],
-    ["./usage-values.js", "./pace-logic.js"],
-    ["./themes/default/asset-manifest.js", "./pace-logic.js"],
-    ["./pace-state-art.js", "./pace-state-data.js"],
-    ["./pace-state-data.js", "./developer-options.js"],
-    ["./perfect-zero-space-draw.js", "./perfect-zero-space-scene.js"],
-    ["./dashboard-status-logic.js", "./dashboard-status-controller.js"],
-    [
-      "./dashboard-singularity-transition-data.js",
-      "./dashboard-singularity-transition-motion.js",
-    ],
-    [
-      "./dashboard-singularity-transition-motion.js",
-      "./dashboard-singularity-transition-draw.js",
-    ],
-    [
-      "./dashboard-singularity-transition-draw.js",
-      "./dashboard-singularity-transition-renderer.js",
-    ],
-    [
-      "./dashboard-singularity-transition-renderer.js",
-      "./dashboard-singularity-transition-methods.js",
-    ],
-    ["./dashboard-pace-icon-methods.js", "./dashboard-pace-rail-methods.js"],
-    ["./dashboard-pace-rail-methods.js", "./dashboard-pace-controller.js"],
-    ["./dashboard-pace-controller.js", "./dashboard-app-core.js"],
-    ["./dashboard-app-core.js", "./dashboard.js"],
-  ]);
-  assertRuntimeOrder(assert, runtimeManifest.BACKGROUND_SCRIPT_SOURCES, [
-    ["product-metadata.js", "background-logic.js"],
-    ["pace-state-art.js", "pace-state-data.js"],
-    ["pace-state-data.js", "developer-options.js"],
-    ["pace-state-data.js", "pace-logic.js"],
-    ["background-logic.js", "background-usage-source.js"],
-  ]);
+  assertRuntimeOrder(
+    assert,
+    runtimeManifest.DASHBOARD_SCRIPT_SOURCES,
+    runtimeManifest.DASHBOARD_RUNTIME_DEPENDENCY_EDGES,
+    "Dashboard runtime manifest",
+  );
+  assertRuntimeOrder(
+    assert,
+    runtimeManifest.BACKGROUND_SCRIPT_SOURCES,
+    runtimeManifest.BACKGROUND_RUNTIME_DEPENDENCY_EDGES,
+    "Background runtime manifest",
+  );
 }
 
-function assertDashboardSource({
-  assert,
-  backgroundSource,
-  dashboardSource,
-  dashboardStatusSource,
-  dashboardStatusLogicSource,
-}) {
+function assertDashboardSourceUsesDomContract({ assert, dashboardSource }) {
   assert(
-    !/\.\/themes\/default\/pace-icons\//.test(dashboardSource),
-    "Dashboard script must read pace icon paths from shared pace-state metadata.",
+    dashboardSource.includes("PacePetsDashboardDom") &&
+      dashboardSource.includes("DASHBOARD_DOM.collectElements(document)"),
+    "Dashboard must collect elements through the shared DOM contract.",
   );
+}
+
+function assertDashboardPreferenceSource({ assert, dashboardSource }) {
   assert(
     !/localStorage\.(?:getItem|setItem)\(\s*this\.(?:BADGE_)?WINDOW_STORAGE_KEY\b/.test(
       dashboardSource,
@@ -169,11 +113,20 @@ function assertDashboardSource({
     "Dashboard window selection must not use localStorage.",
   );
   assert(
-    dashboardSource.includes("sessionStorage.getItem(") &&
-      dashboardSource.includes("sessionStorage.setItem(") &&
-      dashboardSource.includes("this.DASHBOARD_WINDOW_SESSION_KEY"),
-    "Dashboard selected window must be scoped to the current page session.",
+    dashboardSource.includes("readDashboardWindowPreference(") &&
+      dashboardSource.includes("storeDashboardWindowPreference(") &&
+      dashboardSource.includes("DASHBOARD_WINDOW_SESSION_KEY"),
+    "Dashboard selected window must be scoped through the dashboard preferences contract.",
   );
+  assert(
+    dashboardSource.includes("readThemePreference(") &&
+      dashboardSource.includes("storeThemePreference(") &&
+      dashboardSource.includes("THEME_STORAGE_KEY"),
+    "Dashboard theme preference must be scoped through the dashboard preferences contract.",
+  );
+}
+
+function assertDashboardCacheSource({ assert, dashboardSource }) {
   assert(
     dashboardSource.includes("this.EXTENSION_STORAGE.getLocal(") &&
       dashboardSource.includes("this.BADGE_WINDOW_STORAGE_KEY"),
@@ -201,6 +154,15 @@ function assertDashboardSource({
     ),
     "Dashboard minute refresh must not reread full storage state.",
   );
+}
+
+function assertDashboardStatusSource({
+  assert,
+  backgroundSource,
+  dashboardSource,
+  dashboardStatusSource,
+  dashboardStatusLogicSource,
+}) {
   assert(
     !/runtime\.sendMessage\(\s*\{\s*type:\s*"status"\s*\}/.test(
       `${dashboardSource}\n${dashboardStatusSource}`,
@@ -225,6 +187,18 @@ function assertDashboardSource({
       !dashboardSource.includes("showPacePreview"),
     "Dashboard rail must stay passive; developer controls own forced state previews.",
   );
+}
+
+function assertDashboardSource(context) {
+  const { assert, dashboardSource } = context;
+  assert(
+    !/\.\/themes\/default\/pace-icons\//.test(dashboardSource),
+    "Dashboard script must read pace icon paths from shared pace-state metadata.",
+  );
+  assertDashboardSourceUsesDomContract(context);
+  assertDashboardPreferenceSource(context);
+  assertDashboardCacheSource(context);
+  assertDashboardStatusSource(context);
 }
 
 export function checkDashboardSmoke(context) {

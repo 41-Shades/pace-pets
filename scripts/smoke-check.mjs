@@ -86,6 +86,13 @@ await import(
 );
 const themeAssets = globalThis.CodexThemeAssets;
 assert(themeAssets, "Theme asset manifest is not wired.");
+await import(
+  pathToFileURL(
+    path.join(projectRoot, "collector/extension/dashboard-dom-contract.js"),
+  )
+);
+const dashboardDomContract = globalThis.PacePetsDashboardDom;
+assert(dashboardDomContract, "Dashboard DOM contract is not wired.");
 
 const manifest = readJson("collector/extension/manifest.json");
 assert(
@@ -146,8 +153,10 @@ const backgroundJs = [
   .map((file) => readText(`collector/extension/${file}`))
   .join("\n");
 const dashboardSource = [
+  "dashboard-preferences.js",
   "dashboard.js",
   "dashboard-app-core.js",
+  "dashboard-shell-controls.js",
   "dashboard-history-methods.js",
   "dashboard-event-methods.js",
 ]
@@ -165,12 +174,23 @@ const usageIntegrationAdaptersJs = readText(
   "collector/extension/usage-integration-adapters.js",
 );
 const extensionDocsHtml = readText("docs/extension.html");
+const publicDocsSource = [
+  "README.md",
+  "PRIVACY.md",
+  "SECURITY.md",
+  "collector/extension/README.md",
+  "docs/index.html",
+  "docs/extension.html",
+]
+  .map((file) => readText(file))
+  .join("\n");
 await assertStorageSchemaDocumentCurrent();
 checkDashboardSmoke({
   assert,
   assertIncludes,
   backgroundSource: backgroundJs,
   dashboardHtml,
+  dashboardDomContract,
   dashboardSource,
   dashboardStatusLogicSource: dashboardStatusLogicJs,
   dashboardStatusSource: dashboardStatusControllerJs,
@@ -179,10 +199,31 @@ checkDashboardSmoke({
   runtimeManifest,
   themeAssets,
 });
+if (!manifest.permissions?.includes("activeTab")) {
+  assert(
+    !/activeTab/.test(publicDocsSource),
+    "Public docs must not mention activeTab when the manifest does not request it.",
+  );
+}
+assert(
+  !/(?:briefly capture|dashboard capture|visible Pace\s+Pets dashboard in memory)/i.test(
+    publicDocsSource,
+  ),
+  "Public docs must not describe the Singularity transition as dashboard capture.",
+);
 assert(
   dashboardStatusControllerJs.includes(
     "REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS",
   ) &&
+    dashboardStatusControllerJs.includes(
+      "REFRESH_CONTROL.responseCooldownUntilMs(response)",
+    ) &&
+    dashboardStatusControllerJs.includes(
+      "REFRESH_CONTROL.manualRefreshResponseFailed(response)",
+    ) &&
+    dashboardStatusControllerJs.includes(
+      "REFRESH_CONTROL.refreshNowMessage()",
+    ) &&
     dashboardStatusControllerJs.includes(
       "button.hidden = !this.manualRefreshAvailable",
     ) &&
@@ -199,6 +240,11 @@ assert(
     backgroundJs.includes(
       "PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS",
     ) &&
+    backgroundJs.includes(
+      "PacePetsRefreshControl.manualRefreshCooldownResponse",
+    ) &&
+    backgroundJs.includes("PacePetsRefreshControl.refreshNowResponse") &&
+    backgroundJs.includes("PacePetsRefreshControl.refreshErrorResponse") &&
     backgroundJs.includes("runScheduledRefresh()") &&
     backgroundJs.includes("runManualRefresh"),
   "Manual refresh must be conditional, cooldown guarded, and routed through the scheduled refresh path.",
