@@ -3,9 +3,15 @@
 
   const BODY_CLASS = "has-sync-sunburst-page-background";
   const CANVAS_CLASS = "sync-sunburst-page-background";
+  const DASHBOARD_PREFERENCES = root.PacePetsDashboardPreferences;
   const DRAW = root.PacePetsDashboardSyncSunburstDraw;
   const RAYS = root.PacePetsDashboardSyncSunburstRays;
   const TURNOVER = root.PacePetsDashboardSyncSunburstTurnover;
+  if (!DASHBOARD_PREFERENCES) {
+    throw new Error(
+      "Pace dashboard preferences must load before dashboard-sync-sunburst-renderer.js.",
+    );
+  }
   if (!DRAW) {
     throw new Error(
       "Pace sync sunburst draw helpers must load before dashboard-sync-sunburst-renderer.js.",
@@ -30,7 +36,6 @@
   const PANEL_BG_START_OPACITY = 1;
   const PANEL_SELECTOR = ".usage-panel";
   const RAY_FINAL_OPACITY = 0.64;
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const RAY_TURNOVER_FRAME_DELAY_MS = 33;
 
   function clamp(value, min = 0, max = 1) {
@@ -61,6 +66,10 @@
       PANEL_BG_END_OPACITY,
       panelFadeFor(progress),
     );
+  }
+
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   function viewportSize(canvas) {
@@ -107,11 +116,11 @@
   function rayLengthMultipliersFor({
     finishedAtMs,
     isFinishedFrame,
+    motionEnabled,
     rays,
-    reducedMotionMedia,
     timestamp,
   }) {
-    if (!isFinishedFrame || reducedMotionMedia?.matches) {
+    if (!isFinishedFrame || !motionEnabled) {
       return null;
     }
     return RAYS.lengthMultipliers(timestamp, rays, finishedAtMs);
@@ -119,12 +128,12 @@
 
   function rayOpacityMultipliersFor({
     activeProgress,
+    motionEnabled,
     rayTurnover,
     rays,
-    reducedMotionMedia,
     timestamp,
   }) {
-    if (activeProgress < 0.5 || reducedMotionMedia?.matches) {
+    if (activeProgress < 0.5 || !motionEnabled) {
       return null;
     }
     return rayTurnover.opacities(
@@ -160,7 +169,7 @@
       this.rayTurnover = TURNOVER.create();
       this.rayTurnoverTimerId = null;
       this.rays = RAYS.create();
-      this.reducedMotionMedia = root.matchMedia?.(REDUCED_MOTION_QUERY);
+      this.removeMotionPreferenceListener = () => {};
       this.startTimeMs = initialStartTimeMs;
       this.stopped = false;
       this.handleMotionChange = this.handleMotionChange.bind(this);
@@ -176,7 +185,7 @@
 
     progressAt(timestamp) {
       this.startTimeMs ??= timestamp;
-      return this.reducedMotionMedia?.matches
+      return !motionPreferenceEnabled()
         ? FINISHED_PROGRESS
         : clamp((timestamp - this.startTimeMs) / GROW_DURATION_MS);
     }
@@ -186,6 +195,7 @@
       const activeProgress =
         progress === null ? this.progressAt(timestamp) : progress;
       const isFinishedFrame = activeProgress >= FINISHED_PROGRESS;
+      const motionEnabled = motionPreferenceEnabled();
       this.finishedAtMs = finishedAtMsFor(
         this.finishedAtMs,
         isFinishedFrame,
@@ -209,15 +219,15 @@
         rayLengthMultipliers: rayLengthMultipliersFor({
           finishedAtMs: this.finishedAtMs,
           isFinishedFrame,
+          motionEnabled,
           rays: this.rays,
-          reducedMotionMedia: this.reducedMotionMedia,
           timestamp,
         }),
         rayOpacityMultipliers: rayOpacityMultipliersFor({
           activeProgress,
+          motionEnabled,
           rayTurnover: this.rayTurnover,
           rays: this.rays,
-          reducedMotionMedia: this.reducedMotionMedia,
           timestamp,
         }),
         timestamp,
@@ -247,7 +257,7 @@
         this.animationFrameId !== null ||
         this.rayTurnoverTimerId !== null ||
         root.document.hidden ||
-        this.reducedMotionMedia?.matches
+        !motionPreferenceEnabled()
       ) {
         return;
       }
@@ -262,7 +272,7 @@
     }
 
     handleMotionChange() {
-      this.draw(this.reducedMotionMedia?.matches ? FINISHED_PROGRESS : null);
+      this.draw(motionPreferenceEnabled() ? null : FINISHED_PROGRESS);
       this.requestFrame();
     }
 
@@ -287,17 +297,17 @@
       root.document.body.classList.add(BODY_CLASS);
       root.document.body.prepend(this.canvas);
       const now = root.performance.now();
-      this.reducedMotionMedia?.addEventListener?.(
-        "change",
-        this.handleMotionChange,
-      );
+      this.removeMotionPreferenceListener =
+        DASHBOARD_PREFERENCES.addMotionPreferenceChangeListener(
+          this.handleMotionChange,
+        );
       root.document.addEventListener(
         "visibilitychange",
         this.handleVisibilityChange,
       );
       root.addEventListener("resize", this.handleResize);
       this.draw(
-        this.finished || this.reducedMotionMedia?.matches
+        this.finished || !motionPreferenceEnabled()
           ? FINISHED_PROGRESS
           : this.progressAt(now),
         now,
@@ -312,10 +322,7 @@
         root.cancelAnimationFrame(this.animationFrameId);
       }
       root.clearTimeout(this.rayTurnoverTimerId);
-      this.reducedMotionMedia?.removeEventListener?.(
-        "change",
-        this.handleMotionChange,
-      );
+      this.removeMotionPreferenceListener();
       root.removeEventListener("resize", this.handleResize);
       root.document.removeEventListener(
         "visibilitychange",

@@ -322,15 +322,18 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .pace-card.pace-splat.is-splat-card-impacting,
-  .pace-card.pace-splat.is-splat-card-impacting .pace-ratio-stat strong,
-  .pace-icon-effect-splat-fall,
-  .splat-fall-image,
-  .splat-fall-line,
+html[data-motion="off"] .pace-card.pace-splat.is-splat-card-impacting,
+html[data-motion="off"]
+  .pace-card.pace-splat.is-splat-card-impacting
+  .pace-ratio-stat
+  strong,
+html[data-motion="off"] .pace-icon-effect-splat-fall,
+html[data-motion="off"] .splat-fall-image,
+html[data-motion="off"] .splat-fall-line,
+html[data-motion="off"]
   .pace-card.pace-splat
-    .pace-icon.has-pace-icon-effect-splat-fall.is-splat-fall-running::before,
+  .pace-icon.has-pace-icon-effect-splat-fall.is-splat-fall-running::before,
+html[data-motion="off"]
   .pace-icon.has-pace-icon-effect-splat-fall.is-splat-impacting {
-    animation: none;
-  }
+  animation: none;
 }

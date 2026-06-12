@@ -2,17 +2,12 @@
   "use strict";
 
   const DATA = globalThis.PacePetsDashboardPaceData;
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !Controller) {
+  if (!DATA || !DASHBOARD_PREFERENCES || !Controller) {
     throw new Error(
-      "Pace data and core must load before dashboard-pace-icon-methods.js.",
+      "Pace data, preferences, and core must load before dashboard-pace-icon-methods.js.",
     );
-  }
-
-  function setSvgAttributes(element, attrs) {
-    for (const [name, value] of Object.entries(attrs)) {
-      element.setAttribute(name, value);
-    }
   }
 
   function shouldPlaySplatFall({ previousState, state, replay, playOnEntry }) {
@@ -20,6 +15,10 @@
       state.key === DATA.PACE_STATES.splat.key &&
       (replay || (playOnEntry && previousState.key !== state.key))
     );
+  }
+
+  function motionPreferenceEnabled(controller) {
+    return controller.motionPreferenceEnabled?.() !== false;
   }
 
   function hasMatchingPlayfulPaceIcon(container, state) {
@@ -108,7 +107,10 @@
   }
 
   function setSyncSunburstPageBackground(controller, previousState, state) {
-    if (state.key !== DATA.PACE_STATES.sync.key) {
+    if (
+      state.key !== DATA.PACE_STATES.sync.key ||
+      !motionPreferenceEnabled(controller)
+    ) {
       controller.setSyncSunburstPageBackgroundActive?.(false);
       return;
     }
@@ -140,10 +142,12 @@
     { level, playSplatFall, previousState, state },
   ) {
     const pageBackgroundActive =
-      controller.setPerfectZeroPageBackgroundActive?.(
+      motionPreferenceEnabled(controller) &&
+      (controller.setPerfectZeroPageBackgroundActive?.(
         state.key === DATA.PACE_STATES.perfectZero.key ||
           state.key === DATA.PACE_STATES.singularity.key,
-      ) ?? false;
+      ) ??
+        false);
     const preservePaceIcon = shouldPreservePaceIcon(
       controller,
       previousState,
@@ -239,6 +243,10 @@
     },
 
     renderPaceIconEffect(container, state) {
+      if (!motionPreferenceEnabled(this)) {
+        return;
+      }
+
       const effect = DATA.PACE_ICON_EFFECTS_BY_STATE[state.key];
       if (!effect) {
         return;
@@ -254,52 +262,12 @@
       }
     },
 
-    renderPlayfulPaceIcon(container, src, state, useEffects) {
-      container.classList.add("is-playful");
-      const image = document.createElement("img");
-      image.src = src;
-      image.alt = "";
-      image.decoding = "async";
-      image.loading = "lazy";
-      container.append(image);
-      if (useEffects) {
-        this.renderPaceIconEffect(container, state);
-      }
-    },
-
-    renderSvgPaceIcon(container, state, useEffects) {
-      container.classList.remove("is-playful");
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("viewBox", "0 0 24 24");
-      svg.setAttribute("role", "img");
-      for (const part of state.iconParts) {
-        const element = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          part.tag,
-        );
-        setSvgAttributes(element, part.attrs);
-        svg.append(element);
-      }
-      container.append(svg);
-      if (useEffects) {
-        this.renderPaceIconEffect(container, state);
-      }
-    },
-
-    renderPerfectZeroApertureIcon(container, src) {
-      container.classList.remove("is-playful");
-      if (!src) {
-        return;
-      }
-
-      const image = document.createElement("img");
-      image.className = "perfect-zero-cameo";
-      image.src = src;
-      image.alt = "";
-      image.decoding = "async";
-      image.loading = "lazy";
-      image.setAttribute("aria-hidden", "true");
-      container.append(image);
+    stopMotionEffects() {
+      this.clearPaceIconEffects(this.elements.paceIcon);
+      this.stopPerfectZeroPageBackgroundScene?.();
+      this.stopSyncSunburstPageBackground?.();
+      this.stopSyncMonkEscape?.();
+      this.stopSingularityTransition?.();
     },
 
     renderPaceIcon(
@@ -349,12 +317,14 @@
     ) {
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const state = this.paceStateForClassName(level);
-      const playSplatFall = shouldPlaySplatFall({
-        playOnEntry: playSplatFallOnEntry,
-        previousState,
-        replay: replaySplatFall,
-        state,
-      });
+      const playSplatFall =
+        motionPreferenceEnabled(this) &&
+        shouldPlaySplatFall({
+          playOnEntry: playSplatFallOnEntry,
+          previousState,
+          replay: replaySplatFall,
+          state,
+        });
       setSplatFallIntro(this.elements.paceIcon, playSplatFall);
       setSyncSunburstPageBackground(this, previousState, state);
       const staleClasses = DATA.PACE_CLASSES.filter((name) => name !== level);

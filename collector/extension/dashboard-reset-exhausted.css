@@ -266,35 +266,31 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .reset-exhausted-trace {
-    animation: none;
-  }
+html[data-motion="off"] .reset-exhausted-trace,
+html[data-motion="off"] .reset-exhausted-face-state,
+html[data-motion="off"]
+  .reset-countdown-card.has-reset-exhausted-preview
+  .reset-exhausted-figure,
+html[data-motion="off"]
+  .reset-countdown-card.has-reset-exhausted-preview
+  .reset-exhausted-message,
+html[data-motion="off"] .reset-exhausted-message-stage {
+  animation: none;
+}
 
-  .reset-exhausted-free-arm animate,
-  .reset-exhausted-trace-face animate {
-    display: none;
-  }
+html[data-motion="off"] .reset-exhausted-free-arm animate,
+html[data-motion="off"] .reset-exhausted-trace-face animate {
+  display: none;
+}
 
-  .reset-exhausted-face-state {
-    animation: none;
-  }
+html[data-motion="off"] .reset-exhausted-message-stage {
+  opacity: 0;
+}
 
-  .reset-countdown-card.has-reset-exhausted-preview .reset-exhausted-figure,
-  .reset-countdown-card.has-reset-exhausted-preview .reset-exhausted-message {
-    animation: none;
-  }
+html[data-motion="off"] .reset-exhausted-face-sleep {
+  opacity: 1;
+}
 
-  .reset-exhausted-message-stage {
-    animation: none;
-    opacity: 0;
-  }
-
-  .reset-exhausted-face-sleep {
-    opacity: 1;
-  }
-
-  .reset-exhausted-face-slits {
-    opacity: 0;
-  }
+html[data-motion="off"] .reset-exhausted-face-slits {
+  opacity: 0;
 }

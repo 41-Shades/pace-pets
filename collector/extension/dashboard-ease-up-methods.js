@@ -2,11 +2,13 @@
   "use strict";
 
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!Controller) {
-    throw new Error("Pace core must load before dashboard-ease-up-methods.js.");
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  if (!Controller || !DASHBOARD_PREFERENCES) {
+    throw new Error(
+      "Pace core and preferences must load before dashboard-ease-up-methods.js.",
+    );
   }
 
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const SIDE_EYE_ANIMATION_DURATION_MS = 7800;
   const SIDE_EYE_INITIAL_DELAY_RANGE_MS = Object.freeze([7000, 10000]);
   const SIDE_EYE_PLAYING_CLASS = "is-ease-up-side-eye-playing";
@@ -38,8 +40,8 @@
     return element;
   }
 
-  function prefersReducedMotion() {
-    return window.matchMedia?.(REDUCED_MOTION_QUERY)?.matches ?? false;
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   function createSteamLayer() {
@@ -117,7 +119,7 @@
       container.classList.add("has-pace-icon-effect-ease-up");
       container.closest(".pace-card")?.classList.add("has-pace-ease-up-effect");
 
-      if (prefersReducedMotion()) {
+      if (!motionPreferenceEnabled()) {
         this.paceIconEffectCleanups.set(container, () => {
           this.clearEaseUpEffectClasses(container);
         });

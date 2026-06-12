@@ -77,6 +77,7 @@
     "./dashboard-singularity-transition-methods.js",
     "./dashboard-pace-wobble-methods.js",
     "./dashboard-ease-up-methods.js",
+    "./dashboard-pace-icon-render-methods.js",
     "./dashboard-pace-icon-methods.js",
     "./dashboard-cart-spill-data.js",
     "./dashboard-cart-spill-pile-renderer.js",
@@ -95,6 +96,7 @@
     "./dashboard-pace-controller.js",
     "./dashboard-app-core.js",
     "./dashboard-reset-exhausted-arm-motion.js",
+    "./dashboard-reset-exhausted-figure.js",
     "./dashboard-reset-exhausted-methods.js",
     "./dashboard-singularity-transition-preview-methods.js",
     "./dashboard-history-methods.js",
@@ -153,6 +155,35 @@
     return extensionPageDependencyEdge(edge);
   }
 
+  function dashboardFile(name) {
+    return name ? `./dashboard-${name}.js` : "./dashboard.js";
+  }
+
+  function dashboardFileEdge(before, after) {
+    return dependencyEdge(dashboardFile(before), dashboardFile(after));
+  }
+
+  function dashboardPreferenceDependencyEdge(after) {
+    return dependencyEdge("./dashboard-preferences.js", after);
+  }
+
+  const DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS = Object.freeze([
+    "./dashboard-shell-controls.js",
+    "./dashboard-app-core.js",
+    "./dashboard-eclipse-icon.js",
+    "./dashboard-brake-debris-methods.js",
+    "./dashboard-cart-spill-methods.js",
+    "./dashboard-push-stretch-methods.js",
+    "./dashboard-sync-sunburst-renderer.js",
+    "./dashboard-sync-monk-escape-scene.js",
+    "./dashboard-ease-up-methods.js",
+    "./dashboard-pace-icon-methods.js",
+    "./dashboard-splat-fall-methods.js",
+    "./dashboard-train-roll-methods.js",
+    "./dashboard-singularity-transition-methods.js",
+    "./dashboard-singularity-transition-preview-methods.js",
+  ]);
+
   const COMMON_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("integration-config.js", "usage.js"),
     dependencyEdge("usage-windows.js", "usage.js"),
@@ -188,148 +219,93 @@
     dependencyEdge("./developer-options.js", "./dashboard.js"),
     dependencyEdge("./integration-config.js", "./dashboard-chart-data.js"),
     dependencyEdge("./pace-logic.js", "./dashboard-chart-data.js"),
-    dependencyEdge("./dashboard-chart-data.js", "./dashboard-chart.js"),
+    dashboardFileEdge("chart-data", "chart"),
     dependencyEdge("./pace-logic.js", "./dashboard-chart.js"),
-    dependencyEdge(
-      "./dashboard-preferences.js",
-      "./dashboard-shell-controls.js",
+    ...DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS.map(
+      dashboardPreferenceDependencyEdge,
     ),
-    dependencyEdge("./dashboard-preferences.js", "./dashboard-app-core.js"),
     dependencyEdge(
       "./perfect-zero-space-draw.js",
       "./perfect-zero-space-scene.js",
     ),
-    dependencyEdge(
-      "./dashboard-status-logic.js",
-      "./dashboard-status-controller.js",
-    ),
+    dashboardFileEdge("status-logic", "status-controller"),
     dependencyEdge("./sprint-intensity.js", "./dashboard-pace-data.js"),
-    dependencyEdge(
-      "./dashboard-pace-data.js",
-      "./dashboard-brake-extreme-canvas-methods.js",
+    dashboardFileEdge("pace-data", "brake-extreme-canvas-methods"),
+    dashboardFileEdge("pace-core", "brake-extreme-canvas-methods"),
+    dashboardFileEdge("brake-debris-data", "brake-extreme-canvas-methods"),
+    dashboardFileEdge("push-stretch-renderer", "push-stretch-methods"),
+    dashboardFileEdge("push-sweat-variation", "push-sweat-renderer"),
+    dashboardFileEdge("push-sweat-renderer", "push-stretch-methods"),
+    dashboardFileEdge("push-water-renderer", "push-stretch-methods"),
+    dashboardFileEdge("sync-sunburst-rays", "sync-sunburst-renderer"),
+    dashboardFileEdge(
+      "singularity-black-hole-v2-shaders",
+      "singularity-black-hole-v2-scene",
     ),
-    dependencyEdge(
-      "./dashboard-pace-core.js",
-      "./dashboard-brake-extreme-canvas-methods.js",
+    dashboardFileEdge(
+      "singularity-black-hole-v2-scene",
+      "singularity-transition-renderer",
     ),
-    dependencyEdge(
-      "./dashboard-brake-debris-data.js",
-      "./dashboard-brake-extreme-canvas-methods.js",
+    dashboardFileEdge(
+      "singularity-chrome-collapse-fragments",
+      "singularity-chrome-collapse-motion",
     ),
-    dependencyEdge(
-      "./dashboard-push-stretch-renderer.js",
-      "./dashboard-push-stretch-methods.js",
+    dashboardFileEdge(
+      "singularity-chrome-collapse-fragments",
+      "singularity-chrome-collapse-scene",
     ),
-    dependencyEdge(
-      "./dashboard-push-sweat-variation.js",
-      "./dashboard-push-sweat-renderer.js",
+    dashboardFileEdge(
+      "singularity-chrome-collapse-motion",
+      "singularity-chrome-collapse-scene",
     ),
-    dependencyEdge(
-      "./dashboard-push-sweat-renderer.js",
-      "./dashboard-push-stretch-methods.js",
+    dashboardFileEdge(
+      "singularity-chrome-collapse-scene",
+      "singularity-transition-renderer",
     ),
-    dependencyEdge(
-      "./dashboard-push-water-renderer.js",
-      "./dashboard-push-stretch-methods.js",
+    dashboardFileEdge(
+      "singularity-transition-renderer",
+      "singularity-transition-methods",
     ),
-    dependencyEdge(
-      "./dashboard-sync-sunburst-rays.js",
-      "./dashboard-sync-sunburst-renderer.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-black-hole-v2-shaders.js",
-      "./dashboard-singularity-black-hole-v2-scene.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-black-hole-v2-scene.js",
-      "./dashboard-singularity-transition-renderer.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-chrome-collapse-fragments.js",
-      "./dashboard-singularity-chrome-collapse-motion.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-chrome-collapse-fragments.js",
-      "./dashboard-singularity-chrome-collapse-scene.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-chrome-collapse-motion.js",
-      "./dashboard-singularity-chrome-collapse-scene.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-chrome-collapse-scene.js",
-      "./dashboard-singularity-transition-renderer.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-transition-renderer.js",
-      "./dashboard-singularity-transition-methods.js",
-    ),
-    dependencyEdge(
-      "./dashboard-pace-icon-methods.js",
-      "./dashboard-pace-rail-methods.js",
-    ),
+    dashboardFileEdge("pace-core", "pace-icon-render-methods"),
+    dashboardFileEdge("pace-icon-render-methods", "pace-icon-methods"),
+    dashboardFileEdge("pace-icon-methods", "pace-rail-methods"),
     dependencyEdge(
       "./splat-bounce-preview-control.js",
       "./dashboard-splat-fall-methods.js",
     ),
-    dependencyEdge(
-      "./dashboard-splat-fall-profile.js",
-      "./dashboard-splat-fall-methods.js",
-    ),
+    dashboardFileEdge("splat-fall-profile", "splat-fall-methods"),
     dependencyEdge(
       "./sprint-intensity.js",
       "./dashboard-sprint-smoke-methods.js",
     ),
-    dependencyEdge(
-      "./dashboard-train-smoke-data.js",
-      "./dashboard-train-smoke.js",
-    ),
-    dependencyEdge(
-      "./dashboard-pace-core.js",
-      "./dashboard-pace-controller.js",
-    ),
-    dependencyEdge(
-      "./dashboard-pace-rail-methods.js",
-      "./dashboard-pace-controller.js",
-    ),
-    dependencyEdge("./dashboard-pace-controller.js", "./dashboard-app-core.js"),
+    dashboardFileEdge("train-smoke-data", "train-smoke"),
+    dashboardFileEdge("pace-core", "pace-controller"),
+    dashboardFileEdge("pace-rail-methods", "pace-controller"),
+    dashboardFileEdge("pace-controller", "app-core"),
     dependencyEdge(
       "./singularity-transition-preview-control.js",
       "./dashboard-singularity-transition-preview-methods.js",
     ),
-    dependencyEdge(
-      "./dashboard-pace-data.js",
-      "./dashboard-singularity-transition-preview-methods.js",
-    ),
-    dependencyEdge(
-      "./dashboard-app-core.js",
-      "./dashboard-singularity-transition-preview-methods.js",
-    ),
-    dependencyEdge(
-      "./dashboard-app-core.js",
-      "./dashboard-reset-exhausted-methods.js",
-    ),
-    dependencyEdge(
-      "./dashboard-reset-exhausted-arm-motion.js",
-      "./dashboard-reset-exhausted-methods.js",
-    ),
-    dependencyEdge(
-      "./dashboard-pace-data.js",
-      "./dashboard-reset-exhausted-methods.js",
-    ),
+    dashboardFileEdge("pace-data", "singularity-transition-preview-methods"),
+    dashboardFileEdge("app-core", "singularity-transition-preview-methods"),
+    dashboardFileEdge("app-core", "reset-exhausted-methods"),
+    dashboardFileEdge("reset-exhausted-arm-motion", "reset-exhausted-figure"),
+    dashboardFileEdge("reset-exhausted-figure", "reset-exhausted-methods"),
+    dashboardFileEdge("reset-exhausted-arm-motion", "reset-exhausted-methods"),
+    dashboardFileEdge("pace-data", "reset-exhausted-methods"),
     dependencyEdge(
       "./themes/default/asset-manifest.js",
       "./dashboard-reset-exhausted-methods.js",
     ),
-    dependencyEdge("./dashboard-reset-exhausted-methods.js", "./dashboard.js"),
-    dependencyEdge(
-      "./dashboard-singularity-transition-preview-methods.js",
-      "./dashboard-event-methods.js",
+    dashboardFileEdge("reset-exhausted-methods", ""),
+    dashboardFileEdge(
+      "singularity-transition-preview-methods",
+      "event-methods",
     ),
-    dependencyEdge("./dashboard-app-core.js", "./dashboard.js"),
-    dependencyEdge("./dashboard-history-methods.js", "./dashboard.js"),
-    dependencyEdge("./dashboard-event-methods.js", "./dashboard.js"),
-    dependencyEdge("./dashboard-dom-contract.js", "./dashboard.js"),
+    dashboardFileEdge("app-core", ""),
+    dashboardFileEdge("history-methods", ""),
+    dashboardFileEdge("event-methods", ""),
+    dashboardFileEdge("dom-contract", ""),
   ]);
 
   const DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([

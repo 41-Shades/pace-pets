@@ -2,35 +2,22 @@
   "use strict";
 
   const BOUNCE = globalThis.PacePetsBouncingBoxMotion;
-  if (!BOUNCE) {
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  if (!BOUNCE || !DASHBOARD_PREFERENCES) {
     throw new Error(
-      "Bouncing-box motion must load before dashboard-sync-monk-escape-scene.js.",
+      "Bouncing-box motion and preferences must load before dashboard-sync-monk-escape-scene.js.",
     );
   }
 
   const BODY_CLASS = "has-sync-monk-escape";
   const CONE_HALF_ANGLE_RADIANS = (35 * Math.PI) / 180;
   const FRAME_DELTA_LIMIT_MS = 64;
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const SPEED_MAX_PX_PER_SECOND = 30;
   const SPEED_MIN_PX_PER_SECOND = 18;
   const UPWARD_ANGLE_RADIANS = -Math.PI / 2;
 
-  function addMediaChangeListener(mediaQuery, listener) {
-    if (!mediaQuery) {
-      return () => {};
-    }
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", listener);
-      return () => mediaQuery.removeEventListener("change", listener);
-    }
-
-    mediaQuery.addListener(listener);
-    return () => mediaQuery.removeListener(listener);
-  }
-
-  function prefersReducedMotion() {
-    return globalThis.matchMedia?.(REDUCED_MOTION_QUERY)?.matches === true;
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   function randomBetween(min, max) {
@@ -84,7 +71,6 @@
       this.lastFrameAtMs = null;
       this.layer = null;
       this.onStop = onStop;
-      this.reducedMotionMedia = globalThis.matchMedia?.(REDUCED_MOTION_QUERY);
       this.handleMotionPreferenceChange =
         this.handleMotionPreferenceChange.bind(this);
       this.handleResize = this.handleResize.bind(this);
@@ -136,7 +122,7 @@
       if (
         this.isStopped ||
         this.frameId !== null ||
-        this.reducedMotionMedia?.matches ||
+        !motionPreferenceEnabled() ||
         document.hidden
       ) {
         return;
@@ -170,7 +156,7 @@
     }
 
     handleMotionPreferenceChange() {
-      if (this.reducedMotionMedia?.matches) {
+      if (!motionPreferenceEnabled()) {
         this.stop();
       }
     }
@@ -192,7 +178,7 @@
     }
 
     start() {
-      if (this.reducedMotionMedia?.matches) {
+      if (!motionPreferenceEnabled()) {
         return null;
       }
 
@@ -203,10 +189,10 @@
 
       document.body.append(this.layer);
       document.body.classList.add(BODY_CLASS);
-      this.removeMotionPreferenceListener = addMediaChangeListener(
-        this.reducedMotionMedia,
-        this.handleMotionPreferenceChange,
-      );
+      this.removeMotionPreferenceListener =
+        DASHBOARD_PREFERENCES.addMotionPreferenceChangeListener(
+          this.handleMotionPreferenceChange,
+        );
       document.addEventListener(
         "visibilitychange",
         this.handleVisibilityChange,
@@ -237,7 +223,7 @@
   }
 
   function create(container, onStop) {
-    if (prefersReducedMotion()) {
+    if (!motionPreferenceEnabled()) {
       return null;
     }
 
@@ -246,6 +232,6 @@
 
   globalThis.PacePetsDashboardSyncMonkEscape = Object.freeze({
     create,
-    prefersReducedMotion,
+    motionPreferenceEnabled,
   });
 })();

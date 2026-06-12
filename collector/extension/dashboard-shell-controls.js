@@ -26,6 +26,17 @@
     DASHBOARD_PREFERENCES.storeThemePreference(theme);
   }
 
+  function storedMotionPreference() {
+    return (
+      DASHBOARD_PREFERENCES.readMotionPreference().value ||
+      DASHBOARD_PREFERENCES.DEFAULT_MOTION
+    );
+  }
+
+  function storeMotionPreference(motion) {
+    DASHBOARD_PREFERENCES.storeMotionPreference(motion);
+  }
+
   function isInputLike(element) {
     return (
       element instanceof HTMLInputElement ||
@@ -40,6 +51,7 @@
       appTooltips,
       earlyReset,
       elements,
+      onMotionPreferenceChanged,
       refreshThemeSensitiveViews,
     }) {
       this.appTooltips = appTooltips;
@@ -48,6 +60,8 @@
       this.elements = elements;
       this.explicitTheme = storedThemePreference();
       this.infoPanelReturnFocus = null;
+      this.motionPreference = storedMotionPreference();
+      this.onMotionPreferenceChanged = onMotionPreferenceChanged;
       this.refreshThemeSensitiveViews = refreshThemeSensitiveViews;
       this.colorSchemeMedia.addEventListener("change", () => {
         if (!this.explicitTheme) {
@@ -55,6 +69,7 @@
         }
       });
       this.applyResolvedTheme();
+      this.applyMotionPreference();
     }
 
     systemTheme() {
@@ -98,6 +113,39 @@
       this.explicitTheme = this.oppositeTheme(this.resolvedTheme());
       storeThemePreference(this.explicitTheme);
       this.applyResolvedTheme({ refresh: true });
+    }
+
+    nextMotionPreference() {
+      return this.motionPreference === "on" ? "off" : "on";
+    }
+
+    updateMotionToggle(motion) {
+      if (!this.elements.motionToggle) {
+        return;
+      }
+
+      const enabled = motion === "on";
+      const label = enabled ? "Turn all motion off" : "Turn all motion on";
+      this.elements.motionToggle.setAttribute("aria-pressed", String(enabled));
+      this.elements.motionToggle.setAttribute("aria-label", label);
+      this.appTooltips.setText(this.elements.motionToggle, label);
+    }
+
+    applyMotionPreference({ notify = false } = {}) {
+      document.documentElement.dataset.motion = this.motionPreference;
+      this.updateMotionToggle(this.motionPreference);
+      if (notify) {
+        DASHBOARD_PREFERENCES.notifyMotionPreferenceChanged(
+          this.motionPreference,
+        );
+        this.onMotionPreferenceChanged?.(this.motionPreference);
+      }
+    }
+
+    toggleMotion() {
+      this.motionPreference = this.nextMotionPreference();
+      storeMotionPreference(this.motionPreference);
+      this.applyMotionPreference({ notify: true });
     }
 
     isInfoPanelOpen() {
@@ -218,6 +266,7 @@
       hideInfoPanel: controls.hideInfoPanel.bind(controls),
       isInfoPanelOpen: controls.isInfoPanelOpen.bind(controls),
       toggleInfoPanel: controls.toggleInfoPanel.bind(controls),
+      toggleMotion: controls.toggleMotion.bind(controls),
       toggleTheme: controls.toggleTheme.bind(controls),
       trapInfoPanelFocus: controls.trapInfoPanelFocus.bind(controls),
     });

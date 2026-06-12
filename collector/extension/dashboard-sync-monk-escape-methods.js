@@ -58,12 +58,12 @@
         enteredAtMs === null ||
         this.syncMonkEscapeScene ||
         this.syncMonkEscapeLaunchedForEnteredAtMs === enteredAtMs ||
-        SyncMonkEscape.prefersReducedMotion()
+        !SyncMonkEscape.motionPreferenceEnabled()
       );
     },
 
     isSyncMonkEscapeLaunchBlocked(enteredAtMs) {
-      return enteredAtMs === null || SyncMonkEscape.prefersReducedMotion();
+      return enteredAtMs === null || !SyncMonkEscape.motionPreferenceEnabled();
     },
 
     syncMonkEscapeNeedsDelay(enteredAtMs, ignoreDelay) {

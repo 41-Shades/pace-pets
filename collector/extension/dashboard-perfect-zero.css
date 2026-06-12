@@ -348,19 +348,20 @@ body.has-perfect-zero-page-background
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+html[data-motion="off"]
   body.has-perfect-zero-page-background
-    .pace-card.pace-perfect-zero
-    #pace-title,
+  .pace-card.pace-perfect-zero
+  #pace-title,
+html[data-motion="off"]
   body.has-perfect-zero-page-background
-    .pace-card.pace-perfect-zero
-    #pace-ratio-value,
+  .pace-card.pace-perfect-zero
+  #pace-ratio-value,
+html[data-motion="off"]
   body.has-perfect-zero-page-background
-    .pace-card.pace-perfect-zero
-    #pace-copy {
-    animation: none;
-    filter: none;
-    opacity: var(--perfect-zero-copy-rest-opacity, 0.72);
-    transform: none;
-  }
+  .pace-card.pace-perfect-zero
+  #pace-copy {
+  animation: none;
+  filter: none;
+  opacity: var(--perfect-zero-copy-rest-opacity, 0.72);
+  transform: none;
 }

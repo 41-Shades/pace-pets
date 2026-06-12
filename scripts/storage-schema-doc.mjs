@@ -239,6 +239,8 @@ export async function storageSchemaGeneratedMarkdown() {
     `- Dashboard window session key: \`${dashboardPreferences.DASHBOARD_WINDOW_SESSION_KEY}\``,
     `- Dashboard theme preference key: \`${dashboardPreferences.THEME_STORAGE_KEY}\``,
     `- Supported dashboard theme values: ${dashboardPreferences.THEME_VALUES.map((theme) => `\`${theme}\``).join(", ")}`,
+    `- Dashboard motion preference key: \`${dashboardPreferences.MOTION_STORAGE_KEY}\``,
+    `- Supported dashboard motion values: ${dashboardPreferences.MOTION_VALUES.map((motion) => `\`${motion}\``).join(", ")}`,
     `- Dashboard local preference scopes: ${dashboardPreferences.LOCAL_PREFERENCES.map((preference) => `\`${preference.key}\` in \`${preference.scope}\``).join(", ")}`,
     `- Safe persisted text cap: \`${persistedText.MAX_SAFE_TEXT_LENGTH}\` characters`,
     "",

@@ -176,31 +176,20 @@
   stroke-width: 1.85;
 }
 
-@media (prefers-reduced-motion: reduce) {
+html[data-motion="off"]
+  .pace-icon.has-pace-icon-effect-ease-up
   .pace-ease-up-layer {
-    display: none;
-  }
+  display: none;
+}
 
-  .pace-card.pace-behind.has-pace-ease-up-effect,
-  .pace-card.pace-behind.has-pace-ease-up-effect > *,
-  .pace-ease-up-eye,
-  .pace-ease-up-eye-layer,
-  .pace-ease-up-eyes,
-  .pace-icon.has-pace-icon-effect-ease-up img,
-  .pace-icon.has-pace-icon-effect-ease-up .pace-ease-up-layer,
-  .pace-ease-up-steam {
-    animation: none;
-  }
+html[data-motion="off"] .pace-card.pace-behind.has-pace-ease-up-effect {
+  background: var(--pace-bg);
+  border-color: var(--pace-border);
+  transform: none;
+}
 
-  .pace-card.pace-behind.has-pace-ease-up-effect {
-    background: var(--pace-bg);
-    border-color: var(--pace-border);
-    transform: none;
-  }
-
-  .pace-card.pace-behind.has-pace-ease-up-effect::before,
-  .pace-card.pace-behind.has-pace-ease-up-effect::after {
-    animation: none;
-    display: none;
-  }
+html[data-motion="off"] .pace-card.pace-behind.has-pace-ease-up-effect::before,
+html[data-motion="off"] .pace-card.pace-behind.has-pace-ease-up-effect::after {
+  animation: none;
+  display: none;
 }

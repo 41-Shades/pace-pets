@@ -176,24 +176,42 @@
 }
 
 .info-toggle-icon {
+  --info-toggle-mark: color-mix(
+    in srgb,
+    var(--control-icon-disc) 20%,
+    var(--subhead)
+  );
+  --info-toggle-ring: color-mix(
+    in srgb,
+    var(--control-icon-disc) 62%,
+    var(--subhead)
+  );
+
   display: block;
-  fill: none;
   height: 16px;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2.1;
+  position: relative;
   width: 16px;
 }
 
-.info-toggle-ring {
-  color: color-mix(in srgb, var(--control-icon-disc) 62%, var(--subhead));
-  stroke-width: 2;
+.info-toggle-icon::before {
+  border: 2px solid var(--info-toggle-ring);
+  border-radius: 50%;
+  content: "";
+  inset: 1px;
+  position: absolute;
 }
 
-.info-toggle-mark {
-  color: color-mix(in srgb, var(--control-icon-disc) 20%, var(--subhead));
-  stroke-width: 2.35;
+.info-toggle-icon::after {
+  background: var(--info-toggle-mark);
+  border-radius: 999px;
+  box-shadow: 0 -4px 0 -0.35px var(--info-toggle-mark);
+  content: "";
+  height: 4px;
+  left: 50%;
+  position: absolute;
+  top: 8px;
+  transform: translateX(-50%);
+  width: 2px;
 }
 
 .info-close-icon {
@@ -348,33 +366,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .collection-pulse.live {
-    animation: none;
-  }
-
-  .last-collected-value.is-updated::after {
-    animation: none;
-    opacity: 0.6;
-  }
-
-  .theme-toggle,
-  .theme-toggle-icon,
-  .manual-refresh-button,
-  .info-toggle,
-  .info-close,
-  body,
-  .usage-panel,
-  .window-toggle,
-  .window-toggle-option,
-  .pace-card,
-  .metrics,
-  .reset-card,
-  .chart-panel,
-  .metric-icon,
-  .metric-bar,
-  .reset-progress-dot,
-  .reset-progress-fill {
-    transition: none;
-  }
+html[data-motion="off"] .last-collected-value.is-updated::after {
+  opacity: 0.6;
 }

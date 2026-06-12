@@ -2,12 +2,19 @@
   "use strict";
 
   const Controller = globalThis.PacePetsDashboardPaceController;
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const PushStretch = globalThis.PacePetsDashboardPushStretch;
   const PushSweat = globalThis.PacePetsDashboardPushSweat;
   const PushWater = globalThis.PacePetsDashboardPushWater;
-  if (!Controller || !PushStretch || !PushSweat || !PushWater) {
+  if (
+    !Controller ||
+    !DASHBOARD_PREFERENCES ||
+    !PushStretch ||
+    !PushSweat ||
+    !PushWater
+  ) {
     throw new Error(
-      "Pace push stretch renderers must load before dashboard-push-stretch-methods.js.",
+      "Pace preferences and push stretch renderers must load before dashboard-push-stretch-methods.js.",
     );
   }
 
@@ -126,6 +133,10 @@
     };
   }
 
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
+  }
+
   Object.assign(Controller.prototype, {
     clearPushStretchEffectClasses(container) {
       container.classList.remove("has-pace-icon-effect-push-stretch");
@@ -138,10 +149,7 @@
       if (!image) {
         return;
       }
-      const reducedMotion = window.matchMedia?.(
-        "(prefers-reduced-motion: reduce)",
-      );
-      if (reducedMotion?.matches) {
+      if (!motionPreferenceEnabled()) {
         return;
       }
 

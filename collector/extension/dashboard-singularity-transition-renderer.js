@@ -24,14 +24,14 @@
   );
 
   class SingularityTransitionRenderer {
-    constructor({ reducedMotion = false } = {}) {
+    constructor({ motionDisabled = false } = {}) {
       this.blackHoleApproachCompleted = null;
       this.blackHoleScene = null;
       this.chromeCollapseCompleted = null;
       this.chromeCollapseScene = null;
       this.chromeCollapseTimer = null;
       this.done = null;
-      this.reducedMotion = reducedMotion;
+      this.motionDisabled = motionDisabled;
       this.resolveDone = null;
       this.revealTimer = null;
       this.finishTimer = null;
@@ -45,7 +45,7 @@
         this.resolveDone = resolve;
       });
       document.body.classList.remove(ENTRY_EXIT_CLASS);
-      if (this.reducedMotion) {
+      if (this.motionDisabled) {
         this.finish(true);
         return this.done;
       }
@@ -92,7 +92,7 @@
 
       document.body.classList.remove(REVEAL_CLASS);
       const scene = BLACK_HOLE_SCENE.create({
-        reducedMotion: this.reducedMotion,
+        motionDisabled: this.motionDisabled,
       });
       this.blackHoleScene = scene;
       this.chromeCollapseTimer = root.setTimeout(() => {
@@ -127,7 +127,7 @@
       }
 
       const scene = CHROME_COLLAPSE_SCENE.create({
-        reducedMotion: this.reducedMotion,
+        motionDisabled: this.motionDisabled,
       });
       this.chromeCollapseScene = scene;
       scene

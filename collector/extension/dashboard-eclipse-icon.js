@@ -1,6 +1,13 @@
 (() => {
   "use strict";
 
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  if (!DASHBOARD_PREFERENCES) {
+    throw new Error(
+      "Pace Pets dashboard preferences must load before dashboard-eclipse-icon.js.",
+    );
+  }
+
   const CANVAS_CSS_SIZE = 28;
   const MAX_DEVICE_PIXEL_RATIO = 3;
   const MOON_RADIUS = 6.4;
@@ -88,7 +95,6 @@
       this.context = null;
       this.frameId = null;
       this.icon = themeToggle?.querySelector(".theme-toggle-icon") || null;
-      this.motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
       this.scheduleFrame = (nowMs) => {
         this.draw(nowMs);
         this.frameId = window.requestAnimationFrame(this.scheduleFrame);
@@ -295,6 +301,11 @@
     }
 
     start() {
+      if (!DASHBOARD_PREFERENCES.motionPreferenceEnabled()) {
+        this.stop();
+        return;
+      }
+
       if (!this.ensureCanvas() || !this.context) {
         return;
       }
@@ -302,7 +313,7 @@
       this.startedAtMs = performance.now();
       this.draw(this.startedAtMs);
 
-      if (!this.motionQuery.matches && this.frameId === null) {
+      if (this.frameId === null) {
         this.frameId = window.requestAnimationFrame(this.scheduleFrame);
       }
     }

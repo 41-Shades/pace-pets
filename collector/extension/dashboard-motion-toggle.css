@@ -1,0 +1,72 @@
+.motion-toggle {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--control-icon-disc) 42%, var(--subhead));
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 20px;
+  justify-content: center;
+  margin-right: -4px;
+  padding: 0;
+  transition: color 180ms ease;
+  width: 20px;
+}
+
+.motion-toggle[aria-pressed="true"] {
+  color: color-mix(in srgb, var(--collection-live-dot) 22%, var(--subhead));
+}
+
+.motion-toggle[aria-pressed="false"] {
+  color: color-mix(in srgb, var(--danger) 24%, var(--subhead));
+}
+
+.motion-toggle:focus-visible {
+  outline: 2px solid var(--accent-line);
+  outline-offset: 2px;
+}
+
+.motion-toggle:hover {
+  background: transparent;
+  color: color-mix(in srgb, var(--muted) 64%, var(--accent));
+}
+
+.motion-toggle[aria-pressed="true"]:hover {
+  color: color-mix(in srgb, var(--collection-live-dot) 58%, var(--accent));
+}
+
+.motion-toggle[aria-pressed="false"]:hover {
+  color: color-mix(in srgb, var(--danger) 56%, var(--accent));
+}
+
+.motion-toggle-icon {
+  display: block;
+  height: 20px;
+  position: relative;
+  width: 20px;
+}
+
+.motion-toggle-icon::before {
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  content: "";
+  height: 12px;
+  inset: 5px 2px 1px;
+  position: absolute;
+  width: 12px;
+}
+
+.motion-toggle-icon::after {
+  background: currentcolor;
+  border-radius: 999px;
+  content: "";
+  height: 7px;
+  left: 9px;
+  position: absolute;
+  top: 3px;
+  width: 2px;
+}

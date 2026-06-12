@@ -3,18 +3,18 @@
 
   const App = globalThis.PacePetsDashboardApp;
   const DATA = globalThis.PacePetsDashboardPaceData;
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const PREVIEW = globalThis.PacePetsSingularityTransitionPreviewControl;
-  if (!App || !DATA || !PREVIEW) {
+  if (!App || !DATA || !DASHBOARD_PREFERENCES || !PREVIEW) {
     throw new Error("Singularity transition preview dependencies missing.");
   }
 
   const ENTRY_EXIT_CLASS = "is-singularity-entry-exit";
   const ENTRY_EXIT_DURATION_MS = 2000;
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const SINGULARITY_STATE = DATA.PACE_STATES.singularity;
 
-  function prefersReducedMotion() {
-    return window.matchMedia?.(REDUCED_MOTION_QUERY).matches === true;
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   Object.assign(App.prototype, {
@@ -32,7 +32,7 @@
       await this.EXTENSION_STORAGE.setLocal(storageItems);
     },
     scheduleSingularityTransitionPreviewState() {
-      const delayMs = prefersReducedMotion() ? 0 : ENTRY_EXIT_DURATION_MS;
+      const delayMs = motionPreferenceEnabled() ? ENTRY_EXIT_DURATION_MS : 0;
       this.singularityTransitionEntryPreviewTimer = globalThis.setTimeout(
         async () => {
           this.singularityTransitionEntryPreviewTimer = null;
