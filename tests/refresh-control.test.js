@@ -82,4 +82,25 @@ describe("PacePetsRefreshControl", () => {
       null,
     );
   });
+
+  it("normalizes persistent manual refresh cooldown storage", () => {
+    const refreshControl = globalThis.PacePetsRefreshControl;
+    const cooldownUntil = "2026-05-25T12:01:00.000Z";
+
+    expect(refreshControl.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY).toBe(
+      "pacePetsManualRefreshCooldownUntil",
+    );
+    expect(refreshControl.manualRefreshCooldownUntilMs(cooldownUntil)).toBe(
+      Date.parse(cooldownUntil),
+    );
+    expect(refreshControl.manualRefreshCooldownUntilMs("not a date")).toBe(0);
+    expect(
+      refreshControl.manualRefreshCooldownStorageValue(
+        Date.parse(cooldownUntil),
+      ),
+    ).toBe(cooldownUntil);
+    expect(refreshControl.manualRefreshCooldownStorageValue("not a date")).toBe(
+      null,
+    );
+  });
 });

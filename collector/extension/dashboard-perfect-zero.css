@@ -109,7 +109,7 @@ body.has-perfect-zero-page-background #scheduled-reset-time {
   color: var(--perfect-zero-space-text-secondary);
 }
 
-body.has-perfect-zero-page-background .collection-status-label,
+body.has-perfect-zero-page-background #collection-status-label,
 body.has-perfect-zero-page-background .chart-meta h2,
 body.has-perfect-zero-page-background .metric-note,
 body.has-perfect-zero-page-background .pace-alt-ratio,

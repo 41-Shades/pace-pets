@@ -102,37 +102,37 @@
                 </button>
               </div>
               <div class="collection-meta">
-                <span
-                  class="collection-status-label"
-                  id="collection-status-label"
-                  hidden
-                ></span>
+                <span id="collection-status-label" hidden></span>
                 <button
                   class="manual-refresh-button"
                   id="manual-refresh-button"
                   type="button"
-                  aria-label="Check ChatGPT usage now"
-                  data-tooltip="Check ChatGPT usage now"
+                  aria-label="Check now"
+                  data-tooltip="Check now"
                   hidden
                 >
-                  Refresh
+                  Check now
                 </button>
                 <span
-                  class="collection-pulse live"
-                  id="collection-pulse"
-                  aria-hidden="true"
-                  data-tooltip="Usage collection status: Live"
-                ></span>
-                <span
-                  class="last-collected"
-                  id="last-collected"
-                  aria-label="Checked: waiting. Status: Live"
-                  data-tooltip="Status: Live"
+                  class="collection-status"
+                  id="collection-status"
+                  data-tooltip="Auto-checks every 5m"
                 >
-                  <span class="last-collected-label">Checked:</span>
-                  <span class="last-collected-value" id="last-collected-value"
-                    >waiting</span
+                  <span
+                    class="collection-pulse live"
+                    id="collection-pulse"
+                    aria-hidden="true"
+                  ></span>
+                  <span
+                    class="last-collected"
+                    id="last-collected"
+                    aria-label="Checked: waiting. Checks every 5 minutes."
                   >
+                    <span class="last-collected-label">Checked:</span>
+                    <span class="last-collected-value" id="last-collected-value"
+                      >waiting</span
+                    >
+                  </span>
                 </span>
                 <span id="collector-version" hidden>v...</span>
               </div>
