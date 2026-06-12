@@ -48,12 +48,7 @@ describe("PacePetsDeveloperOptions storage", () => {
     );
     expect(options.MAX_POOL_FILL_KEY).toBe("maxPoolFill");
     expect(options.RESET_EXHAUSTED_PREVIEW_KEY).toBe("resetExhaustedPreview");
-    expect(options.SINGULARITY_BLACK_HOLE_VERSION_KEY).toBe(
-      "singularityBlackHoleVersion",
-    );
     expect(options.SPRINT_INTENSITY_PREVIEW_KEY).toBe("sprintIntensityPreview");
-    expect(options.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION).toBe("v1");
-    expect(options.SINGULARITY_BLACK_HOLE_VERSION_VALUES).toEqual(["v1", "v2"]);
     expect(options.SPRINT_INTENSITY_PREVIEW_VALUES).toEqual([
       "1.55",
       "2.00",
@@ -73,10 +68,6 @@ describe("PacePetsDeveloperOptions storage", () => {
     expect(options.normalizeMaxPoolFill("true")).toBe(false);
     expect(options.normalizeResetExhaustedPreview(true)).toBe(true);
     expect(options.normalizeResetExhaustedPreview("true")).toBe(false);
-    expect(options.normalizeSingularityBlackHoleVersion("v2")).toBe("v2");
-    expect(options.normalizeSingularityBlackHoleVersion("unsupported")).toBe(
-      "v1",
-    );
     expect(options.normalizeSprintIntensityPreview("4.00")).toBe("4.00");
     expect(options.normalizeSprintIntensityPreview("unsupported")).toBeNull();
     expect(
@@ -86,7 +77,6 @@ describe("PacePetsDeveloperOptions storage", () => {
         manualRefreshLeadWindow: true,
         maxPoolFill: true,
         resetExhaustedPreview: true,
-        singularityBlackHoleVersion: "v2",
         sprintIntensityPreview: "4.00",
         unsupported: false,
       }),
@@ -96,7 +86,6 @@ describe("PacePetsDeveloperOptions storage", () => {
       manualRefreshLeadWindow: true,
       maxPoolFill: true,
       resetExhaustedPreview: true,
-      singularityBlackHoleVersion: "v2",
       sprintIntensityPreview: "4.00",
     });
     expect(
@@ -114,7 +103,6 @@ describe("PacePetsDeveloperOptions storage", () => {
       manualRefreshLeadWindow: false,
       maxPoolFill: false,
       resetExhaustedPreview: false,
-      singularityBlackHoleVersion: "v1",
       sprintIntensityPreview: null,
     });
   });
@@ -131,7 +119,6 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
         manualRefreshLeadWindow: true,
         maxPoolFill: true,
         resetExhaustedPreview: true,
-        singularityBlackHoleVersion: "v2",
         sprintIntensityPreview: "7.00",
       }),
     ).toEqual({
@@ -140,14 +127,8 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
       manualRefreshLeadWindow: true,
       maxPoolFill: true,
       resetExhaustedPreview: true,
-      singularityBlackHoleVersion: "v2",
       sprintIntensityPreview: "7.00",
     });
-    expect(
-      options.storedDeveloperOptionsValue({
-        singularityBlackHoleVersion: "v1",
-      }),
-    ).toEqual({});
     expect(
       options.storedDeveloperOptionsValue({
         forcedPaceStateKey: "perfectZero",

@@ -147,6 +147,19 @@ selected puffs onto a much longer cubic float up and away path. Same-state
 refreshes preserve the running effect, reduced-motion settings disable smoke,
 and the legend rail remains static.
 
+The reset countdown card has a dev-only exhaustion preview controlled by
+`resetExhaustedPreview`. The source visual asset remains
+`collector/extension/themes/default/effects/reset-exhausted/exhausted-person.png`,
+which is kept as the raster reference for the seated, slumped pose. The active
+preview currently renders an inline SVG trace in
+`collector/extension/dashboard-reset-exhausted-methods.js` so the free arm can
+animate independently without modifying or masking the PNG. The whole traced
+figure shares the same subtle rocking motion in
+`collector/extension/dashboard-reset-exhausted.css`; reduced-motion settings
+disable that rock. Keep the base PNG available while iterating on the trace,
+because it remains the visual target for pose, face, scale, and future asset
+work.
+
 For small organic or atmospheric effects, prefer a focused canvas renderer over
 stacked CSS gradients once the visual depends on noisy asymmetry, soft plumes,
 or nonuniform shimmer. CSS works well for flat legend treatment and simple
@@ -247,15 +260,13 @@ states outside the regular pace levels.
 The `singularity` state runs a dashboard-only transition when the dashboard
 enters that state from any other state. The transition fades from the prior
 state into the shared space backdrop, holds briefly on blank space, fades the
-dashboard chrome back in, then starts the selected black-hole approach scene.
-Canvas Black Hole V1 is the default; local developer controls can select the
-WebGL Black Hole V2 scene for the black-hole phase only. The black-hole canvas
-stays behind the dashboard chrome. Around the V2 glint suction timing, a
-chrome-collapse phase splits real main-panel containers and state-rail items,
-pulls them along slower circular inward paths, and gradually stretches them
-toward the black hole before shrinking them into the horizon. Same-state
-refreshes do not replay the transition. If Singularity is selected from the
-separate developer controls
+dashboard chrome back in, then starts the WebGL black-hole approach scene. The
+black-hole canvas stays behind the dashboard chrome. Around the glint suction
+timing, a chrome-collapse phase splits real main-panel containers and
+state-rail items, pulls them along slower circular inward paths, and gradually
+stretches them toward the black hole before shrinking them into the horizon.
+Same-state refreshes do not replay the transition. If Singularity is selected
+from the separate developer controls
 while the dashboard tab is hidden, the transition is queued and plays when the
 dashboard becomes visible. Reduced-motion users skip the animated sequence. The
 renderer removes the temporary black-hole canvas and restores distorted chrome

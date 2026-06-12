@@ -1,21 +1,15 @@
 (function attachPacePetsDashboardSingularityTransitionRenderer(root) {
   "use strict";
 
-  const BLACK_HOLE_V1_SCENE = root.PacePetsDashboardSingularityBlackHoleV1Scene;
-  const BLACK_HOLE_V2_SCENE = root.PacePetsDashboardSingularityBlackHoleV2Scene;
+  const BLACK_HOLE_SCENE = root.PacePetsDashboardSingularityBlackHoleV2Scene;
   const CHROME_COLLAPSE_SCENE =
     root.PacePetsDashboardSingularityChromeCollapseScene;
-  if (!BLACK_HOLE_V1_SCENE || !BLACK_HOLE_V2_SCENE || !CHROME_COLLAPSE_SCENE) {
+  if (!BLACK_HOLE_SCENE || !CHROME_COLLAPSE_SCENE) {
     throw new Error(
       "Singularity scenes must load before dashboard-singularity-transition-renderer.js.",
     );
   }
 
-  const BLACK_HOLE_SCENES = Object.freeze({
-    v1: BLACK_HOLE_V1_SCENE,
-    v2: BLACK_HOLE_V2_SCENE,
-  });
-  const DEFAULT_BLACK_HOLE_VERSION = "v1";
   const HIDDEN_CLASS = "is-singularity-space-hidden";
   const REVEAL_CLASS = "is-singularity-space-reveal";
   const ENTRY_EXIT_CLASS = "is-singularity-entry-exit";
@@ -30,11 +24,10 @@
   );
 
   class SingularityTransitionRenderer {
-    constructor({ blackHoleVersion, reducedMotion = false } = {}) {
-      this.blackHoleVersion = BLACK_HOLE_SCENES[blackHoleVersion]
-        ? blackHoleVersion
-        : DEFAULT_BLACK_HOLE_VERSION;
+    constructor({ reducedMotion = false } = {}) {
+      this.blackHoleApproachCompleted = null;
       this.blackHoleScene = null;
+      this.chromeCollapseCompleted = null;
       this.chromeCollapseScene = null;
       this.chromeCollapseTimer = null;
       this.done = null;
@@ -98,8 +91,7 @@
       }
 
       document.body.classList.remove(REVEAL_CLASS);
-      const sceneFactory = BLACK_HOLE_SCENES[this.blackHoleVersion];
-      const scene = sceneFactory.create({
+      const scene = BLACK_HOLE_SCENE.create({
         reducedMotion: this.reducedMotion,
       });
       this.blackHoleScene = scene;
@@ -114,19 +106,17 @@
             return;
           }
 
-          if (this.blackHoleScene === scene) {
-            this.blackHoleScene = null;
+          this.blackHoleApproachCompleted = completed;
+          if (
+            !completed ||
+            this.chromeCollapseCompleted !== null ||
+            (!this.chromeCollapseScene && this.chromeCollapseTimer === null)
+          ) {
+            this.finish(completed && this.chromeCollapseCompleted !== false);
           }
-          this.finish(completed);
         })
         .catch((error) => {
-          console.warn(
-            `Pace Pets Singularity black-hole ${this.blackHoleVersion} scene failed:`,
-            error,
-          );
-          if (this.blackHoleScene === scene) {
-            this.blackHoleScene = null;
-          }
+          console.warn("Pace Pets Singularity black-hole scene failed:", error);
           this.finish(false);
         });
     }
@@ -137,13 +127,23 @@
       }
 
       const scene = CHROME_COLLAPSE_SCENE.create({
-        blackHoleVersion: this.blackHoleVersion,
         reducedMotion: this.reducedMotion,
       });
       this.chromeCollapseScene = scene;
-      scene.play().catch((error) => {
-        console.warn("Pace Pets Singularity chrome collapse failed:", error);
-      });
+      scene
+        .play()
+        .then((completed) => {
+          this.chromeCollapseCompleted = completed;
+          if (this.stopped || this.blackHoleApproachCompleted === null) {
+            return;
+          }
+
+          this.finish(completed && this.blackHoleApproachCompleted);
+        })
+        .catch((error) => {
+          console.warn("Pace Pets Singularity chrome collapse failed:", error);
+          this.finish(false);
+        });
     }
 
     stop() {
@@ -161,6 +161,8 @@
       this.revealTimer = null;
       this.finishTimer = null;
       this.chromeCollapseTimer = null;
+      this.blackHoleApproachCompleted = null;
+      this.chromeCollapseCompleted = null;
       this.spaceEnterFrame = null;
       this.spaceEnterTimer = null;
       this.blackHoleScene?.stop();

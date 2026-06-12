@@ -1,40 +1,10 @@
 (() => {
   "use strict";
 
-  const PREVIEW_ACTIVE_DURATION_MS = 18000;
+  const PREVIEW_ACTIVE_DURATION_MS = 28000;
   const QUEUED_ACTIVE_DURATION_MS = 2200;
 
-  function renderBlackHoleOptions({
-    currentVersion,
-    list,
-    optionRow,
-    persistDeveloperOptions,
-    setStatus,
-    versionOptions,
-  }) {
-    list.replaceChildren(
-      ...versionOptions.map((option) =>
-        optionRow({
-          indicator: false,
-          labelText: option.label,
-          pressed: currentVersion === option.value,
-          onClick: async ({ pressed }) => {
-            if (pressed) {
-              return;
-            }
-
-            await persistDeveloperOptions({
-              singularityBlackHoleVersion: option.value,
-            });
-            setStatus(option.status);
-          },
-        }),
-      ),
-    );
-  }
-
   function renderPreviewAction({
-    currentBlackHoleVersion,
     list,
     optionRow,
     previewActions,
@@ -52,9 +22,7 @@
           setPreviewActive(true);
           try {
             const response =
-              await previewActions.requestSingularityTransitionPreview({
-                blackHoleVersion: currentBlackHoleVersion,
-              });
+              await previewActions.requestSingularityTransitionPreview();
             const durationMs = response?.queued
               ? QUEUED_ACTIVE_DURATION_MS
               : PREVIEW_ACTIVE_DURATION_MS;
@@ -74,27 +42,14 @@
   }
 
   function render({
-    blackHoleVersionList,
-    currentBlackHoleVersion,
     optionRow,
-    persistDeveloperOptions,
     previewActions,
     previewActive,
     previewList,
     setPreviewActive,
     setStatus,
-    versionOptions,
   }) {
-    renderBlackHoleOptions({
-      currentVersion: currentBlackHoleVersion,
-      list: blackHoleVersionList,
-      optionRow,
-      persistDeveloperOptions,
-      setStatus,
-      versionOptions,
-    });
     renderPreviewAction({
-      currentBlackHoleVersion,
       list: previewList,
       optionRow,
       previewActions,

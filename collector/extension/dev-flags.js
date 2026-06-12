@@ -34,9 +34,6 @@
     currentModeSummary: requiredElementById("current-mode-summary"),
     featurePreviewList: requiredElementById("feature-preview-list"),
     resetAll: requiredElementById("reset-all"),
-    singularityBlackHoleVersionList: requiredElementById(
-      "singularity-black-hole-version-list",
-    ),
     singularityTransitionPreviewList: requiredElementById(
       "singularity-transition-preview-list",
     ),
@@ -59,8 +56,6 @@
   let currentManualRefreshLeadWindow = false;
   let currentMaxPoolFill = false;
   let currentResetExhaustedPreview = false;
-  let currentSingularityBlackHoleVersion =
-    DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION;
   let currentSprintIntensityPreview = null;
   let singularityTransitionPreviewActive = false;
   let statusTimer = null;
@@ -97,7 +92,6 @@
       manualRefreshLeadWindow: currentManualRefreshLeadWindow,
       maxPoolFill: currentMaxPoolFill,
       resetExhaustedPreview: currentResetExhaustedPreview,
-      singularityBlackHoleVersion: currentSingularityBlackHoleVersion,
       sprintIntensityPreview: currentSprintIntensityPreview,
     };
   }
@@ -117,7 +111,6 @@
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     currentMaxPoolFill = options.maxPoolFill;
     currentResetExhaustedPreview = options.resetExhaustedPreview;
-    currentSingularityBlackHoleVersion = options.singularityBlackHoleVersion;
     currentSprintIntensityPreview = options.sprintIntensityPreview;
   }
 
@@ -144,21 +137,6 @@
     );
   }
 
-  function activeSingularityBlackHoleVersionOption() {
-    if (
-      currentSingularityBlackHoleVersion ===
-      DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION
-    ) {
-      return null;
-    }
-
-    return (
-      DEVELOPER_OPTIONS.SINGULARITY_BLACK_HOLE_VERSION_OPTIONS.find(
-        (option) => option.value === currentSingularityBlackHoleVersion,
-      ) || null
-    );
-  }
-
   function currentModeLabel() {
     const labels = [];
     if (currentForcedPaceStateKey) {
@@ -168,10 +146,6 @@
     if (sprintIntensityPreview) {
       labels.push(sprintIntensityPreview.label);
     }
-    const blackHoleVersion = activeSingularityBlackHoleVersionOption();
-    if (blackHoleVersion) {
-      labels.push(blackHoleVersion.label);
-    }
     labels.push(...activeFeaturePreviewOptions().map((option) => option.label));
     return labels.length > 0 ? labels.join(" + ") : "Live data";
   }
@@ -180,7 +154,6 @@
     const activeCount =
       Number(Boolean(currentForcedPaceStateKey)) +
       Number(Boolean(activeSprintIntensityPreviewOption())) +
-      Number(Boolean(activeSingularityBlackHoleVersionOption())) +
       activeFeaturePreviewOptions().length;
     if (activeCount === 0) {
       return "Live data";
@@ -192,7 +165,6 @@
     return (
       Boolean(currentForcedPaceStateKey) ||
       Boolean(activeSprintIntensityPreviewOption()) ||
-      Boolean(activeSingularityBlackHoleVersionOption()) ||
       activeFeaturePreviewOptions().length > 0
     );
   }
@@ -256,16 +228,12 @@
 
   function renderSingularityControls() {
     SINGULARITY_CONTROLS.render({
-      blackHoleVersionList: elements.singularityBlackHoleVersionList,
-      currentBlackHoleVersion: currentSingularityBlackHoleVersion,
       optionRow,
-      persistDeveloperOptions,
       previewActions: PREVIEW_ACTIONS,
       previewActive: singularityTransitionPreviewActive,
       previewList: elements.singularityTransitionPreviewList,
       setPreviewActive: setSingularityTransitionPreviewActive,
       setStatus,
-      versionOptions: DEVELOPER_OPTIONS.SINGULARITY_BLACK_HOLE_VERSION_OPTIONS,
     });
   }
 
@@ -341,8 +309,6 @@
         ]),
       ),
       forcedPaceStateKey: null,
-      singularityBlackHoleVersion:
-        DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION,
       sprintIntensityPreview: null,
     });
     setStatus("Dev overrides reset.");

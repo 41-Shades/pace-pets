@@ -23,13 +23,11 @@
       this.singularityTransitionEntryPreviewTimer = null;
       document.body.classList.remove(ENTRY_EXIT_CLASS);
     },
-    async forceSingularityTransitionPreviewState({ blackHoleVersion } = {}) {
+    async forceSingularityTransitionPreviewState() {
       const options = await this.readDeveloperOptions();
       const storageItems = this.DEVELOPER_OPTIONS.developerOptionsStorageItems({
         ...options,
         forcedPaceStateKey: SINGULARITY_STATE.key,
-        singularityBlackHoleVersion:
-          blackHoleVersion || options.singularityBlackHoleVersion,
       });
       await this.EXTENSION_STORAGE.setLocal(storageItems);
     },
@@ -39,10 +37,7 @@
         async () => {
           this.singularityTransitionEntryPreviewTimer = null;
           try {
-            await this.forceSingularityTransitionPreviewState({
-              blackHoleVersion:
-                this.singularityTransitionEntryPreviewBlackHoleVersion,
-            });
+            await this.forceSingularityTransitionPreviewState();
           } catch (error) {
             console.warn("Pace Pets Singularity entry preview failed:", error);
             this.clearSingularityTransitionEntryPreview();
@@ -51,7 +46,7 @@
         delayMs,
       );
     },
-    async previewSingularityTransitionEntry({ blackHoleVersion } = {}) {
+    async previewSingularityTransitionEntry() {
       if (
         this.elements.paceCard.classList.contains(SINGULARITY_STATE.className)
       ) {
@@ -61,12 +56,9 @@
         };
       }
       if (document.hidden) {
-        this.singularityTransitionEntryPreviewBlackHoleVersion =
-          blackHoleVersion;
         this.singularityTransitionEntryPreviewPending = true;
         return { ok: true, queued: true };
       }
-      this.singularityTransitionEntryPreviewBlackHoleVersion = blackHoleVersion;
       this.clearSingularityTransitionEntryPreview();
       document.body.classList.add(ENTRY_EXIT_CLASS);
       this.scheduleSingularityTransitionPreviewState();
@@ -77,10 +69,7 @@
         return false;
       }
       this.singularityTransitionEntryPreviewPending = false;
-      this.previewSingularityTransitionEntry({
-        blackHoleVersion:
-          this.singularityTransitionEntryPreviewBlackHoleVersion,
-      }).catch((error) => {
+      this.previewSingularityTransitionEntry().catch((error) => {
         console.warn("Pace Pets Singularity entry preview failed:", error);
       });
       return true;
@@ -101,9 +90,7 @@
           if (!PREVIEW.isLaunchMessage(message)) {
             return false;
           }
-          this.previewSingularityTransitionEntry({
-            blackHoleVersion: message.blackHoleVersion,
-          })
+          this.previewSingularityTransitionEntry()
             .then((response) => sendResponse?.(response))
             .catch((error) => {
               sendResponse?.({
