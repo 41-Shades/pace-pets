@@ -333,18 +333,18 @@
 }
 
 .last-collected-value::after {
-  background: currentcolor;
-  bottom: -2px;
+  background: color-mix(in srgb, var(--accent-line) 78%, var(--accent));
+  bottom: -3px;
   content: "";
-  height: 1px;
-  left: 0;
+  height: 2px;
+  left: -2px;
   opacity: 0;
   position: absolute;
-  right: 0;
+  right: -2px;
 }
 
 .last-collected-value.is-updated::after {
-  animation: last-collected-update-underline-fade 1400ms ease-out;
+  animation: last-collected-update-underline-fade 2400ms ease-out;
 }
 
 .last-collected-label {
@@ -357,8 +357,8 @@
   }
 
   18%,
-  72% {
-    opacity: 0.6;
+  82% {
+    opacity: 0.78;
   }
 
   100% {
@@ -367,5 +367,5 @@
 }
 
 html[data-motion="off"] .last-collected-value.is-updated::after {
-  opacity: 0.6;
+  opacity: 0.78;
 }

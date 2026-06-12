@@ -21,6 +21,7 @@
   }
 
   const OPEN_DASHBOARD_CONTEXT_MENU_ID = "open-dashboard";
+  const CHECK_USAGE_NOW_CONTEXT_MENU_ID = "check-usage-now";
   const BADGE_CONTEXT_MENU_SEPARATOR_ID = "badge-window-separator";
   const BADGE_CONTEXT_MENU_ID_PREFIX = "badge-window:";
   const BADGE_CONTEXT_MENU_CONTEXTS = Object.freeze(["action"]);
@@ -80,6 +81,11 @@
     });
     await createContextMenu({
       contexts: BADGE_CONTEXT_MENU_CONTEXTS,
+      id: CHECK_USAGE_NOW_CONTEXT_MENU_ID,
+      title: PRODUCT_METADATA.CHECK_USAGE_NOW_MENU_TITLE,
+    });
+    await createContextMenu({
+      contexts: BADGE_CONTEXT_MENU_CONTEXTS,
       id: BADGE_CONTEXT_MENU_SEPARATOR_ID,
       type: "separator",
     });
@@ -110,6 +116,8 @@
   root.PacePetsBackgroundContextMenu = Object.freeze({
     badgeWindowKeyFromContextMenuId,
     createBadgeContextMenus,
+    isCheckUsageNowMenuItem: (menuItemId) =>
+      menuItemId === CHECK_USAGE_NOW_CONTEXT_MENU_ID,
     isOpenDashboardMenuItem: (menuItemId) =>
       menuItemId === OPEN_DASHBOARD_CONTEXT_MENU_ID,
     syncBadgeContextMenuSelection,

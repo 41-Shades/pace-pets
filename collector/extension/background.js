@@ -281,6 +281,13 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
     return;
   }
 
+  if (PacePetsBackgroundContextMenu.isCheckUsageNowMenuItem(info.menuItemId)) {
+    runManualRefresh().catch((error) => {
+      console.warn("Codex usage context-menu refresh failed:", error);
+    });
+    return;
+  }
+
   const windowKey =
     PacePetsBackgroundContextMenu.badgeWindowKeyFromContextMenuId(
       info.menuItemId,

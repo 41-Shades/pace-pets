@@ -9,7 +9,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/manifest.json` declares the extension, the background service worker, toolbar action, storage permission, alarms permission, context-menu permission, and current upstream host permission.
 - `collector/extension/runtime-manifest.js` owns the shared runtime script prefix, background-only, dashboard-only, and dev-controls-only script tails, and dependency-edge assertions, deriving target script orders and target load-order checks from one script-loading contract.
 - `collector/extension/dashboard-loader.js` loads the dashboard runtime scripts from `runtime-manifest.js` in dependency order and continues past optional dashboard asset failures declared by the runtime manifest.
-- `collector/extension/product-metadata.js` owns shared runtime product labels, dashboard path, dashboard description, context-menu title, and badge titles.
+- `collector/extension/product-metadata.js` owns shared runtime product labels, dashboard path, dashboard description, context-menu titles, and badge titles.
 - `collector/extension/integration-config.js` owns the current ChatGPT origin, usage endpoint, auth-session endpoints, required host permission, and source markers shared by runtime code and static checks.
 - `collector/extension/usage-integration-adapters.js` owns upstream usage adapter metadata, including ChatGPT WHAM raw window paths, path-matched candidate patterns, and supported field aliases.
 - `collector/extension/usage-providers.js` owns the usage provider registry that ties the current ChatGPT WHAM provider to its host permission, auth-session probes, usage endpoint, parser adapter, source markers, request headers, and retry/auth-failure status policy.
@@ -23,8 +23,8 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/background-usage-source.js` owns the credentials-included
   auth-session probes and WHAM usage fetch for the current provider.
 - `collector/extension/background-context-menu.js` owns the toolbar action
-  context-menu items for opening the dashboard and selecting the stored badge
-  usage window.
+  context-menu items for opening the dashboard, requesting a cooldown-limited
+  usage check, and selecting the stored badge usage window.
 - `collector/extension/usage-windows.js` owns supported usage-window keys, durations, labels, the badge preference storage key, and window-key helpers shared by collection, storage, badge, and dashboard code.
 - `collector/extension/usage-values.js` owns shared primitive usage value normalization, date parsing, reset-window time math, and stored-window normalization.
 - `collector/extension/persisted-text.js` owns safe persisted text normalization, length caps, and secret redaction shared by history and refresh-status storage boundaries.
@@ -56,7 +56,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 8. Between usage polls, `background.js` refreshes only the toolbar badge presentation from stored history once per minute so time-derived pace ratios stay current without calling the usage endpoint. It skips that presentation refresh while a network refresh is in flight or after a same-worker refresh failure so the failure badge remains visible.
 9. `dashboard.js` renders summaries, reset timing, and pace state from extension-local storage plus the page-local dashboard window selection, delegates chart rendering to the dashboard chart helper, then reuses cached state for minute-by-minute countdown and pace updates until storage changes or the page window selection changes.
 
-The dashboard can also request a user-initiated refresh when the visible status is actionable, such as a missing ChatGPT sign-in, failed check, stale refresh, or first-run waiting state, and near the end of a supported reset window. Manual requests use the shared `refresh-control.js` message/response contract, then the same guarded background refresh path as the alarm, and are cooldown-limited in the dashboard and background worker.
+The dashboard can also request a user-initiated refresh when the visible status is actionable, such as a missing ChatGPT sign-in, failed check, stale refresh, or first-run waiting state, and near the end of a supported reset window. The toolbar action context menu exposes the same background refresh as an always-available `Check usage now` action outside the dashboard surface. Manual requests use the shared `refresh-control.js` message/response contract where a caller needs a response, then the same guarded background refresh path as the alarm, and are cooldown-limited in the dashboard and background worker.
 
 ## Developer Controls
 
