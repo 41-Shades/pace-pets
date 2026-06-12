@@ -6,6 +6,7 @@
   const DASHBOARD_DESCRIPTION = "Codex usage, pace, and reset timing.";
   const ACTION_DEFAULT_TITLE = NAME;
   const OPEN_DASHBOARD_MENU_TITLE = `Open ${NAME}`;
+  const CHECK_USAGE_NOW_MENU_TITLE = "Check usage now";
   const REFRESH_FAILED_TITLE = `${NAME} - refresh failed`;
 
   function badgeTitle({ badgeText, label } = {}) {
@@ -31,6 +32,7 @@
 
   root.CodexProductMetadata = Object.freeze({
     ACTION_DEFAULT_TITLE,
+    CHECK_USAGE_NOW_MENU_TITLE,
     DASHBOARD_DESCRIPTION,
     DASHBOARD_PATH,
     NAME,

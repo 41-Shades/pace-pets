@@ -26,7 +26,7 @@
   const MANUAL_REFRESH_DEFAULT_LABEL = "Check ChatGPT usage now";
   const MANUAL_REFRESH_COOLDOWN_PREFIX = "Check again in";
   const MANUAL_REFRESH_FAILURE_VISIBLE_MS = 1800;
-  const LAST_COLLECTED_UPDATE_FEEDBACK_MS = 1400;
+  const LAST_COLLECTED_UPDATE_FEEDBACK_MS = 2400;
   const COLLECTION_STATUS_STALE_AFTER_MS = 15 * 60 * 1000;
 
   function collectionStatusLabelText(text) {
