@@ -187,18 +187,16 @@
     return { height, width };
   }
 
-  function groundY(canvas, groundElement, dimensions) {
+  function landingY(canvas, groundElement, dimensions, waterLevel) {
     const canvasRect = canvas.getBoundingClientRect();
     if (!groundElement || canvasRect.height <= 0) {
       return dimensions.height;
     }
     const groundRect = groundElement.getBoundingClientRect();
     const pixelRatio = dimensions.height / canvasRect.height;
-    return clamp(
-      (groundRect.bottom - canvasRect.top) * pixelRatio,
-      0,
-      dimensions.height,
-    );
+    const bottom = (groundRect.bottom - canvasRect.top) * pixelRatio;
+    const waterDepth = groundRect.height * pixelRatio * clamp(waterLevel);
+    return clamp(bottom - waterDepth, 0, dimensions.height);
   }
 
   function drawDrop(context, drop) {
@@ -322,12 +320,13 @@
         previousProfile,
         previousPulseLevel,
         pulseLevel,
+        waterLevel = 0,
       }) {
         const dimensions = resizeCanvas(canvas);
         const frame = {
           amount,
           dimensions,
-          groundY: groundY(canvas, groundElement, dimensions),
+          groundY: landingY(canvas, groundElement, dimensions, waterLevel),
           iconRenderer,
           phase,
           profile,

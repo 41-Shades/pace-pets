@@ -272,6 +272,13 @@ The status card also renders a clipped canvas water layer behind the content so
 the falling drops land into a slowly rising shimmer pool. The pool starts empty
 when Push harder is entered or the dashboard page is loaded, rises toward its cap,
 and does not loop back to empty while Push harder remains the active pace state.
+As the pool fills, `collector/extension/dashboard-push-tank-renderer.js` adds a
+small staged fish-tank scene using selected PNGs from
+`collector/extension/themes/default/ocean-icons/`: a few swimmers arrive first,
+then restrained bottom decor and crawlers appear at higher fill levels. Near max
+fill, a shark or surface-height whale can pass through without tying the scene to
+pulse intensity. See `docs/reference/push-harder-fish-tank.md` for the tank's
+asset, staging, and orientation rules.
 The dashboard's 60-second time-sensitive refresh reapplies the pace summary, so
 the active Push harder effect is preserved across same-state refreshes to keep
 the pool from resetting. Leaving Push harder or reloading the dashboard tears
@@ -299,16 +306,22 @@ The `singularity` state runs a dashboard-only transition when the dashboard
 enters that state from any other state. The transition fades from the prior
 state into the shared space backdrop, holds briefly on blank space, fades the
 dashboard chrome back in, then starts the WebGL black-hole approach scene. The
-black-hole canvas stays behind the dashboard chrome. Around the glint suction
-timing, a chrome-collapse phase splits real main-panel containers and
-state-rail items, pulls them along slower circular inward paths, and gradually
-stretches them toward the black hole before shrinking them into the horizon.
+black-hole canvas stays behind the dashboard chrome. Singularity uses the
+shared full-page space backdrop without Perfect Zero's status-icon featured
+planet. As the approach nears collapse, the shader increases disk turbulence,
+photon-ring flares, lensing shock ripples, jet flicker, and infalling-glint
+acceleration. Around the glint suction timing, a chrome-collapse phase splits
+real main-panel containers and state-rail items, pulls them along circular
+inward paths, and stretches them toward the black hole. Owned inner fragments
+then tear loose on an overlapping delay while the parent pieces continue
+falling, and all pieces shrink into the horizon without an explosive breakup.
 Same-state refreshes do not replay the transition. If Singularity is selected
-from the separate developer controls
-while the dashboard tab is hidden, the transition is queued and plays when the
-dashboard becomes visible. Reduced-motion users skip the animated sequence. The
-renderer removes the temporary black-hole canvas and restores distorted chrome
-when the state changes. See
+from the separate developer controls while the dashboard tab is hidden, the
+transition is queued and plays when the dashboard becomes visible.
+Reduced-motion users skip the animated sequence. Successful collapse
+intentionally holds in the unfinished post-collapse state; the renderer removes
+the temporary black-hole canvas and restores distorted chrome only when
+Singularity exits or the active transition is cancelled. See
 `docs/reference/singularity-transition.md` for the full architecture and
 lifecycle contract.
 

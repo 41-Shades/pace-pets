@@ -1,9 +1,17 @@
 ((root) => {
   "use strict";
 
+  const PushTank = root.PacePetsDashboardPushTank;
+  if (!PushTank) {
+    throw new Error(
+      "Pace push tank renderer must load before dashboard-push-water-renderer.js.",
+    );
+  }
+
   const BASE_LEVEL = 0;
   const MAX_LEVEL = 0.85;
   const RISE_RATE = 0.005;
+  const WAVE_STEP = 8;
 
   function clamp(value, min = 0, max = 1) {
     return Math.max(min, Math.min(max, value));
@@ -32,10 +40,11 @@
 
   function createWaterPath(context, frame) {
     context.beginPath();
-    context.moveTo(0, frame.top);
-    for (let x = 0; x <= frame.width; x += 8) {
+    context.moveTo(0, waveY({ ...frame, x: 0 }));
+    for (let x = WAVE_STEP; x < frame.width; x += WAVE_STEP) {
       context.lineTo(x, waveY({ ...frame, x }));
     }
+    context.lineTo(frame.width, waveY({ ...frame, x: frame.width }));
     context.lineTo(frame.width, frame.height);
     context.lineTo(0, frame.height);
     context.closePath();
@@ -43,16 +52,17 @@
 
   function drawWaveLine(context, frame) {
     context.beginPath();
-    context.moveTo(0, frame.top);
-    for (let x = 0; x <= frame.width; x += 8) {
+    context.moveTo(0, waveY({ ...frame, x: 0 }));
+    for (let x = WAVE_STEP; x < frame.width; x += WAVE_STEP) {
       context.lineTo(x, waveY({ ...frame, x }));
     }
+    context.lineTo(frame.width, waveY({ ...frame, x: frame.width }));
     context.strokeStyle = `rgb(226 246 255 / ${0.34 + frame.ripple * 0.2})`;
     context.lineWidth = Math.max(1, frame.height * 0.012);
     context.stroke();
   }
 
-  function drawWater(context, frame) {
+  function drawWaterFill(context, frame) {
     const gradient = context.createLinearGradient(
       0,
       frame.top,
@@ -64,7 +74,6 @@
     createWaterPath(context, frame);
     context.fillStyle = gradient;
     context.fill();
-    drawWaveLine(context, frame);
   }
 
   function createRenderer(canvas) {
@@ -77,7 +86,11 @@
       level: BASE_LEVEL,
       ripple: 0,
     };
+    const tankRenderer = PushTank.createRenderer();
     return {
+      currentLevel({ maxFill = false } = {}) {
+        return maxFill ? MAX_LEVEL : state.level;
+      },
       render(sweatLoad, timestamp, { maxFill = false } = {}) {
         const dimensions = resizeCanvas(canvas);
         const previousTimestamp = state.lastTimestamp ?? timestamp;
@@ -100,14 +113,25 @@
           return;
         }
         const waterHeight = dimensions.height * state.level;
-        drawWater(context, {
+        const frame = {
           amplitude: 1.1 + state.ripple * 3.2,
+          deltaSeconds,
           height: dimensions.height,
+          maxFill,
           phase: timestamp / 470,
           ripple: state.ripple,
+          stage: state.level / MAX_LEVEL,
           top: dimensions.height - waterHeight,
           width: dimensions.width,
-        });
+        };
+        drawWaterFill(context, frame);
+        context.save();
+        createWaterPath(context, frame);
+        context.clip();
+        tankRenderer.renderSubmerged(context, frame, timestamp);
+        context.restore();
+        tankRenderer.renderSurface(context, frame, timestamp);
+        drawWaveLine(context, frame);
       },
     };
   }

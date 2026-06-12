@@ -12,6 +12,7 @@
 body.is-singularity-space-hidden,
 body.is-singularity-entry-exit,
 body.is-singularity-space-reveal,
+body.is-singularity-chrome-jitter,
 body.is-singularity-chrome-pressure,
 body.is-singularity-chrome-collapse {
   overflow: hidden;
@@ -20,6 +21,7 @@ body.is-singularity-chrome-collapse {
 body.is-singularity-entry-exit .content-grid,
 body.is-singularity-space-hidden .content-grid,
 body.is-singularity-space-reveal .content-grid,
+body.is-singularity-chrome-jitter .content-grid,
 body.is-singularity-chrome-pressure .content-grid,
 body.is-singularity-chrome-collapse .content-grid {
   pointer-events: none;
@@ -57,6 +59,13 @@ body.is-singularity-space-reveal .content-grid {
   transition: opacity 6s ease-in-out;
 }
 
+body.is-singularity-chrome-jitter .content-grid {
+  animation: singularity-chrome-jitter
+    var(--singularity-chrome-jitter-duration, 5472ms) linear both;
+  transform-origin: 54% 49%;
+  will-change: filter, transform;
+}
+
 body.is-singularity-chrome-pressure .content-grid {
   animation: singularity-chrome-pressure 850ms ease-in-out both;
   transform-origin: 54% 49%;
@@ -64,6 +73,88 @@ body.is-singularity-chrome-pressure .content-grid {
 
 body.is-singularity-chrome-collapse .content-grid {
   transform-style: preserve-3d;
+}
+
+body.is-singularity-chrome-collapse .usage-panel,
+body.is-singularity-chrome-collapse .state-rail {
+  visibility: hidden;
+}
+
+body.is-singularity-chrome-collapse .is-singularity-collapse-piece {
+  visibility: visible;
+}
+
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation: none;
+  scroll-behavior: auto;
+  transition: none;
+}
+
+body.is-singularity-chrome-collapse .content-grid * {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+body.is-singularity-chrome-collapse .usage-panel,
+body.is-singularity-chrome-collapse .metrics {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+@keyframes singularity-chrome-jitter {
+  0% {
+    filter: brightness(1);
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  12% {
+    filter: brightness(1.01);
+    transform: translate3d(0.3px, -0.2px, 0) rotate(0.015deg);
+  }
+
+  24% {
+    filter: brightness(1.015);
+    transform: translate3d(-0.7px, 0.3px, 0) rotate(-0.025deg);
+  }
+
+  36% {
+    filter: brightness(1.025);
+    transform: translate3d(1.1px, 0.2px, 0) rotate(0.04deg);
+  }
+
+  48% {
+    filter: brightness(1.035);
+    transform: translate3d(-1.4px, -0.6px, 0) rotate(-0.055deg);
+  }
+
+  60% {
+    filter: brightness(1.06);
+    transform: translate3d(1.8px, -0.8px, 0) rotate(0.07deg);
+  }
+
+  72% {
+    filter: brightness(1.085);
+    transform: translate3d(-2.4px, 1px, 0) rotate(-0.09deg);
+  }
+
+  84% {
+    filter: brightness(1.12);
+    transform: translate3d(3px, 1.3px, 0) rotate(0.12deg);
+  }
+
+  94% {
+    filter: brightness(1.15);
+    transform: translate3d(-3.7px, -1.5px, 0) rotate(-0.15deg);
+  }
+
+  100% {
+    filter: brightness(1.17);
+    transform: translate3d(4.4px, 1.8px, 0) rotate(0.18deg);
+  }
 }
 
 @keyframes singularity-chrome-pressure {
@@ -104,12 +195,4 @@ html[data-motion="off"] body.is-singularity-chrome-pressure .content-grid {
 
 html[data-motion="off"] body.is-singularity-chrome-collapse .content-grid {
   transform-style: flat;
-}
-
-html[data-motion="off"] *,
-html[data-motion="off"] *::before,
-html[data-motion="off"] *::after {
-  animation: none;
-  scroll-behavior: auto;
-  transition: none;
 }

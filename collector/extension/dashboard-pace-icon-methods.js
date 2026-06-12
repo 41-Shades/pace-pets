@@ -141,11 +141,14 @@
     controller,
     { level, playSplatFall, previousState, state },
   ) {
+    const isPerfectZeroState = state.key === DATA.PACE_STATES.perfectZero.key;
+    const usesSpacePageBackground =
+      isPerfectZeroState || state.key === DATA.PACE_STATES.singularity.key;
     const pageBackgroundActive =
       motionPreferenceEnabled(controller) &&
       (controller.setPerfectZeroPageBackgroundActive?.(
-        state.key === DATA.PACE_STATES.perfectZero.key ||
-          state.key === DATA.PACE_STATES.singularity.key,
+        usesSpacePageBackground,
+        { featuredIconPlanet: isPerfectZeroState },
       ) ??
         false);
     const preservePaceIcon = shouldPreservePaceIcon(
