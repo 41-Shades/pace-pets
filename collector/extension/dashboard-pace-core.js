@@ -29,6 +29,7 @@
       this.singularityTransitionPending = false;
       this.singularityTransitionRunId = 0;
       this.singularityTransitionScene = null;
+      this.splatMaxBouncePreviewTimer = null;
       this.syncMonkEscapeEnteredAtMs = null;
       this.syncMonkEscapeLaunchedForEnteredAtMs = null;
       this.syncMonkEscapeLaunchTimer = null;

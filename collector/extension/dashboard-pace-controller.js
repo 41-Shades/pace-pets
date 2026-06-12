@@ -11,6 +11,7 @@
 
   function createController(options) {
     const controller = new Controller(options);
+    controller.bindSplatBouncePreviewRequests?.();
     controller.bindSyncMonkEscapePreviewRequests?.();
     return Object.freeze({
       hasForcedPaceStateOverride:

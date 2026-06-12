@@ -119,6 +119,10 @@ replay the animation. Leaving forced Splat active in dev controls also does not
 replay on interval refreshes, but turning Splat on again or reloading the
 dashboard while Splat is active can replay it once. At the impact moment, the
 status card briefly teeters and the ratio stat pops upward before both settle.
+Each Splat entry randomizes the ratio pop height, drift, rebound, duration, and
+card teeter profile, with a bias toward occasional higher bounces. Dev controls
+can request a deterministic max-bounce preview: `560px` peak height, `1500ms`
+duration, `1.20` peak scale, and the strongest card teeter profile.
 
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects.

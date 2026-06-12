@@ -9,6 +9,7 @@ const INITIAL_REFRESH_DELAY_MINUTES = 1;
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
 const DEVELOPER_OPTIONS_STORAGE_KEY = PacePetsDeveloperOptions.STORAGE_KEY;
+const HISTORY_STORAGE_KEY = CodexUsageHistory.HISTORY_STORAGE_KEY;
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
@@ -316,14 +317,18 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     changes,
     BADGE_WINDOW_STORAGE_KEY,
   );
+  const historyChanged = CodexExtensionStorage.hasChange(
+    changes,
+    HISTORY_STORAGE_KEY,
+  );
   const developerOptionsChanged =
     PacePetsDeveloperOptions.hasDeveloperOptionsChange(changes);
-  if (!badgeWindowChanged && !developerOptionsChanged) {
+  if (!badgeWindowChanged && !historyChanged && !developerOptionsChanged) {
     return;
   }
 
   updatePaceBadgeFromHistory({
-    clearWhenEmpty: developerOptionsChanged,
+    clearWhenEmpty: historyChanged || developerOptionsChanged,
   }).catch((error) => {
     console.warn("Codex usage badge update failed:", error);
   });
