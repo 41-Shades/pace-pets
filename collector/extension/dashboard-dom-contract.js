@@ -21,6 +21,7 @@
     lastCollected: "#last-collected",
     lastCollectedValue: "#last-collected-value",
     manualRefreshButton: "#manual-refresh-button",
+    motionToggle: "#motion-toggle",
     paceAltRatio: "#pace-alt-ratio",
     paceCard: "#pace-card",
     paceCopy: "#pace-copy",

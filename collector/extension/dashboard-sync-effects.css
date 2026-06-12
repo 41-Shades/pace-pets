@@ -81,14 +81,20 @@ body.has-sync-sunburst-page-background .chart-frame.empty {
   );
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sync-monk-escape {
-    display: none;
-  }
+html[data-motion="off"] .sync-monk-escape {
+  display: none;
+}
 
-  body.has-sync-monk-escape .pace-card.pace-sync .pace-icon > img,
-  body.has-sync-monk-escape .pace-card.pace-sync .pace-icon > svg {
-    opacity: 1;
-    transition: none;
-  }
+html[data-motion="off"]
+  body.has-sync-monk-escape
+  .pace-card.pace-sync
+  .pace-icon
+  > img,
+html[data-motion="off"]
+  body.has-sync-monk-escape
+  .pace-card.pace-sync
+  .pace-icon
+  > svg {
+  opacity: 1;
+  transition: none;
 }

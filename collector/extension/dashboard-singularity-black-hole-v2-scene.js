@@ -145,7 +145,7 @@
   }
 
   class BlackHoleScene {
-    constructor({ reducedMotion = false } = {}) {
+    constructor({ motionDisabled = false } = {}) {
       this.canvas = null;
       this.contextLost = false;
       this.done = null;
@@ -153,7 +153,7 @@
       this.gl = null;
       this.isApproachComplete = false;
       this.isFinished = false;
-      this.reducedMotion = reducedMotion;
+      this.motionDisabled = motionDisabled;
       this.resolveDone = null;
       this.resources = null;
       this.size = { height: 1, pixelHeight: 1, pixelWidth: 1, width: 1 };
@@ -169,7 +169,7 @@
       this.done = new Promise((resolve) => {
         this.resolveDone = resolve;
       });
-      if (this.reducedMotion) {
+      if (this.motionDisabled) {
         this.finish(true);
         return this.done;
       }

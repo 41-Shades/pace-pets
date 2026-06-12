@@ -4,10 +4,17 @@
   const DATA = globalThis.PacePetsDashboardPaceData;
   const Controller = globalThis.PacePetsDashboardPaceController;
   const CART_SPILL_DATA = globalThis.PacePetsDashboardCartSpillData;
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const PILE_RENDERER = globalThis.PacePetsDashboardCartSpillPileRenderer;
-  if (!DATA || !Controller || !CART_SPILL_DATA || !PILE_RENDERER) {
+  if (
+    !DATA ||
+    !Controller ||
+    !CART_SPILL_DATA ||
+    !DASHBOARD_PREFERENCES ||
+    !PILE_RENDERER
+  ) {
     throw new Error(
-      "Pace data, core, and cart spill renderers must load before dashboard-cart-spill-methods.js.",
+      "Pace data, core, preferences, and cart spill renderers must load before dashboard-cart-spill-methods.js.",
     );
   }
 
@@ -18,14 +25,13 @@
   const PILE_STACK_REUSE_CHANCE_PERCENT = 28;
   const PILE_STACK_REUSE_RADIUS_SLOTS = 7;
   const TOSS_LANDING_CONTROL_LIFT_PX = 36;
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
 
-  function prefersReducedMotion() {
-    return window.matchMedia?.(REDUCED_MOTION_QUERY).matches === true;
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   function randomIcon(controller) {
@@ -284,7 +290,7 @@
     },
 
     launchSlowCartSpill(container, state, { isExtreme = false } = {}) {
-      if (prefersReducedMotion()) {
+      if (!motionPreferenceEnabled()) {
         return;
       }
 

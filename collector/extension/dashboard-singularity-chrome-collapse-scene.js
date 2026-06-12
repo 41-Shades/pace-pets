@@ -13,12 +13,12 @@
   const BODY_COLLAPSE_CLASS = "is-singularity-chrome-collapse";
 
   class ChromeCollapseScene {
-    constructor({ reducedMotion = false } = {}) {
+    constructor({ motionDisabled = false } = {}) {
       this.animations = [];
       this.done = null;
       this.splitContainers = [];
       this.isDisposed = false;
-      this.reducedMotion = reducedMotion;
+      this.motionDisabled = motionDisabled;
       this.resolveDone = null;
     }
 
@@ -26,7 +26,7 @@
       this.done = new Promise((resolve) => {
         this.resolveDone = resolve;
       });
-      if (this.reducedMotion) {
+      if (this.motionDisabled) {
         this.resolve(true);
         return this.done;
       }

@@ -25,6 +25,7 @@
       renderStateRail: controller.renderStateRail.bind(controller),
       setPaceSummary: controller.setPaceSummary.bind(controller),
       setPercent: controller.setPercent.bind(controller),
+      stopMotionEffects: controller.stopMotionEffects.bind(controller),
     });
   }
 

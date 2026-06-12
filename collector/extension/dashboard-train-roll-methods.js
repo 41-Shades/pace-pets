@@ -2,9 +2,10 @@
   "use strict";
 
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!Controller) {
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  if (!Controller || !DASHBOARD_PREFERENCES) {
     throw new Error(
-      "Pace core must load before dashboard-train-roll-methods.js.",
+      "Pace core and preferences must load before dashboard-train-roll-methods.js.",
     );
   }
   const TRAIN_SMOKE = globalThis.PacePetsDashboardTrainSmoke;
@@ -14,33 +15,19 @@
     );
   }
 
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-
   function spanWithClass(className) {
     const element = document.createElement("span");
     element.className = className;
     return element;
   }
 
-  function addMediaChangeListener(mediaQuery, listener) {
-    if (!mediaQuery) {
-      return () => {};
-    }
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", listener);
-      return () => mediaQuery.removeEventListener("change", listener);
-    }
-    mediaQuery.addListener?.(listener);
-    return () => mediaQuery.removeListener?.(listener);
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   Object.assign(Controller.prototype, {
     clearTrainRollEffectClasses(container) {
       container.classList.remove("has-pace-icon-effect-train-roll");
-    },
-
-    trainSmokeReducedMotionMedia() {
-      return window.matchMedia?.(REDUCED_MOTION_QUERY) || null;
     },
 
     nextTrainSmokeEmissionMs(timeMs) {
@@ -169,8 +156,7 @@
         nextEmissionMs: 0,
         puffs: [],
       };
-      const reducedMotionMedia = this.trainSmokeReducedMotionMedia();
-      if (reducedMotionMedia?.matches) {
+      if (!motionPreferenceEnabled()) {
         return;
       }
 
@@ -222,8 +208,8 @@
         this.renderTrainSmokeFrame(state, timeMs),
       );
       state.cleanups.push(
-        addMediaChangeListener(reducedMotionMedia, (event) => {
-          if (event.matches) {
+        DASHBOARD_PREFERENCES.addMotionPreferenceChangeListener(() => {
+          if (!motionPreferenceEnabled()) {
             const cleanup = this.paceIconEffectCleanups.get(container);
             cleanup?.();
             this.paceIconEffectCleanups.delete(container);
@@ -254,7 +240,7 @@
       );
 
       container.classList.add("has-pace-icon-effect-train-roll");
-      if (this.trainSmokeReducedMotionMedia()?.matches) {
+      if (!motionPreferenceEnabled()) {
         return;
       }
 

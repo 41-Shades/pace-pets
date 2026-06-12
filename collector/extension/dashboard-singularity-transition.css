@@ -92,24 +92,24 @@ body.is-singularity-chrome-collapse .content-grid {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  body.is-singularity-space-reveal .content-grid {
-    transition: none;
-  }
+html[data-motion="off"] body.is-singularity-space-reveal .content-grid,
+html[data-motion="off"] body.is-singularity-entry-exit .content-grid,
+html[data-motion="off"] body.is-singularity-space-enter::before {
+  transition: none;
+}
 
-  body.is-singularity-entry-exit .content-grid {
-    transition: none;
-  }
+html[data-motion="off"] body.is-singularity-chrome-pressure .content-grid {
+  animation: none;
+}
 
-  body.is-singularity-space-enter::before {
-    transition: none;
-  }
+html[data-motion="off"] body.is-singularity-chrome-collapse .content-grid {
+  transform-style: flat;
+}
 
-  body.is-singularity-chrome-pressure .content-grid {
-    animation: none;
-  }
-
-  body.is-singularity-chrome-collapse .content-grid {
-    transform-style: flat;
-  }
+html[data-motion="off"] *,
+html[data-motion="off"] *::before,
+html[data-motion="off"] *::after {
+  animation: none;
+  scroll-behavior: auto;
+  transition: none;
 }

@@ -30,7 +30,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/persisted-text.js` owns safe persisted text normalization, length caps, and secret redaction shared by history and refresh-status storage boundaries.
 - `collector/extension/refresh-status.js` owns refresh-status construction, normalization, storage key, and safe observable failure messages.
 - `collector/extension/refresh-control.js` owns the dashboard-to-background manual refresh message contract, response builders, cooldown math, and failure predicates.
-- `collector/extension/dashboard-preferences.js` owns dashboard-local preference keys, scopes, supported values, and read/write helpers for tab-scoped usage-window selection and extension-page theme selection.
+- `collector/extension/dashboard-preferences.js` owns dashboard-local preference keys, scopes, supported values, and read/write helpers for tab-scoped usage-window selection, extension-page theme selection, and extension-page motion selection.
 - `collector/extension/preview-control.js` owns synthetic pace-state ratios and preview timing used by local developer state overrides.
 - `collector/extension/storage-adapter.js` owns Promise-based `chrome.storage.local` reads/writes, shared Chrome `lastError` callback wrapping, and local-storage change helpers shared by history, background, and dashboard code.
 - `collector/extension/usage.js` owns raw-to-safe usage normalization through the default WHAM adapter into supported usage windows.

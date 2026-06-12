@@ -3,16 +3,16 @@
 
   const DATA = globalThis.PacePetsDashboardPaceData;
   const Controller = globalThis.PacePetsDashboardPaceController;
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const DEBRIS_DATA = globalThis.PacePetsDashboardBrakeDebrisData;
-  if (!DATA || !Controller || !DEBRIS_DATA) {
+  if (!DATA || !Controller || !DASHBOARD_PREFERENCES || !DEBRIS_DATA) {
     throw new Error(
-      "Pace data, core, and brake debris data must load before dashboard-brake-debris-methods.js.",
+      "Pace data, core, preferences, and brake debris data must load before dashboard-brake-debris-methods.js.",
     );
   }
 
   const { KIND_KEYS_BY_RANGE, SHAPES } = DEBRIS_DATA;
   const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
   function setSvgAttributes(element, attrs) {
     for (const [name, value] of Object.entries(attrs)) {
@@ -20,8 +20,8 @@
     }
   }
 
-  function prefersReducedMotion() {
-    return window.matchMedia?.(REDUCED_MOTION_QUERY).matches === true;
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   function createDebrisSvg(kindKey, variantIndex) {
@@ -194,7 +194,7 @@
     },
 
     launchBrakeDebrisBurst(container, burst, state) {
-      if (burst.rangeKey === "normal" || prefersReducedMotion()) {
+      if (burst.rangeKey === "normal" || !motionPreferenceEnabled()) {
         return;
       }
 

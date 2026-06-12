@@ -25,6 +25,13 @@
           this.elements.themeToggle,
         );
       });
+      this.elements.motionToggle.addEventListener("click", (event) => {
+        this.shellControls.toggleMotion();
+        this.appTooltips.releasePointerClickFocus(
+          event,
+          this.elements.motionToggle,
+        );
+      });
       this.elements.manualRefreshButton.addEventListener("click", (event) => {
         this.dashboardStatus.runManualRefresh().catch((error) => {
           console.warn("Codex usage manual refresh failed:", error);

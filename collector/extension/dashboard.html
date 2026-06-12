@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="./dashboard.css" />
     <link rel="stylesheet" href="./dashboard-rail.css" />
     <link rel="stylesheet" href="./dashboard-header.css" />
+    <link rel="stylesheet" href="./dashboard-motion-toggle.css" />
     <link rel="stylesheet" href="./dashboard-overlays.css" />
     <link rel="stylesheet" href="./dashboard-animations.css" />
     <link rel="stylesheet" href="./dashboard-brake-hard-animations.css" />
@@ -56,6 +57,15 @@
             <div class="panel-actions">
               <div class="panel-controls">
                 <button
+                  class="motion-toggle"
+                  id="motion-toggle"
+                  type="button"
+                  aria-label="Turn all motion off"
+                  aria-pressed="true"
+                >
+                  <span class="motion-toggle-icon" aria-hidden="true"></span>
+                </button>
+                <button
                   class="theme-toggle"
                   id="theme-toggle"
                   type="button"
@@ -88,16 +98,7 @@
                   aria-expanded="false"
                   data-tooltip="About Pace Pets"
                 >
-                  <svg
-                    class="info-toggle-icon"
-                    viewBox="3 3 18 18"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <circle class="info-toggle-ring" cx="12" cy="12" r="8" />
-                    <path class="info-toggle-mark" d="M12 11.6v3.6"></path>
-                    <path class="info-toggle-mark" d="M12 8h.01"></path>
-                  </svg>
+                  <span class="info-toggle-icon" aria-hidden="true"></span>
                 </button>
               </div>
               <div class="collection-meta">

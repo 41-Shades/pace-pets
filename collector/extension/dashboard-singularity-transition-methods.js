@@ -2,23 +2,22 @@
   "use strict";
 
   const DATA = globalThis.PacePetsDashboardPaceData;
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const TRANSITION_RENDERER =
     globalThis.PacePetsDashboardSingularityTransitionRenderer;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !TRANSITION_RENDERER || !Controller) {
+  if (!DATA || !DASHBOARD_PREFERENCES || !TRANSITION_RENDERER || !Controller) {
     throw new Error(
-      "Pace and Singularity transition helpers must load before transition methods.",
+      "Pace, preferences, and Singularity transition helpers must load before transition methods.",
     );
   }
-
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
   function isSingularityState(state) {
     return state?.key === DATA.PACE_STATES.singularity.key;
   }
 
-  function prefersReducedMotion() {
-    return window.matchMedia?.(REDUCED_MOTION_QUERY).matches === true;
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   Object.assign(Controller.prototype, {
@@ -76,9 +75,9 @@
       this.singularityTransitionInFlight = true;
       this.singularityTransitionPending = false;
 
-      const reducedMotion = prefersReducedMotion();
+      const motionDisabled = !motionPreferenceEnabled();
       const scene = TRANSITION_RENDERER.create({
-        reducedMotion,
+        motionDisabled,
       });
       this.singularityTransitionScene = scene;
       await scene.play();

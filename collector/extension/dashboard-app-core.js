@@ -57,6 +57,7 @@
         appTooltips: this.appTooltips,
         earlyReset: this.earlyReset,
         elements: this.elements,
+        onMotionPreferenceChanged: () => this.handleMotionPreferenceChanged(),
         refreshThemeSensitiveViews: () => this.refreshThemeSensitiveViews(),
       });
       this.createStatusAndPaceControllers();
@@ -83,6 +84,7 @@
         getCurrentSprintIntensityPreview: () =>
           this.currentSprintIntensityPreview,
         getSelectedWindowKey: () => this.selectedWindowKey,
+        motionPreferenceEnabled: () => this.motionPreferenceEnabled(),
         onPaceStateChanged: (details) => this.handlePaceStateChanged?.(details),
         renderHistory: (history, refreshStatus, options) =>
           this.renderHistory(history, refreshStatus, options),
@@ -125,6 +127,10 @@
           result.error.message,
         );
       }
+    }
+
+    motionPreferenceEnabled() {
+      return this.DASHBOARD_PREFERENCES.motionPreferenceEnabled();
     }
 
     async readBadgeWindowKey() {
@@ -239,6 +245,17 @@
         this.renderHistoryLoadFailure(error),
       );
       this.paceView.renderStateRail();
+    }
+
+    handleMotionPreferenceChanged() {
+      this.appTooltips.hide();
+      this.paceView.stopMotionEffects?.();
+      this.clearResetExhaustedSplatTimers?.();
+      this.currentResetExhaustedSplatActive = false;
+      this.renderResetExhaustedPreview();
+      this.refreshDashboardTimeSensitiveViews().catch((error) =>
+        this.renderHistoryLoadFailure(error),
+      );
     }
 
     toggleUsageWindow() {

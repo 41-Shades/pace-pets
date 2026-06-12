@@ -57,14 +57,18 @@
       : currentState;
   }
 
-  function addMediaChangeListener(mediaQuery, listener) {
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", listener);
-      return () => mediaQuery.removeEventListener("change", listener);
-    }
+  function motionPreferenceEnabled() {
+    return (
+      root.PacePetsDashboardPreferences?.motionPreferenceEnabled?.() !== false
+    );
+  }
 
-    mediaQuery.addListener(listener);
-    return () => mediaQuery.removeListener(listener);
+  function addMotionPreferenceChangeListener(listener) {
+    return (
+      root.PacePetsDashboardPreferences?.addMotionPreferenceChangeListener?.(
+        listener,
+      ) || (() => {})
+    );
   }
 
   class PerfectZeroSceneController {
@@ -76,15 +80,13 @@
       this.elapsedMs = 0;
       this.isStopped = false;
       this.lastFrameAtMs = null;
-      this.reducedMotionMedia = root.matchMedia(DATA.REDUCED_MOTION_QUERY);
       this.scene = scene;
       this.sceneState = null;
       this.handleMotionPreferenceChange =
         this.handleMotionPreferenceChange.bind(this);
       this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
       this.renderFrame = this.renderFrame.bind(this);
-      this.removeMotionPreferenceListener = addMediaChangeListener(
-        this.reducedMotionMedia,
+      this.removeMotionPreferenceListener = addMotionPreferenceChangeListener(
         this.handleMotionPreferenceChange,
       );
       this.resizeObserver =
@@ -115,7 +117,7 @@
       if (
         this.isStopped ||
         this.animationFrameId !== null ||
-        this.reducedMotionMedia.matches ||
+        !motionPreferenceEnabled() ||
         root.document.hidden
       ) {
         return;

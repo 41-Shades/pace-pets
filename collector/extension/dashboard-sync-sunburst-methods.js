@@ -73,7 +73,7 @@
       origin,
       { enteredSync = false } = {},
     ) {
-      if (!active) {
+      if (!active || this.motionPreferenceEnabled?.() === false) {
         return this.deactivateSyncSunburstPageBackground();
       }
 

@@ -7,7 +7,6 @@
     fullBleed: FULL_BLEED_PROFILE_KEY,
     icon: DEFAULT_PROFILE_KEY,
   });
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const SCENE_DEFAULTS = Object.freeze({
     background: "#020617",
     cometDelayMaxMs: 18000,
@@ -309,7 +308,6 @@
     DEFAULT_PROFILE_KEY,
     PLANET_TYPES_SET,
     PROFILE_KEYS,
-    REDUCED_MOTION_QUERY,
     SCENE_DEFAULTS,
     SCENE_FRAME_DEFAULTS,
     SCENE_GRADIENT_DEFAULTS,

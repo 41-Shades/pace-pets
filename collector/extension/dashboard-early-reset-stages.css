@@ -232,77 +232,63 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .early-reset-popover {
-    transition: none;
-  }
+html[data-motion="off"] .early-reset-popover {
+  transition: none;
+}
 
-  .pace-icon.has-pace-icon-effect-brake-wobble img {
-    will-change: auto;
-  }
-
-  .pace-icon.has-pace-icon-effect-slow-wobble img {
-    will-change: auto;
-  }
-
-  .pace-icon.has-pace-icon-effect-sprint-smoke img {
-    will-change: auto;
-  }
-
-  .pace-icon.has-pace-icon-effect-sprint-smoke.is-sprint-speed-bumping {
-    will-change: auto;
-  }
-
-  .pace-icon.has-pace-icon-effect-train-roll {
-    will-change: auto;
-  }
-
-  .pace-icon.has-pace-icon-effect-speed-lines img {
-    will-change: auto;
-  }
-
-  .pace-card.pace-sync .pace-icon,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-brake-wobble img,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-slow-wobble img,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-sprint-smoke img,
+html[data-motion="off"]
   .pace-icon.has-pace-icon-effect-sprint-smoke.is-sprint-speed-bumping,
-  .pace-icon.is-perfect-zero-aperture::after,
-  .pace-icon.is-perfect-zero-aperture .perfect-zero-cameo,
-  .pace-icon.has-pace-icon-effect-train-roll,
-  .pace-icon.has-pace-icon-effect-train-roll::after,
-  .pace-icon.has-pace-icon-effect-speed-lines::after,
-  .pace-icon.has-pace-icon-effect-speed-lines img,
-  .pace-icon.has-pace-icon-effect-sprint-smoke img,
-  .pace-icon.has-pace-icon-effect-brake-wobble img,
-  .pace-icon.has-pace-icon-effect-slow-wobble img,
-  .pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling img,
-  .pace-icon.has-pace-icon-effect-brake-wobble.is-brake-wobbling img,
-  .pace-speed-line,
-  .pace-speed-tail-ghost,
-  .brake-debris-piece,
-  .brake-debris-svg,
-  .pace-smoke-puff,
-  .pace-train-cloud-puff,
-  .early-reset-popover[data-early-reset-stage="5"],
-  .early-reset-popover.is-popping,
-  .early-reset-popover.is-popping::before {
-    animation: none;
-  }
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-train-roll,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-speed-lines img,
+html[data-motion="off"] .pace-card.pace-sync .pace-icon {
+  will-change: auto;
+}
 
-  .brake-debris-layer,
-  .pace-icon-effect-speed-lines,
-  .pace-speed-tail-layer,
-  .pace-icon-effect-sprint-smoke {
-    display: none;
-  }
+html[data-motion="off"] .pace-card.pace-sync .pace-icon,
+html[data-motion="off"]
+  .pace-icon.has-pace-icon-effect-sprint-smoke.is-sprint-speed-bumping,
+html[data-motion="off"] .pace-icon.is-perfect-zero-aperture::after,
+html[data-motion="off"] .pace-icon.is-perfect-zero-aperture .perfect-zero-cameo,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-train-roll,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-train-roll::after,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-speed-lines::after,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-speed-lines img,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-sprint-smoke img,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-brake-wobble img,
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-slow-wobble img,
+html[data-motion="off"]
+  .pace-icon.has-pace-icon-effect-slow-wobble.is-slow-wobbling
+  img,
+html[data-motion="off"]
+  .pace-icon.has-pace-icon-effect-brake-wobble.is-brake-wobbling
+  img,
+html[data-motion="off"] .pace-speed-line,
+html[data-motion="off"] .pace-speed-tail-ghost,
+html[data-motion="off"] .brake-debris-piece,
+html[data-motion="off"] .brake-debris-svg,
+html[data-motion="off"] .pace-smoke-puff,
+html[data-motion="off"] .pace-train-cloud-puff,
+html[data-motion="off"] .early-reset-popover[data-early-reset-stage="5"],
+html[data-motion="off"] .early-reset-popover.is-popping,
+html[data-motion="off"] .early-reset-popover.is-popping::before {
+  animation: none;
+}
 
-  .pace-card.pace-sync .pace-icon {
-    will-change: auto;
-  }
+html[data-motion="off"] .brake-debris-layer,
+html[data-motion="off"] .pace-icon-effect-speed-lines,
+html[data-motion="off"] .pace-speed-tail-layer,
+html[data-motion="off"] .pace-icon-effect-sprint-smoke {
+  display: none;
+}
 
-  .early-reset-popover.is-popping {
-    filter: none;
-    opacity: 1;
-  }
+html[data-motion="off"] .early-reset-popover.is-popping {
+  filter: none;
+  opacity: 1;
+}
 
-  .early-reset-popover.is-popping::before {
-    content: none;
-  }
+html[data-motion="off"] .early-reset-popover.is-popping::before {
+  content: none;
 }

@@ -3,12 +3,13 @@
 
   const DATA = globalThis.PacePetsDashboardPaceData;
   const Controller = globalThis.PacePetsDashboardPaceController;
+  const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const PROFILE = globalThis.PacePetsDashboardSplatFallProfile;
   const PREVIEW = globalThis.PacePetsSplatBouncePreviewControl;
-  if (!DATA || !Controller || !PROFILE || !PREVIEW) {
+  if (!DATA || !Controller || !DASHBOARD_PREFERENCES || !PROFILE || !PREVIEW) {
     throw new Error(
       [
-        "Pace data, core, Splat profiles, and preview controls must load before",
+        "Pace data, core, preferences, Splat profiles, and preview controls must load before",
         "dashboard-splat-fall-methods.js.",
       ].join(" "),
     );
@@ -18,10 +19,9 @@
   const SPLAT_FALL_CLEANUP_MS = 1105;
   const SPLAT_CARD_IMPACT_DURATION_MS = SPLAT_FALL_DURATION_MS + 20;
   const SPLAT_FALL_IMPACT_MS = 960;
-  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
-  function prefersReducedMotion() {
-    return globalThis.matchMedia?.(REDUCED_MOTION_QUERY)?.matches === true;
+  function motionPreferenceEnabled() {
+    return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
   function splatFallStartY(container) {
@@ -183,7 +183,11 @@
     renderSplatFallEffect(container) {
       const playIntro = container.dataset.splatFallIntro === "true";
       delete container.dataset.splatFallIntro;
-      if (!playIntro || prefersReducedMotion() || !DATA.SPLAT_FREE_FALL_IMAGE) {
+      if (
+        !playIntro ||
+        !motionPreferenceEnabled() ||
+        !DATA.SPLAT_FREE_FALL_IMAGE
+      ) {
         return;
       }
 

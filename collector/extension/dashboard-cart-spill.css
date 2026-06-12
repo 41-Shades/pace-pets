@@ -67,15 +67,13 @@
   will-change: transform;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cart-spill-layer,
-  .cart-spill-pile-layer {
-    display: none;
-  }
+html[data-motion="off"] .cart-spill-layer,
+html[data-motion="off"] .cart-spill-pile-layer {
+  display: none;
+}
 
-  .cart-spill-item,
-  .cart-spill-image {
-    animation: none;
-    will-change: auto;
-  }
+html[data-motion="off"] .cart-spill-item,
+html[data-motion="off"] .cart-spill-image {
+  animation: none;
+  will-change: auto;
 }

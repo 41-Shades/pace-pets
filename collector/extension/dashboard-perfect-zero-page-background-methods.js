@@ -63,7 +63,7 @@
         return false;
       }
 
-      if (!active) {
+      if (!active || this.motionPreferenceEnabled?.() === false) {
         this.stopPerfectZeroPageBackgroundScene();
         return false;
       }

@@ -51,16 +51,14 @@
   z-index: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .pace-icon.has-pace-icon-effect-push-stretch > img {
-    opacity: 1;
-  }
+html[data-motion="off"] .pace-icon.has-pace-icon-effect-push-stretch > img {
+  opacity: 1;
+}
 
-  .pace-push-water-layer {
-    display: none;
-  }
+html[data-motion="off"] .pace-push-water-layer {
+  display: none;
+}
 
-  .pace-push-stretch-layer {
-    display: none;
-  }
+html[data-motion="off"] .pace-push-stretch-layer {
+  display: none;
 }
