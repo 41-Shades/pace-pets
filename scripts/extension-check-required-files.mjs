@@ -111,6 +111,10 @@ function themeAssetPaths(themeAssets) {
       (relativePath) =>
         `${themeAssets.THEME_BASE_PATH.slice(2)}/${relativePath}`,
     ),
+    ...Object.values(themeAssets.EFFECT_ASSET_FILES || {}).map(
+      (relativePath) =>
+        `${themeAssets.THEME_BASE_PATH.slice(2)}/${relativePath}`,
+    ),
   ];
 }
 

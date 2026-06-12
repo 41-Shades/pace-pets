@@ -8,8 +8,8 @@
     throw new Error("Singularity transition preview dependencies missing.");
   }
 
-  const ENTRY_EXIT_CLASS = "is-singularity-v2-entry-exit";
-  const ENTRY_EXIT_DURATION_MS = 1600;
+  const ENTRY_EXIT_CLASS = "is-singularity-entry-exit";
+  const ENTRY_EXIT_DURATION_MS = 2000;
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   const SINGULARITY_STATE = DATA.PACE_STATES.singularity;
 
@@ -23,12 +23,13 @@
       this.singularityTransitionEntryPreviewTimer = null;
       document.body.classList.remove(ENTRY_EXIT_CLASS);
     },
-    async forceSingularityTransitionPreviewState() {
+    async forceSingularityTransitionPreviewState({ blackHoleVersion } = {}) {
       const options = await this.readDeveloperOptions();
       const storageItems = this.DEVELOPER_OPTIONS.developerOptionsStorageItems({
         ...options,
         forcedPaceStateKey: SINGULARITY_STATE.key,
-        singularityTransitionVersion: "v2",
+        singularityBlackHoleVersion:
+          blackHoleVersion || options.singularityBlackHoleVersion,
       });
       await this.EXTENSION_STORAGE.setLocal(storageItems);
     },
@@ -38,19 +39,19 @@
         async () => {
           this.singularityTransitionEntryPreviewTimer = null;
           try {
-            await this.forceSingularityTransitionPreviewState();
+            await this.forceSingularityTransitionPreviewState({
+              blackHoleVersion:
+                this.singularityTransitionEntryPreviewBlackHoleVersion,
+            });
           } catch (error) {
-            console.warn(
-              "Pace Pets Singularity V2 entry preview failed:",
-              error,
-            );
+            console.warn("Pace Pets Singularity entry preview failed:", error);
             this.clearSingularityTransitionEntryPreview();
           }
         },
         delayMs,
       );
     },
-    async previewSingularityTransitionEntry() {
+    async previewSingularityTransitionEntry({ blackHoleVersion } = {}) {
       if (
         this.elements.paceCard.classList.contains(SINGULARITY_STATE.className)
       ) {
@@ -60,9 +61,12 @@
         };
       }
       if (document.hidden) {
+        this.singularityTransitionEntryPreviewBlackHoleVersion =
+          blackHoleVersion;
         this.singularityTransitionEntryPreviewPending = true;
         return { ok: true, queued: true };
       }
+      this.singularityTransitionEntryPreviewBlackHoleVersion = blackHoleVersion;
       this.clearSingularityTransitionEntryPreview();
       document.body.classList.add(ENTRY_EXIT_CLASS);
       this.scheduleSingularityTransitionPreviewState();
@@ -73,8 +77,11 @@
         return false;
       }
       this.singularityTransitionEntryPreviewPending = false;
-      this.previewSingularityTransitionEntry().catch((error) => {
-        console.warn("Pace Pets Singularity V2 entry preview failed:", error);
+      this.previewSingularityTransitionEntry({
+        blackHoleVersion:
+          this.singularityTransitionEntryPreviewBlackHoleVersion,
+      }).catch((error) => {
+        console.warn("Pace Pets Singularity entry preview failed:", error);
       });
       return true;
     },
@@ -94,11 +101,13 @@
           if (!PREVIEW.isLaunchMessage(message)) {
             return false;
           }
-          this.previewSingularityTransitionEntry()
+          this.previewSingularityTransitionEntry({
+            blackHoleVersion: message.blackHoleVersion,
+          })
             .then((response) => sendResponse?.(response))
             .catch((error) => {
               sendResponse?.({
-                message: error.message || "Could not preview Singularity V2.",
+                message: error.message || "Could not preview Singularity.",
                 ok: false,
               });
             });

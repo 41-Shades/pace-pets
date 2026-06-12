@@ -69,6 +69,9 @@ describe("extension check required files", () => {
     expect(requiredFiles).toContain(
       "themes/default/pace-icons/perfect-zero.png",
     );
+    expect(requiredFiles).toContain(
+      "themes/default/effects/reset-exhausted/exhausted-person.png",
+    );
     expect(new Set(requiredFiles).size).toBe(requiredFiles.length);
   });
 });

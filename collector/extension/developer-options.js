@@ -6,9 +6,10 @@
   const CRITICAL_BADGE_WINDOW_KEY = "criticalBadgeWindow";
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
   const MAX_POOL_FILL_KEY = "maxPoolFill";
-  const SINGULARITY_TRANSITION_VERSION_KEY = "singularityTransitionVersion";
+  const RESET_EXHAUSTED_PREVIEW_KEY = "resetExhaustedPreview";
+  const SINGULARITY_BLACK_HOLE_VERSION_KEY = "singularityBlackHoleVersion";
   const SPRINT_INTENSITY_PREVIEW_KEY = "sprintIntensityPreview";
-  const DEFAULT_SINGULARITY_TRANSITION_VERSION = "v2";
+  const DEFAULT_SINGULARITY_BLACK_HOLE_VERSION = "v1";
   const PACE_STATE_DATA = root.PacePetsPaceStateData;
   const SPRINT_INTENSITY = root.PacePetsSprintIntensity;
   if (!PACE_STATE_DATA || !SPRINT_INTENSITY) {
@@ -58,7 +59,7 @@
     });
   }
 
-  function singularityTransitionVersionOption({ label, status, value }) {
+  function singularityBlackHoleVersionOption({ label, status, value }) {
     return Object.freeze({
       label,
       status,
@@ -100,23 +101,29 @@
       label: "Max pool fill",
       value: "max-pool-fill",
     }),
-  ]);
-  const SINGULARITY_TRANSITION_VERSION_OPTIONS = Object.freeze([
-    singularityTransitionVersionOption({
-      label: "Singularity V2",
-      status: "Singularity transition V2 selected.",
-      value: "v2",
+    featurePreviewOption({
+      disableStatus: "Reset exhaustion hidden.",
+      enableStatus: "Reset exhaustion shown.",
+      key: RESET_EXHAUSTED_PREVIEW_KEY,
+      label: "Reset exhaustion",
+      value: "reset-exhausted-preview",
     }),
-    singularityTransitionVersionOption({
-      label: "Singularity V1",
-      status: "Singularity transition V1 selected.",
+  ]);
+  const SINGULARITY_BLACK_HOLE_VERSION_OPTIONS = Object.freeze([
+    singularityBlackHoleVersionOption({
+      label: "Black Hole V1",
+      status: "Singularity black-hole phase uses Canvas V1.",
       value: "v1",
     }),
+    singularityBlackHoleVersionOption({
+      label: "Black Hole V2",
+      status: "Singularity black-hole phase uses WebGL V2.",
+      value: "v2",
+    }),
   ]);
-  const SINGULARITY_TRANSITION_VERSION_VALUES = Object.freeze(
-    SINGULARITY_TRANSITION_VERSION_OPTIONS.map((option) => option.value),
+  const SINGULARITY_BLACK_HOLE_VERSION_VALUES = Object.freeze(
+    SINGULARITY_BLACK_HOLE_VERSION_OPTIONS.map((option) => option.value),
   );
-
   function isPlainObject(value) {
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
   }
@@ -137,10 +144,14 @@
     return value === true;
   }
 
-  function normalizeSingularityTransitionVersion(value) {
-    return SINGULARITY_TRANSITION_VERSION_VALUES.includes(value)
+  function normalizeResetExhaustedPreview(value) {
+    return value === true;
+  }
+
+  function normalizeSingularityBlackHoleVersion(value) {
+    return SINGULARITY_BLACK_HOLE_VERSION_VALUES.includes(value)
       ? value
-      : DEFAULT_SINGULARITY_TRANSITION_VERSION;
+      : DEFAULT_SINGULARITY_BLACK_HOLE_VERSION;
   }
 
   function normalizeSprintIntensityPreview(value) {
@@ -165,8 +176,11 @@
       maxPoolFill: normalizeMaxPoolFill(
         isPlainObject(value) ? value[MAX_POOL_FILL_KEY] : null,
       ),
-      singularityTransitionVersion: normalizeSingularityTransitionVersion(
-        isPlainObject(value) ? value[SINGULARITY_TRANSITION_VERSION_KEY] : null,
+      resetExhaustedPreview: normalizeResetExhaustedPreview(
+        isPlainObject(value) ? value[RESET_EXHAUSTED_PREVIEW_KEY] : null,
+      ),
+      singularityBlackHoleVersion: normalizeSingularityBlackHoleVersion(
+        isPlainObject(value) ? value[SINGULARITY_BLACK_HOLE_VERSION_KEY] : null,
       ),
       sprintIntensityPreview:
         forcedPaceStateKey === PACE_STATE_DATA.PACE_STATES.wellAhead.key
@@ -175,20 +189,26 @@
     });
   }
 
+  function developerOptionsStorageInput(options) {
+    if (!isPlainObject(options)) {
+      return null;
+    }
+
+    return {
+      [CRITICAL_BADGE_WINDOW_KEY]: options.criticalBadgeWindow,
+      [FORCED_PACE_STATE_KEY]:
+        options.forcedPaceStateKey ?? options[FORCED_PACE_STATE_KEY],
+      [MANUAL_REFRESH_LEAD_WINDOW_KEY]: options.manualRefreshLeadWindow,
+      [MAX_POOL_FILL_KEY]: options.maxPoolFill,
+      [RESET_EXHAUSTED_PREVIEW_KEY]: options.resetExhaustedPreview,
+      [SINGULARITY_BLACK_HOLE_VERSION_KEY]: options.singularityBlackHoleVersion,
+      [SPRINT_INTENSITY_PREVIEW_KEY]: options.sprintIntensityPreview,
+    };
+  }
+
   function storedDeveloperOptionsValue(options = {}) {
     const normalized = normalizeDeveloperOptions(
-      isPlainObject(options)
-        ? {
-            [CRITICAL_BADGE_WINDOW_KEY]: options.criticalBadgeWindow,
-            [FORCED_PACE_STATE_KEY]:
-              options.forcedPaceStateKey ?? options[FORCED_PACE_STATE_KEY],
-            [MANUAL_REFRESH_LEAD_WINDOW_KEY]: options.manualRefreshLeadWindow,
-            [MAX_POOL_FILL_KEY]: options.maxPoolFill,
-            [SINGULARITY_TRANSITION_VERSION_KEY]:
-              options.singularityTransitionVersion,
-            [SPRINT_INTENSITY_PREVIEW_KEY]: options.sprintIntensityPreview,
-          }
-        : null,
+      developerOptionsStorageInput(options),
     );
     const value = {};
     if (normalized.forcedPaceStateKey) {
@@ -203,12 +223,15 @@
     if (normalized.maxPoolFill) {
       value[MAX_POOL_FILL_KEY] = true;
     }
+    if (normalized.resetExhaustedPreview) {
+      value[RESET_EXHAUSTED_PREVIEW_KEY] = true;
+    }
     if (
-      normalized.singularityTransitionVersion !==
-      DEFAULT_SINGULARITY_TRANSITION_VERSION
+      normalized.singularityBlackHoleVersion !==
+      DEFAULT_SINGULARITY_BLACK_HOLE_VERSION
     ) {
-      value[SINGULARITY_TRANSITION_VERSION_KEY] =
-        normalized.singularityTransitionVersion;
+      value[SINGULARITY_BLACK_HOLE_VERSION_KEY] =
+        normalized.singularityBlackHoleVersion;
     }
     if (normalized.sprintIntensityPreview) {
       value[SPRINT_INTENSITY_PREVIEW_KEY] = normalized.sprintIntensityPreview;
@@ -239,7 +262,7 @@
 
   root.PacePetsDeveloperOptions = Object.freeze({
     CRITICAL_BADGE_WINDOW_KEY,
-    DEFAULT_SINGULARITY_TRANSITION_VERSION,
+    DEFAULT_SINGULARITY_BLACK_HOLE_VERSION,
     FEATURE_PREVIEW_OPTIONS,
     FORCEABLE_PACE_STATE_GROUPS,
     FORCEABLE_PACE_STATE_KEYS,
@@ -247,9 +270,10 @@
     FORCED_PACE_STATE_KEY,
     MANUAL_REFRESH_LEAD_WINDOW_KEY,
     MAX_POOL_FILL_KEY,
-    SINGULARITY_TRANSITION_VERSION_KEY,
-    SINGULARITY_TRANSITION_VERSION_OPTIONS,
-    SINGULARITY_TRANSITION_VERSION_VALUES,
+    RESET_EXHAUSTED_PREVIEW_KEY,
+    SINGULARITY_BLACK_HOLE_VERSION_KEY,
+    SINGULARITY_BLACK_HOLE_VERSION_OPTIONS,
+    SINGULARITY_BLACK_HOLE_VERSION_VALUES,
     SPRINT_INTENSITY_PREVIEW_KEY,
     SPRINT_INTENSITY_PREVIEW_OPTIONS: SPRINT_INTENSITY.PREVIEW_OPTIONS,
     SPRINT_INTENSITY_PREVIEW_VALUES: SPRINT_INTENSITY.PREVIEW_VALUES,
@@ -263,7 +287,8 @@
     normalizeForcedPaceStateKey,
     normalizeManualRefreshLeadWindow,
     normalizeMaxPoolFill,
-    normalizeSingularityTransitionVersion,
+    normalizeResetExhaustedPreview,
+    normalizeSingularityBlackHoleVersion,
     normalizeSprintIntensityPreview,
     storedDeveloperOptionsValue,
   });

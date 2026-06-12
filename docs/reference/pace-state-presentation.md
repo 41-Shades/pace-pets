@@ -164,10 +164,11 @@ the canvas from the control.
 
 The `behind` / Ease up state uses a dashboard-only CSS effect in
 `collector/extension/dashboard-ease-up-methods.js` and
-`collector/extension/dashboard-ease-up.css`. The active status card visibly
-breathes with separate fill and border layers that bulge at the center while
-keeping the side endpoints anchored; a brief center contraction precedes the
-outward swell. The status icon, copy, and ratio use a smaller synchronized
+`collector/extension/dashboard-ease-up.css`, with keyframes isolated in
+`collector/extension/dashboard-ease-up-keyframes.css`. The active status card
+visibly breathes with separate fill and border layers that bulge at the center
+while keeping the side endpoints anchored; a brief center contraction precedes
+the outward swell. The status icon, copy, and ratio use a smaller synchronized
 transform-only breath with slight vertical drift so they move with the shape
 without affecting layout. The icon layer renders short SVG mug-steam squiggles
 with an in-place shimmer.
@@ -244,16 +245,21 @@ The forced developer override can also render perfect and imperfect context
 states outside the regular pace levels.
 
 The `singularity` state runs a dashboard-only transition when the dashboard
-enters that state from any other state. The transition uses generated
-in-memory canvas fragments, pulls them into a black-hole center, holds on a
-small singularity point, and expands into a brief big-bang reveal. Same-state
+enters that state from any other state. The transition fades from the prior
+state into the shared space backdrop, holds briefly on blank space, fades the
+dashboard chrome back in, then starts the selected black-hole approach scene.
+Canvas Black Hole V1 is the default; local developer controls can select the
+WebGL Black Hole V2 scene for the black-hole phase only. The black-hole canvas
+stays behind the dashboard chrome. Around the V2 glint suction timing, a
+chrome-collapse phase splits real main-panel containers and state-rail items,
+pulls them along slower circular inward paths, and gradually stretches them
+toward the black hole before shrinking them into the horizon. Same-state
 refreshes do not replay the transition. If Singularity is selected from the
-separate developer controls while the dashboard tab is hidden, the transition
-is queued and plays when the dashboard becomes visible. Reduced-motion users
-get a short non-fragmenting pulse. The renderer removes the overlay and clears
-generated scene references when the sequence ends or the state changes. Local
-developer controls can select the V1 or V2 transition renderer without adding a
-second pace state. See
+separate developer controls
+while the dashboard tab is hidden, the transition is queued and plays when the
+dashboard becomes visible. Reduced-motion users skip the animated sequence. The
+renderer removes the temporary black-hole canvas and restores distorted chrome
+when the state changes. See
 `docs/reference/singularity-transition.md` for the full architecture and
 lifecycle contract.
 

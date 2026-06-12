@@ -20,10 +20,10 @@
     runtimeMessaging().sendMessage(SYNC_MONK_ESCAPE_PREVIEW.launchMessage());
   }
 
-  function requestSingularityTransitionPreview() {
+  function requestSingularityTransitionPreview(options) {
     return new Promise((resolve, reject) => {
       runtimeMessaging().sendMessage(
-        SINGULARITY_TRANSITION_PREVIEW.launchMessage(),
+        SINGULARITY_TRANSITION_PREVIEW.launchMessage(options),
         (response) => {
           const error = chrome.runtime.lastError;
           if (error) {

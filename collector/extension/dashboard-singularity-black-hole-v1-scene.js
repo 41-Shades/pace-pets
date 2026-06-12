@@ -1,14 +1,14 @@
-(function attachPacePetsDashboardSingularityV2BlackHoleScene(root) {
+(function attachPacePetsDashboardSingularityBlackHoleV1Scene(root) {
   "use strict";
 
-  const DRAW = root.PacePetsDashboardSingularityV2BlackHoleDraw;
+  const DRAW = root.PacePetsDashboardSingularityBlackHoleV1Draw;
   if (!DRAW) {
     throw new Error(
-      "Singularity V2 black-hole draw helpers must load before dashboard-singularity-v2-black-hole-scene.js.",
+      "Singularity black-hole V1 draw helpers must load before dashboard-singularity-black-hole-v1-scene.js.",
     );
   }
 
-  const CANVAS_CLASS = "singularity-v2-black-hole-scene";
+  const CANVAS_CLASS = "singularity-black-hole-v1-scene";
   const MAX_PIXEL_RATIO = 2;
 
   function viewportSize() {
@@ -106,11 +106,6 @@
       this.size = configureCanvas(this.canvas, this.context);
       const elapsedMs = Math.max(0, frameTimeMs - this.startedAtMs);
       DRAW.drawFrame(this.context, this.state, this.size, elapsedMs);
-      if (elapsedMs >= DRAW.totalDurationMs) {
-        this.finish(true);
-        return;
-      }
-
       this.requestFrame();
     }
 
@@ -161,7 +156,7 @@
     return new BlackHoleScene(options);
   }
 
-  root.PacePetsDashboardSingularityV2BlackHoleScene = Object.freeze({
+  root.PacePetsDashboardSingularityBlackHoleV1Scene = Object.freeze({
     create,
   });
 })(globalThis);

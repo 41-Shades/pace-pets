@@ -34,6 +34,138 @@ function expectUniqueEdges(edges) {
   );
 }
 
+function expectCommonRuntimeDependencyEdges(runtime) {
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "usage-providers.js",
+    "usage.js",
+  ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "refresh-status.js",
+    "refresh-control.js",
+  ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "persisted-text.js",
+    "refresh-status.js",
+  ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "persisted-text.js",
+    "history-store.js",
+  ]);
+}
+
+function expectTargetRuntimeDependencyEdges(runtime) {
+  expect(runtime.BACKGROUND_RUNTIME_DEPENDENCY_EDGES).toEqual([
+    ...runtime.COMMON_RUNTIME_DEPENDENCY_EDGES,
+    ...runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES,
+  ]);
+  expect(runtime.DASHBOARD_RUNTIME_DEPENDENCY_EDGES).toEqual([
+    ...runtime.COMMON_RUNTIME_DEPENDENCY_EDGES.map(([before, after]) => [
+      dashboardSource(before),
+      dashboardSource(after),
+    ]),
+    ...runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES,
+  ]);
+  expect(runtime.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES).toEqual([
+    ...runtime.COMMON_RUNTIME_DEPENDENCY_EDGES.map(([before, after]) => [
+      extensionPageSource(before),
+      extensionPageSource(after),
+    ]),
+    ...runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES,
+  ]);
+}
+
+function expectBackgroundRuntimeDependencyEdges(runtime) {
+  expect(runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "usage-providers.js",
+    "background-usage-source.js",
+  ]);
+}
+
+function expectDashboardRuntimeDependencyEdges(runtime) {
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-status-logic.js",
+    "./dashboard-status-controller.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-dom-contract.js",
+    "./dashboard.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-black-hole-v1-scene.js",
+    "./dashboard-singularity-transition-renderer.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-black-hole-v1-draw.js",
+    "./dashboard-singularity-black-hole-v1-scene.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-black-hole-v2-shaders.js",
+    "./dashboard-singularity-black-hole-v2-scene.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-black-hole-v2-scene.js",
+    "./dashboard-singularity-transition-renderer.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-chrome-collapse-fragments.js",
+    "./dashboard-singularity-chrome-collapse-motion.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-chrome-collapse-fragments.js",
+    "./dashboard-singularity-chrome-collapse-scene.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-chrome-collapse-motion.js",
+    "./dashboard-singularity-chrome-collapse-scene.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-chrome-collapse-scene.js",
+    "./dashboard-singularity-transition-renderer.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-singularity-transition-renderer.js",
+    "./dashboard-singularity-transition-methods.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-preferences.js",
+    "./dashboard-shell-controls.js",
+  ]);
+}
+
+function expectDevFlagsRuntimeDependencyEdges(runtime) {
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./developer-options.js",
+    "./dev-flags.js",
+  ]);
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-flags-current-mode.js",
+    "./dev-flags.js",
+  ]);
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-flags-rendering.js",
+    "./dev-flags-singularity-controls.js",
+  ]);
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-flags-singularity-controls.js",
+    "./dev-flags.js",
+  ]);
+}
+
+function expectFrozenRuntimeDependencyEdgeLists(runtime) {
+  for (const edgeList of [
+    runtime.COMMON_RUNTIME_DEPENDENCY_EDGES,
+    runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES,
+    runtime.BACKGROUND_RUNTIME_DEPENDENCY_EDGES,
+    runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES,
+    runtime.DASHBOARD_RUNTIME_DEPENDENCY_EDGES,
+    runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES,
+    runtime.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES,
+  ]) {
+    expectFrozenEdges(edgeList);
+    expectUniqueEdges(edgeList);
+  }
+}
+
 beforeAll(async () => {
   await import(
     pathToFileURL(
@@ -72,10 +204,25 @@ describe("CodexExtensionRuntime script sources", () => {
       "./dashboard-preferences.js",
     );
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-v2-black-hole-scene.js",
+      "./dashboard-singularity-black-hole-v1-scene.js",
     );
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-v2-black-hole-draw.js",
+      "./dashboard-singularity-black-hole-v1-draw.js",
+    );
+    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
+      "./dashboard-singularity-black-hole-v2-shaders.js",
+    );
+    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
+      "./dashboard-singularity-black-hole-v2-scene.js",
+    );
+    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
+      "./dashboard-singularity-chrome-collapse-fragments.js",
+    );
+    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
+      "./dashboard-singularity-chrome-collapse-motion.js",
+    );
+    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
+      "./dashboard-singularity-chrome-collapse-scene.js",
     );
     expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toContain("./dev-flags.js");
   });
@@ -123,93 +270,11 @@ describe("CodexExtensionRuntime dependency edges", () => {
   it("derives target runtime dependency edges from shared contracts", () => {
     const runtime = globalThis.CodexExtensionRuntime;
 
-    expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "usage-providers.js",
-      "usage.js",
-    ]);
-    expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "refresh-status.js",
-      "refresh-control.js",
-    ]);
-    expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "persisted-text.js",
-      "refresh-status.js",
-    ]);
-    expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "persisted-text.js",
-      "history-store.js",
-    ]);
-    expect(runtime.BACKGROUND_RUNTIME_DEPENDENCY_EDGES).toEqual([
-      ...runtime.COMMON_RUNTIME_DEPENDENCY_EDGES,
-      ...runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES,
-    ]);
-    expect(runtime.DASHBOARD_RUNTIME_DEPENDENCY_EDGES).toEqual([
-      ...runtime.COMMON_RUNTIME_DEPENDENCY_EDGES.map(([before, after]) => [
-        dashboardSource(before),
-        dashboardSource(after),
-      ]),
-      ...runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES,
-    ]);
-    expect(runtime.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES).toEqual([
-      ...runtime.COMMON_RUNTIME_DEPENDENCY_EDGES.map(([before, after]) => [
-        extensionPageSource(before),
-        extensionPageSource(after),
-      ]),
-      ...runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES,
-    ]);
-
-    expect(runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "usage-providers.js",
-      "background-usage-source.js",
-    ]);
-    expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./dashboard-status-logic.js",
-      "./dashboard-status-controller.js",
-    ]);
-    expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./dashboard-dom-contract.js",
-      "./dashboard.js",
-    ]);
-    expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./dashboard-singularity-v2-black-hole-scene.js",
-      "./dashboard-singularity-transition-v2-renderer.js",
-    ]);
-    expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./dashboard-singularity-v2-black-hole-draw.js",
-      "./dashboard-singularity-v2-black-hole-scene.js",
-    ]);
-    expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./dashboard-preferences.js",
-      "./dashboard-shell-controls.js",
-    ]);
-    expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./developer-options.js",
-      "./dev-flags.js",
-    ]);
-    expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./dev-flags-current-mode.js",
-      "./dev-flags.js",
-    ]);
-    expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./dev-flags-rendering.js",
-      "./dev-flags-singularity-controls.js",
-    ]);
-    expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-      "./dev-flags-singularity-controls.js",
-      "./dev-flags.js",
-    ]);
-
-    for (const edgeList of [
-      runtime.COMMON_RUNTIME_DEPENDENCY_EDGES,
-      runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES,
-      runtime.BACKGROUND_RUNTIME_DEPENDENCY_EDGES,
-      runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES,
-      runtime.DASHBOARD_RUNTIME_DEPENDENCY_EDGES,
-      runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES,
-      runtime.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES,
-    ]) {
-      expectFrozenEdges(edgeList);
-      expectUniqueEdges(edgeList);
-    }
+    expectCommonRuntimeDependencyEdges(runtime);
+    expectTargetRuntimeDependencyEdges(runtime);
+    expectBackgroundRuntimeDependencyEdges(runtime);
+    expectDashboardRuntimeDependencyEdges(runtime);
+    expectDevFlagsRuntimeDependencyEdges(runtime);
+    expectFrozenRuntimeDependencyEdgeLists(runtime);
   });
 });

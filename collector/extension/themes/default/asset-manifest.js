@@ -27,6 +27,9 @@
     perfectZeroGlow: "pace-icons/perfect-zero-glow.png",
     splatFreeFall: "pace-icons/06-slow-down-free-fall-transparent.png",
   });
+  const EFFECT_ASSET_FILES = Object.freeze({
+    resetExhaustedPerson: "effects/reset-exhausted/exhausted-person.png",
+  });
   const PACE_ICON_STATE_EXCLUSIONS = Object.freeze({
     muted: "No playful image.",
     singularity: "Uses generated in-memory art.",
@@ -65,6 +68,14 @@
     return themedPath(paceIconVariantFile(variantKey));
   }
 
+  function effectAssetFile(assetKey) {
+    return EFFECT_ASSET_FILES[assetKey] || "";
+  }
+
+  function effectAssetPath(assetKey) {
+    return themedPath(effectAssetFile(assetKey));
+  }
+
   function isPackagedPaceIconState(stateKey) {
     return (
       Boolean(stateKey) &&
@@ -88,12 +99,15 @@
     THEME_BASE_PATH,
     APP_ICON_FILES,
     APP_ICON_FILES_BY_SIZE,
+    EFFECT_ASSET_FILES,
     PACE_ICON_FILES,
     PACE_ICON_FILES_BY_STATE,
     PACE_ICON_STATE_EXCLUSIONS,
     PACE_ICON_VARIANT_FILES,
     appIconFileForSize,
     appIconPathForSize,
+    effectAssetFile,
+    effectAssetPath,
     isPackagedPaceIconState,
     packagedPaceIconStateKeys,
     paceIconVariantFile,

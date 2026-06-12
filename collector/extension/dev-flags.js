@@ -34,11 +34,11 @@
     currentModeSummary: requiredElementById("current-mode-summary"),
     featurePreviewList: requiredElementById("feature-preview-list"),
     resetAll: requiredElementById("reset-all"),
+    singularityBlackHoleVersionList: requiredElementById(
+      "singularity-black-hole-version-list",
+    ),
     singularityTransitionPreviewList: requiredElementById(
       "singularity-transition-preview-list",
-    ),
-    singularityTransitionVersionList: requiredElementById(
-      "singularity-transition-version-list",
     ),
     sprintIntensityPreviewList: requiredElementById(
       "sprint-intensity-preview-list",
@@ -58,8 +58,9 @@
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
   let currentMaxPoolFill = false;
-  let currentSingularityTransitionVersion =
-    DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_TRANSITION_VERSION;
+  let currentResetExhaustedPreview = false;
+  let currentSingularityBlackHoleVersion =
+    DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION;
   let currentSprintIntensityPreview = null;
   let singularityTransitionPreviewActive = false;
   let statusTimer = null;
@@ -95,7 +96,8 @@
       forcedPaceStateKey: currentForcedPaceStateKey,
       manualRefreshLeadWindow: currentManualRefreshLeadWindow,
       maxPoolFill: currentMaxPoolFill,
-      singularityTransitionVersion: currentSingularityTransitionVersion,
+      resetExhaustedPreview: currentResetExhaustedPreview,
+      singularityBlackHoleVersion: currentSingularityBlackHoleVersion,
       sprintIntensityPreview: currentSprintIntensityPreview,
     };
   }
@@ -114,7 +116,8 @@
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     currentMaxPoolFill = options.maxPoolFill;
-    currentSingularityTransitionVersion = options.singularityTransitionVersion;
+    currentResetExhaustedPreview = options.resetExhaustedPreview;
+    currentSingularityBlackHoleVersion = options.singularityBlackHoleVersion;
     currentSprintIntensityPreview = options.sprintIntensityPreview;
   }
 
@@ -133,25 +136,25 @@
     );
   }
 
-  function activeSingularityTransitionVersionOption() {
+  function activeSprintIntensityPreviewOption() {
+    return (
+      DEVELOPER_OPTIONS.SPRINT_INTENSITY_PREVIEW_OPTIONS.find(
+        (option) => option.value === currentSprintIntensityPreview,
+      ) || null
+    );
+  }
+
+  function activeSingularityBlackHoleVersionOption() {
     if (
-      currentSingularityTransitionVersion ===
-      DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_TRANSITION_VERSION
+      currentSingularityBlackHoleVersion ===
+      DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION
     ) {
       return null;
     }
 
     return (
-      DEVELOPER_OPTIONS.SINGULARITY_TRANSITION_VERSION_OPTIONS.find(
-        (option) => option.value === currentSingularityTransitionVersion,
-      ) || null
-    );
-  }
-
-  function activeSprintIntensityPreviewOption() {
-    return (
-      DEVELOPER_OPTIONS.SPRINT_INTENSITY_PREVIEW_OPTIONS.find(
-        (option) => option.value === currentSprintIntensityPreview,
+      DEVELOPER_OPTIONS.SINGULARITY_BLACK_HOLE_VERSION_OPTIONS.find(
+        (option) => option.value === currentSingularityBlackHoleVersion,
       ) || null
     );
   }
@@ -161,13 +164,13 @@
     if (currentForcedPaceStateKey) {
       labels.push(stateLabelForKey(currentForcedPaceStateKey));
     }
-    const transitionVersion = activeSingularityTransitionVersionOption();
-    if (transitionVersion) {
-      labels.push(transitionVersion.label);
-    }
     const sprintIntensityPreview = activeSprintIntensityPreviewOption();
     if (sprintIntensityPreview) {
       labels.push(sprintIntensityPreview.label);
+    }
+    const blackHoleVersion = activeSingularityBlackHoleVersionOption();
+    if (blackHoleVersion) {
+      labels.push(blackHoleVersion.label);
     }
     labels.push(...activeFeaturePreviewOptions().map((option) => option.label));
     return labels.length > 0 ? labels.join(" + ") : "Live data";
@@ -176,8 +179,8 @@
   function currentModeDetail() {
     const activeCount =
       Number(Boolean(currentForcedPaceStateKey)) +
-      Number(Boolean(activeSingularityTransitionVersionOption())) +
       Number(Boolean(activeSprintIntensityPreviewOption())) +
+      Number(Boolean(activeSingularityBlackHoleVersionOption())) +
       activeFeaturePreviewOptions().length;
     if (activeCount === 0) {
       return "Live data";
@@ -188,8 +191,8 @@
   function hasActiveOverride() {
     return (
       Boolean(currentForcedPaceStateKey) ||
-      Boolean(activeSingularityTransitionVersionOption()) ||
       Boolean(activeSprintIntensityPreviewOption()) ||
+      Boolean(activeSingularityBlackHoleVersionOption()) ||
       activeFeaturePreviewOptions().length > 0
     );
   }
@@ -253,7 +256,8 @@
 
   function renderSingularityControls() {
     SINGULARITY_CONTROLS.render({
-      currentVersion: currentSingularityTransitionVersion,
+      blackHoleVersionList: elements.singularityBlackHoleVersionList,
+      currentBlackHoleVersion: currentSingularityBlackHoleVersion,
       optionRow,
       persistDeveloperOptions,
       previewActions: PREVIEW_ACTIONS,
@@ -261,8 +265,7 @@
       previewList: elements.singularityTransitionPreviewList,
       setPreviewActive: setSingularityTransitionPreviewActive,
       setStatus,
-      versionList: elements.singularityTransitionVersionList,
-      versionOptions: DEVELOPER_OPTIONS.SINGULARITY_TRANSITION_VERSION_OPTIONS,
+      versionOptions: DEVELOPER_OPTIONS.SINGULARITY_BLACK_HOLE_VERSION_OPTIONS,
     });
   }
 
@@ -338,8 +341,8 @@
         ]),
       ),
       forcedPaceStateKey: null,
-      singularityTransitionVersion:
-        DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_TRANSITION_VERSION,
+      singularityBlackHoleVersion:
+        DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION,
       sprintIntensityPreview: null,
     });
     setStatus("Dev overrides reset.");

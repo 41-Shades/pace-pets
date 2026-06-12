@@ -1,0 +1,97 @@
+.reset-exhausted-figure {
+  bottom: -2px;
+  display: block;
+  inline-size: clamp(48px, 19%, 64px);
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  right: -4px;
+  transform: translate(6px, 5px) scale(0.94);
+  transform-origin: 100% 100%;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+  z-index: 0;
+}
+
+.reset-exhausted-figure[hidden] {
+  display: none;
+}
+
+.reset-countdown-card.has-reset-exhausted-preview .reset-exhausted-figure {
+  opacity: 0.96;
+  transform: translate(0, 0) scale(1);
+}
+
+.reset-countdown-card.has-reset-exhausted-preview .reset-summary {
+  z-index: 1;
+}
+
+.reset-exhausted-trace {
+  aspect-ratio: 360 / 292;
+  animation: reset-exhausted-png-slump 8.6s ease-in-out infinite;
+  display: block;
+  height: auto;
+  overflow: visible;
+  transform-origin: 88% 94%;
+  width: 100%;
+}
+
+.reset-exhausted-trace-linework path,
+.reset-exhausted-trace-face path {
+  fill: none;
+  stroke: #243a4b;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.reset-exhausted-trace-linework path {
+  stroke-width: 5.2px;
+}
+
+.reset-exhausted-trace-head {
+  fill: #ffffff;
+  stroke: #243a4b;
+  stroke-width: 5.2px;
+}
+
+.reset-exhausted-trace-face path {
+  stroke-width: 3.8px;
+}
+
+@keyframes reset-exhausted-png-slump {
+  0%,
+  58%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  72% {
+    transform: rotate(1.2deg);
+  }
+
+  86% {
+    transform: rotate(0.45deg);
+  }
+}
+
+@media (width <= 760px) {
+  .reset-exhausted-figure {
+    inline-size: clamp(41px, 14%, 53px);
+    opacity: 0;
+  }
+
+  .reset-countdown-card.has-reset-exhausted-preview .reset-exhausted-figure {
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reset-exhausted-trace {
+    animation: none;
+  }
+
+  .reset-exhausted-free-arm animate {
+    display: none;
+  }
+}
