@@ -38,8 +38,10 @@
 }
 
 .pace-card.pace-splat.is-splat-card-impacting {
-  animation: splat-card-teeter 620ms cubic-bezier(0.16, 0.86, 0.22, 1) both;
-  transform-origin: 52% 72%;
+  animation: splat-card-teeter var(--splat-card-teeter-duration, 620ms)
+    cubic-bezier(0.16, 0.86, 0.22, 1) both;
+  transform-origin: var(--splat-card-origin-x, 52%)
+    var(--splat-card-origin-y, 72%);
   will-change: transform;
 }
 
@@ -52,7 +54,8 @@
 }
 
 .pace-ratio-splat-pop-clone {
-  animation: splat-ratio-pop var(--splat-fall-duration)
+  animation: splat-ratio-pop
+    var(--splat-ratio-pop-duration, var(--splat-fall-duration))
     cubic-bezier(0.16, 0.86, 0.22, 1) both;
   backface-visibility: hidden;
   display: block;
@@ -169,19 +172,23 @@
   }
 
   16% {
-    transform: translate3d(0, 8px, 0) rotate(-4.7deg);
+    transform: translate3d(0, var(--splat-card-drop-y, 8px), 0)
+      rotate(var(--splat-card-rotate-first, -4.7deg));
   }
 
   32% {
-    transform: translate3d(0, -3.2px, 0) rotate(1.72deg);
+    transform: translate3d(0, var(--splat-card-rebound-y, -3.2px), 0)
+      rotate(var(--splat-card-rotate-second, 1.72deg));
   }
 
   56% {
-    transform: translate3d(0, 1.6px, 0) rotate(-0.68deg);
+    transform: translate3d(0, var(--splat-card-settle-y, 1.6px), 0)
+      rotate(var(--splat-card-rotate-third, -0.68deg));
   }
 
   78% {
-    transform: translate3d(0, -0.4px, 0) rotate(0.24deg);
+    transform: translate3d(0, var(--splat-card-final-y, -0.4px), 0)
+      rotate(var(--splat-card-rotate-fourth, 0.24deg));
   }
 }
 
@@ -192,23 +199,38 @@
   }
 
   26% {
-    transform: translate3d(0, -300px, 0) scale(1.12);
+    transform: translate3d(
+        var(--splat-pop-peak-x, 0),
+        var(--splat-pop-peak-y, -300px),
+        0
+      )
+      scale(var(--splat-pop-peak-scale, 1.12));
   }
 
   38% {
-    transform: translate3d(0, -300px, 0) scale(1.12);
+    transform: translate3d(
+        var(--splat-pop-peak-x, 0),
+        var(--splat-pop-peak-y, -300px),
+        0
+      )
+      scale(var(--splat-pop-peak-scale, 1.12));
   }
 
   70% {
-    transform: translate3d(0, 24px, 0) scale(0.985);
+    transform: translate3d(
+        var(--splat-pop-rebound-x, 0),
+        var(--splat-pop-rebound-y, 24px),
+        0
+      )
+      scale(var(--splat-pop-rebound-scale, 0.985));
   }
 
   86% {
-    transform: translate3d(0, -10px, 0) scale(1.004);
+    transform: translate3d(0, var(--splat-pop-second-y, -10px), 0) scale(1.004);
   }
 
   94% {
-    transform: translate3d(0, 4px, 0) scale(0.998);
+    transform: translate3d(0, var(--splat-pop-settle-y, 4px), 0) scale(0.998);
   }
 }
 

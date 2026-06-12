@@ -3,9 +3,14 @@
 
   const SINGULARITY_TRANSITION_PREVIEW =
     globalThis.PacePetsSingularityTransitionPreviewControl;
+  const SPLAT_BOUNCE_PREVIEW = globalThis.PacePetsSplatBouncePreviewControl;
   const SYNC_MONK_ESCAPE_PREVIEW =
     globalThis.PacePetsSyncMonkEscapePreviewControl;
-  if (!SINGULARITY_TRANSITION_PREVIEW || !SYNC_MONK_ESCAPE_PREVIEW) {
+  if (
+    !SINGULARITY_TRANSITION_PREVIEW ||
+    !SPLAT_BOUNCE_PREVIEW ||
+    !SYNC_MONK_ESCAPE_PREVIEW
+  ) {
     throw new Error("Dev preview action dependencies did not load.");
   }
 
@@ -18,6 +23,32 @@
 
   function requestSyncMonkEscapeLaunch() {
     runtimeMessaging().sendMessage(SYNC_MONK_ESCAPE_PREVIEW.launchMessage());
+  }
+
+  function requestSplatMaxBouncePreview() {
+    return new Promise((resolve, reject) => {
+      runtimeMessaging().sendMessage(
+        SPLAT_BOUNCE_PREVIEW.maxBounceMessage(),
+        (response) => {
+          const error = chrome.runtime.lastError;
+          if (error) {
+            reject(new Error(error.message));
+            return;
+          }
+          if (!response?.ok) {
+            reject(
+              new Error(
+                response?.message ||
+                  "Open the dashboard on Splat before previewing max bounce.",
+              ),
+            );
+            return;
+          }
+
+          resolve(response);
+        },
+      );
+    });
   }
 
   function requestSingularityTransitionPreview(options) {
@@ -48,6 +79,7 @@
 
   globalThis.PacePetsDevFlagsPreviewActions = Object.freeze({
     requestSingularityTransitionPreview,
+    requestSplatMaxBouncePreview,
     requestSyncMonkEscapeLaunch,
   });
 })();

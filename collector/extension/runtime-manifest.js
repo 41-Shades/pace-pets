@@ -9,6 +9,7 @@
     "persisted-text.js",
     "refresh-status.js",
     "refresh-control.js",
+    "splat-bounce-preview-control.js",
     "sync-monk-escape-preview-control.js",
     "singularity-transition-preview-control.js",
     "storage-adapter.js",
@@ -81,6 +82,7 @@
     "./dashboard-cart-spill-pile-renderer.js",
     "./dashboard-cart-spill-methods.js",
     "./dashboard-pace-favicon-methods.js",
+    "./dashboard-splat-fall-profile.js",
     "./dashboard-splat-fall-methods.js",
     "./dashboard-speed-lines-methods.js",
     "./dashboard-sprint-smoke-methods.js",
@@ -267,6 +269,14 @@
       "./dashboard-pace-rail-methods.js",
     ),
     dependencyEdge(
+      "./splat-bounce-preview-control.js",
+      "./dashboard-splat-fall-methods.js",
+    ),
+    dependencyEdge(
+      "./dashboard-splat-fall-profile.js",
+      "./dashboard-splat-fall-methods.js",
+    ),
+    dependencyEdge(
       "./sprint-intensity.js",
       "./dashboard-sprint-smoke-methods.js",
     ),
@@ -334,6 +344,10 @@
     dependencyEdge("./pace-state-data.js", "./dev-flags.js"),
     dependencyEdge(
       "./singularity-transition-preview-control.js",
+      "./dev-flags-preview-actions.js",
+    ),
+    dependencyEdge(
+      "./splat-bounce-preview-control.js",
       "./dev-flags-preview-actions.js",
     ),
     dependencyEdge(

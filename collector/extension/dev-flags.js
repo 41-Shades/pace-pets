@@ -22,7 +22,16 @@
 
   const FEATURE_PREVIEW_ACTIONS = Object.freeze([
     Object.freeze({
+      label: "Max Splat bounce",
+      run: () => PREVIEW_ACTIONS.requestSplatMaxBouncePreview(),
+      status: "Max Splat bounce preview requested.",
+    }),
+    Object.freeze({
       label: "Monk escape",
+      run: () => {
+        PREVIEW_ACTIONS.requestSyncMonkEscapeLaunch();
+        return Promise.resolve();
+      },
       status: "Monk escape launch requested.",
     }),
   ]);
@@ -282,7 +291,7 @@
           indicator: false,
           labelText: preview.label,
           onClick: async () => {
-            PREVIEW_ACTIONS.requestSyncMonkEscapeLaunch();
+            await preview.run();
             setStatus(preview.status);
           },
         }),
