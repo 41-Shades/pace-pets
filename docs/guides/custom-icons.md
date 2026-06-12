@@ -29,6 +29,10 @@ collector/extension/themes/default/
     apple.png
     ...
     yogurt.png
+  ocean-icons/
+    blue_tang.png
+    ...
+    yellow_tang.png
   effects/
     reset-exhausted/
       exhausted-person.png
@@ -57,6 +61,10 @@ current filenames are owned by
 `collector/extension/dashboard-cart-spill-data.js`, not the theme asset
 manifest.
 
+Ocean assets are PNGs used by the Push harder fish-tank water effect. The active
+subset and staged presentation are owned by
+`collector/extension/dashboard-push-tank-renderer.js`.
+
 `effects/reset-exhausted/exhausted-person.png` is currently retained as the
 reference/source visual for the reset exhaustion presentation. Live Splat can
 show that rescue sequence after the Splat fall, and local developer controls can
@@ -81,6 +89,9 @@ icons directly from its manifest, so those paths have to stay aligned.
 
 If you rename grocery spill files, update `GROCERY_ICON_FILES` in
 `collector/extension/dashboard-cart-spill-data.js`.
+
+If you rename ocean fish-tank files, update the icon choices and source
+directions in `collector/extension/dashboard-push-tank-renderer.js`.
 
 If you rename effect asset files, update `EFFECT_ASSET_FILES` in
 `collector/extension/themes/default/asset-manifest.js`.

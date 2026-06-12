@@ -172,19 +172,11 @@ input {
   text-transform: uppercase;
 }
 
-.singularity-checklist {
+.state-subsection-note {
   color: var(--muted);
-  display: grid;
-  font-size: 0.88rem;
-  gap: 7px;
+  font-size: 0.82rem;
   line-height: 1.35;
-  margin: 0;
-  padding-left: 20px;
-}
-
-.singularity-checklist li::marker {
-  color: var(--primary);
-  font-weight: 750;
+  margin: -2px 0 0;
 }
 
 .option-row[aria-pressed="true"],

@@ -13,8 +13,34 @@
     ".reset-countdown-group",
     ".panel-controls > *",
     ".collection-meta",
+    ".state-column-section",
+    ".state-column-title",
+    ".state-chip",
     ".state-stack > *",
   ]);
+
+  const INNER_FRAGMENT_SELECTORS = Object.freeze([
+    ".brand-title > *",
+    ".panel-actions > *",
+    ".panel-controls > *",
+    ".collection-meta > *",
+    ".pace-icon",
+    ".pace-copy > *",
+    ".pace-stats > *",
+    ".chart-meta > *",
+    ".chart-frame > *",
+    ".metric-main > *",
+    ".metric-bar",
+    ".reset-detail",
+    ".reset-detail-copy > *",
+    ".reset-progress > *",
+    ".reset-summary-copy > *",
+    ".early-reset-action > *",
+    ".state-chip > *",
+    ".state-copy > *",
+  ]);
+
+  const MAX_INNER_FRAGMENTS_PER_CONTAINER = 8;
 
   function viewportSize() {
     const rootElement = document.documentElement;
@@ -67,7 +93,53 @@
           containers.push({ element, index, rect });
         }
       });
-    return containers;
+
+    const containerElements = new Set(
+      containers.map((container) => container.element),
+    );
+    return containers.map((container) => ({
+      ...container,
+      innerFragments: collectInnerFragments(container, containerElements),
+    }));
+  }
+
+  function ownsFragment(element, containerElement, containerElements) {
+    let current = element.parentElement;
+    while (current && current !== containerElement) {
+      if (containerElements.has(current)) {
+        return false;
+      }
+      current = current.parentElement;
+    }
+    return current === containerElement;
+  }
+
+  function collectInnerFragments(container, containerElements) {
+    const fragments = [];
+    const seen = new Set();
+    container.element
+      .querySelectorAll(INNER_FRAGMENT_SELECTORS.join(","))
+      .forEach((element) => {
+        const rect = visibleRect(element);
+        if (
+          fragments.length < MAX_INNER_FRAGMENTS_PER_CONTAINER &&
+          !seen.has(element) &&
+          !containerElements.has(element) &&
+          ownsFragment(element, container.element, containerElements) &&
+          rect &&
+          rect.width >= 4 &&
+          rect.height >= 4
+        ) {
+          seen.add(element);
+          fragments.push({
+            element,
+            index: fragments.length,
+            parentIndex: container.index,
+            rect,
+          });
+        }
+      });
+    return fragments;
   }
 
   root.PacePetsDashboardSingularityChromeCollapseFragments = Object.freeze({

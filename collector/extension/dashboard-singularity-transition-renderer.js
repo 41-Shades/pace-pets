@@ -13,8 +13,10 @@
   const HIDDEN_CLASS = "is-singularity-space-hidden";
   const REVEAL_CLASS = "is-singularity-space-reveal";
   const ENTRY_EXIT_CLASS = "is-singularity-entry-exit";
+  const JITTER_CLASS = "is-singularity-chrome-jitter";
   const SPACE_ENTER_CLASS = "is-singularity-space-enter";
   const SPACE_ENTER_VISIBLE_CLASS = "is-singularity-space-enter-visible";
+  const JITTER_DURATION_PROPERTY = "--singularity-chrome-jitter-duration";
   const SPACE_ENTER_DURATION_MS = 2000;
   const REVEAL_DURATION_MS = 6000;
   const BLACK_HOLE_APPROACH_DURATION_MS = 7600;
@@ -91,6 +93,11 @@
       }
 
       document.body.classList.remove(REVEAL_CLASS);
+      document.body.style.setProperty(
+        JITTER_DURATION_PROPERTY,
+        `${CHROME_COLLAPSE_DELAY_MS}ms`,
+      );
+      document.body.classList.add(JITTER_CLASS);
       const scene = BLACK_HOLE_SCENE.create({
         motionDisabled: this.motionDisabled,
       });
@@ -107,12 +114,8 @@
           }
 
           this.blackHoleApproachCompleted = completed;
-          if (
-            !completed ||
-            this.chromeCollapseCompleted !== null ||
-            (!this.chromeCollapseScene && this.chromeCollapseTimer === null)
-          ) {
-            this.finish(completed && this.chromeCollapseCompleted !== false);
+          if (!completed || this.chromeCollapseCompleted === false) {
+            this.finish(false);
           }
         })
         .catch((error) => {
@@ -126,6 +129,7 @@
         return;
       }
 
+      document.body.classList.remove(JITTER_CLASS);
       const scene = CHROME_COLLAPSE_SCENE.create({
         motionDisabled: this.motionDisabled,
       });
@@ -134,11 +138,15 @@
         .play()
         .then((completed) => {
           this.chromeCollapseCompleted = completed;
-          if (this.stopped || this.blackHoleApproachCompleted === null) {
+          if (this.stopped) {
             return;
           }
 
-          this.finish(completed && this.blackHoleApproachCompleted);
+          if (!completed || this.blackHoleApproachCompleted === false) {
+            this.finish(false);
+          }
+          // The successful post-collapse hold is intentional until the next
+          // Singularity phase is designed.
         })
         .catch((error) => {
           console.warn("Pace Pets Singularity chrome collapse failed:", error);
@@ -173,10 +181,12 @@
       document.body.classList.remove(
         ENTRY_EXIT_CLASS,
         HIDDEN_CLASS,
+        JITTER_CLASS,
         REVEAL_CLASS,
         SPACE_ENTER_CLASS,
         SPACE_ENTER_VISIBLE_CLASS,
       );
+      document.body.style.removeProperty(JITTER_DURATION_PROPERTY);
       this.resolveDone?.(completed);
       this.resolveDone = null;
     }

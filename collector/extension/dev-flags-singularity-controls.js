@@ -17,7 +17,7 @@
         action: true,
         active: previewActive,
         indicator: false,
-        labelText: "Run from current state",
+        labelText: "Preview entry",
         onClick: async () => {
           setPreviewActive(true);
           try {

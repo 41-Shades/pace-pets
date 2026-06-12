@@ -11,10 +11,12 @@
 
   const BODY_PRESSURE_CLASS = "is-singularity-chrome-pressure";
   const BODY_COLLAPSE_CLASS = "is-singularity-chrome-collapse";
+  const COLLAPSE_PIECE_CLASS = "is-singularity-collapse-piece";
 
   class ChromeCollapseScene {
     constructor({ motionDisabled = false } = {}) {
       this.animations = [];
+      this.claimedElements = [];
       this.done = null;
       this.splitContainers = [];
       this.isDisposed = false;
@@ -37,9 +39,25 @@
         return this.done;
       }
 
+      this.claimCollapsePieces();
       document.body.classList.add(BODY_PRESSURE_CLASS);
       this.startCollapse();
       return this.done;
+    }
+
+    claimCollapsePieces() {
+      this.claimedElements = [];
+      this.splitContainers.forEach((container) => {
+        this.claimElement(container.element);
+        (container.innerFragments ?? []).forEach((fragment) => {
+          this.claimElement(fragment.element);
+        });
+      });
+    }
+
+    claimElement(element) {
+      element.classList.add(COLLAPSE_PIECE_CLASS);
+      this.claimedElements.push(element);
     }
 
     startCollapse() {
@@ -77,6 +95,10 @@
         animation.cancel();
       }
       this.animations = [];
+      for (const element of this.claimedElements) {
+        element.classList.remove(COLLAPSE_PIECE_CLASS);
+      }
+      this.claimedElements = [];
       this.splitContainers = [];
       document.body.classList.remove(BODY_PRESSURE_CLASS, BODY_COLLAPSE_CLASS);
       this.resolve(false);

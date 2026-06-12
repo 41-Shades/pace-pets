@@ -10,6 +10,52 @@
     );
   }
 
+  function canUsePerfectZeroPageBackground(controller) {
+    return Boolean(
+      controller.elements.shell &&
+      controller.elements.perfectZeroPageBackground,
+    );
+  }
+
+  function shouldStopPerfectZeroPageBackground(controller, active) {
+    return !active || controller.motionPreferenceEnabled?.() === false;
+  }
+
+  function hasMatchingPerfectZeroPageBackgroundScene(
+    controller,
+    featuredIconPlanet,
+  ) {
+    return (
+      controller.perfectZeroPageBackgroundScene &&
+      controller.perfectZeroPageBackgroundFeaturedIconPlanet ===
+        featuredIconPlanet
+    );
+  }
+
+  function preparePerfectZeroPageBackground(controller) {
+    controller.elements.perfectZeroPageBackground.hidden = false;
+    document.body.classList.add("has-perfect-zero-page-background");
+    controller.perfectZeroEclipseIconController()?.start();
+  }
+
+  function createPerfectZeroPageBackgroundScene(
+    controller,
+    featuredIconPlanet,
+  ) {
+    return PERFECT_ZERO_SPACE.create(
+      controller.elements.shell,
+      controller.elements.perfectZeroPageBackground,
+      {
+        profile: PERFECT_ZERO_SPACE.profiles.fullBleed,
+        scene: {
+          featuredPlanets: featuredIconPlanet
+            ? controller.perfectZeroPageFeaturedPlanets()
+            : [],
+        },
+      },
+    );
+  }
+
   Object.assign(Controller.prototype, {
     perfectZeroEclipseIconController() {
       if (!this.perfectZeroEclipseIcon && this.elements.themeToggle) {
@@ -24,6 +70,7 @@
     stopPerfectZeroPageBackgroundScene() {
       this.perfectZeroPageBackgroundScene?.stop();
       this.perfectZeroPageBackgroundScene = null;
+      this.perfectZeroPageBackgroundFeaturedIconPlanet = null;
       this.perfectZeroEclipseIcon?.stop();
       if (this.elements.perfectZeroPageBackground) {
         this.elements.perfectZeroPageBackground.hidden = true;
@@ -58,33 +105,29 @@
       ];
     },
 
-    setPerfectZeroPageBackgroundActive(active) {
-      if (!this.elements.shell || !this.elements.perfectZeroPageBackground) {
+    setPerfectZeroPageBackgroundActive(
+      active,
+      { featuredIconPlanet = true } = {},
+    ) {
+      if (!canUsePerfectZeroPageBackground(this)) {
         return false;
       }
 
-      if (!active || this.motionPreferenceEnabled?.() === false) {
+      if (shouldStopPerfectZeroPageBackground(this, active)) {
         this.stopPerfectZeroPageBackgroundScene();
         return false;
       }
 
-      if (this.perfectZeroPageBackgroundScene) {
+      if (hasMatchingPerfectZeroPageBackgroundScene(this, featuredIconPlanet)) {
         this.perfectZeroEclipseIconController()?.start();
         return true;
       }
 
-      this.elements.perfectZeroPageBackground.hidden = false;
-      document.body.classList.add("has-perfect-zero-page-background");
-      this.perfectZeroEclipseIconController()?.start();
-      const scene = PERFECT_ZERO_SPACE.create(
-        this.elements.shell,
-        this.elements.perfectZeroPageBackground,
-        {
-          profile: PERFECT_ZERO_SPACE.profiles.fullBleed,
-          scene: {
-            featuredPlanets: this.perfectZeroPageFeaturedPlanets(),
-          },
-        },
+      this.stopPerfectZeroPageBackgroundScene();
+      preparePerfectZeroPageBackground(this);
+      const scene = createPerfectZeroPageBackgroundScene(
+        this,
+        featuredIconPlanet,
       );
       if (!scene) {
         this.stopPerfectZeroPageBackgroundScene();
@@ -92,6 +135,7 @@
       }
 
       this.perfectZeroPageBackgroundScene = scene;
+      this.perfectZeroPageBackgroundFeaturedIconPlanet = featuredIconPlanet;
       return true;
     },
   });

@@ -108,6 +108,10 @@
     state.renderer.render(sweatLoad, timestamp, { maxFill });
   }
 
+  function currentPushWaterLevel(state, maxFill) {
+    return state?.renderer?.currentLevel?.({ maxFill }) ?? 0;
+  }
+
   function createPushStretchLayer() {
     const stretchCanvas = document.createElement("canvas");
     stretchCanvas.className = "pace-push-stretch-canvas";
@@ -173,6 +177,7 @@
         const phase = (elapsed % PULSE_DURATION_MS) / PULSE_DURATION_MS;
         const profile = pulseState.profile;
         const amount = pulseAmount(profile, phase);
+        const maxFill = Boolean(this.getCurrentMaxPoolFill?.());
         renderer.render(profile, amount);
         const sweatLoad = sweatRenderer?.render({
           cycleIndex: pulseState.cycleIndex,
@@ -184,13 +189,9 @@
           previousProfile: pulseState.previousProfile,
           previousPulseLevel: pulseState.previousPulseLevel,
           pulseLevel: pulseState.pulseLevel,
+          waterLevel: currentPushWaterLevel(waterState, maxFill),
         });
-        updatePushWaterLayer(
-          waterState,
-          sweatLoad ?? 0,
-          timestamp,
-          Boolean(this.getCurrentMaxPoolFill?.()),
-        );
+        updatePushWaterLayer(waterState, sweatLoad ?? 0, timestamp, maxFill);
         animationFrameId = window.requestAnimationFrame(renderFrame);
       };
       const start = () => {
