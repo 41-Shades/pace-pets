@@ -1,9 +1,12 @@
 .reset-details {
+  align-content: start;
   align-items: stretch;
-  column-gap: clamp(8px, 1.4vw, 18px);
   display: grid;
   flex: 1 1 auto;
+  gap: 14px clamp(8px, 1.4vw, 18px);
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  height: 100%;
   margin: 0;
   min-width: 0;
   padding: 0;
@@ -29,10 +32,41 @@
 
 #resets-in {
   display: block;
+  font-size: 2.15rem;
+  font-weight: 820;
   line-height: 1;
   white-space: nowrap;
-  font-size: 2.45rem;
-  font-weight: 850;
+}
+
+.pace-burnout-line {
+  align-items: center;
+  color: var(--subhead);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  font-weight: 500;
+  gap: 5px;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  margin-left: 2px;
+  margin-top: 9px;
+  max-width: 100%;
+  outline: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.pace-burnout-line:focus-visible {
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+#pace-burnout-in {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
 }
 
 .reset-note {
@@ -41,10 +75,10 @@
   display: flex;
   flex-wrap: wrap;
   font-size: 0.72rem;
-  font-weight: 200;
+  font-weight: 100;
   gap: 4px;
   justify-content: flex-start;
-  margin: 12px 0 0;
+  margin: 4px 0 0 2px;
   max-width: 100%;
 }
 
@@ -52,7 +86,7 @@ dd {
   display: grid;
   gap: 4px;
   font-size: 0.78rem;
-  margin: 10px 0 0;
+  margin: 20px 0 0;
 }
 
 .reset-date-value,
@@ -85,7 +119,7 @@ dd {
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: auto 1fr auto;
-  margin-top: 12px;
+  margin-top: 0;
   min-width: 0;
   padding-inline: 0;
 }
@@ -99,11 +133,11 @@ dd {
   z-index: 1;
 }
 
-.reset-progress-dot-start {
+.reset-progress-dot:first-child {
   background: var(--reset-dot-start);
 }
 
-.reset-progress-dot-end {
+.reset-progress-dot:last-child {
   background: var(--reset-dot-end);
   border-color: var(--reset-dot-end-border);
 }

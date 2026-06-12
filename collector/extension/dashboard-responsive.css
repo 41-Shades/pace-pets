@@ -109,7 +109,9 @@
     grid-row: auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: auto auto;
+    height: auto;
     padding: 0;
+    row-gap: 0;
     width: 100%;
   }
 
@@ -143,7 +145,7 @@
 
   .reset-summary-copy {
     display: grid;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto auto auto;
     justify-items: start;
     width: 100%;
   }
@@ -161,6 +163,7 @@
   }
 
   .reset-progress {
+    align-self: auto;
     grid-row: auto;
     margin-top: 16px;
   }

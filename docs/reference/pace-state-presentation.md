@@ -161,6 +161,10 @@ then repeats on later bounded delays until the dashboard leaves Splat. The
 developer override is the only stored field; live Splat rescue state is
 transient dashboard timer and DOM state.
 
+The same card shows projected pace burn out by linearly extrapolating the
+current window's used percent over elapsed time, including projections that land
+after the scheduled reset.
+
 The source visual asset remains
 `collector/extension/themes/default/effects/reset-exhausted/exhausted-person.png`,
 which is kept as the raster reference for the seated, slumped pose. The active

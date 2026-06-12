@@ -142,6 +142,10 @@
   font-weight: 200;
 }
 
+.reset-exhausted-message-save-text {
+  transform: translateX(14px);
+}
+
 .reset-exhausted-face-state {
   animation-delay: var(--reset-exhausted-sequence-delay, 0ms);
   animation-duration: 10.9s;

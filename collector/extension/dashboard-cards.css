@@ -92,7 +92,7 @@
   margin-top: 0;
   overflow: hidden;
   display: flex;
-  height: var(--dashboard-card-height);
+  height: var(--reset-card-height);
   padding: 22px var(--dashboard-card-padding-x) 20px;
 }
 
@@ -103,7 +103,7 @@
 }
 
 .reset-window {
-  align-items: center;
+  align-items: stretch;
   display: flex;
   flex: 1 1 auto;
   gap: 16px;
@@ -195,7 +195,7 @@
   cursor: pointer;
   font: inherit;
   font-size: 1.04em;
-  font-weight: 250;
+  font-weight: 150;
   line-height: 1;
   padding: 4px 7px;
 }

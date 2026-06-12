@@ -24,6 +24,7 @@
     manualRefreshButton: "#manual-refresh-button",
     motionToggle: "#motion-toggle",
     paceAltRatio: "#pace-alt-ratio",
+    paceBurnoutIn: "#pace-burnout-in",
     paceCard: "#pace-card",
     paceCopy: "#pace-copy",
     paceIcon: "#pace-icon",

@@ -58,12 +58,19 @@
         previewWindow.windowData?.resetsAt,
         previewWindow.atMs,
       );
+      this.elements.paceBurnoutIn.textContent =
+        DASHBOARD_TIME.paceBurnoutCountdown(
+          previewWindow.windowData,
+          previewWindow.atMs,
+        );
 
       if (state.key !== DATA.PACE_STATES.singularity.key) {
         return;
       }
 
       this.elements.resetsIn.textContent =
+        DATA.SINGULARITY_RESET_COUNTDOWN_TEXT;
+      this.elements.paceBurnoutIn.textContent =
         DATA.SINGULARITY_RESET_COUNTDOWN_TEXT;
       this.elements.resetProgressFill.style.setProperty(
         "--reset-progress",

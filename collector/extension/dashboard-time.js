@@ -1,6 +1,10 @@
 (() => {
   "use strict";
 
+  const MS_PER_MINUTE = 60 * 1000;
+  const MINUTES_PER_HOUR = 60;
+  const HOURS_PER_DAY = 24;
+
   function dateMs(value) {
     return PacePetsLogic.dateMs(value);
   }
@@ -93,6 +97,17 @@
     );
   }
 
+  function durationCountdown(remainingMs, { alwaysShowDays = false } = {}) {
+    const totalMinutes = Math.floor(remainingMs / MS_PER_MINUTE);
+    const days = Math.floor(totalMinutes / (HOURS_PER_DAY * MINUTES_PER_HOUR));
+    const hours = Math.floor(
+      (totalMinutes % (HOURS_PER_DAY * MINUTES_PER_HOUR)) / MINUTES_PER_HOUR,
+    );
+    const minutes = totalMinutes % MINUTES_PER_HOUR;
+    const time = `${hours}h ${String(minutes).padStart(2, "0")}m`;
+    return alwaysShowDays || days > 0 ? `${days}d ${time}` : time;
+  }
+
   function resetCountdown(value, atMs = Date.now()) {
     const resetMs = dateMs(value);
     if (resetMs === null) {
@@ -104,12 +119,42 @@
       return "Window ended";
     }
 
-    const totalMinutes = Math.floor(remainingMs / 60000);
-    const days = Math.floor(totalMinutes / (24 * 60));
-    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
-    const minutes = totalMinutes % 60;
-    const time = `${hours}h ${String(minutes).padStart(2, "0")}m`;
-    return days > 0 ? `${days}d ${time}` : time;
+    return durationCountdown(remainingMs);
+  }
+
+  function hasBurnoutCountdownInputs(startMs, resetMs, remainingPercent) {
+    return (
+      startMs !== null &&
+      resetMs !== null &&
+      remainingPercent !== null &&
+      startMs < resetMs
+    );
+  }
+
+  function paceBurnoutCountdown(windowData, atMs = Date.now()) {
+    const startMs = PacePetsLogic.windowStartMs(windowData);
+    const resetMs = dateMs(windowData?.resetsAt);
+    const remainingPercent = PacePetsLogic.boundedPercent(
+      windowData?.remainingPercent,
+    );
+
+    if (!hasBurnoutCountdownInputs(startMs, resetMs, remainingPercent)) {
+      return "--";
+    }
+    if (atMs >= resetMs) {
+      return "Window ended";
+    }
+
+    const elapsedMs = atMs - startMs;
+    const usedPercent = 100 - remainingPercent;
+    if (elapsedMs <= 0 || usedPercent <= 0) {
+      return "--";
+    }
+
+    const burnoutAtMs = startMs + (elapsedMs * 100) / usedPercent;
+    return durationCountdown(Math.max(0, burnoutAtMs - atMs), {
+      alwaysShowDays: true,
+    });
   }
 
   function resetCountdownDisplaysZero(value, atMs = Date.now()) {
@@ -119,13 +164,14 @@
     }
 
     const remainingMs = resetMs - atMs;
-    return remainingMs > 0 && Math.floor(remainingMs / 60000) === 0;
+    return remainingMs > 0 && Math.floor(remainingMs / MS_PER_MINUTE) === 0;
   }
 
   globalThis.PacePetsDashboardTime = Object.freeze({
     dateMs,
     formatClockTime,
     isResetWindowStale: PacePetsLogic.isResetWindowStale,
+    paceBurnoutCountdown,
     resetCountdown,
     resetCountdownDisplaysZero,
     setResetParts,

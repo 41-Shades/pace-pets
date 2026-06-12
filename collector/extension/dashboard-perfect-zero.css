@@ -113,6 +113,7 @@ body.has-perfect-zero-page-background #collection-status-label,
 body.has-perfect-zero-page-background .chart-meta h2,
 body.has-perfect-zero-page-background .metric-note,
 body.has-perfect-zero-page-background .pace-alt-ratio,
+body.has-perfect-zero-page-background .pace-burnout-line,
 body.has-perfect-zero-page-background .reset-note {
   color: var(--perfect-zero-space-text-tertiary);
 }
@@ -136,6 +137,10 @@ body.has-perfect-zero-page-background #resets-in {
   color: var(--perfect-zero-space-text-secondary);
   font-size: 2.05rem;
   font-weight: 780;
+}
+
+body.has-perfect-zero-page-background #pace-burnout-in {
+  color: var(--perfect-zero-space-text-tertiary);
 }
 
 body.has-perfect-zero-page-background .pace-card.pace-perfect-zero #pace-title,
