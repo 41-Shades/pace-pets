@@ -13,9 +13,8 @@
   const BODY_COLLAPSE_CLASS = "is-singularity-chrome-collapse";
 
   class ChromeCollapseScene {
-    constructor({ blackHoleVersion, reducedMotion = false } = {}) {
+    constructor({ reducedMotion = false } = {}) {
       this.animations = [];
-      this.blackHoleVersion = blackHoleVersion;
       this.done = null;
       this.splitContainers = [];
       this.isDisposed = false;
@@ -51,9 +50,20 @@
       document.body.classList.add(BODY_COLLAPSE_CLASS);
       const { animations } = MOTION.startContainerPullAnimations(
         this.splitContainers,
-        this.blackHoleVersion,
       );
       this.animations.push(...animations);
+      Promise.all(
+        animations.map((animation) =>
+          animation.finished.then(
+            () => true,
+            () => false,
+          ),
+        ),
+      ).then((results) => {
+        if (!this.isDisposed) {
+          this.resolve(results.every(Boolean));
+        }
+      });
     }
 
     resolve(completed) {

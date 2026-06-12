@@ -48,6 +48,12 @@ state mapping from
 Effect assets are also PNGs with transparent backgrounds and are listed in the
 same asset manifest.
 
+`effects/reset-exhausted/exhausted-person.png` is currently retained as the
+reference/source visual for the dev-only reset exhaustion preview. The active
+animated preview renders a traced inline SVG so limbs can move independently,
+but the PNG remains the pose, scale, and face target for trace adjustments or
+future layered artwork.
+
 After replacing icons, reload the unpacked extension from
 `chrome://extensions`.
 

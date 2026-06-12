@@ -67,8 +67,6 @@
     "./dashboard-sync-monk-escape-scene.js",
     "./dashboard-sync-monk-escape-methods.js",
     "./dashboard-sync-sunburst-methods.js",
-    "./dashboard-singularity-black-hole-v1-draw.js",
-    "./dashboard-singularity-black-hole-v1-scene.js",
     "./dashboard-singularity-black-hole-v2-shaders.js",
     "./dashboard-singularity-black-hole-v2-scene.js",
     "./dashboard-singularity-chrome-collapse-fragments.js",
@@ -234,14 +232,6 @@
     dependencyEdge(
       "./dashboard-sync-sunburst-rays.js",
       "./dashboard-sync-sunburst-renderer.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-black-hole-v1-draw.js",
-      "./dashboard-singularity-black-hole-v1-scene.js",
-    ),
-    dependencyEdge(
-      "./dashboard-singularity-black-hole-v1-scene.js",
-      "./dashboard-singularity-transition-renderer.js",
     ),
     dependencyEdge(
       "./dashboard-singularity-black-hole-v2-shaders.js",

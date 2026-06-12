@@ -91,14 +91,6 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
     "./dashboard.js",
   ]);
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-    "./dashboard-singularity-black-hole-v1-scene.js",
-    "./dashboard-singularity-transition-renderer.js",
-  ]);
-  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-    "./dashboard-singularity-black-hole-v1-draw.js",
-    "./dashboard-singularity-black-hole-v1-scene.js",
-  ]);
-  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-singularity-black-hole-v2-shaders.js",
     "./dashboard-singularity-black-hole-v2-scene.js",
   ]);
@@ -202,12 +194,6 @@ describe("CodexExtensionRuntime script sources", () => {
     );
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
       "./dashboard-preferences.js",
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-black-hole-v1-scene.js",
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-black-hole-v1-draw.js",
     );
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
       "./dashboard-singularity-black-hole-v2-shaders.js",

@@ -32,13 +32,13 @@
     const linework = createSvgElement(documentRef, "g");
     linework.classList.add("reset-exhausted-trace-linework");
     linework.append(
-      createTracePath(documentRef, "M 286 132 L 258 229"),
+      createTracePath(documentRef, "M 286 132 L 260.8 219.3"),
       createTracePath(
         documentRef,
-        "M 286 132 C 310 178 327 223 331 256 L 354 261",
+        "M 286 132 C 307.6 173.4 322.9 213.9 326.5 243.6 L 347.2 248.1",
       ),
-      createTracePath(documentRef, "M 258 229 L 159 229 L 7 253"),
-      createTracePath(documentRef, "M 258 234 L 42 269 L 22 262"),
+      createTracePath(documentRef, "M 260.8 219.3 L 171.7 219.3 L 34.9 240.9"),
+      createTracePath(documentRef, "M 260.8 223.8 L 66.4 255.3 L 48.4 249"),
       createAnimatedArm(documentRef),
     );
 
@@ -48,39 +48,68 @@
     head.setAttribute("cy", "66");
     head.setAttribute("r", "58");
 
-    const face = createSvgElement(documentRef, "g");
-    face.classList.add("reset-exhausted-trace-face");
-    face.append(
-      createTracePath(documentRef, "M 244 48 C 251 49 257 47 263 45"),
-      createTracePath(documentRef, "M 240 68 C 249 74 258 73 265 67"),
-      createTracePath(documentRef, "M 294 56 C 301 62 307 69 311 78"),
-      createTracePath(documentRef, "M 292 82 C 301 90 311 94 320 91"),
-      createTracePath(documentRef, "M 263 104 C 268 103 272 106 274 110"),
-    );
+    const face = createFaceExpressions(documentRef);
 
     svg.append(linework, head, face);
     return svg;
   }
 
+  function createFaceExpressions(documentRef) {
+    const face = createSvgElement(documentRef, "g");
+    face.classList.add("reset-exhausted-trace-face");
+    face.append(
+      createFaceState(documentRef, "reset-exhausted-face-sleep", [
+        "M 244 48 C 251 49 257 47 263 45",
+        "M 294 56 C 301 62 307 69 311 78",
+        "M 240 68 C 249 74 258 73 265 67",
+        "M 292 82 C 301 90 311 94 320 91",
+        "M 263 104 C 268 103 272 106 274 110",
+      ]),
+      createFaceState(documentRef, "reset-exhausted-face-slits", [
+        "M 240 66 C 248 64 256 62 264 60",
+        "M 294 75 C 302 80 310 86 318 91",
+        "M 262 103 C 267 105 272 107 276 109",
+      ]),
+    );
+    return face;
+  }
+
+  function createFaceState(documentRef, className, pathDataList) {
+    const group = createSvgElement(documentRef, "g");
+    group.classList.add("reset-exhausted-face-state", className);
+    group.append(
+      ...pathDataList.map((pathData) => createTracePath(documentRef, pathData)),
+    );
+    return group;
+  }
+
   function createAnimatedArm(documentRef) {
-    const path = createTracePath(documentRef, "M 286 132 L 236 202 L 198 224");
+    const path = createTracePath(
+      documentRef,
+      "M 286 132 L 241 195 L 206.8 214.8",
+    );
     path.classList.add("reset-exhausted-free-arm");
 
     const animation = createSvgElement(documentRef, "animate");
     animation.setAttribute("attributeName", "d");
-    animation.setAttribute("dur", "8.6s");
-    animation.setAttribute("repeatCount", "indefinite");
-    animation.setAttribute("keyTimes", "0;0.54;0.62;0.72;0.82;0.92;1");
+    animation.setAttribute("dur", "10.9s");
+    animation.setAttribute("fill", "freeze");
+    animation.setAttribute("repeatCount", "1");
+    animation.setAttribute(
+      "keyTimes",
+      "0;0.426;0.491;0.565;0.796;0.843;0.89;1",
+    );
     animation.setAttribute(
       "values",
       [
-        "M 286 132 L 236 202 L 198 224",
-        "M 286 132 L 236 202 L 198 224",
-        "M 286 132 L 235 167 L 183 194",
-        "M 286 132 L 233 135 L 177 110",
-        "M 286 132 L 235 167 L 183 194",
-        "M 286 132 L 236 202 L 198 224",
-        "M 286 132 L 236 202 L 198 224",
+        "M 286 132 L 241 195 L 206.8 214.8",
+        "M 286 132 L 241 195 L 206.8 214.8",
+        "M 286 132 L 240.1 163.5 L 193.3 187.8",
+        "M 286 132 L 238.3 134.7 L 187.9 112.2",
+        "M 286 132 L 238.3 134.7 L 187.9 112.2",
+        "M 286 132 L 240.1 163.5 L 193.3 187.8",
+        "M 286 132 L 241 195 L 206.8 214.8",
+        "M 286 132 L 241 195 L 206.8 214.8",
       ].join(";"),
     );
     path.append(animation);

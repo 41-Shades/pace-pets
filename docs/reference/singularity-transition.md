@@ -23,7 +23,7 @@ The Singularity transition is the dashboard-only cinematic effect for the rare
 
 The Singularity transition fades into the shared space backdrop over 2 seconds,
 fades dashboard chrome in over 6 seconds, then starts the selected supermassive
-black-hole approach. As V2 glints start falling inward, the dashboard chrome
+black-hole approach. As glints start falling inward, the dashboard chrome
 pressure-ripples and its real containers begin one continuous split, orbital
 pull, and distortion toward the black hole. They shrink and fade only as they
 reach the horizon. The explosive/shard breakup path is intentionally not active.
@@ -39,17 +39,11 @@ The central effect is a supermassive black hole that starts as a small point
 deep in the shared space scene, spins forward, and becomes the visual anchor for
 the chrome-collapse phase.
 
-Black Hole V1 is the default procedural Canvas 2D scene. It is the
-lowest-friction baseline inside the extension without adding a runtime
-dependency. The scene draws the event horizon, photon ring, accretion disk,
-plasma jets, and lensing glow directly over the existing space backdrop.
-
-Black Hole V2 is the WebGL shader scene. It renders a full-window transparent
+The black hole is the WebGL shader scene. It renders a full-window transparent
 WebGL canvas behind the dashboard chrome and over the shared space backdrop with
 a procedural event horizon, asymmetric photon ring, tilted noisy accretion disk,
 lensing glow, Doppler-shifted plasma bands, turbulent vertical jets, a late
-gravity pulse, and sparse infalling glints. It is selectable from local
-developer controls for review before becoming the default.
+gravity pulse, and sparse infalling glints.
 
 Other implementation paths remain available if the shader scene hits a ceiling:
 
@@ -67,7 +61,7 @@ Current sequence target:
 5. A distant black-hole point appears in the background.
 6. The accretion disk spins, brightens, and grows toward the foreground.
 7. The scene holds long enough to establish the threat.
-8. Dashboard chrome pressure-ripples near the same time V2 glints start
+8. Dashboard chrome pressure-ripples near the same time glints start
    distorting and falling inward.
 9. Main-panel containers and each state-rail item split apart, orbit inward,
    stretch, and shear as one continuous pull instead of separate break/fall
@@ -83,15 +77,10 @@ breakup handoff is active in the current implementation.
 ## Versioning
 
 `singularity` remains the only product pace state. The retired generated
-fragment implementation has been removed, so the dashboard now has one
-canonical Singularity transition. Local developer controls no longer store a
-selector for the whole transition.
-
-Versioning is now scoped to the black-hole phase. Black Hole V1 is the default
-Canvas 2D implementation. Black Hole V2 is the WebGL implementation. Local
-developer controls can store `singularityBlackHoleVersion` to select V2 for the
-black-hole phase only; this does not restore a selector for the full
-Singularity transition.
+fragment implementation and the Canvas black-hole baseline have both been
+removed, so the dashboard now has one canonical Singularity transition. Local
+developer controls no longer store selectors for the whole transition or the
+black-hole phase.
 
 The local `Run from current state` dev action can be launched from another
 displayed pace state. It fades the live dashboard chrome out, writes the forced
@@ -104,15 +93,14 @@ requested, the preview is queued until that dashboard tab becomes visible.
 1. Reload the unpacked extension from `chrome://extensions`.
 2. Reload both extension pages: `dashboard.html` and `dev-flags.html`.
 3. In Dev Controls, choose a prior state such as `Keep pace` or `Perfect zero`.
-4. Choose `Black Hole V1` or `Black Hole V2`.
-5. Click `Run from current state`.
-6. If Dev Controls reports that the preview is queued, switch to the dashboard
+4. Click `Run from current state`.
+5. If Dev Controls reports that the preview is queued, switch to the dashboard
    tab.
 
 Expected timing: the prior dashboard state fades out for about 2 seconds, the
 forced Singularity state fades into space over 2 seconds, the dashboard chrome
 fades in over 6 seconds, then the black-hole approach builds for about 7.6
-seconds. The chrome-collapse pressure starts around the V2 glint suction point
+seconds. The chrome-collapse pressure starts around the glint suction point
 inside the black-hole approach, and main-panel containers plus state-rail items
 immediately split, orbit inward, distort, and shrink into the horizon as one
 continuous pull.
@@ -157,10 +145,10 @@ dashboard page
   -> SingularityTransitionRenderer.create({ ... })
   -> renderer leaves the space backdrop visible
   -> renderer fades dashboard chrome in
-  -> renderer starts the selected black-hole approach scene
+  -> renderer starts the WebGL black-hole approach scene
   -> renderer starts live chrome container split/orbit during black-hole approach
   -> renderer compresses containers into the horizon without a shard explosion
-  -> renderer tears down when Singularity exits
+  -> renderer tears down when the chrome collapse completes or Singularity exits
 ```
 
 The manifest does not request `activeTab`, `<all_urls>`, `tabs`, `tabCapture`,
@@ -172,16 +160,12 @@ or `desktopCapture` for this effect.
   Singularity transition renderer. It fades into the normal Singularity
   page/backdrop over 2 seconds, fades dashboard chrome in over 6 seconds, and
   starts the black-hole approach scene.
-- `collector/extension/dashboard-singularity-black-hole-v1-draw.js`:
-  procedural Canvas 2D black-hole approach drawing helpers for Black Hole V1.
-- `collector/extension/dashboard-singularity-black-hole-v1-scene.js`:
-  temporary black-hole canvas lifecycle, high-DPI sizing, animation frame loop,
-  and teardown for Black Hole V1.
 - `collector/extension/dashboard-singularity-black-hole-v2-shaders.js`:
-  WebGL vertex and fragment shader sources for Black Hole V2.
+  WebGL vertex and fragment shader sources for the black-hole scene.
 - `collector/extension/dashboard-singularity-black-hole-v2-scene.js`:
   temporary WebGL canvas lifecycle, shader setup, high-DPI sizing, animation
-  frame loop, context-loss handling, and teardown for Black Hole V2.
+  frame loop, context-loss handling, approach completion, and teardown for the
+  black-hole scene.
 - `collector/extension/dashboard-singularity-chrome-collapse-fragments.js`:
   DOM-geometry collection for live containers that split away from the dashboard
   chrome.
@@ -197,22 +181,21 @@ or `desktopCapture` for this effect.
   controller integration, entry gating, hidden-tab queueing, and scene launch.
 - `collector/extension/dashboard-singularity-transition.css`: body shell
   visibility styles, black-hole canvas layers, pressure ripple, and live
-  chrome-collapse state. Both black-hole scenes stay behind the dashboard
-  chrome while real chrome containers animate above them.
+  chrome-collapse state. The black-hole scene stays behind the dashboard chrome
+  while real chrome containers animate above it.
 
-`collector/extension/runtime-manifest.js` owns the script order. The Black Hole
-V1 draw helper must load before the Black Hole V1 scene, the V2 shaders must
-load before the Black Hole V2 scene, chrome-collapse container collection must
-load before the chrome-collapse motion and scene modules, motion must load
-before the chrome-collapse scene, and those scenes must load before the
-transition renderer.
+`collector/extension/runtime-manifest.js` owns the script order. The WebGL
+shaders must load before the black-hole scene, chrome-collapse container
+collection must load before the chrome-collapse motion and scene modules,
+motion must load before the chrome-collapse scene, and those scenes must load
+before the transition renderer.
 
 ## Lifecycle And Cleanup
 
 The renderer creates its temporary presentation state at playback start. It
 applies body classes that hide the dashboard chrome while leaving the shared
 space backdrop visible, then creates a temporary black-hole canvas for the
-approach phase. Around the V2 glint suction timing, it starts the
+approach phase. Around the glint suction timing, it starts the
 chrome-collapse scene. That scene animates real main-panel containers and
 state-rail items as stretched DOM pieces along circular inward paths, then
 compresses them into the horizon without an explosive breakup.

@@ -151,6 +151,7 @@
       this.done = null;
       this.frameId = null;
       this.gl = null;
+      this.isApproachComplete = false;
       this.isFinished = false;
       this.reducedMotion = reducedMotion;
       this.resolveDone = null;
@@ -260,6 +261,9 @@
       this.size = configureCanvas(this.canvas, this.gl);
       const elapsedMs = Math.max(0, frameTimeMs - this.startedAtMs);
       this.drawFrame(elapsedMs);
+      if (elapsedMs >= APPROACH_DURATION_MS) {
+        this.complete(true);
+      }
       this.requestFrame();
     }
 
@@ -297,22 +301,17 @@
     }
 
     handleVisibilityChange() {
-      if (this.frameId !== null) {
-        root.cancelAnimationFrame(this.frameId);
-        this.frameId = null;
-      }
+      this.cancelFrame();
       this.requestFrame();
     }
 
     handleContextLost(event) {
       event.preventDefault();
       this.contextLost = true;
-      if (this.frameId !== null) {
-        root.cancelAnimationFrame(this.frameId);
-        this.frameId = null;
-      }
+      this.cancelFrame();
       this.resources = null;
       console.warn("Pace Pets Singularity black-hole V2 WebGL context lost.");
+      this.finish(false);
     }
 
     handleContextRestored() {
@@ -341,6 +340,21 @@
       this.finish(false);
     }
 
+    complete(completed) {
+      if (!this.isApproachComplete) {
+        this.isApproachComplete = true;
+        this.resolveDone?.(completed);
+        this.resolveDone = null;
+      }
+    }
+
+    cancelFrame() {
+      if (this.frameId !== null) {
+        root.cancelAnimationFrame(this.frameId);
+        this.frameId = null;
+      }
+    }
+
     destroyGlResources() {
       if (!this.gl || !this.resources || this.contextLost) {
         return;
@@ -357,10 +371,7 @@
       }
 
       this.isFinished = true;
-      if (this.frameId !== null) {
-        root.cancelAnimationFrame(this.frameId);
-      }
-      this.frameId = null;
+      this.cancelFrame();
       root.removeEventListener("resize", this.handleResize);
       document.removeEventListener(
         "visibilitychange",
@@ -378,16 +389,11 @@
       this.canvas?.remove();
       this.canvas = null;
       this.gl = null;
-      this.resolveDone?.(completed);
-      this.resolveDone = null;
+      this.complete(completed);
     }
   }
 
-  function create(options) {
-    return new BlackHoleScene(options);
-  }
-
   root.PacePetsDashboardSingularityBlackHoleV2Scene = Object.freeze({
-    create,
+    create: (options) => new BlackHoleScene(options),
   });
 })(globalThis);

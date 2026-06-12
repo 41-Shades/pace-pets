@@ -78,7 +78,6 @@
 
       const reducedMotion = prefersReducedMotion();
       const scene = TRANSITION_RENDERER.create({
-        blackHoleVersion: this.getCurrentSingularityBlackHoleVersion?.(),
         reducedMotion,
       });
       this.singularityTransitionScene = scene;

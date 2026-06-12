@@ -26,8 +26,6 @@
       this.currentManualRefreshLeadWindow = false;
       this.currentMaxPoolFill = false;
       this.currentResetExhaustedPreview = false;
-      this.currentSingularityBlackHoleVersion =
-        this.DEVELOPER_OPTIONS.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION;
       this.currentSprintIntensityPreview = null;
       this.selectedWindowKey = this.DEFAULT_WINDOW_KEY;
       this.createControllers();
@@ -77,8 +75,6 @@
         getCurrentHistory: () => this.currentHistory,
         getCurrentMaxPoolFill: () => this.currentMaxPoolFill,
         getCurrentRefreshStatus: () => this.currentRefreshStatus,
-        getCurrentSingularityBlackHoleVersion: () =>
-          this.currentSingularityBlackHoleVersion,
         getCurrentSprintIntensityPreview: () =>
           this.currentSprintIntensityPreview,
         getSelectedWindowKey: () => this.selectedWindowKey,
@@ -212,8 +208,6 @@
       this.currentMaxPoolFill = developerOptions.maxPoolFill;
       this.currentResetExhaustedPreview =
         developerOptions.resetExhaustedPreview;
-      this.currentSingularityBlackHoleVersion =
-        developerOptions.singularityBlackHoleVersion;
       this.currentSprintIntensityPreview =
         developerOptions.sprintIntensityPreview;
       this.currentHistory = history;

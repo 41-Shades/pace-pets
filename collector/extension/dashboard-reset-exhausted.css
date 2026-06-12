@@ -1,5 +1,5 @@
 .reset-exhausted-figure {
-  bottom: -2px;
+  bottom: -8px;
   display: block;
   inline-size: clamp(48px, 19%, 64px);
   opacity: 0;
@@ -29,7 +29,7 @@
 
 .reset-exhausted-trace {
   aspect-ratio: 360 / 292;
-  animation: reset-exhausted-png-slump 8.6s ease-in-out infinite;
+  animation: reset-exhausted-png-slump 10.9s ease-in-out infinite;
   display: block;
   height: auto;
   overflow: visible;
@@ -46,17 +46,33 @@
 }
 
 .reset-exhausted-trace-linework path {
-  stroke-width: 5.2px;
+  stroke-width: 5.8px;
 }
 
 .reset-exhausted-trace-head {
   fill: #ffffff;
   stroke: #243a4b;
-  stroke-width: 5.2px;
+  stroke-width: 5.8px;
 }
 
 .reset-exhausted-trace-face path {
-  stroke-width: 3.8px;
+  stroke-width: 4.7px;
+}
+
+.reset-exhausted-face-state {
+  animation-duration: 10.9s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+  animation-timing-function: linear;
+}
+
+.reset-exhausted-face-sleep {
+  animation-name: reset-exhausted-face-sleep;
+}
+
+.reset-exhausted-face-slits {
+  animation-name: reset-exhausted-face-slits;
+  opacity: 0;
 }
 
 @keyframes reset-exhausted-png-slump {
@@ -72,6 +88,30 @@
 
   86% {
     transform: rotate(0.45deg);
+  }
+}
+
+@keyframes reset-exhausted-face-sleep {
+  0%,
+  96% {
+    opacity: 1;
+  }
+
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes reset-exhausted-face-slits {
+  0%,
+  96% {
+    opacity: 0;
+  }
+
+  97%,
+  100% {
+    opacity: 1;
   }
 }
 
@@ -91,7 +131,20 @@
     animation: none;
   }
 
-  .reset-exhausted-free-arm animate {
+  .reset-exhausted-free-arm animate,
+  .reset-exhausted-trace-face animate {
     display: none;
+  }
+
+  .reset-exhausted-face-state {
+    animation: none;
+  }
+
+  .reset-exhausted-face-sleep {
+    opacity: 1;
+  }
+
+  .reset-exhausted-face-slits {
+    opacity: 0;
   }
 }

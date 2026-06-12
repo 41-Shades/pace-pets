@@ -91,14 +91,11 @@ describe("CodexExtensionStorage", () => {
 });
 
 describe("PacePetsSingularityTransitionPreviewControl", () => {
-  it("carries the selected black-hole phase version in launch messages", () => {
+  it("creates launch messages for Singularity transition previews", () => {
     const preview = globalThis.PacePetsSingularityTransitionPreviewControl;
-    const message = preview.launchMessage({ blackHoleVersion: "v2" });
+    const message = preview.launchMessage();
 
     expect(preview.isLaunchMessage(message)).toBe(true);
-    expect(message).toMatchObject({
-      blackHoleVersion: "v2",
-    });
     expect(preview.isLaunchMessage({ type: "other" })).toBe(false);
   });
 });

@@ -182,7 +182,6 @@ function developerOptionsExample({ developerOptions }) {
     manualRefreshLeadWindow: true,
     maxPoolFill: true,
     resetExhaustedPreview: true,
-    singularityBlackHoleVersion: "v2",
     sprintIntensityPreview: "4.00",
   });
 }
@@ -236,7 +235,6 @@ export async function storageSchemaGeneratedMarkdown() {
     `- Developer-options key: \`${developerOptions.STORAGE_KEY}\``,
     `- Supported forced pace-state values: ${developerOptions.FORCEABLE_PACE_STATE_KEYS.map((key) => `\`${key}\``).join(", ")}`,
     `- Developer feature preview fields: ${developerOptions.FEATURE_PREVIEW_OPTIONS.map((option) => `\`${option.key}\``).join(", ")}`,
-    `- Developer Singularity black-hole phase field: \`${developerOptions.SINGULARITY_BLACK_HOLE_VERSION_KEY}\`; supported values: ${developerOptions.SINGULARITY_BLACK_HOLE_VERSION_VALUES.map((value) => `\`${value}\``).join(", ")}; default: \`${developerOptions.DEFAULT_SINGULARITY_BLACK_HOLE_VERSION}\``,
     `- Developer Sprint faster intensity preview field: \`${developerOptions.SPRINT_INTENSITY_PREVIEW_KEY}\`; supported values: ${developerOptions.SPRINT_INTENSITY_PREVIEW_VALUES.map((value) => `\`${value}\``).join(", ")}; stored only with \`${developerOptions.FORCED_PACE_STATE_KEY}: "wellAhead"\``,
     `- Dashboard window session key: \`${dashboardPreferences.DASHBOARD_WINDOW_SESSION_KEY}\``,
     `- Dashboard theme preference key: \`${dashboardPreferences.THEME_STORAGE_KEY}\``,

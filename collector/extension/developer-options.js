@@ -7,9 +7,7 @@
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
   const MAX_POOL_FILL_KEY = "maxPoolFill";
   const RESET_EXHAUSTED_PREVIEW_KEY = "resetExhaustedPreview";
-  const SINGULARITY_BLACK_HOLE_VERSION_KEY = "singularityBlackHoleVersion";
   const SPRINT_INTENSITY_PREVIEW_KEY = "sprintIntensityPreview";
-  const DEFAULT_SINGULARITY_BLACK_HOLE_VERSION = "v1";
   const PACE_STATE_DATA = root.PacePetsPaceStateData;
   const SPRINT_INTENSITY = root.PacePetsSprintIntensity;
   if (!PACE_STATE_DATA || !SPRINT_INTENSITY) {
@@ -59,14 +57,6 @@
     });
   }
 
-  function singularityBlackHoleVersionOption({ label, status, value }) {
-    return Object.freeze({
-      label,
-      status,
-      value,
-    });
-  }
-
   const FORCEABLE_PACE_STATE_GROUPS = Object.freeze(
     PACE_STATE_DATA.PACE_STATE_GROUPS.map(forceablePaceStateGroup),
   );
@@ -109,21 +99,6 @@
       value: "reset-exhausted-preview",
     }),
   ]);
-  const SINGULARITY_BLACK_HOLE_VERSION_OPTIONS = Object.freeze([
-    singularityBlackHoleVersionOption({
-      label: "Black Hole V1",
-      status: "Singularity black-hole phase uses Canvas V1.",
-      value: "v1",
-    }),
-    singularityBlackHoleVersionOption({
-      label: "Black Hole V2",
-      status: "Singularity black-hole phase uses WebGL V2.",
-      value: "v2",
-    }),
-  ]);
-  const SINGULARITY_BLACK_HOLE_VERSION_VALUES = Object.freeze(
-    SINGULARITY_BLACK_HOLE_VERSION_OPTIONS.map((option) => option.value),
-  );
   function isPlainObject(value) {
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
   }
@@ -146,12 +121,6 @@
 
   function normalizeResetExhaustedPreview(value) {
     return value === true;
-  }
-
-  function normalizeSingularityBlackHoleVersion(value) {
-    return SINGULARITY_BLACK_HOLE_VERSION_VALUES.includes(value)
-      ? value
-      : DEFAULT_SINGULARITY_BLACK_HOLE_VERSION;
   }
 
   function normalizeSprintIntensityPreview(value) {
@@ -179,9 +148,6 @@
       resetExhaustedPreview: normalizeResetExhaustedPreview(
         isPlainObject(value) ? value[RESET_EXHAUSTED_PREVIEW_KEY] : null,
       ),
-      singularityBlackHoleVersion: normalizeSingularityBlackHoleVersion(
-        isPlainObject(value) ? value[SINGULARITY_BLACK_HOLE_VERSION_KEY] : null,
-      ),
       sprintIntensityPreview:
         forcedPaceStateKey === PACE_STATE_DATA.PACE_STATES.wellAhead.key
           ? sprintIntensityPreview
@@ -201,7 +167,6 @@
       [MANUAL_REFRESH_LEAD_WINDOW_KEY]: options.manualRefreshLeadWindow,
       [MAX_POOL_FILL_KEY]: options.maxPoolFill,
       [RESET_EXHAUSTED_PREVIEW_KEY]: options.resetExhaustedPreview,
-      [SINGULARITY_BLACK_HOLE_VERSION_KEY]: options.singularityBlackHoleVersion,
       [SPRINT_INTENSITY_PREVIEW_KEY]: options.sprintIntensityPreview,
     };
   }
@@ -225,13 +190,6 @@
     }
     if (normalized.resetExhaustedPreview) {
       value[RESET_EXHAUSTED_PREVIEW_KEY] = true;
-    }
-    if (
-      normalized.singularityBlackHoleVersion !==
-      DEFAULT_SINGULARITY_BLACK_HOLE_VERSION
-    ) {
-      value[SINGULARITY_BLACK_HOLE_VERSION_KEY] =
-        normalized.singularityBlackHoleVersion;
     }
     if (normalized.sprintIntensityPreview) {
       value[SPRINT_INTENSITY_PREVIEW_KEY] = normalized.sprintIntensityPreview;
@@ -262,7 +220,6 @@
 
   root.PacePetsDeveloperOptions = Object.freeze({
     CRITICAL_BADGE_WINDOW_KEY,
-    DEFAULT_SINGULARITY_BLACK_HOLE_VERSION,
     FEATURE_PREVIEW_OPTIONS,
     FORCEABLE_PACE_STATE_GROUPS,
     FORCEABLE_PACE_STATE_KEYS,
@@ -271,9 +228,6 @@
     MANUAL_REFRESH_LEAD_WINDOW_KEY,
     MAX_POOL_FILL_KEY,
     RESET_EXHAUSTED_PREVIEW_KEY,
-    SINGULARITY_BLACK_HOLE_VERSION_KEY,
-    SINGULARITY_BLACK_HOLE_VERSION_OPTIONS,
-    SINGULARITY_BLACK_HOLE_VERSION_VALUES,
     SPRINT_INTENSITY_PREVIEW_KEY,
     SPRINT_INTENSITY_PREVIEW_OPTIONS: SPRINT_INTENSITY.PREVIEW_OPTIONS,
     SPRINT_INTENSITY_PREVIEW_VALUES: SPRINT_INTENSITY.PREVIEW_VALUES,
@@ -288,7 +242,6 @@
     normalizeManualRefreshLeadWindow,
     normalizeMaxPoolFill,
     normalizeResetExhaustedPreview,
-    normalizeSingularityBlackHoleVersion,
     normalizeSprintIntensityPreview,
     storedDeveloperOptionsValue,
   });

@@ -20,19 +20,12 @@
     };
   }
 
-  function blackHoleTarget(blackHoleVersion) {
+  function blackHoleTarget() {
     const { height, width } = viewportSize();
-    if (blackHoleVersion === "v2") {
-      const aspect = width / height;
-      return {
-        x: width * ((0.1 / aspect + 1) / 2),
-        y: height * 0.49,
-      };
-    }
-
+    const aspect = width / height;
     return {
-      x: width * 0.58,
-      y: height * 0.43,
+      x: width * ((0.1 / aspect + 1) / 2),
+      y: height * 0.49,
     };
   }
 
@@ -192,8 +185,8 @@
     };
   }
 
-  function startContainerPullAnimations(containers, blackHoleVersion) {
-    const target = blackHoleTarget(blackHoleVersion);
+  function startContainerPullAnimations(containers) {
+    const target = blackHoleTarget();
     const animations = containers.map((container) => {
       return container.element.animate(
         containerKeyframes(container, target),
