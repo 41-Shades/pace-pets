@@ -1,6 +1,8 @@
 (() => {
   "use strict";
 
+  const AUTO_CHECKS_STATUS_TOOLTIP = "Auto-checks every 5m";
+  const CHECKS_EVERY_ARIA = "Checks every 5 minutes.";
   const COLLECTION_STATUS_TITLE = "Usage collection status";
   const STATUS_TEXT = Object.freeze({
     live: "Live",
@@ -23,8 +25,8 @@
     [STATUS_TEXT.signInNotFound]: "Sign-in needed",
     [STATUS_TEXT.waiting]: "Waiting",
   });
-  const MANUAL_REFRESH_DEFAULT_LABEL = "Check ChatGPT usage now";
-  const MANUAL_REFRESH_COOLDOWN_PREFIX = "Check again in";
+  const MANUAL_REFRESH_DEFAULT_LABEL = "Check now";
+  const MANUAL_REFRESH_COOLDOWN_PREFIX = "Again in";
   const MANUAL_REFRESH_FAILURE_VISIBLE_MS = 1800;
   const LAST_COLLECTED_UPDATE_FEEDBACK_MS = 2400;
   const COLLECTION_STATUS_STALE_AFTER_MS = 15 * 60 * 1000;
@@ -33,8 +35,9 @@
     return COLLECTION_STATUS_LABELS[text] || "";
   }
 
-  function statusTooltipText(title, text, detail = "") {
-    return detail ? `${title}: ${text}. ${detail}` : `${title}: ${text}`;
+  function statusSummaryText(text, detail = "") {
+    const label = collectionStatusLabelText(text) || text;
+    return detail ? `${label}. ${detail}` : label;
   }
 
   function isSignInNotFoundStatus(refreshStatus) {
@@ -253,6 +256,8 @@
   }
 
   globalThis.PacePetsDashboardStatusLogic = Object.freeze({
+    AUTO_CHECKS_STATUS_TOOLTIP,
+    CHECKS_EVERY_ARIA,
     COLLECTION_STATUS_TITLE,
     LAST_COLLECTED_UPDATE_FEEDBACK_MS,
     MANUAL_REFRESH_COOLDOWN_PREFIX,
@@ -268,6 +273,6 @@
     isRecentRefreshStatus,
     isSignInNotFoundStatus,
     refreshFailureDetail,
-    statusTooltipText,
+    statusSummaryText,
   });
 })();

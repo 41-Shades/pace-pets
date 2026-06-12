@@ -10,6 +10,8 @@ const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
 const DEVELOPER_OPTIONS_STORAGE_KEY = PacePetsDeveloperOptions.STORAGE_KEY;
 const HISTORY_STORAGE_KEY = CodexUsageHistory.HISTORY_STORAGE_KEY;
+const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
+  PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY;
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
@@ -210,25 +212,65 @@ function runBadgePresentationRefresh() {
   return updatePaceBadgeFromHistory();
 }
 
-function manualRefreshCooldownRemainingMs() {
+async function readManualRefreshCooldownUntilMs() {
+  try {
+    const items = await CodexExtensionStorage.getLocal(
+      MANUAL_REFRESH_COOLDOWN_STORAGE_KEY,
+    );
+    return PacePetsRefreshControl.manualRefreshCooldownUntilMs(
+      items[MANUAL_REFRESH_COOLDOWN_STORAGE_KEY],
+    );
+  } catch (error) {
+    console.warn("Could not read Codex usage manual refresh cooldown:", error);
+    return manualRefreshCooldownUntilMs;
+  }
+}
+
+async function persistManualRefreshCooldownUntilMs(cooldownUntilMs) {
+  manualRefreshCooldownUntilMs =
+    PacePetsRefreshControl.manualRefreshCooldownUntilMs(cooldownUntilMs);
+  const storedValue = PacePetsRefreshControl.manualRefreshCooldownStorageValue(
+    manualRefreshCooldownUntilMs,
+  );
+
+  try {
+    if (storedValue) {
+      await CodexExtensionStorage.setLocal({
+        [MANUAL_REFRESH_COOLDOWN_STORAGE_KEY]: storedValue,
+      });
+      return;
+    }
+
+    await CodexExtensionStorage.removeLocal(
+      MANUAL_REFRESH_COOLDOWN_STORAGE_KEY,
+    );
+  } catch (error) {
+    console.warn("Could not store Codex usage manual refresh cooldown:", error);
+  }
+}
+
+async function manualRefreshCooldownRemainingMs() {
+  manualRefreshCooldownUntilMs = Math.max(
+    manualRefreshCooldownUntilMs,
+    await readManualRefreshCooldownUntilMs(),
+  );
   return PacePetsRefreshControl.cooldownRemainingMs(
     manualRefreshCooldownUntilMs,
   );
 }
 
-function runManualRefresh() {
-  const remainingMs = manualRefreshCooldownRemainingMs();
+async function runManualRefresh() {
+  const remainingMs = await manualRefreshCooldownRemainingMs();
   if (remainingMs > 0) {
-    return Promise.resolve(
-      PacePetsRefreshControl.manualRefreshCooldownResponse(
-        lastRefreshState,
-        remainingMs,
-      ),
+    return PacePetsRefreshControl.manualRefreshCooldownResponse(
+      lastRefreshState,
+      remainingMs,
     );
   }
 
-  manualRefreshCooldownUntilMs =
-    Date.now() + PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS;
+  await persistManualRefreshCooldownUntilMs(
+    Date.now() + PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS,
+  );
   return runScheduledRefresh().then(PacePetsRefreshControl.refreshNowResponse);
 }
 

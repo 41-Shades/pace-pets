@@ -96,8 +96,8 @@
 .info-toggle {
   background: transparent;
   color: color-mix(in srgb, var(--control-icon-disc) 42%, var(--subhead));
-  height: 16px;
-  width: 16px;
+  height: 17px;
+  width: 17px;
 }
 
 .info-close {
@@ -178,7 +178,7 @@
 .info-toggle-icon {
   --info-toggle-mark: color-mix(
     in srgb,
-    var(--control-icon-disc) 20%,
+    var(--control-icon-disc) 12%,
     var(--subhead)
   );
   --info-toggle-ring: color-mix(
@@ -188,30 +188,31 @@
   );
 
   display: block;
-  height: 16px;
+  height: 17px;
   position: relative;
-  width: 16px;
+  width: 17px;
 }
 
 .info-toggle-icon::before {
-  border: 2px solid var(--info-toggle-ring);
-  border-radius: 50%;
+  background: var(--info-toggle-ring);
   content: "";
-  inset: 1px;
+  inset: 0.5px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 18 18'%3E%3Ccircle cx='12' cy='12' r='8' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
   position: absolute;
 }
 
 .info-toggle-icon::after {
   background: var(--info-toggle-mark);
-  border-radius: 999px;
-  box-shadow: 0 -4px 0 -0.35px var(--info-toggle-mark);
   content: "";
-  height: 4px;
-  left: 50%;
+  inset: 0.5px;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 3 18 18'%3E%3Cpath d='M12 11.6v3.6' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.35'/%3E%3Cpath d='M12 8h.01' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.35'/%3E%3C/svg%3E");
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
   position: absolute;
-  top: 8px;
-  transform: translateX(-50%);
-  width: 2px;
 }
 
 .info-close-icon {
@@ -292,20 +293,28 @@
   width: 100%;
 }
 
-.collection-status-label {
+#collection-status-label {
   color: var(--subhead);
   font-weight: 700;
   white-space: nowrap;
 }
 
-.collection-status-label.stale,
-.collection-status-label.warning {
+#collection-status-label.stale,
+#collection-status-label.warning {
   color: var(--warning);
 }
 
-.collection-status-label.error,
-.collection-status-label.offline {
+#collection-status-label.error,
+#collection-status-label.offline {
   color: var(--danger);
+}
+
+.collection-status {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  justify-content: flex-end;
 }
 
 .last-collected {

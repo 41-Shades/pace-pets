@@ -9,14 +9,35 @@
   }
 
   const REFRESH_NOW_MESSAGE_TYPE = "pacePets.refreshUsageNow";
+  const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
+    "pacePetsManualRefreshCooldownUntil";
   const MANUAL_REFRESH_COOLDOWN_MS = 60 * 1000;
 
+  function manualRefreshCooldownUntilMs(value) {
+    const valueMs =
+      typeof value === "string" ? Date.parse(value) : Number(value);
+    return Number.isFinite(valueMs) ? valueMs : 0;
+  }
+
+  function manualRefreshCooldownStorageValue(cooldownUntilMs) {
+    const valueMs = manualRefreshCooldownUntilMs(cooldownUntilMs);
+    if (valueMs <= 0) {
+      return null;
+    }
+
+    const valueDate = new Date(valueMs);
+    return Number.isFinite(valueDate.getTime())
+      ? valueDate.toISOString()
+      : null;
+  }
+
   function cooldownRemainingMs(cooldownUntilMs, nowMs = Date.now()) {
-    if (!Number.isFinite(cooldownUntilMs) || !Number.isFinite(nowMs)) {
+    const valueMs = manualRefreshCooldownUntilMs(cooldownUntilMs);
+    if (!Number.isFinite(valueMs) || !Number.isFinite(nowMs)) {
       return 0;
     }
 
-    return Math.max(0, cooldownUntilMs - nowMs);
+    return Math.max(0, valueMs - nowMs);
   }
 
   function refreshNowMessage() {
@@ -82,11 +103,14 @@
 
   root.PacePetsRefreshControl = Object.freeze({
     MANUAL_REFRESH_COOLDOWN_MS,
+    MANUAL_REFRESH_COOLDOWN_STORAGE_KEY,
     REFRESH_NOW_MESSAGE_TYPE,
     cooldownRemainingMs,
     isManualRefreshCooldownResponse,
     isRefreshNowMessage,
     manualRefreshCooldownResponse,
+    manualRefreshCooldownStorageValue,
+    manualRefreshCooldownUntilMs,
     manualRefreshResponseFailed,
     refreshErrorResponse,
     refreshNowMessage,

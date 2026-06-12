@@ -149,21 +149,27 @@
       }
       this.setCollectionStatusLabel(state.text, state.mode);
 
-      const statusText = state.detail
-        ? `${state.text}. ${state.detail}`
-        : state.text;
-      const title = state.title || STATUS_LOGIC.COLLECTION_STATUS_TITLE;
+      const isLiveStatus =
+        state.text === STATUS_LOGIC.STATUS_TEXT.live && !state.detail;
+      const statusSummaryText = STATUS_LOGIC.statusSummaryText(
+        state.text,
+        state.detail,
+      );
+      const checkedText =
+        this.lastCheckedText === "waiting"
+          ? "Checked: waiting"
+          : `Checked ${this.lastCheckedText}`;
       this.appTooltips.setText(
-        this.elements.collectionPulse,
-        STATUS_LOGIC.statusTooltipText(title, state.text, state.detail),
+        this.elements.collectionStatus,
+        isLiveStatus
+          ? STATUS_LOGIC.AUTO_CHECKS_STATUS_TOOLTIP
+          : statusSummaryText,
       );
       this.elements.lastCollected.setAttribute(
         "aria-label",
-        `Checked: ${this.lastCheckedText}. Status: ${statusText}`,
-      );
-      this.appTooltips.setText(
-        this.elements.lastCollected,
-        `Status: ${statusText}`,
+        isLiveStatus
+          ? `${checkedText}. ${STATUS_LOGIC.CHECKS_EVERY_ARIA}`
+          : `Checked: ${this.lastCheckedText}. ${statusSummaryText}`,
       );
       this.updateManualRefreshButton();
     }

@@ -8,6 +8,7 @@
     chartState: "#chart-state",
     clearDataButton: "#clear-data-button",
     collectionPulse: "#collection-pulse",
+    collectionStatus: "#collection-status",
     collectionStatusLabel: "#collection-status-label",
     collectorVersion: "#collector-version",
     earlyResetButton: "#early-reset-button",
