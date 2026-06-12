@@ -311,6 +311,7 @@
       this.cancelFrame();
       this.resources = null;
       console.warn("Pace Pets Singularity black-hole V2 WebGL context lost.");
+      this.finish(false);
     }
 
     handleContextRestored() {
