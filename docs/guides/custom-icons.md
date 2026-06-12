@@ -25,6 +25,10 @@ collector/extension/themes/default/
     06-slow-down-splat-transparent.png
     06-slow-down-free-fall-transparent.png
     perfect-zero-glow.png
+  grocery_icons/
+    apple.png
+    ...
+    yogurt.png
   effects/
     reset-exhausted/
       exhausted-person.png
@@ -48,11 +52,17 @@ state mapping from
 Effect assets are also PNGs with transparent backgrounds and are listed in the
 same asset manifest.
 
+Grocery spill assets are PNGs used by the Slow down cart-spill effect. Their
+current filenames are owned by
+`collector/extension/dashboard-cart-spill-data.js`, not the theme asset
+manifest.
+
 `effects/reset-exhausted/exhausted-person.png` is currently retained as the
-reference/source visual for the dev-only reset exhaustion preview. The active
-animated preview renders a traced inline SVG so limbs can move independently,
-but the PNG remains the pose, scale, and face target for trace adjustments or
-future layered artwork.
+reference/source visual for the reset exhaustion presentation. Live Splat can
+show that rescue sequence after the Splat fall, and local developer controls can
+force it with the reset exhaustion preview. The active presentation renders a
+traced inline SVG so limbs can move independently, but the PNG remains the pose,
+scale, and face target for trace adjustments or future layered artwork.
 
 After replacing icons, reload the unpacked extension from
 `chrome://extensions`.
@@ -68,6 +78,12 @@ If you rename app icon files, update `APP_ICON_FILES_BY_SIZE` in
 `collector/extension/themes/default/asset-manifest.js` and keep
 `collector/extension/manifest.json` pointed at the same files. Chrome reads app
 icons directly from its manifest, so those paths have to stay aligned.
+
+If you rename grocery spill files, update `GROCERY_ICON_FILES` in
+`collector/extension/dashboard-cart-spill-data.js`.
+
+If you rename effect asset files, update `EFFECT_ASSET_FILES` in
+`collector/extension/themes/default/asset-manifest.js`.
 
 ## State Mapping
 

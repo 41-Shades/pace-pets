@@ -13,7 +13,18 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/integration-config.js` owns the current ChatGPT origin, usage endpoint, auth-session endpoints, required host permission, and source markers shared by runtime code and static checks.
 - `collector/extension/usage-integration-adapters.js` owns upstream usage adapter metadata, including ChatGPT WHAM raw window paths, path-matched candidate patterns, and supported field aliases.
 - `collector/extension/usage-providers.js` owns the usage provider registry that ties the current ChatGPT WHAM provider to its host permission, auth-session probes, usage endpoint, parser adapter, source markers, request headers, and retry/auth-failure status policy.
-- `collector/extension/background.js` owns scheduled collection, toolbar action behavior, toolbar badge-view menu behavior, status state, badge updates, and writes to local history.
+- `collector/extension/background.js` bootstraps the background runtime from
+  the runtime manifest, schedules collection and badge-presentation alarms,
+  coordinates manual refreshes, opens the dashboard from the toolbar action,
+  listens for storage changes, and writes refresh status plus history updates.
+- `collector/extension/background-logic.js` owns background-safe helper logic
+  for badge-window selection, attention-badge prioritization, session-token
+  extraction, usage headers, and usage auth-failure retry predicates.
+- `collector/extension/background-usage-source.js` owns the credentials-included
+  auth-session probes and WHAM usage fetch for the current provider.
+- `collector/extension/background-context-menu.js` owns the toolbar action
+  context-menu items for opening the dashboard and selecting the stored badge
+  usage window.
 - `collector/extension/usage-windows.js` owns supported usage-window keys, durations, labels, the badge preference storage key, and window-key helpers shared by collection, storage, badge, and dashboard code.
 - `collector/extension/usage-values.js` owns shared primitive usage value normalization, date parsing, reset-window time math, and stored-window normalization.
 - `collector/extension/persisted-text.js` owns safe persisted text normalization, length caps, and secret redaction shared by history and refresh-status storage boundaries.

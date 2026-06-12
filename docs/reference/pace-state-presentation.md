@@ -147,18 +147,24 @@ selected puffs onto a much longer cubic float up and away path. Same-state
 refreshes preserve the running effect, reduced-motion settings disable smoke,
 and the legend rail remains static.
 
-The reset countdown card has a dev-only exhaustion preview controlled by
-`resetExhaustedPreview`. The source visual asset remains
+The reset countdown card has a reset-exhausted rescue presentation owned by
+`collector/extension/dashboard-reset-exhausted-methods.js` and
+`collector/extension/dashboard-reset-exhausted.css`. Local developer controls
+can force it with `resetExhaustedPreview`, and live Splat can also schedule it
+after the falling Splat intro finishes. While Splat remains current, the rescue
+sequence waits for a bounded delay, shows the traced tired figure and message,
+then repeats on later bounded delays until the dashboard leaves Splat. The
+developer override is the only stored field; live Splat rescue state is
+transient dashboard timer and DOM state.
+
+The source visual asset remains
 `collector/extension/themes/default/effects/reset-exhausted/exhausted-person.png`,
 which is kept as the raster reference for the seated, slumped pose. The active
-preview currently renders an inline SVG trace in
-`collector/extension/dashboard-reset-exhausted-methods.js` so the free arm can
-animate independently without modifying or masking the PNG. The whole traced
-figure shares the same subtle rocking motion in
-`collector/extension/dashboard-reset-exhausted.css`; reduced-motion settings
-disable that rock. Keep the base PNG available while iterating on the trace,
-because it remains the visual target for pose, face, scale, and future asset
-work.
+presentation renders an inline SVG trace so the free arm can animate
+independently without modifying or masking the PNG. The whole traced figure
+shares the same subtle rocking motion; reduced-motion settings disable that
+rock. Keep the base PNG available while iterating on the trace, because it
+remains the visual target for pose, face, scale, and future asset work.
 
 For small organic or atmospheric effects, prefer a focused canvas renderer over
 stacked CSS gradients once the visual depends on noisy asymmetry, soft plumes,
@@ -187,6 +193,30 @@ without affecting layout. The icon layer renders short SVG mug-steam squiggles
 with an in-place shimmer.
 Same-state refreshes preserve the effect, reduced-motion settings disable the
 looping motion, and the legend rail remains static.
+
+The `wellBehind` / Slow down state uses the dashboard-only slow-wobble and
+cart-spill effect in `collector/extension/dashboard-pace-wobble-methods.js`,
+`collector/extension/dashboard-cart-spill-data.js`,
+`collector/extension/dashboard-cart-spill-methods.js`,
+`collector/extension/dashboard-cart-spill-pile-renderer.js`, and
+`collector/extension/dashboard-cart-spill.css`. Periodic wobble bursts may use a
+normal or extreme profile. Grocery PNGs from
+`collector/extension/themes/default/grocery_icons/` launch from the status icon,
+follow bounded-random toss paths, and settle into a bottom-of-viewport pile that
+is cleaned up when Slow down exits. Same-state refreshes preserve the running
+effect; reduced-motion settings skip the thrown grocery launches.
+
+The `criticalBehind` / Brake hard state uses the dashboard-only brake-wobble
+effect in `collector/extension/dashboard-pace-wobble-methods.js`,
+`collector/extension/dashboard-brake-debris-data.js`,
+`collector/extension/dashboard-brake-debris-methods.js`,
+`collector/extension/dashboard-brake-extreme-canvas-methods.js`, and
+`collector/extension/dashboard-brake-debris.css`. The first burst is normal.
+Later bursts choose normal, wide, escape, or extreme ranges at
+60% / 25% / 12% / 3% odds. Wide and escape bursts emit SVG debris from the
+status icon; extreme bursts use a high-DPI canvas particle layer for many tiny
+fragments, sparks, and smoke. Same-state refreshes preserve the running wobble;
+reduced-motion settings skip debris launches.
 
 The `sync` / Perfect Sync state keeps its existing gentle status-icon float and
 adds a dashboard-only yellow sunburst on the page background layer behind the

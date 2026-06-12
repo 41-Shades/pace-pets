@@ -258,6 +258,14 @@
       return true;
     }
 
+    async clearLocalUsageData() {
+      const { history, refreshStatus } =
+        await CodexUsageHistory.clearUsageData();
+      this.currentHistory = history;
+      this.currentRefreshStatus = refreshStatus;
+      this.renderHistory(this.currentHistory, this.currentRefreshStatus);
+    }
+
     start() {
       this.bindEvents();
       window.setInterval(() => {

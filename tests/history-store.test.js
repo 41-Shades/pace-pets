@@ -214,3 +214,25 @@ describe("CodexUsageHistory.normalizeRefreshStatus", () => {
     ).toBeNull();
   });
 });
+
+describe("CodexUsageHistory.clearUsageData", () => {
+  it("removes local history and refresh status metadata", async () => {
+    globalThis.chrome.storage.local.remove.mockImplementation((keys, done) => {
+      done();
+    });
+
+    await expect(
+      globalThis.CodexUsageHistory.clearUsageData(),
+    ).resolves.toEqual({
+      history: {
+        historyVersion: 1,
+        samples: [],
+      },
+      refreshStatus: null,
+    });
+    expect(globalThis.chrome.storage.local.remove).toHaveBeenCalledWith(
+      ["codexUsageHistory", "codexUsageRefreshStatus"],
+      expect.any(Function),
+    );
+  });
+});

@@ -205,6 +205,17 @@
     return normalized;
   }
 
+  async function clearUsageData() {
+    await EXTENSION_STORAGE.removeLocal([
+      HISTORY_STORAGE_KEY,
+      REFRESH_STATUS_STORAGE_KEY,
+    ]);
+    return {
+      history: normalizeHistory(null),
+      refreshStatus: null,
+    };
+  }
+
   async function appendUsageSnapshot(
     payload,
     collectedAt = new Date().toISOString(),
@@ -246,6 +257,7 @@
     MAX_SAMPLES,
     PLATEAU_SAMPLE_INTERVAL_MINUTES,
     appendUsageSnapshot,
+    clearUsageData,
     latestSample,
     normalizeHistory,
     normalizeRefreshStatus,

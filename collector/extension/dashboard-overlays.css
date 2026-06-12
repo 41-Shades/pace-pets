@@ -112,17 +112,22 @@
 }
 
 .info-panel-meta-row {
+  align-items: center;
   border-top: 1px solid color-mix(in srgb, var(--line) 42%, transparent);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
   margin-top: 38px;
   padding-top: 14px;
 }
 
 .info-panel-meta {
   color: color-mix(in srgb, var(--subhead) 76%, var(--surface-mix));
+  flex: 1 1 auto;
   font-size: 0.72rem;
   font-weight: 450;
   line-height: 1.45;
-  padding-right: 36px;
+  min-width: 0;
 }
 
 .info-panel-meta-label {
@@ -146,6 +151,47 @@
 .info-panel-meta-separator {
   color: color-mix(in srgb, var(--subhead) 58%, transparent);
   padding: 0 7px;
+}
+
+.info-panel-clear-data {
+  align-items: center;
+  appearance: none;
+  background: color-mix(in srgb, var(--track) 42%, transparent);
+  border: 0;
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--subhead) 70%, var(--surface-mix));
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 560;
+  justify-content: center;
+  line-height: 1.45;
+  min-height: 24px;
+  padding: 2px 9px;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.info-panel-clear-data:disabled {
+  cursor: default;
+  opacity: 0.52;
+}
+
+.info-panel-clear-data:focus-visible {
+  background: color-mix(in srgb, var(--track) 58%, var(--surface-mix));
+  color: color-mix(in srgb, var(--accent) 62%, var(--subhead));
+  outline: 2px solid var(--accent-line);
+  outline-offset: 2px;
+}
+
+.info-panel-clear-data:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--track) 58%, var(--surface-mix));
+  color: color-mix(in srgb, var(--accent) 62%, var(--subhead));
 }
 
 .info-panel-item {
