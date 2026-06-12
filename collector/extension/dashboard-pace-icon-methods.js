@@ -135,6 +135,32 @@
     }
   }
 
+  function updatePrimaryPaceIcon(
+    controller,
+    { level, playSplatFall, previousState, state },
+  ) {
+    const pageBackgroundActive =
+      controller.setPerfectZeroPageBackgroundActive?.(
+        state.key === DATA.PACE_STATES.perfectZero.key ||
+          state.key === DATA.PACE_STATES.singularity.key,
+      ) ?? false;
+    const preservePaceIcon = shouldPreservePaceIcon(
+      controller,
+      previousState,
+      state,
+      {
+        playEntryAnimation: playSplatFall,
+        usePerfectZeroPageAperture: pageBackgroundActive,
+      },
+    );
+    if (!preservePaceIcon) {
+      controller.renderPaceIcon(controller.elements.paceIcon, level, {
+        useEffects: true,
+        usePerfectZeroPageAperture: pageBackgroundActive,
+      });
+    }
+  }
+
   const DIRECT_PACE_ICON_EFFECT_RENDERERS = Object.freeze({
     "brake-wobble": (controller, container) =>
       controller.startBrakeWobbleEffect(container),
@@ -334,32 +360,19 @@
       const staleClasses = DATA.PACE_CLASSES.filter((name) => name !== level);
       this.elements.paceCard.classList.remove(...staleClasses);
       this.elements.paceCard.classList.add(level);
-      const pageBackgroundActive =
-        this.setPerfectZeroPageBackgroundActive?.(
-          state.key === DATA.PACE_STATES.perfectZero.key ||
-            state.key === DATA.PACE_STATES.singularity.key,
-        ) ?? false;
-      const preservePaceIcon = shouldPreservePaceIcon(
-        this,
+      updatePrimaryPaceIcon(this, {
+        level,
+        playSplatFall,
         previousState,
         state,
-        {
-          playEntryAnimation: playSplatFall,
-          usePerfectZeroPageAperture: pageBackgroundActive,
-        },
-      );
-      if (!preservePaceIcon) {
-        this.renderPaceIcon(this.elements.paceIcon, level, {
-          useEffects: true,
-          usePerfectZeroPageAperture: pageBackgroundActive,
-        });
-      }
+      });
       updatePaceLevelSideEffects(this, {
         level,
         state,
         updateStateRailActive,
         updateTabIcon,
       });
+      this.onPaceStateChanged?.({ playSplatFall, previousState, state });
     },
 
     currentPaceLevel() {
