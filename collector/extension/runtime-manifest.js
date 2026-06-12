@@ -92,6 +92,7 @@
     "./dashboard-pace-preview-methods.js",
     "./dashboard-pace-controller.js",
     "./dashboard-app-core.js",
+    "./dashboard-reset-exhausted-arm-motion.js",
     "./dashboard-reset-exhausted-methods.js",
     "./dashboard-singularity-transition-preview-methods.js",
     "./dashboard-history-methods.js",
@@ -296,6 +297,14 @@
     ),
     dependencyEdge(
       "./dashboard-app-core.js",
+      "./dashboard-reset-exhausted-methods.js",
+    ),
+    dependencyEdge(
+      "./dashboard-reset-exhausted-arm-motion.js",
+      "./dashboard-reset-exhausted-methods.js",
+    ),
+    dependencyEdge(
+      "./dashboard-pace-data.js",
       "./dashboard-reset-exhausted-methods.js",
     ),
     dependencyEdge(

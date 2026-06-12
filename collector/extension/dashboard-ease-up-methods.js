@@ -7,6 +7,10 @@
   }
 
   const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+  const SIDE_EYE_ANIMATION_DURATION_MS = 7800;
+  const SIDE_EYE_INITIAL_DELAY_RANGE_MS = Object.freeze([7000, 10000]);
+  const SIDE_EYE_PLAYING_CLASS = "is-ease-up-side-eye-playing";
+  const SIDE_EYE_REPEAT_DELAY_RANGE_MS = Object.freeze([24000, 55000]);
   const STEAM_PATHS = Object.freeze([
     "M9.5 27 C8 24.8 11.2 23 9.9 20.8 C8.8 19 11.2 17.6 10.5 16",
     "M13 27 C11.5 24.8 14.7 23 13.4 20.8 C12.3 19 14.7 17.6 14 16",
@@ -90,9 +94,19 @@
     return layer;
   }
 
+  function clearSideEyeTimers(state) {
+    window.clearTimeout(state.clearTimer);
+    window.clearTimeout(state.playTimer);
+    state.clearTimer = null;
+    state.playTimer = null;
+  }
+
   Object.assign(Controller.prototype, {
     clearEaseUpEffectClasses(container) {
-      container.classList.remove("has-pace-icon-effect-ease-up");
+      container.classList.remove(
+        "has-pace-icon-effect-ease-up",
+        SIDE_EYE_PLAYING_CLASS,
+      );
       container
         .closest(".pace-card")
         ?.classList.remove("has-pace-ease-up-effect");
@@ -111,11 +125,50 @@
       }
 
       const layer = createEaseUpLayer();
+      const stopSideEyeSchedule = this.startEaseUpSideEyeSchedule(container);
       container.append(layer);
       this.paceIconEffectCleanups.set(container, () => {
+        stopSideEyeSchedule();
         layer.remove();
         this.clearEaseUpEffectClasses(container);
       });
+    },
+
+    startEaseUpSideEyeSchedule(container) {
+      const state = {
+        clearTimer: null,
+        isActive: true,
+        playTimer: null,
+      };
+
+      const schedule = (delayRange) => {
+        state.playTimer = window.setTimeout(() => {
+          state.playTimer = null;
+          if (!state.isActive) {
+            return;
+          }
+          if (document.hidden) {
+            schedule(SIDE_EYE_REPEAT_DELAY_RANGE_MS);
+            return;
+          }
+
+          container.classList.add(SIDE_EYE_PLAYING_CLASS);
+          state.clearTimer = window.setTimeout(() => {
+            state.clearTimer = null;
+            container.classList.remove(SIDE_EYE_PLAYING_CLASS);
+            if (state.isActive) {
+              schedule(SIDE_EYE_REPEAT_DELAY_RANGE_MS);
+            }
+          }, SIDE_EYE_ANIMATION_DURATION_MS);
+        }, this.randomIntegerInRange(delayRange));
+      };
+
+      schedule(SIDE_EYE_INITIAL_DELAY_RANGE_MS);
+      return () => {
+        state.isActive = false;
+        clearSideEyeTimers(state);
+        container.classList.remove(SIDE_EYE_PLAYING_CLASS);
+      };
     },
   });
 })();

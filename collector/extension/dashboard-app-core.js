@@ -26,7 +26,12 @@
       this.currentManualRefreshLeadWindow = false;
       this.currentMaxPoolFill = false;
       this.currentResetExhaustedPreview = false;
+      this.currentResetExhaustedSplatActive = false;
       this.currentSprintIntensityPreview = null;
+      this.resetExhaustedArmAnimationFrame = null;
+      this.resetExhaustedSplatLaunchTimer = null;
+      this.resetExhaustedSplatRepeatTimer = null;
+      this.resetExhaustedSequenceStartTimer = null;
       this.selectedWindowKey = this.DEFAULT_WINDOW_KEY;
       this.createControllers();
       this.applyProductMetadata();
@@ -78,6 +83,7 @@
         getCurrentSprintIntensityPreview: () =>
           this.currentSprintIntensityPreview,
         getSelectedWindowKey: () => this.selectedWindowKey,
+        onPaceStateChanged: (details) => this.handlePaceStateChanged?.(details),
         renderHistory: (history, refreshStatus, options) =>
           this.renderHistory(history, refreshStatus, options),
         selectedSupportedWindowKey: () => this.selectedSupportedWindowKey(),

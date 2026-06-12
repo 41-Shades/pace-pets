@@ -70,22 +70,27 @@
 }
 
 .pace-ease-up-eyes {
-  animation:
-    ease-up-side-eye-appear 7.8s ease-in-out infinite,
-    ease-up-side-eye-glance 7.8s cubic-bezier(0.36, 0, 0.18, 1) infinite;
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
 }
 
+.pace-icon.is-ease-up-side-eye-playing .pace-ease-up-eyes {
+  animation:
+    ease-up-side-eye-appear 7.8s ease-in-out both,
+    ease-up-side-eye-glance 7.8s cubic-bezier(0.36, 0, 0.18, 1) both;
+}
+
 .pace-ease-up-eye {
-  animation: ease-up-side-eye-narrow 7.8s cubic-bezier(0.36, 0, 0.18, 1)
-    infinite;
   fill: #000000;
   opacity: 1;
   transform-box: fill-box;
   transform-origin: center;
   will-change: transform;
+}
+
+.pace-icon.is-ease-up-side-eye-playing .pace-ease-up-eye {
+  animation: ease-up-side-eye-narrow 7.8s cubic-bezier(0.36, 0, 0.18, 1) both;
 }
 
 .pace-ease-up-eye-1 {
