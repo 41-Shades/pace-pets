@@ -118,13 +118,13 @@
       ].filter((element) => element instanceof HTMLElement);
     }
 
-    showInfoPanel() {
+    showInfoPanel({ restoreFocus = true } = {}) {
       if (!this.elements.infoOverlay || this.isInfoPanelOpen()) {
         return;
       }
 
       this.infoPanelReturnFocus =
-        document.activeElement instanceof HTMLElement
+        restoreFocus && document.activeElement instanceof HTMLElement
           ? document.activeElement
           : null;
       this.appTooltips.hide();
@@ -164,13 +164,13 @@
       this.infoPanelReturnFocus = null;
     }
 
-    toggleInfoPanel() {
+    toggleInfoPanel({ restoreFocus = true } = {}) {
       if (this.isInfoPanelOpen()) {
-        this.hideInfoPanel();
+        this.hideInfoPanel({ restoreFocus });
         return;
       }
 
-      this.showInfoPanel();
+      this.showInfoPanel({ restoreFocus });
     }
 
     trapInfoPanelFocus(event) {

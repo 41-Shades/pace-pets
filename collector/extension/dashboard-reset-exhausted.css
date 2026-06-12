@@ -69,7 +69,7 @@
 
 .reset-exhausted-message {
   block-size: 17px;
-  bottom: 36px;
+  bottom: 37px;
   color: #172b3a;
   font-family:
     Inter,
@@ -86,7 +86,7 @@
   opacity: 0;
   pointer-events: none;
   position: absolute;
-  right: 39px;
+  right: 38px;
   text-align: right;
   white-space: nowrap;
   width: 86px;
@@ -139,7 +139,7 @@
 
 .reset-exhausted-message-save {
   animation-name: reset-exhausted-message-save;
-  font-weight: 380;
+  font-weight: 350;
 }
 
 .reset-exhausted-face-state {

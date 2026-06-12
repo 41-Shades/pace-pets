@@ -6,6 +6,7 @@
     chartCanvas: "#usage-chart",
     chartFrame: "#chart-frame",
     chartState: "#chart-state",
+    clearDataButton: "#clear-data-button",
     collectionPulse: "#collection-pulse",
     collectionStatusLabel: "#collection-status-label",
     collectorVersion: "#collector-version",

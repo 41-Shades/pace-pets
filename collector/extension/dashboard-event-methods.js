@@ -38,7 +38,9 @@
 
     bindInfoPanelEvents() {
       this.elements.infoToggle.addEventListener("click", (event) => {
-        this.shellControls.toggleInfoPanel();
+        this.shellControls.toggleInfoPanel({
+          restoreFocus: !this.appTooltips.isPointerClick(event),
+        });
         this.appTooltips.releasePointerClickFocus(
           event,
           this.elements.infoToggle,
@@ -48,6 +50,20 @@
         this.shellControls.hideInfoPanel({
           restoreFocus: !this.appTooltips.isPointerClick(event),
         });
+      });
+      this.elements.clearDataButton.addEventListener("click", (event) => {
+        this.elements.clearDataButton.disabled = true;
+        this.clearLocalUsageData()
+          .catch((error) => {
+            console.warn("Could not clear local usage data:", error.message);
+          })
+          .finally(() => {
+            this.elements.clearDataButton.disabled = false;
+          });
+        this.appTooltips.releasePointerClickFocus(
+          event,
+          this.elements.clearDataButton,
+        );
       });
       this.elements.infoOverlay.addEventListener("click", (event) => {
         if (event.target === this.elements.infoOverlay) {

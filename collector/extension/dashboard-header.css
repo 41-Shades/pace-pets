@@ -192,7 +192,7 @@
 }
 
 .info-toggle-mark {
-  color: color-mix(in srgb, var(--control-icon-disc) 28%, var(--subhead));
+  color: color-mix(in srgb, var(--control-icon-disc) 20%, var(--subhead));
   stroke-width: 2.35;
 }
 

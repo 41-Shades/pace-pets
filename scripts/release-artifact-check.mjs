@@ -32,7 +32,7 @@ const publicSurfacePatterns = [
   /^package(?:-lock)?\.json$/,
   /^collector\/extension\//,
   /^data\/usage\.sample\.json$/,
-  /^docs\/(?:guides|reference)\//,
+  /^docs\/(?:guides|operations|reference)\//,
   /^docs\/(?:index|extension)\.html$/,
   /^docs\/styles\.css$/,
   /^index\.html$/,
@@ -137,7 +137,9 @@ function trackedFiles() {
   })
     .split("\0")
     .filter(Boolean)
-    .filter((relativePath) => fs.existsSync(path.join(projectRoot, relativePath)));
+    .filter((relativePath) =>
+      fs.existsSync(path.join(projectRoot, relativePath)),
+    );
 }
 
 function readFileBuffer(relativePath) {

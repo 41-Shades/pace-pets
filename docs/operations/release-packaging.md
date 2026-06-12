@@ -81,9 +81,17 @@ The package script warns when the working tree has uncommitted changes or when
 `scripts/release-artifact-check.mjs` validates the public source before a
 release-facing workflow. It checks version alignment across `package.json`,
 `package-lock.json`, and `collector/extension/manifest.json`; release-safe
-tracked paths; sensitive tracked text; public-doc planning links; `.gitattributes`
-export-ignore entries; and `.gitignore` entries for private/generated local
-artifacts.
+tracked paths; sensitive tracked text; public-surface planning links;
+`.gitattributes` export-ignore entries; and `.gitignore` entries for
+private/generated local artifacts.
+
+The public-surface content scan covers release-facing docs and source paths:
+`README.md`, policy docs, package metadata, `collector/extension/`,
+`data/usage.sample.json`, `docs/guides/`, `docs/operations/`,
+`docs/reference/`, docs HTML/CSS, repo scripts, lint configs, and GitHub
+workflow files. That scan blocks links to ignored internal planning docs and
+concrete bearer headers. All tracked text is also scanned for local user-profile
+paths and private key material.
 
 Current export-ignore and gitignore policy keeps these internal or local paths
 out of public source archives or tracked source:
