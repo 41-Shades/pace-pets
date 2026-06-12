@@ -34,6 +34,7 @@
     priorResetLabel: "#prior-reset-label",
     priorResetTime: "#prior-reset-time",
     resetsIn: "#resets-in",
+    resetCountdownCard: ".reset-countdown-card",
     resetProgressFill: "#reset-progress-fill",
     resetWindowCard: ".reset-window-card",
     scheduledResetDate: "#scheduled-reset-date",

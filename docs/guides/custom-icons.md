@@ -25,6 +25,9 @@ collector/extension/themes/default/
     06-slow-down-splat-transparent.png
     06-slow-down-free-fall-transparent.png
     perfect-zero-glow.png
+  effects/
+    reset-exhausted/
+      exhausted-person.png
 ```
 
 ## Replace Existing Files
@@ -42,6 +45,8 @@ App icons must keep their exact pixel sizes:
 Pace icons must be PNGs with a transparent background. The dashboard reads their
 state mapping from
 `collector/extension/themes/default/asset-manifest.js`.
+Effect assets are also PNGs with transparent backgrounds and are listed in the
+same asset manifest.
 
 After replacing icons, reload the unpacked extension from
 `chrome://extensions`.

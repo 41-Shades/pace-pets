@@ -1,140 +1,149 @@
 (function attachPacePetsDashboardSingularityTransitionRenderer(root) {
   "use strict";
 
-  const DATA = root.PacePetsDashboardSingularityTransitionData;
-  const DRAW = root.PacePetsDashboardSingularityTransitionDraw;
-  const MOTION = root.PacePetsDashboardSingularityTransitionMotion;
-  if (!DATA || !DRAW || !MOTION) {
+  const BLACK_HOLE_V1_SCENE = root.PacePetsDashboardSingularityBlackHoleV1Scene;
+  const BLACK_HOLE_V2_SCENE = root.PacePetsDashboardSingularityBlackHoleV2Scene;
+  const CHROME_COLLAPSE_SCENE =
+    root.PacePetsDashboardSingularityChromeCollapseScene;
+  if (!BLACK_HOLE_V1_SCENE || !BLACK_HOLE_V2_SCENE || !CHROME_COLLAPSE_SCENE) {
     throw new Error(
-      "Singularity transition data, draw, and motion must load before renderer.",
+      "Singularity scenes must load before dashboard-singularity-transition-renderer.js.",
     );
   }
 
-  function timelineStarts() {
-    const gravityEnd = DATA.TIMELINE.gravityMs;
-    const intakeEnd = gravityEnd + DATA.TIMELINE.intakeMs;
-    const tunnelEnd = intakeEnd + DATA.TIMELINE.tunnelMs;
-    const holdEnd = tunnelEnd + DATA.TIMELINE.holdMs;
-    const bangEnd = holdEnd + DATA.TIMELINE.bangMs;
-    return { bangEnd, gravityEnd, holdEnd, intakeEnd, tunnelEnd };
-  }
-
-  function canvasSize() {
-    return {
-      height: Math.max(1, root.innerHeight || 1),
-      width: Math.max(1, root.innerWidth || 1),
-    };
-  }
-
-  function configureCanvas(canvas, context) {
-    const size = canvasSize();
-    const pixelRatio = Math.max(
-      1,
-      Math.min(root.devicePixelRatio || 1, DATA.MAX_PIXEL_RATIO),
-    );
-    const pixelWidth = Math.round(size.width * pixelRatio);
-    const pixelHeight = Math.round(size.height * pixelRatio);
-    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-      canvas.width = pixelWidth;
-      canvas.height = pixelHeight;
-    }
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    return size;
-  }
-
-  function createOverlayCanvas() {
-    const canvas = document.createElement("canvas");
-    canvas.className = "singularity-transition-overlay";
-    canvas.setAttribute("aria-hidden", "true");
-    canvas.setAttribute("role", "presentation");
-    return canvas;
-  }
+  const BLACK_HOLE_SCENES = Object.freeze({
+    v1: BLACK_HOLE_V1_SCENE,
+    v2: BLACK_HOLE_V2_SCENE,
+  });
+  const DEFAULT_BLACK_HOLE_VERSION = "v1";
+  const HIDDEN_CLASS = "is-singularity-space-hidden";
+  const REVEAL_CLASS = "is-singularity-space-reveal";
+  const ENTRY_EXIT_CLASS = "is-singularity-entry-exit";
+  const SPACE_ENTER_CLASS = "is-singularity-space-enter";
+  const SPACE_ENTER_VISIBLE_CLASS = "is-singularity-space-enter-visible";
+  const SPACE_ENTER_DURATION_MS = 2000;
+  const REVEAL_DURATION_MS = 6000;
+  const BLACK_HOLE_APPROACH_DURATION_MS = 7600;
+  const GLINT_SUCTION_PROGRESS = 0.72;
+  const CHROME_COLLAPSE_DELAY_MS = Math.round(
+    BLACK_HOLE_APPROACH_DURATION_MS * GLINT_SUCTION_PROGRESS,
+  );
 
   class SingularityTransitionRenderer {
-    constructor({ origin, reducedMotion = false }) {
-      this.animationFrameId = null;
-      this.bangParticles = [];
-      this.center = origin || {
-        x: root.innerWidth / 2,
-        y: root.innerHeight / 2,
-      };
-      this.context = null;
+    constructor({ blackHoleVersion, reducedMotion = false } = {}) {
+      this.blackHoleVersion = BLACK_HOLE_SCENES[blackHoleVersion]
+        ? blackHoleVersion
+        : DEFAULT_BLACK_HOLE_VERSION;
+      this.blackHoleScene = null;
+      this.chromeCollapseScene = null;
+      this.chromeCollapseTimer = null;
       this.done = null;
-      this.overlay = null;
       this.reducedMotion = reducedMotion;
       this.resolveDone = null;
-      this.size = canvasSize();
-      this.starts = timelineStarts();
-      this.startedAtMs = 0;
+      this.revealTimer = null;
+      this.finishTimer = null;
+      this.spaceEnterFrame = null;
+      this.spaceEnterTimer = null;
       this.stopped = false;
-      this.streaks = [];
-      this.tiles = [];
-      this.renderFrame = this.renderFrame.bind(this);
     }
 
-    async play() {
+    play() {
       this.done = new Promise((resolve) => {
         this.resolveDone = resolve;
       });
-      if (this.stopped) {
-        this.finish(false);
+      document.body.classList.remove(ENTRY_EXIT_CLASS);
+      if (this.reducedMotion) {
+        this.finish(true);
         return this.done;
       }
 
-      this.mount();
-      this.startedAtMs = root.performance.now();
-      this.animationFrameId = root.requestAnimationFrame(this.renderFrame);
+      document.body.classList.add(HIDDEN_CLASS);
+      document.body.classList.remove(REVEAL_CLASS, SPACE_ENTER_VISIBLE_CLASS);
+      document.body.classList.add(SPACE_ENTER_CLASS);
+      this.spaceEnterFrame = root.requestAnimationFrame(() => {
+        this.spaceEnterFrame = null;
+        document.body.classList.add(SPACE_ENTER_VISIBLE_CLASS);
+      });
+      this.spaceEnterTimer = root.setTimeout(() => {
+        this.spaceEnterTimer = null;
+        document.body.classList.remove(
+          SPACE_ENTER_CLASS,
+          SPACE_ENTER_VISIBLE_CLASS,
+        );
+      }, SPACE_ENTER_DURATION_MS);
+      this.revealTimer = root.setTimeout(
+        () => this.startReveal(),
+        SPACE_ENTER_DURATION_MS,
+      );
       return this.done;
     }
 
-    mount() {
-      this.overlay = createOverlayCanvas();
-      this.context = this.overlay.getContext("2d");
-      if (!this.context) {
-        this.finish(false);
-        return;
-      }
-
-      document.body.append(this.overlay);
-      document.body.classList.add(DATA.BODY_CLASS);
-      this.size = configureCanvas(this.overlay, this.context);
-      this.center = {
-        x: MOTION.clamp(this.center.x, 0, this.size.width),
-        y: MOTION.clamp(this.center.y, 0, this.size.height),
-      };
-      this.tiles = MOTION.createTiles(
-        this.size.width,
-        this.size.height,
-        this.center,
-      );
-      this.streaks = MOTION.createStreaks(
-        this.size.width,
-        this.size.height,
-        this.center,
-      );
-      this.bangParticles = MOTION.createBangParticles(this.center);
-    }
-
-    renderFrame(frameTimeMs) {
-      this.animationFrameId = null;
-      if (this.stopped || !this.context || !this.overlay) {
-        this.finish(false);
-        return;
-      }
-
-      this.size = configureCanvas(this.overlay, this.context);
-      const elapsedMs = frameTimeMs - this.startedAtMs;
-      DRAW.drawFrame(this, elapsedMs);
+    startReveal() {
+      this.revealTimer = null;
       if (this.stopped) {
         return;
       }
 
-      if (elapsedMs >= DATA.TOTAL_DURATION_MS) {
-        this.finish(true);
+      document.body.classList.remove(HIDDEN_CLASS);
+      document.body.classList.add(REVEAL_CLASS);
+      this.finishTimer = root.setTimeout(() => {
+        this.finishTimer = null;
+        this.startBlackHoleApproach();
+      }, REVEAL_DURATION_MS);
+    }
+
+    startBlackHoleApproach() {
+      if (this.stopped) {
         return;
       }
 
-      this.animationFrameId = root.requestAnimationFrame(this.renderFrame);
+      document.body.classList.remove(REVEAL_CLASS);
+      const sceneFactory = BLACK_HOLE_SCENES[this.blackHoleVersion];
+      const scene = sceneFactory.create({
+        reducedMotion: this.reducedMotion,
+      });
+      this.blackHoleScene = scene;
+      this.chromeCollapseTimer = root.setTimeout(() => {
+        this.chromeCollapseTimer = null;
+        this.startChromeCollapse();
+      }, CHROME_COLLAPSE_DELAY_MS);
+      scene
+        .play()
+        .then((completed) => {
+          if (this.stopped) {
+            return;
+          }
+
+          if (this.blackHoleScene === scene) {
+            this.blackHoleScene = null;
+          }
+          this.finish(completed);
+        })
+        .catch((error) => {
+          console.warn(
+            `Pace Pets Singularity black-hole ${this.blackHoleVersion} scene failed:`,
+            error,
+          );
+          if (this.blackHoleScene === scene) {
+            this.blackHoleScene = null;
+          }
+          this.finish(false);
+        });
+    }
+
+    startChromeCollapse() {
+      if (this.stopped || this.chromeCollapseScene) {
+        return;
+      }
+
+      const scene = CHROME_COLLAPSE_SCENE.create({
+        blackHoleVersion: this.blackHoleVersion,
+        reducedMotion: this.reducedMotion,
+      });
+      this.chromeCollapseScene = scene;
+      scene.play().catch((error) => {
+        console.warn("Pace Pets Singularity chrome collapse failed:", error);
+      });
     }
 
     stop() {
@@ -142,18 +151,30 @@
     }
 
     finish(completed) {
-      if (this.animationFrameId !== null) {
-        root.cancelAnimationFrame(this.animationFrameId);
-        this.animationFrameId = null;
+      root.clearTimeout(this.revealTimer);
+      root.clearTimeout(this.finishTimer);
+      root.clearTimeout(this.spaceEnterTimer);
+      root.clearTimeout(this.chromeCollapseTimer);
+      if (this.spaceEnterFrame) {
+        root.cancelAnimationFrame(this.spaceEnterFrame);
       }
+      this.revealTimer = null;
+      this.finishTimer = null;
+      this.chromeCollapseTimer = null;
+      this.spaceEnterFrame = null;
+      this.spaceEnterTimer = null;
+      this.blackHoleScene?.stop();
+      this.blackHoleScene = null;
+      this.chromeCollapseScene?.stop();
+      this.chromeCollapseScene = null;
       this.stopped = true;
-      this.overlay?.remove();
-      document.body.classList.remove(DATA.BODY_CLASS);
-      this.context = null;
-      this.overlay = null;
-      this.tiles = [];
-      this.streaks = [];
-      this.bangParticles = [];
+      document.body.classList.remove(
+        ENTRY_EXIT_CLASS,
+        HIDDEN_CLASS,
+        REVEAL_CLASS,
+        SPACE_ENTER_CLASS,
+        SPACE_ENTER_VISIBLE_CLASS,
+      );
       this.resolveDone?.(completed);
       this.resolveDone = null;
     }

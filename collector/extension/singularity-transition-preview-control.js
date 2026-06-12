@@ -3,8 +3,11 @@
 
   const LAUNCH_MESSAGE_TYPE = "pacePets.singularityTransitionPreview.launch";
 
-  function launchMessage() {
-    return Object.freeze({ type: LAUNCH_MESSAGE_TYPE });
+  function launchMessage({ blackHoleVersion } = {}) {
+    return Object.freeze({
+      blackHoleVersion,
+      type: LAUNCH_MESSAGE_TYPE,
+    });
   }
 
   function isLaunchMessage(message) {

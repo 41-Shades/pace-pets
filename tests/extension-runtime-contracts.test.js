@@ -90,6 +90,19 @@ describe("CodexExtensionStorage", () => {
   });
 });
 
+describe("PacePetsSingularityTransitionPreviewControl", () => {
+  it("carries the selected black-hole phase version in launch messages", () => {
+    const preview = globalThis.PacePetsSingularityTransitionPreviewControl;
+    const message = preview.launchMessage({ blackHoleVersion: "v2" });
+
+    expect(preview.isLaunchMessage(message)).toBe(true);
+    expect(message).toMatchObject({
+      blackHoleVersion: "v2",
+    });
+    expect(preview.isLaunchMessage({ type: "other" })).toBe(false);
+  });
+});
+
 describe("CodexProductMetadata", () => {
   it("exposes shared product labels and runtime titles", () => {
     const metadata = globalThis.CodexProductMetadata;
@@ -156,6 +169,9 @@ describe("CodexThemeAssets", () => {
     );
     expect(assets.paceIconPathForState("perfectZero")).toBe(
       `${assets.THEME_BASE_PATH}/${assets.PACE_ICON_FILES_BY_STATE.perfectZero}`,
+    );
+    expect(assets.effectAssetPath("resetExhaustedPerson")).toBe(
+      `${assets.THEME_BASE_PATH}/${assets.EFFECT_ASSET_FILES.resetExhaustedPerson}`,
     );
     expect(assets.paceIconPathForState("muted")).toBe("");
   });

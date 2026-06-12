@@ -311,6 +311,14 @@ for (const variantKey of Object.keys(themeAssets.PACE_ICON_VARIANT_FILES)) {
     ),
   );
 }
+for (const assetKey of Object.keys(themeAssets.EFFECT_ASSET_FILES || {})) {
+  assertExtensionFile(
+    extensionPathFromExtensionPageUrl(
+      themeAssets.effectAssetPath(assetKey),
+      `${assetKey} effect asset`,
+    ),
+  );
+}
 
 checkDashboardAssets({
   assert,

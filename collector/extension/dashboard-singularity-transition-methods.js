@@ -2,39 +2,23 @@
   "use strict";
 
   const DATA = globalThis.PacePetsDashboardPaceData;
-  const TRANSITION_DATA = globalThis.PacePetsDashboardSingularityTransitionData;
-  const TRANSITION_VERSIONS =
-    globalThis.PacePetsDashboardSingularityTransitionVersions;
+  const TRANSITION_RENDERER =
+    globalThis.PacePetsDashboardSingularityTransitionRenderer;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !TRANSITION_DATA || !TRANSITION_VERSIONS || !Controller) {
+  if (!DATA || !TRANSITION_RENDERER || !Controller) {
     throw new Error(
       "Pace and Singularity transition helpers must load before transition methods.",
     );
   }
+
+  const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
   function isSingularityState(state) {
     return state?.key === DATA.PACE_STATES.singularity.key;
   }
 
   function prefersReducedMotion() {
-    return (
-      window.matchMedia?.(TRANSITION_DATA.REDUCED_MOTION_QUERY).matches === true
-    );
-  }
-
-  function paceIconOrigin(controller) {
-    const rect = controller.elements.paceIcon?.getBoundingClientRect();
-    if (!rect || rect.width <= 0 || rect.height <= 0) {
-      return {
-        x: window.innerWidth / 2,
-        y: window.innerHeight / 2,
-      };
-    }
-
-    return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-    };
+    return window.matchMedia?.(REDUCED_MOTION_QUERY).matches === true;
   }
 
   Object.assign(Controller.prototype, {
@@ -93,10 +77,9 @@
       this.singularityTransitionPending = false;
 
       const reducedMotion = prefersReducedMotion();
-      const scene = TRANSITION_VERSIONS.create({
-        origin: paceIconOrigin(this),
+      const scene = TRANSITION_RENDERER.create({
+        blackHoleVersion: this.getCurrentSingularityBlackHoleVersion?.(),
         reducedMotion,
-        version: this.getCurrentSingularityTransitionVersion?.(),
       });
       this.singularityTransitionScene = scene;
       await scene.play();

@@ -1,192 +1,3 @@
-@keyframes ease-up-card-border-exhale {
-  0%,
-  50%,
-  100% {
-    border-radius: 12px;
-    clip-path: polygon(
-      0 0,
-      11% 0,
-      28% 0,
-      50% 0,
-      72% 0,
-      89% 0,
-      100% 0,
-      100% 100%,
-      89% 100%,
-      72% 100%,
-      50% 100%,
-      28% 100%,
-      11% 100%,
-      0 100%
-    );
-    inset: 0;
-  }
-
-  24% {
-    border-radius: 10px;
-    clip-path: polygon(
-      0 0,
-      11% 2%,
-      28% 5%,
-      50% 7%,
-      72% 5%,
-      89% 2%,
-      100% 0,
-      100% 100%,
-      89% 98%,
-      72% 95%,
-      50% 93%,
-      28% 95%,
-      11% 98%,
-      0 100%
-    );
-    inset: 0;
-  }
-
-  74% {
-    border-radius: 34px / 62px;
-    clip-path: polygon(
-      0 8%,
-      11% 6%,
-      28% 2%,
-      50% 0,
-      72% 2%,
-      89% 6%,
-      100% 8%,
-      100% 92%,
-      89% 94%,
-      72% 98%,
-      50% 100%,
-      28% 98%,
-      11% 94%,
-      0 92%
-    );
-    inset: -10px 0;
-  }
-}
-
-@keyframes ease-up-card-fill-exhale {
-  0%,
-  50%,
-  100% {
-    border-radius: 11px;
-    clip-path: polygon(
-      0 0,
-      11% 0,
-      28% 0,
-      50% 0,
-      72% 0,
-      89% 0,
-      100% 0,
-      100% 100%,
-      89% 100%,
-      72% 100%,
-      50% 100%,
-      28% 100%,
-      11% 100%,
-      0 100%
-    );
-    inset: 1px;
-  }
-
-  24% {
-    border-radius: 10px;
-    clip-path: polygon(
-      0 0,
-      11% 2%,
-      28% 5%,
-      50% 7%,
-      72% 5%,
-      89% 2%,
-      100% 0,
-      100% 100%,
-      89% 98%,
-      72% 95%,
-      50% 93%,
-      28% 95%,
-      11% 98%,
-      0 100%
-    );
-    inset: 1px;
-  }
-
-  74% {
-    border-radius: 33px / 60px;
-    clip-path: polygon(
-      0 8%,
-      11% 6%,
-      28% 2%,
-      50% 0,
-      72% 2%,
-      89% 6%,
-      100% 8%,
-      100% 92%,
-      89% 94%,
-      72% 98%,
-      50% 100%,
-      28% 98%,
-      11% 94%,
-      0 92%
-    );
-    inset: -9px 1px;
-  }
-}
-
-@keyframes ease-up-content-exhale {
-  0%,
-  50%,
-  100% {
-    transform: scale(1);
-  }
-
-  24% {
-    transform: translateY(1px) scaleX(0.988) scaleY(0.965);
-  }
-
-  74% {
-    transform: translateY(-1px) scaleX(1.006) scaleY(1.032);
-  }
-}
-
-@keyframes ease-up-steam-shimmer {
-  0% {
-    opacity: var(--steam-low-opacity);
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-
-  34% {
-    opacity: var(--steam-peak-opacity);
-    transform: translate3d(var(--steam-wiggle-x), var(--steam-wiggle-y), 0)
-      rotate(var(--steam-rotate));
-  }
-
-  68% {
-    opacity: var(--steam-mid-opacity);
-    transform: translate3d(
-        var(--steam-wiggle-x-alt),
-        var(--steam-wiggle-y-alt),
-        0
-      )
-      rotate(var(--steam-rotate-alt));
-  }
-
-  100% {
-    opacity: var(--steam-low-opacity);
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-}
-
-@keyframes ease-up-steam-layer-float {
-  0%,
-  100% {
-    transform: translateY(1px);
-  }
-
-  48% {
-    transform: translateY(-2px);
-  }
-}
-
 .pace-card.pace-behind.has-pace-ease-up-effect {
   background: transparent;
   border-color: transparent;
@@ -222,11 +33,16 @@
   z-index: 1;
 }
 
-.pace-card.pace-behind.has-pace-ease-up-effect > * {
+.pace-card.pace-behind.has-pace-ease-up-effect > :not(.pace-icon),
+.pace-icon.has-pace-icon-effect-ease-up img,
+.pace-icon.has-pace-icon-effect-ease-up .pace-ease-up-layer {
   animation: ease-up-content-exhale 7.8s linear infinite;
-  position: relative;
   transform-origin: 50% 50%;
   will-change: transform;
+}
+
+.pace-card.pace-behind.has-pace-ease-up-effect > * {
+  position: relative;
   z-index: 2;
 }
 
@@ -237,7 +53,47 @@
 
 .pace-icon.has-pace-icon-effect-ease-up .pace-ease-up-layer {
   display: block;
-  z-index: auto;
+  z-index: 3;
+}
+
+.pace-ease-up-eye-layer {
+  display: block;
+  height: 106%;
+  left: 50%;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate3d(-50%, -50%, 0) translate(-6px, -16px);
+  width: 106%;
+  z-index: 2;
+}
+
+.pace-ease-up-eyes {
+  animation:
+    ease-up-side-eye-appear 7.8s ease-in-out infinite,
+    ease-up-side-eye-glance 7.8s cubic-bezier(0.36, 0, 0.18, 1) infinite;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.pace-ease-up-eye {
+  animation: ease-up-side-eye-narrow 7.8s cubic-bezier(0.36, 0, 0.18, 1)
+    infinite;
+  fill: #000000;
+  opacity: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.pace-ease-up-eye-1 {
+  --ease-up-eye-local-x: -48px;
+}
+
+.pace-ease-up-eye-2 {
+  --ease-up-eye-local-x: 1px;
 }
 
 .pace-ease-up-steam-layer {
@@ -316,8 +172,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .pace-ease-up-layer {
+    display: none;
+  }
+
   .pace-card.pace-behind.has-pace-ease-up-effect,
   .pace-card.pace-behind.has-pace-ease-up-effect > *,
+  .pace-ease-up-eye,
+  .pace-ease-up-eye-layer,
+  .pace-ease-up-eyes,
+  .pace-icon.has-pace-icon-effect-ease-up img,
+  .pace-icon.has-pace-icon-effect-ease-up .pace-ease-up-layer,
   .pace-ease-up-steam {
     animation: none;
   }
@@ -331,10 +196,6 @@
   .pace-card.pace-behind.has-pace-ease-up-effect::before,
   .pace-card.pace-behind.has-pace-ease-up-effect::after {
     animation: none;
-    display: none;
-  }
-
-  .pace-ease-up-layer {
     display: none;
   }
 }

@@ -1,51 +1,24 @@
 (() => {
   "use strict";
 
-  const ORIGIN = Object.freeze({ X_PX: 64, Y_PX: 27 });
-  const EMIT_INTERVAL_MS = 340;
-  const EMIT_JITTER_MS = Object.freeze([-35, 35]);
-  const INITIAL_ACTIVE_PUFFS = 12;
-  const MAX_CATCH_UP_EMISSIONS = 4;
-  const PUFF_POOL_SIZE = 20;
-  const ESCAPE = Object.freeze({
-    CHANCE_PERCENT: 4,
-    DURATION_MS: Object.freeze([11000, 15000]),
-    END_OPACITY_RATIO: 0.28,
-    END_SCALE_PERCENT: Object.freeze([128, 145]),
-    END_X_PX: Object.freeze([-230, -184]),
-    FADE_START_PROGRESS: 0.82,
-    FIRST_CONTROL_X_OFFSET_PX: Object.freeze([-132, -92]),
-    FIRST_CONTROL_Y_OFFSET_PX: Object.freeze([-8, 0]),
-    MIN_END_Y_PX: -180,
-    SECOND_CONTROL_X_PX: Object.freeze([-236, -190]),
-    SECOND_CONTROL_Y_PERCENT: Object.freeze([50, 66]),
-    SPIN_DEG: Object.freeze([18, 34]),
-    TILT_DEG: Object.freeze([-8, 8]),
-    TOP_MARGIN_PX: 120,
-  });
-  const EXTENDED_PATH = Object.freeze({
-    CHANCE_PERCENT: 27,
-    DURATION_MS: Object.freeze([5600, 7600]),
-    END_X_PX: Object.freeze([-104, -62]),
-    END_Y_PX: Object.freeze([-40, -14]),
-    MID_OPACITY_RATIO: 0.42,
-    MID_X_PX: Object.freeze([-17, -5]),
-    MID_Y_PX: Object.freeze([-40, -25]),
-    PEAK_OPACITY_RATIO: 0.9,
-    THIN_OPACITY_RATIO: 0.12,
-  });
-  const SHAPES = Object.freeze(["round", "long", "tall"]);
-  const VARIATION = Object.freeze({
-    DURATION_MS: Object.freeze([4200, 5800]),
-    END_SCALE_PERCENT: Object.freeze([106, 122]),
-    END_X_PX: Object.freeze([-60, -44]),
-    END_Y_PX: Object.freeze([-27, -20]),
-    MID_X_PX: Object.freeze([-5, -1]),
-    MID_Y_PX: Object.freeze([-32, -24]),
-    OPACITY_PERCENT: Object.freeze([52, 72]),
-    SIZE_PX: Object.freeze([12, 19]),
-    TILT_DEG: Object.freeze([-12, 10]),
-  });
+  const DATA = globalThis.PacePetsDashboardTrainSmokeData;
+  if (!DATA) {
+    throw new Error(
+      "Train smoke data must load before dashboard-train-smoke.js.",
+    );
+  }
+  const {
+    EMIT_INTERVAL_MS,
+    EMIT_JITTER_MS,
+    ESCAPE,
+    EXTENDED_PATH,
+    INITIAL_ACTIVE_PUFFS,
+    MAX_CATCH_UP_EMISSIONS,
+    ORIGIN,
+    PUFF_POOL_SIZE,
+    SHAPES,
+    VARIATION,
+  } = DATA;
 
   function decimalString(value) {
     return String(Math.round(value * 100) / 100);
@@ -135,27 +108,27 @@
     if (progress < 0.16) {
       return peakOpacity * smoothstep(progress / 0.16);
     }
-    if (progress < 0.48) {
+    if (progress < 0.4) {
       return peakOpacity;
     }
-    if (progress < 0.7) {
+    if (progress < 0.62) {
       return lerp(
         peakOpacity,
-        peakOpacity * 0.66,
-        smoothstep((progress - 0.48) / 0.22),
+        peakOpacity * 0.62,
+        smoothstep((progress - 0.4) / 0.22),
       );
     }
-    if (progress < 0.86) {
+    if (progress < 0.8) {
       return lerp(
-        peakOpacity * 0.66,
-        peakOpacity * 0.28,
-        smoothstep((progress - 0.7) / 0.16),
+        peakOpacity * 0.62,
+        peakOpacity * Math.max(0.22, endOpacityRatio),
+        smoothstep((progress - 0.62) / 0.18),
       );
     }
     return lerp(
-      peakOpacity * 0.28,
+      peakOpacity * Math.max(0.22, endOpacityRatio),
       peakOpacity * endOpacityRatio,
-      smoothstep((progress - 0.86) / 0.14),
+      smoothstep((progress - 0.8) / 0.2),
     );
   }
 
@@ -193,6 +166,17 @@
       peakOpacity * thinOpacityRatio,
       peakOpacity * endOpacityRatio,
       smoothstep((progress - 0.86) / 0.14),
+    );
+  }
+
+  function baseScaleForProgress(puffState, phase) {
+    const fullScale = lerp(0.58, puffState.endScale, phase.motionProgress);
+    if (puffState.isEscape) {
+      return fullScale;
+    }
+    return (
+      fullScale *
+      lerp(1, 0.62, smoothstep(Math.max(0, phase.progress - 0.54) / 0.46))
     );
   }
 
@@ -259,10 +243,7 @@
   }
 
   function escapeSpinDirection(controller) {
-    if (controller.randomIntegerInRange([0, 1]) === 0) {
-      return -1;
-    }
-    return 1;
+    return controller.randomIntegerInRange([0, 1]) === 0 ? -1 : 1;
   }
 
   function randomEscape(controller, puff, variation) {
@@ -273,6 +254,10 @@
     }
 
     const endY = escapeEndYForPuff(puff);
+    const start = arcPosition(variation, smoothstep(ESCAPE.START_PROGRESS));
+    variation.baseDurationMs *= ESCAPE.START_PROGRESS;
+    variation.endX = start.x;
+    variation.endY = start.y;
     return {
       durationMs: controller.randomIntegerInRange(ESCAPE.DURATION_MS),
       endScale:
@@ -303,10 +288,7 @@
   }
 
   function baseEndOpacityRatio(puffState) {
-    if (puffState.isEscape) {
-      return ESCAPE.END_OPACITY_RATIO;
-    }
-    return 0;
+    return puffState.isEscape ? ESCAPE.END_OPACITY_RATIO : 0;
   }
 
   function puffPhase(puffState, elapsedMs) {
@@ -342,7 +324,7 @@
       ),
       position: arcPosition(puffState, phase.motionProgress),
       rotate: lerp(puffState.tilt, 0, phase.motionProgress),
-      scale: lerp(0.58, puffState.endScale, phase.motionProgress),
+      scale: baseScaleForProgress(puffState, phase),
     };
   }
 

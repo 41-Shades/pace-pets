@@ -1,13 +1,9 @@
-(function attachPacePetsDashboardSingularityV2BlackHoleDraw(root) {
+(function attachPacePetsDashboardSingularityBlackHoleV1Draw(root) {
   "use strict";
 
-  const APPROACH_DURATION_MS = 5400;
-  const FADE_DURATION_MS = 900;
-  const HOLD_DURATION_MS = 1400;
-  const PARTICLE_COUNT = 96;
+  const APPROACH_DURATION_MS = 7600;
+  const PARTICLE_COUNT = 128;
   const TAU = Math.PI * 2;
-  const TOTAL_DURATION_MS =
-    APPROACH_DURATION_MS + HOLD_DURATION_MS + FADE_DURATION_MS;
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -51,13 +47,13 @@
   function createParticles() {
     return Array.from({ length: PARTICLE_COUNT }, (_, index) => ({
       angle: seededUnit(index, 1) * TAU,
-      arc: 0.015 + seededUnit(index, 2) * 0.045,
+      arc: 0.012 + seededUnit(index, 2) * 0.07,
       hue: seededUnit(index, 3) > 0.44 ? 36 : 198,
-      lightness: 58 + seededUnit(index, 4) * 28,
-      orbit: 0.74 + seededUnit(index, 5) * 0.9,
-      saturation: 72 + seededUnit(index, 6) * 22,
-      size: 1.4 + seededUnit(index, 7) * 4,
-      speed: 0.00018 + seededUnit(index, 8) * 0.00032,
+      lightness: 54 + seededUnit(index, 4) * 34,
+      orbit: 0.68 + seededUnit(index, 5) * 1.18,
+      saturation: 74 + seededUnit(index, 6) * 24,
+      size: 1.1 + seededUnit(index, 7) * 5.2,
+      speed: 0.0002 + seededUnit(index, 8) * 0.00042,
     }));
   }
 
@@ -69,14 +65,14 @@
 
   function sceneCenter(width, height, progress) {
     return {
-      x: width * (0.56 - (1 - progress) * 0.04),
-      y: height * (0.43 - (1 - progress) * 0.06),
+      x: width * (0.58 - (1 - progress) * 0.08),
+      y: height * (0.43 - (1 - progress) * 0.1),
     };
   }
 
   function sceneRadius(width, height, progress) {
-    const maxRadius = clamp(Math.min(width, height) * 0.24, 116, 250);
-    return 2 + maxRadius * easeOutCubic(progress);
+    const maxRadius = clamp(Math.min(width, height) * 0.32, 150, 340);
+    return 0.6 + maxRadius * easeOutCubic(progress);
   }
 
   function drawRadialGlow(context, center, radius, opacity) {
@@ -88,9 +84,9 @@
       center.y,
       radius * 4.2,
     );
-    glow.addColorStop(0, color(opacity * 0.46, 216, 237, 255));
-    glow.addColorStop(0.14, color(opacity * 0.24, 90, 183, 255));
-    glow.addColorStop(0.44, color(opacity * 0.12, 45, 90, 210));
+    glow.addColorStop(0, color(opacity * 0.5, 232, 244, 255));
+    glow.addColorStop(0.12, color(opacity * 0.25, 99, 197, 255));
+    glow.addColorStop(0.38, color(opacity * 0.09, 42, 90, 220));
     glow.addColorStop(1, color(0, 1, 6, 20));
 
     context.save();
@@ -102,8 +98,9 @@
     context.restore();
   }
 
-  function drawJets(context, center, radius, progress, opacity) {
-    const jetAlpha = opacity * smoothStep(0.26, 0.78, progress);
+  function drawJets(context, center, radius, state) {
+    const jetAlpha =
+      state.opacity * smoothStep(0.42, 0.86, state.approachProgress);
     if (jetAlpha <= 0) {
       return;
     }
@@ -132,7 +129,7 @@
     context.restore();
   }
 
-  function drawDiskRings(context, center, radius, elapsedMs, opacity) {
+  function drawDiskRings(context, state, center, radius, elapsedMs) {
     const rotation = elapsedMs * 0.00018;
     context.save();
     context.translate(center.x, center.y);
@@ -142,14 +139,19 @@
 
     for (let ring = 0; ring < 5; ring += 1) {
       const ringRadius = radius * (1.04 + ring * 0.26);
-      const alpha = opacity * (0.42 - ring * 0.054);
-      context.strokeStyle =
-        ring % 2 === 0
-          ? color(alpha, 255, 236, 192)
-          : color(alpha * 0.72, 111, 207, 255);
+      const alpha = state.diskOpacity * (0.46 - ring * 0.05);
       context.lineWidth = Math.max(1, radius * (0.055 - ring * 0.006));
       context.beginPath();
+      context.strokeStyle = color(alpha * 0.28, 116, 187, 255);
       context.ellipse(0, 0, ringRadius, ringRadius, 0, 0, TAU);
+      context.stroke();
+      context.beginPath();
+      context.strokeStyle = color(alpha * 1.05, 255, 241, 205);
+      context.ellipse(0, 0, ringRadius, ringRadius, 0, 0.08 * TAU, 0.46 * TAU);
+      context.stroke();
+      context.beginPath();
+      context.strokeStyle = color(alpha * 0.82, 87, 206, 255);
+      context.ellipse(0, 0, ringRadius, ringRadius, 0, 0.56 * TAU, 0.9 * TAU);
       context.stroke();
     }
 
@@ -167,10 +169,11 @@
     for (const particle of state.particles) {
       const angle = particle.angle + elapsedMs * particle.speed;
       const orbitRadius = radius * particle.orbit;
-      const frontBoost = Math.sin(angle) > 0 ? 1.22 : 0.64;
+      const frontBoost = Math.sin(angle) > 0 ? 1.55 : 0.38;
+      const sideBoost = 0.72 + smoothStep(-0.25, 1, Math.cos(angle)) * 0.72;
       context.strokeStyle = particleColor(
         particle,
-        state.opacity * frontBoost * 0.62,
+        state.diskOpacity * frontBoost * sideBoost * 0.62,
       );
       context.lineWidth = Math.max(1, particle.size);
       context.beginPath();
@@ -181,17 +184,17 @@
     context.restore();
   }
 
-  function drawHorizon(context, center, radius, opacity) {
+  function drawHorizon(context, center, radius, state) {
     context.save();
-    context.shadowBlur = radius * 0.28;
-    context.shadowColor = color(opacity * 0.9, 0, 0, 0);
-    context.fillStyle = color(opacity, 0, 0, 2);
+    context.shadowBlur = radius * 0.5;
+    context.shadowColor = color(state.opacity, 0, 0, 0);
+    context.fillStyle = color(state.opacity, 0, 0, 1);
     context.beginPath();
     context.ellipse(
       center.x,
       center.y,
-      radius * 0.88,
-      radius * 0.56,
+      radius * 0.98,
+      radius * 0.63,
       0,
       0,
       TAU,
@@ -199,14 +202,14 @@
     context.fill();
 
     context.shadowBlur = 0;
-    context.strokeStyle = color(opacity * 0.76, 240, 248, 255);
-    context.lineWidth = Math.max(1, radius * 0.035);
+    context.strokeStyle = color(state.diskOpacity * 0.94, 249, 253, 255);
+    context.lineWidth = Math.max(1, radius * 0.052);
     context.beginPath();
     context.ellipse(
       center.x,
       center.y,
-      radius * 1.02,
-      radius * 0.68,
+      radius * 1.08,
+      radius * 0.72,
       0,
       0,
       TAU,
@@ -217,13 +220,11 @@
 
   function drawFrame(context, state, size, elapsedMs) {
     const approachProgress = easeInOutCubic(elapsedMs / APPROACH_DURATION_MS);
-    const fadeProgress = easeInOutCubic(
-      (elapsedMs - APPROACH_DURATION_MS - HOLD_DURATION_MS) / FADE_DURATION_MS,
-    );
-    const opacity =
-      smoothStep(0.03, 0.24, approachProgress) * (1 - fadeProgress);
+    const opacity = smoothStep(0.02, 0.38, approachProgress);
     const center = sceneCenter(size.width, size.height, approachProgress);
     const radius = sceneRadius(size.width, size.height, approachProgress);
+    state.approachProgress = approachProgress;
+    state.diskOpacity = opacity * smoothStep(0.18, 0.58, approachProgress);
     state.opacity = opacity;
 
     context.clearRect(0, 0, size.width, size.height);
@@ -232,15 +233,14 @@
     }
 
     drawRadialGlow(context, center, radius, opacity);
-    drawJets(context, center, radius, approachProgress, opacity);
-    drawDiskRings(context, center, radius, elapsedMs, opacity);
+    drawJets(context, center, radius, state);
+    drawDiskRings(context, state, center, radius, elapsedMs);
     drawDiskParticles(context, state, center, radius, elapsedMs);
-    drawHorizon(context, center, radius, opacity);
+    drawHorizon(context, center, radius, state);
   }
 
-  root.PacePetsDashboardSingularityV2BlackHoleDraw = Object.freeze({
+  root.PacePetsDashboardSingularityBlackHoleV1Draw = Object.freeze({
     createState,
     drawFrame,
-    totalDurationMs: TOTAL_DURATION_MS,
   });
 })(globalThis);
