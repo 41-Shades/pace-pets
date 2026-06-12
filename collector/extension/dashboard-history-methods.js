@@ -59,6 +59,8 @@
       }
 
       this.elements.resetsIn.textContent = paceSummary.resetCountdownOverride;
+      this.elements.paceBurnoutIn.textContent =
+        paceSummary.resetCountdownOverride;
     },
 
     renderSummaryWindowPace({
@@ -135,6 +137,8 @@
         windowData?.resetsAt,
         atMs,
       );
+      this.elements.paceBurnoutIn.textContent =
+        this.DASHBOARD_TIME.paceBurnoutCountdown(windowData, atMs);
       this.renderSummaryWindowPace({
         applyPaceSummary,
         history,
@@ -173,6 +177,7 @@
       );
       this.DASHBOARD_TIME.setResetParts(this.elements, null, spec);
       this.elements.resetsIn.textContent = "--";
+      this.elements.paceBurnoutIn.textContent = "--";
       if (!this.paceView.hasForcedPaceStateOverride()) {
         this.paceView.setPaceSummary({
           copy: state.paceCopy,
@@ -207,6 +212,7 @@
       );
       this.DASHBOARD_TIME.setResetParts(this.elements, null, spec);
       this.elements.resetsIn.textContent = "--";
+      this.elements.paceBurnoutIn.textContent = "--";
       if (!this.paceView.hasForcedPaceStateOverride()) {
         this.paceView.setPaceSummary({
           copy: "Could not read local history.",

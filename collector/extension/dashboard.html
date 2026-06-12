@@ -191,9 +191,7 @@
                       <path d="M19 20v-7"></path>
                     </svg>
                   </div>
-                  <div class="metric-copy">
-                    <span class="metric-title">Usage remaining</span>
-                  </div>
+                  <span class="metric-copy metric-title">Usage remaining</span>
                   <span class="metric-value" id="usage-percent">--%</span>
                 </div>
                 <div class="metric-bar" aria-hidden="true">
@@ -208,9 +206,7 @@
                       <path d="M12 8v5l3 2"></path>
                     </svg>
                   </div>
-                  <div class="metric-copy">
-                    <span class="metric-title">Time remaining</span>
-                  </div>
+                  <span class="metric-copy metric-title">Time remaining</span>
                   <span class="metric-value" id="time-percent">--%</span>
                 </div>
                 <div class="metric-bar" aria-hidden="true">
@@ -248,18 +244,14 @@
                     </div>
                   </div>
                   <div class="reset-progress" aria-hidden="true">
-                    <span
-                      class="reset-progress-dot reset-progress-dot-start"
-                    ></span>
+                    <span class="reset-progress-dot"></span>
                     <span class="reset-progress-track">
                       <span
                         class="reset-progress-fill"
                         id="reset-progress-fill"
                       ></span>
                     </span>
-                    <span
-                      class="reset-progress-dot reset-progress-dot-end"
-                    ></span>
+                    <span class="reset-progress-dot"></span>
                   </div>
                 </dl>
               </div>
@@ -284,6 +276,14 @@
                       <span>Resets in</span>
                     </span>
                     <strong id="resets-in">--</strong>
+                    <span
+                      class="pace-burnout-line"
+                      tabindex="0"
+                      data-tooltip="Time to 100% usage at current pace,&#10;even past reset."
+                    >
+                      <span>Burnout in:</span>
+                      <strong id="pace-burnout-in">--</strong>
+                    </span>
                     <span class="reset-note">
                       Click for early reset:
                       <span class="early-reset-action">

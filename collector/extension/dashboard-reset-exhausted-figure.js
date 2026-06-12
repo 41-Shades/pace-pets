@@ -35,12 +35,15 @@
     const tired = documentRef.createElement("span");
     tired.className =
       "reset-exhausted-message-stage reset-exhausted-message-tired";
-    tired.textContent = "Ti..";
+    tired.textContent = "Ti ..";
 
     const save = documentRef.createElement("span");
     save.className =
       "reset-exhausted-message-stage reset-exhausted-message-save";
-    save.textContent = "Save me";
+    const saveText = documentRef.createElement("span");
+    saveText.className = "reset-exhausted-message-save-text";
+    saveText.textContent = "Save me";
+    save.append(saveText);
 
     message.append(tired, save);
     return message;
