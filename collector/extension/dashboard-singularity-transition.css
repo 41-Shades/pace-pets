@@ -72,6 +72,8 @@ body.is-singularity-chrome-pressure .content-grid {
 }
 
 body.is-singularity-chrome-collapse .content-grid {
+  perspective: 900px;
+  perspective-origin: 54% 49%;
   transform-style: preserve-3d;
 }
 
@@ -112,48 +114,48 @@ body.is-singularity-chrome-collapse .metrics {
   }
 
   12% {
-    filter: brightness(1.01);
-    transform: translate3d(0.3px, -0.2px, 0) rotate(0.015deg);
+    filter: brightness(1.012);
+    transform: translate3d(0.4px, -0.3px, 0) rotate(0.019deg);
   }
 
   24% {
-    filter: brightness(1.015);
-    transform: translate3d(-0.7px, 0.3px, 0) rotate(-0.025deg);
+    filter: brightness(1.018);
+    transform: translate3d(-0.9px, 0.4px, 0) rotate(-0.031deg);
   }
 
   36% {
-    filter: brightness(1.025);
-    transform: translate3d(1.1px, 0.2px, 0) rotate(0.04deg);
+    filter: brightness(1.03);
+    transform: translate3d(1.4px, 0.3px, 0) rotate(0.05deg);
   }
 
   48% {
-    filter: brightness(1.035);
-    transform: translate3d(-1.4px, -0.6px, 0) rotate(-0.055deg);
+    filter: brightness(1.04);
+    transform: translate3d(-1.8px, -0.8px, 0) rotate(-0.069deg);
   }
 
   60% {
-    filter: brightness(1.06);
-    transform: translate3d(1.8px, -0.8px, 0) rotate(0.07deg);
+    filter: brightness(1.07);
+    transform: translate3d(2.3px, -1px, 0) rotate(0.088deg);
   }
 
   72% {
-    filter: brightness(1.085);
-    transform: translate3d(-2.4px, 1px, 0) rotate(-0.09deg);
+    filter: brightness(1.1);
+    transform: translate3d(-3.1px, 1.3px, 0) rotate(-0.113deg);
   }
 
   84% {
-    filter: brightness(1.12);
-    transform: translate3d(3px, 1.3px, 0) rotate(0.12deg);
+    filter: brightness(1.14);
+    transform: translate3d(3.9px, 1.7px, 0) rotate(0.15deg);
   }
 
   94% {
-    filter: brightness(1.15);
-    transform: translate3d(-3.7px, -1.5px, 0) rotate(-0.15deg);
+    filter: brightness(1.18);
+    transform: translate3d(-4.8px, -2px, 0) rotate(-0.188deg);
   }
 
   100% {
-    filter: brightness(1.17);
-    transform: translate3d(4.4px, 1.8px, 0) rotate(0.18deg);
+    filter: brightness(1.2);
+    transform: translate3d(5.7px, 2.3px, 0) rotate(0.23deg);
   }
 }
 

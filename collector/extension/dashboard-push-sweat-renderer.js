@@ -31,7 +31,6 @@
     sway: 0.012,
     travel: 0.14,
   });
-  const RARE_EXIT_TRAIL_PHASE = 0.12;
   const SWEAT_ORIGIN = Object.freeze({ x: 0.69, y: 0.18 });
 
   function track([
@@ -151,11 +150,24 @@
     return LEVEL_CONFIGS[level] || LEVEL_CONFIGS.normal;
   }
 
-  function trailPhaseForTransition(previousLevel, currentLevel) {
-    if (previousLevel === "rare" && currentLevel !== "rare") {
-      return RARE_EXIT_TRAIL_PHASE;
+  function completionPhaseForTrack(track) {
+    return track.start + track.duration - 1;
+  }
+
+  function completionPhaseForTracks(tracks) {
+    let phase = 0;
+    for (const track of tracks) {
+      phase = Math.max(phase, completionPhaseForTrack(track));
     }
-    return configForLevel(previousLevel).trailPhase;
+    return phase;
+  }
+
+  function trailPhaseForTransition(previousLevel, currentLevel, tracks) {
+    const completionPhase = completionPhaseForTracks(tracks);
+    if (previousLevel === "rare" && currentLevel !== "rare") {
+      return completionPhase;
+    }
+    return Math.max(configForLevel(previousLevel).trailPhase, completionPhase);
   }
 
   function sizeBoost(maxBoost, amount) {
@@ -280,9 +292,12 @@
     return opacity * track.size * released.sizeBoost;
   }
 
-  function drawTracks(context, frame, tracks) {
+  function drawTracks(context, frame, tracks, shouldDrawTrack = null) {
     let sweatLoad = 0;
     for (const track of tracks) {
+      if (shouldDrawTrack && !shouldDrawTrack(track)) {
+        continue;
+      }
       sweatLoad += drawTrack(context, frame, track);
     }
     return sweatLoad;
@@ -339,15 +354,22 @@
           sizeBoost: currentConfig.sizeBoost,
         };
         context.clearRect(0, 0, dimensions.width, dimensions.height);
-        let sweatLoad = drawTracks(
-          context,
-          currentFrame,
-          trackCaches[pulseLevel].forCycle(cycleIndex),
-        );
+        const currentTracks = trackCaches[pulseLevel].forCycle(cycleIndex);
+        let sweatLoad = drawTracks(context, currentFrame, currentTracks);
         const previousConfig = configForLevel(previousPulseLevel);
+        const previousTrackCache = trackCaches[previousPulseLevel];
+        const previousTracks =
+          previousCycleIndex >= 0 && previousTrackCache
+            ? previousTrackCache.forCycle(previousCycleIndex)
+            : null;
         if (
-          previousCycleIndex >= 0 &&
-          phase <= trailPhaseForTransition(previousPulseLevel, pulseLevel)
+          previousTracks &&
+          phase <=
+            trailPhaseForTransition(
+              previousPulseLevel,
+              pulseLevel,
+              previousTracks,
+            )
         ) {
           sweatLoad += drawTracks(
             context,
@@ -357,7 +379,8 @@
               profile: previousProfile || PushStretch.NORMAL_PROFILE,
               sizeBoost: previousConfig.sizeBoost,
             },
-            trackCaches[previousPulseLevel].forCycle(previousCycleIndex),
+            previousTracks,
+            (track) => phase <= completionPhaseForTrack(track),
           );
         }
         return sweatLoad;

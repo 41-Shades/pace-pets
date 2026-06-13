@@ -27,11 +27,17 @@ The Singularity transition fades into the shared space backdrop over 2 seconds,
 fades dashboard chrome in over 6 seconds, then starts the selected supermassive
 black-hole approach. As glints start falling inward, the dashboard chrome
 pressure-ripples and its real containers begin one continuous split, orbital
-pull, and distortion toward the black hole. Shortly after each container starts
-falling, its owned inner pieces begin a second overlapping breakup pass so text,
-icons, controls, and bars keep tearing loose while the parent container is
-already orbiting inward. They shrink and fade only as they reach the horizon.
-The explosive/shard breakup path is intentionally not active.
+pull, 3D depth recession, and distortion toward the black hole. CSS
+perspective gives the live DOM plane depth, so pieces begin moving backward
+into the black-hole layer as soon as collapse starts instead of sliding only in
+screen space. Pull-direction X/Y torque makes the flat dashboard chrome rotate
+as gravity catches it, while the existing Z-axis orbit and shear preserve the
+spiral motion. Shortly after each container starts falling, its owned inner
+pieces begin a second overlapping breakup pass so text, icons, controls, and
+bars keep tearing loose while the parent container is already orbiting inward.
+Containers and inner fragments progressively shrink, darken, and fade as depth
+recession increases. The explosive/shard breakup path is intentionally not
+active.
 
 Same-state refreshes do not replay the sequence. To replay it in development,
 force a different pace state first, then force Singularity again.
@@ -53,8 +59,8 @@ glints.
 
 Other implementation paths remain available if the shader scene hits a ceiling:
 
-- Three.js scene: useful if the black hole needs true camera depth, orbital
-  geometry, or richer 3D UI-fragment physics later.
+- Three.js scene: useful if the CSS-perspective collapse needs richer camera
+  depth, orbital geometry, or UI-fragment physics later.
 - Generated raster/video asset: visually rich, but less controllable and less
   integrated with the live chrome-collapse physics.
 
@@ -73,22 +79,22 @@ Current sequence target:
 9. Dashboard chrome pressure-ripples near the same time glints start
    distorting and falling inward.
 10. Main-panel containers and each state-rail item split apart, orbit inward,
-    stretch, and shear as one continuous pull instead of separate break/fall
-    phases.
+    rotate in 3D, recede along the Z axis, stretch, shear, and shrink as one
+    continuous pull instead of separate break/fall phases.
 11. Inner content fragments then tear loose on an overlapping delay, continuing
-    to shear and shrink as their parent containers fall.
+    to shear, torque, shrink, and recede as their parent containers fall.
 12. Near the horizon, containers and inner fragments compress, darken, and
     disappear into the black hole without an explosion.
 
 The black-hole canvas intentionally remains below `.content-grid` while the
-approach holds. During collapse, the real `.content-grid` remains visible for
-the container split/orbit/shrink phase; no temporary debris layer or explosive
-breakup handoff is active in the current implementation. The collapse scene
-marks the live DOM pieces it owns; while the unfinished hold is active,
-unclaimed replacement dashboard or rail chrome stays hidden so normal dashboard
-refreshes cannot repaint clean UI over the collapsed state. After successful
-chrome collapse, the scene intentionally holds because the next Singularity
-phase has not been designed yet.
+approach holds. During collapse, the real `.content-grid` remains visible with
+CSS perspective for the container split/orbit/depth-recession/shrink phase; no
+temporary debris layer or explosive breakup handoff is active in the current
+implementation. The collapse scene marks the live DOM pieces it owns; while the
+unfinished hold is active, unclaimed replacement dashboard or rail chrome stays
+hidden so normal dashboard refreshes cannot repaint clean UI over the collapsed
+state. After successful chrome collapse, the scene intentionally holds because
+the next Singularity phase has not been designed yet.
 
 ## Versioning
 
@@ -98,8 +104,8 @@ removed, so the dashboard now has one canonical Singularity transition. Local
 developer controls no longer store selectors for the whole transition or the
 black-hole phase.
 
-The local `Run from current state` dev action can be launched from another
-displayed pace state. It fades the live dashboard chrome out, writes the forced
+The local `Preview entry` dev action can be launched from another displayed
+pace state. It fades the live dashboard chrome out, writes the forced
 Singularity developer state, then lets the space fade, chrome fade-in, and
 black-hole approach run. If the dashboard tab is hidden when the action is
 requested, the preview is queued until that dashboard tab becomes visible.
@@ -109,7 +115,7 @@ requested, the preview is queued until that dashboard tab becomes visible.
 1. Reload the unpacked extension from `chrome://extensions`.
 2. Reload both extension pages: `dashboard.html` and `dev-flags.html`.
 3. In Dev Controls, choose a prior state such as `Keep pace` or `Perfect zero`.
-4. Click `Run from current state`.
+4. Click `Preview entry`.
 5. If Dev Controls reports that the preview is queued, switch to the dashboard
    tab.
 
@@ -119,10 +125,10 @@ fades in over 6 seconds, then the black-hole approach builds for about 7.6
 seconds. A whole-dashboard jitter starts when the black-hole approach begins
 and ramps until chrome collapse starts around the glint suction point. The
 chrome-collapse pressure then begins, and main-panel containers plus state-rail
-items immediately split, orbit inward, and distort. A second inner-fragment pass
-starts shortly after the parent pieces begin falling, so text, icons, controls,
-and bars continue breaking up while everything shrinks into the horizon as one
-continuous pull.
+items immediately split, orbit inward, recede into CSS perspective, rotate in
+3D, and distort. A second inner-fragment pass starts shortly after the parent
+pieces begin falling, so text, icons, controls, and bars continue breaking up
+while everything shrinks into the horizon as one continuous pull.
 
 ## Trigger Flow
 
@@ -141,7 +147,7 @@ Developer-control path:
 
 ```text
 dev-flags.html writes forcedPaceState = singularity
-dev-flags.html may send Run from current state message
+dev-flags.html may send Preview entry message
   -> dashboard storage listener calls loadDashboard()
   -> refreshForcedPaceStateOverride()
   -> renderForcedPaceStateOverride()
@@ -194,10 +200,10 @@ or `desktopCapture` for this effect.
   that split away from the dashboard chrome.
 - `collector/extension/dashboard-singularity-chrome-collapse-motion.js`:
   black-hole target calculation plus live-container and inner-fragment
-  split/orbit/stretch/shrink animation timing.
+  split/orbit/stretch/depth-recession/torque/shrink animation timing.
 - `collector/extension/dashboard-singularity-chrome-collapse-scene.js`:
-  chrome pressure and split/orbit/shrink lifecycle, owned-piece marking for the
-  unfinished hold, plus teardown restoration.
+  chrome pressure and split/orbit/depth-recession/shrink lifecycle, owned-piece
+  marking for the unfinished hold, plus teardown restoration.
 - `collector/extension/dashboard-singularity-transition-preview-methods.js`:
   dev-only entry preview action that fades out live dashboard chrome, then
   forces Singularity so the transition can run.
@@ -221,7 +227,8 @@ applies body classes that hide the dashboard chrome while leaving the shared
 space backdrop visible, then creates a temporary black-hole canvas for the
 approach phase. Around the glint suction timing, it starts the
 chrome-collapse scene. That scene animates real main-panel containers and
-state-rail items as stretched DOM pieces along circular inward paths. Their
+state-rail items as stretched DOM pieces along circular inward paths while they
+recede through CSS perspective and rotate with pull-direction 3D torque. Their
 owned inner fragments start an overlapping secondary breakup while the parent
 pieces are already falling, then everything compresses into the horizon without
 an explosive breakup. During the hold, the claimed animated DOM pieces stay as
