@@ -150,10 +150,14 @@
     return LEVEL_CONFIGS[level] || LEVEL_CONFIGS.normal;
   }
 
+  function completionPhaseForTrack(track) {
+    return track.start + track.duration - 1;
+  }
+
   function completionPhaseForTracks(tracks) {
     let phase = 0;
     for (const track of tracks) {
-      phase = Math.max(phase, track.start + track.duration - 1);
+      phase = Math.max(phase, completionPhaseForTrack(track));
     }
     return phase;
   }
@@ -288,9 +292,12 @@
     return opacity * track.size * released.sizeBoost;
   }
 
-  function drawTracks(context, frame, tracks) {
+  function drawTracks(context, frame, tracks, shouldDrawTrack = null) {
     let sweatLoad = 0;
     for (const track of tracks) {
+      if (shouldDrawTrack && !shouldDrawTrack(track)) {
+        continue;
+      }
       sweatLoad += drawTrack(context, frame, track);
     }
     return sweatLoad;
@@ -373,6 +380,7 @@
               sizeBoost: previousConfig.sizeBoost,
             },
             previousTracks,
+            (track) => phase <= completionPhaseForTrack(track),
           );
         }
         return sweatLoad;
