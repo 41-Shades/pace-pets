@@ -312,12 +312,13 @@ planet. As the approach nears collapse, the shader increases disk turbulence,
 photon-ring flares, lensing shock ripples, jet flicker, and infalling-glint
 acceleration. Around the glint suction timing, a chrome-collapse phase splits
 real main-panel containers and state-rail items, pulls them along circular
-inward paths, and stretches them toward the black hole. Owned inner fragments
-then tear loose on an overlapping delay while the parent pieces continue
-falling, and all pieces shrink into the horizon without an explosive breakup.
-Same-state refreshes do not replay the transition. If Singularity is selected
-from the separate developer controls while the dashboard tab is hidden, the
-transition is queued and plays when the dashboard becomes visible.
+inward paths, recedes them through CSS perspective, rotates them with
+pull-direction 3D torque, and stretches them toward the black hole. Owned inner
+fragments then tear loose on an overlapping delay while the parent pieces
+continue falling, and all pieces shrink into the horizon without an explosive
+breakup. Same-state refreshes do not replay the transition. If Singularity is
+selected from the separate developer controls while the dashboard tab is
+hidden, the transition is queued and plays when the dashboard becomes visible.
 Reduced-motion users skip the animated sequence. Successful collapse
 intentionally holds in the unfinished post-collapse state; the renderer removes
 the temporary black-hole canvas and restores distorted chrome only when

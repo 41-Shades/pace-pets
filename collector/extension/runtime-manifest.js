@@ -9,6 +9,7 @@
     "persisted-text.js",
     "refresh-status.js",
     "refresh-control.js",
+    "push-sweat-preview-control.js",
     "splat-bounce-preview-control.js",
     "sync-monk-escape-preview-control.js",
     "singularity-transition-preview-control.js",
@@ -239,6 +240,10 @@
     dashboardFileEdge("push-stretch-renderer", "push-stretch-methods"),
     dashboardFileEdge("push-sweat-variation", "push-sweat-renderer"),
     dashboardFileEdge("push-sweat-renderer", "push-stretch-methods"),
+    dependencyEdge(
+      "./push-sweat-preview-control.js",
+      "./dashboard-push-stretch-methods.js",
+    ),
     dashboardFileEdge("push-tank-data", "push-tank-visitors"),
     dashboardFileEdge("push-tank-visitors", "push-tank-renderer"),
     dashboardFileEdge("push-tank-renderer", "push-water-renderer"),
@@ -326,6 +331,10 @@
     dependencyEdge("./pace-state-data.js", "./dev-flags.js"),
     dependencyEdge(
       "./singularity-transition-preview-control.js",
+      "./dev-flags-preview-actions.js",
+    ),
+    dependencyEdge(
+      "./push-sweat-preview-control.js",
       "./dev-flags-preview-actions.js",
     ),
     dependencyEdge(

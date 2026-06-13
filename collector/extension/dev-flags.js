@@ -22,6 +22,11 @@
 
   const FEATURE_PREVIEW_ACTIONS = Object.freeze([
     Object.freeze({
+      label: "Rare sweat",
+      run: () => PREVIEW_ACTIONS.requestRarePushSweatPreview(),
+      status: "Rare sweat requested.",
+    }),
+    Object.freeze({
       label: "Max Splat bounce",
       run: () => PREVIEW_ACTIONS.requestSplatMaxBouncePreview(),
       status: "Max Splat bounce preview requested.",

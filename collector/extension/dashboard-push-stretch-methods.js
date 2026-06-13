@@ -3,12 +3,14 @@
 
   const Controller = globalThis.PacePetsDashboardPaceController;
   const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  const PushSweatPreview = globalThis.PacePetsPushSweatPreviewControl;
   const PushStretch = globalThis.PacePetsDashboardPushStretch;
   const PushSweat = globalThis.PacePetsDashboardPushSweat;
   const PushWater = globalThis.PacePetsDashboardPushWater;
   if (
     !Controller ||
     !DASHBOARD_PREFERENCES ||
+    !PushSweatPreview ||
     !PushStretch ||
     !PushSweat ||
     !PushWater
@@ -46,7 +48,11 @@
     return NORMAL_PROFILE;
   }
 
-  function pulseLevelForCycle(controller, cycleIndex) {
+  function pulseLevelForCycle(controller, state, cycleIndex) {
+    if (state.forceRareSweat) {
+      state.forceRareSweat = false;
+      return "rare";
+    }
     if (cycleIndex <= 0) {
       return "normal";
     }
@@ -70,7 +76,7 @@
     state.previousCycleIndex = hasPreviousCycle ? previousCycleIndex : -1;
     state.previousProfile = hasPreviousCycle ? state.profile : null;
     state.previousPulseLevel = hasPreviousCycle ? state.pulseLevel : null;
-    state.pulseLevel = pulseLevelForCycle(controller, cycleIndex);
+    state.pulseLevel = pulseLevelForCycle(controller, state, cycleIndex);
     state.profile = profileForPulseLevel(state.pulseLevel);
   }
 
@@ -127,6 +133,7 @@
   function createPushStretchPulseState() {
     return {
       cycleIndex: -1,
+      forceRareSweat: false,
       previousCycleIndex: -1,
       previousProfile: null,
       previousPulseLevel: null,
@@ -159,6 +166,7 @@
 
       const { layer, stretchCanvas, sweatCanvas } = createPushStretchLayer();
       let animationFrameId = null;
+      let rareSweatPreviewMessageHandler = null;
       let renderer = null;
       let waterState = null;
       let sweatRenderer = null;
@@ -212,8 +220,26 @@
         container.append(layer);
         animationFrameId = window.requestAnimationFrame(renderFrame);
       };
+      if (globalThis.chrome?.runtime?.onMessage) {
+        rareSweatPreviewMessageHandler = (message, _sender, sendResponse) => {
+          if (!PushSweatPreview.isForceRareMessage(message)) {
+            return false;
+          }
+          pulseState.forceRareSweat = true;
+          sendResponse?.({ ok: true });
+          return false;
+        };
+        globalThis.chrome.runtime.onMessage.addListener(
+          rareSweatPreviewMessageHandler,
+        );
+      }
       const stop = () => {
         pulseState.stopped = true;
+        if (rareSweatPreviewMessageHandler) {
+          globalThis.chrome.runtime.onMessage.removeListener(
+            rareSweatPreviewMessageHandler,
+          );
+        }
         image.removeEventListener("load", start);
         window.cancelAnimationFrame(animationFrameId);
         renderer?.destroy();

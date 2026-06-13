@@ -52,7 +52,8 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
   `collector/extension/dashboard-singularity-chrome-collapse-motion.js`, and
   `collector/extension/dashboard-singularity-chrome-collapse-scene.js`: real
   main-panel containers, state-rail items, and owned inner fragments split,
-  travel on circular inward paths, stretch, and shrink into the horizon as DOM
+  travel on circular inward paths, recede through CSS perspective, rotate with
+  pull-direction 3D torque, stretch, and shrink into the horizon as DOM
   elements. Successful collapse intentionally holds in the unfinished
   post-collapse state, with unclaimed replacement dashboard chrome hidden until
   Singularity exits. The transition does not request Chrome tab screenshots.
@@ -91,9 +92,9 @@ States. Choosing a state stores
 `resetExhaustedPreview`. Choosing a Sprint faster intensity preview stores
 `forcedPaceState` as `wellAhead` plus `sprintIntensityPreview` as an exact
 ratio string from `1.55` through `7.00`. Returning to live data removes those
-overrides. The Singularity `Run from current state` preview and monk escape
-feature preview are one-shot dev actions: they send runtime messages to
-dashboard pages and do not store developer option state.
+overrides. The Singularity `Preview entry` preview and monk escape feature
+preview are one-shot dev actions: they send runtime messages to dashboard pages
+and do not store developer option state.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, and toolbar badge match

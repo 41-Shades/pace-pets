@@ -1,7 +1,7 @@
 (function attachPacePetsDashboardSingularityChromeCollapseMotion(root) {
   "use strict";
 
-  const INNER_FRAGMENT_DELAY_MS = 740;
+  const INNER_FRAGMENT_DELAY_MS = 420;
   const PULL_DURATION_MS = 10800;
 
   function clamp(value, min, max) {
@@ -78,14 +78,18 @@
 
   function transformFor({
     angleDeg = 0,
+    rotateX = 0,
+    rotateY = 0,
     scaleX = 1,
     scaleY = 1,
     skew = 0,
     x = 0,
     y = 0,
+    z = 0,
   }) {
     return (
-      `translate3d(${rounded(x, 1)}px, ${rounded(y, 1)}px, 0) ` +
+      `translate3d(${rounded(x, 1)}px, ${rounded(y, 1)}px, ${rounded(z, 1)}px) ` +
+      `rotateX(${rounded(rotateX, 2)}deg) rotateY(${rounded(rotateY, 2)}deg) ` +
       `rotate(${rounded(angleDeg, 2)}deg) skewX(${rounded(skew, 2)}deg) ` +
       `scale(${rounded(scaleX, 3)}, ${rounded(scaleY, 3)})`
     );
@@ -115,6 +119,14 @@
     return startAngle + (endAngle - startAngle) * amount;
   }
 
+  function depthTransform(tiltX, tiltY, z, amount) {
+    return { rotateX: tiltX * amount, rotateY: tiltY * amount, z };
+  }
+
+  function scaleTransform(scaleX, scaleY) {
+    return { scaleX, scaleY };
+  }
+
   function fragmentFrame(frame) {
     return { ...frame, transformOrigin: "50% 50%" };
   }
@@ -130,6 +142,8 @@
     const tangentAngle = pull.angleDeg + sign * 88;
     const skew = sign * (5 + seededUnit(container.index, 4) * 9);
     const stretch = 1.34 + seededUnit(container.index, 5) * 0.34;
+    const tiltX = -pull.unit.y * 24 + sign * 3;
+    const tiltY = pull.unit.x * 32 + sign * 4;
 
     return [
       { filter: "brightness(1)", opacity: 1, transform: "none" },
@@ -139,10 +153,10 @@
         opacity: 0.98,
         transform: transformFor({
           angleDeg: angleBetween(sign * 2, tangentAngle, 0.18),
-          scaleX: 1.03,
-          scaleY: 0.99,
+          ...scaleTransform(1.01, 0.97),
           skew: skew * 0.12,
-          ...pathPoint(pull, orbit, sign, 0.09, 0.44),
+          ...depthTransform(tiltX, tiltY, -20, 0.12),
+          ...pathPoint(pull, orbit, sign, 0.16, 0.25),
         }),
       },
       {
@@ -151,10 +165,10 @@
         opacity: 0.96,
         transform: transformFor({
           angleDeg: angleBetween(sign * 2, tangentAngle, 0.44),
-          scaleX: 1.08,
-          scaleY: 0.96,
+          ...scaleTransform(1.02, 0.9),
           skew: skew * 0.3,
-          ...pathPoint(pull, orbit, sign, 0.25, 1),
+          ...depthTransform(tiltX, tiltY, -70, 0.25),
+          ...pathPoint(pull, orbit, sign, 0.34, 0.72),
         }),
       },
       {
@@ -163,10 +177,10 @@
         opacity: 0.9,
         transform: transformFor({
           angleDeg: angleBetween(tangentAngle, pull.angleDeg, 0.16),
-          scaleX: 1.14,
-          scaleY: 0.9,
+          ...scaleTransform(1, 0.79),
           skew: skew * 0.48,
-          ...pathPoint(pull, orbit, sign, 0.47, -0.62),
+          ...depthTransform(tiltX, tiltY, -150, 0.45),
+          ...pathPoint(pull, orbit, sign, 0.55, -0.48),
         }),
       },
       {
@@ -175,9 +189,9 @@
         opacity: 0.82,
         transform: transformFor({
           angleDeg: angleBetween(tangentAngle, pull.angleDeg, 0.38),
-          scaleX: stretch * 0.96,
-          scaleY: 0.76,
+          ...scaleTransform(stretch * 0.69, 0.55),
           skew: skew * 0.7,
+          ...depthTransform(tiltX, tiltY, -280, 0.68),
           ...pathPoint(pull, orbit, sign, 0.67, -1),
         }),
       },
@@ -187,9 +201,9 @@
         opacity: 0.52,
         transform: transformFor({
           angleDeg: angleBetween(tangentAngle, pull.angleDeg, 0.64),
-          scaleX: stretch * 1.14,
-          scaleY: 0.5,
+          ...scaleTransform(stretch * 0.57, 0.25),
           skew: skew * 0.9,
+          ...depthTransform(tiltX, tiltY, -520, 0.9),
           ...pathPoint(pull, orbit, sign, 0.86, 0.28),
         }),
       },
@@ -199,9 +213,9 @@
         opacity: 0.34,
         transform: transformFor({
           angleDeg: angleBetween(tangentAngle, pull.angleDeg, 0.84),
-          scaleX: stretch * 0.82,
-          scaleY: 0.32,
+          ...scaleTransform(stretch * 0.23, 0.09),
           skew: skew * 0.62,
+          ...depthTransform(tiltX, tiltY, -760, 1.05),
           ...pathPoint(pull, orbit, sign, 0.96, -0.08),
         }),
       },
@@ -210,9 +224,9 @@
         opacity: 0,
         transform: transformFor({
           angleDeg: pull.angleDeg + sign * 18,
-          scaleX: 0.05,
-          scaleY: 0.04,
+          ...scaleTransform(0.05, 0.04),
           skew: skew * 0.3,
+          ...depthTransform(tiltX, tiltY, -980, 1.18),
           ...pathPoint(pull, orbit, sign, 1.02, 0),
         }),
       },
@@ -238,6 +252,8 @@
     const stretch = 1.14 + seededUnit(seed, 17) * 0.44;
     const tangentAngle =
       pull.angleDeg + sign * (28 + seededUnit(seed, 18) * 46);
+    const tiltX = -pull.unit.y * 32 + sign * 5;
+    const tiltY = pull.unit.x * 36 + sign * 6;
     const point = (inward, around, scatterAmount) =>
       fragmentPathPoint(pull, local, orbit, sign, {
         around,
@@ -257,10 +273,11 @@
         opacity: 0.96,
         transform: transformFor({
           angleDeg: angleBetween(sign * 4, tangentAngle, 0.22),
-          scaleX: 1.02,
-          scaleY: 0.98,
+          scaleX: 0.93,
+          scaleY: 0.9,
           skew: skew * 0.2,
-          ...point(0.03, 0.4, scatter),
+          ...depthTransform(tiltX, tiltY, -28, 0.18),
+          ...point(0.08, 0.4, scatter),
         }),
       }),
       fragmentFrame({
@@ -269,10 +286,11 @@
         opacity: 0.88,
         transform: transformFor({
           angleDeg: angleBetween(tangentAngle, pull.angleDeg, 0.22),
-          scaleX: stretch,
-          scaleY: 0.76,
+          scaleX: stretch * 0.82,
+          scaleY: 0.62,
           skew: skew * 0.62,
-          ...point(0.08, 1, scatter * 1.3),
+          ...depthTransform(tiltX, tiltY, -110, 0.42),
+          ...point(0.18, 1, scatter * 1.3),
         }),
       }),
       fragmentFrame({
@@ -281,10 +299,11 @@
         opacity: 0.66,
         transform: transformFor({
           angleDeg: angleBetween(tangentAngle, pull.angleDeg, 0.58),
-          scaleX: stretch * 0.86,
-          scaleY: 0.44,
+          scaleX: stretch * 0.54,
+          scaleY: 0.28,
           skew: skew * 0.78,
-          ...point(0.16, -0.72, scatter * 0.72),
+          ...depthTransform(tiltX, tiltY, -300, 0.72),
+          ...point(0.34, -0.72, scatter * 0.72),
         }),
       }),
       fragmentFrame({
@@ -293,10 +312,11 @@
         opacity: 0.34,
         transform: transformFor({
           angleDeg: pull.angleDeg + sign * 14,
-          scaleX: stretch * 0.42,
-          scaleY: 0.18,
+          scaleX: stretch * 0.22,
+          scaleY: 0.08,
           skew: skew * 0.42,
-          ...point(0.24, 0.16, scatter * 0.2),
+          ...depthTransform(tiltX, tiltY, -620, 1),
+          ...point(0.58, 0.16, scatter * 0.2),
         }),
       }),
       fragmentFrame({
@@ -307,7 +327,8 @@
           scaleX: 0.04,
           scaleY: 0.04,
           skew: 0,
-          ...point(0.3, 0, 0),
+          ...depthTransform(tiltX, tiltY, -940, 1.2),
+          ...point(0.78, 0, 0),
         }),
       }),
     ];
