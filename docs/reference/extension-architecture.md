@@ -54,7 +54,9 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
   main-panel containers, state-rail items, and owned inner fragments split,
   travel on circular inward paths, recede through CSS perspective, rotate with
   pull-direction 3D torque, stretch, and shrink into the horizon as DOM
-  elements. When the black-hole approach completes, the same WebGL scene keeps
+  pieces. Each collapse run uses a fresh seed for geometry and owned-fragment
+  selection while preserving fixed timing. When the black-hole approach
+  completes, the same WebGL scene keeps
   advancing behind the still-collapsing chrome, keeps the horizon attached to
   the existing black-hole center, expands into the viewport, crosses into a
   cone/funnel descent, falls through the singularity point into whiteout, and

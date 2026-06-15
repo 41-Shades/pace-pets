@@ -22,6 +22,7 @@
       this.isDisposed = false;
       this.motionDisabled = motionDisabled;
       this.resolveDone = null;
+      this.runSeed = Math.random();
     }
 
     play() {
@@ -33,7 +34,9 @@
         return this.done;
       }
 
-      this.splitContainers = FRAGMENTS.collectSplitContainers();
+      this.splitContainers = FRAGMENTS.collectSplitContainers({
+        runSeed: this.runSeed,
+      });
       if (this.splitContainers.length === 0) {
         this.resolve(true);
         return this.done;
@@ -68,6 +71,7 @@
       document.body.classList.add(BODY_COLLAPSE_CLASS);
       const { animations } = MOTION.startContainerPullAnimations(
         this.splitContainers,
+        { runSeed: this.runSeed },
       );
       this.animations.push(...animations);
       Promise.all(

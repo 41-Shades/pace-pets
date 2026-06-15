@@ -19,6 +19,9 @@
   const SPACE_ENTER_VISIBLE_CLASS = "is-singularity-space-enter-visible";
   const JITTER_DURATION_PROPERTY = "--singularity-chrome-jitter-duration";
   const SPACE_ENTER_DURATION_MS = 2000;
+  const SPACE_ONLY_HOLD_MS = 2000;
+  const SPACE_REVEAL_START_DELAY_MS =
+    SPACE_ENTER_DURATION_MS + SPACE_ONLY_HOLD_MS;
   const REVEAL_DURATION_MS = 6000;
   const BLACK_HOLE_APPROACH_DURATION_MS = 7600;
   const GLINT_SUCTION_PROGRESS = 0.72;
@@ -75,7 +78,7 @@
       }, SPACE_ENTER_DURATION_MS);
       this.revealTimer = root.setTimeout(
         () => this.startReveal(),
-        SPACE_ENTER_DURATION_MS,
+        SPACE_REVEAL_START_DELAY_MS,
       );
       return this.done;
     }

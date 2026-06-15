@@ -8,8 +8,9 @@
     return Math.min(max, Math.max(min, value));
   }
 
-  function seededUnit(index, salt) {
-    const value = Math.sin((index + 1) * (salt + 6.37) * 71.9) * 10000;
+  function seededUnit(index, salt, runSeed = 0) {
+    const value =
+      Math.sin((index + runSeed * 997 + 1) * (salt + 6.37) * 71.9) * 10000;
     return value - Math.floor(value);
   }
 
@@ -131,17 +132,17 @@
     return { ...frame, transformOrigin: "50% 50%" };
   }
 
-  function containerKeyframes(container, target) {
+  function containerKeyframes(container, target, runSeed) {
     const pull = vectorToTarget(container.rect, target);
-    const sign = seededUnit(container.index, 2) > 0.5 ? 1 : -1;
+    const sign = seededUnit(container.index, 2, runSeed) > 0.5 ? 1 : -1;
     const orbit = clamp(
-      pull.distance * (0.2 + seededUnit(container.index, 3) * 0.18),
+      pull.distance * (0.2 + seededUnit(container.index, 3, runSeed) * 0.18),
       48,
       220,
     );
     const tangentAngle = pull.angleDeg + sign * 88;
-    const skew = sign * (5 + seededUnit(container.index, 4) * 9);
-    const stretch = 1.34 + seededUnit(container.index, 5) * 0.34;
+    const skew = sign * (5 + seededUnit(container.index, 4, runSeed) * 9);
+    const stretch = 1.34 + seededUnit(container.index, 5, runSeed) * 0.34;
     const tiltX = -pull.unit.y * 24 + sign * 3;
     const tiltY = pull.unit.x * 32 + sign * 4;
 
@@ -233,25 +234,25 @@
     ];
   }
 
-  function innerFragmentKeyframes(fragment, container, target) {
+  function innerFragmentKeyframes(fragment, container, target, runSeed) {
     const seed = fragmentSeed(fragment);
     const pull = vectorToTarget(fragment.rect, target);
     const local = vectorFromContainerCenter(fragment, container);
-    const sign = seededUnit(seed, 13) > 0.5 ? 1 : -1;
+    const sign = seededUnit(seed, 13, runSeed) > 0.5 ? 1 : -1;
     const orbit = clamp(
-      pull.distance * (0.08 + seededUnit(seed, 14) * 0.08),
+      pull.distance * (0.08 + seededUnit(seed, 14, runSeed) * 0.08),
       18,
       96,
     );
     const scatter = clamp(
-      local.distance * (0.18 + seededUnit(seed, 15) * 0.18),
+      local.distance * (0.18 + seededUnit(seed, 15, runSeed) * 0.18),
       6,
       32,
     );
-    const skew = sign * (4 + seededUnit(seed, 16) * 10);
-    const stretch = 1.14 + seededUnit(seed, 17) * 0.44;
+    const skew = sign * (4 + seededUnit(seed, 16, runSeed) * 10);
+    const stretch = 1.14 + seededUnit(seed, 17, runSeed) * 0.44;
     const tangentAngle =
-      pull.angleDeg + sign * (28 + seededUnit(seed, 18) * 46);
+      pull.angleDeg + sign * (28 + seededUnit(seed, 18, runSeed) * 46);
     const tiltX = -pull.unit.y * 32 + sign * 5;
     const tiltY = pull.unit.x * 36 + sign * 6;
     const point = (inward, around, scatterAmount) =>
@@ -362,21 +363,21 @@
     };
   }
 
-  function startContainerPullAnimations(containers) {
+  function startContainerPullAnimations(containers, { runSeed = 0 } = {}) {
     const target = blackHoleTarget();
     const animations = [];
     containers.forEach((container) => {
       const timing = containerTiming(container, target);
       animations.push(
         container.element.animate(
-          containerKeyframes(container, target),
+          containerKeyframes(container, target, runSeed),
           timing,
         ),
       );
       (container.innerFragments ?? []).forEach((fragment) => {
         animations.push(
           fragment.element.animate(
-            innerFragmentKeyframes(fragment, container, target),
+            innerFragmentKeyframes(fragment, container, target, runSeed),
             innerFragmentTiming(fragment, timing),
           ),
         );

@@ -83,6 +83,8 @@ Current sequence target:
     continuous pull instead of separate break/fall phases.
 11. Inner content fragments then tear loose on an overlapping delay, continuing
     to shear, torque, shrink, and recede as their parent containers fall.
+    Each run uses a fresh collapse seed for geometry and inner-fragment
+    selection while preserving the fixed collapse timing.
 12. Near the horizon, containers and inner fragments compress, darken, and
     disappear into the black hole without an explosion.
 13. As the black-hole approach completes, the same WebGL scene keeps advancing
@@ -218,10 +220,12 @@ or `desktopCapture` for this effect.
   stop the shader clock.
 - `collector/extension/dashboard-singularity-chrome-collapse-fragments.js`:
   DOM-geometry collection for live containers and their owned inner fragments
-  that split away from the dashboard chrome.
+  that split away from the dashboard chrome, with per-run seeded inner-fragment
+  selection.
 - `collector/extension/dashboard-singularity-chrome-collapse-motion.js`:
   black-hole target calculation plus live-container and inner-fragment
-  split/orbit/stretch/depth-recession/torque/shrink animation timing.
+  split/orbit/stretch/depth-recession/torque/shrink animation geometry and
+  timing.
 - `collector/extension/dashboard-singularity-chrome-collapse-scene.js`:
   chrome pressure and split/orbit/depth-recession/shrink lifecycle, owned-piece
   marking during the collapse, plus teardown restoration.
