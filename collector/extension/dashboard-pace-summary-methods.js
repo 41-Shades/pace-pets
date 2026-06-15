@@ -99,6 +99,7 @@
           : paceRatioDisplayOverride;
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
 
+      this.currentPaceSummaryTimePercent = timePercent;
       this.setPaceLevel(level);
       this.updateSprintSmokeIntensity?.(paceRatio);
       this.elements.paceTitle.textContent = title;

@@ -2,7 +2,6 @@
   "use strict";
 
   const RATIO_HEIGHT_NORMAL_RANGE_PX = Object.freeze([260, 380]);
-  const RATIO_HEIGHT_HIGH_RANGE_PX = Object.freeze([380, 480]);
   const RATIO_HEIGHT_WILD_RANGE_PX = Object.freeze([480, 560]);
   const RATIO_DURATION_RANGE_MS = Object.freeze([1050, 1500]);
   const RATIO_DRIFT_X_RANGE_PX = Object.freeze([-14, 14]);
@@ -17,6 +16,13 @@
   const EXTREME_RATIO_SLAM_PEAK_Y_PX = -5000;
   const EXTREME_CARD_IMPACT_DURATION_MS = 640;
   const MAX_INTRO_CARD_IMPACT_DURATION_MS = 640;
+  const SPLAT_ENTRY_MODES = Object.freeze({
+    maxNormal: "maxNormal",
+    normal: "normal",
+    rareMax: "rareMax",
+  });
+  const SPLAT_ENTRY_NORMAL_CHANCE_PERCENT = 75;
+  const SPLAT_ENTRY_MAX_NORMAL_CHANCE_PERCENT = 20;
 
   const CARD_DURATION_RANGE_MS = Object.freeze([560, 720]);
   const CARD_DROP_Y_RANGE_PX = Object.freeze([6, 11]);
@@ -47,15 +53,22 @@
     return Math.min(max, Math.max(min, value));
   }
 
-  function randomRatioBounceHeight(controller) {
+  function selectSplatEntryMode(controller) {
     const roll = controller.randomIntegerInRange([1, 100]);
-    if (roll <= 5) {
-      return controller.randomIntegerInRange(RATIO_HEIGHT_WILD_RANGE_PX);
+    if (roll <= SPLAT_ENTRY_NORMAL_CHANCE_PERCENT) {
+      return SPLAT_ENTRY_MODES.normal;
     }
-    if (roll <= 30) {
-      return controller.randomIntegerInRange(RATIO_HEIGHT_HIGH_RANGE_PX);
+    if (
+      roll <=
+      SPLAT_ENTRY_NORMAL_CHANCE_PERCENT + SPLAT_ENTRY_MAX_NORMAL_CHANCE_PERCENT
+    ) {
+      return SPLAT_ENTRY_MODES.maxNormal;
     }
-    return controller.randomIntegerInRange(RATIO_HEIGHT_NORMAL_RANGE_PX);
+    return SPLAT_ENTRY_MODES.rareMax;
+  }
+
+  function randomRatioBounceHeight(controller, heightRange) {
+    return controller.randomIntegerInRange(heightRange);
   }
 
   function randomRatioBounceDuration(controller, heightPx) {
@@ -67,8 +80,11 @@
     return clamp(baseDurationMs + jitterMs, RATIO_DURATION_RANGE_MS);
   }
 
-  function randomRatioBounceProfile(controller) {
-    const heightPx = randomRatioBounceHeight(controller);
+  function randomRatioBounceProfile(controller, { heightRange } = {}) {
+    const heightPx = randomRatioBounceHeight(
+      controller,
+      heightRange || RATIO_HEIGHT_NORMAL_RANGE_PX,
+    );
     return {
       durationMs: randomRatioBounceDuration(controller, heightPx),
       peakScale:
@@ -83,6 +99,18 @@
       secondYPx: -controller.randomIntegerInRange(RATIO_SECOND_Y_RANGE_PX),
       settleYPx: controller.randomIntegerInRange(RATIO_SETTLE_Y_RANGE_PX),
     };
+  }
+
+  function normalRatioBounceProfile(controller) {
+    return randomRatioBounceProfile(controller, {
+      heightRange: RATIO_HEIGHT_NORMAL_RANGE_PX,
+    });
+  }
+
+  function maxNormalRatioBounceProfile(controller) {
+    return randomRatioBounceProfile(controller, {
+      heightRange: RATIO_HEIGHT_WILD_RANGE_PX,
+    });
   }
 
   function extremeRatioSlamProfile() {
@@ -232,12 +260,16 @@
   }
 
   globalThis.PacePetsDashboardSplatFallProfile = Object.freeze({
+    SPLAT_ENTRY_MODES,
     applyCardImpactProfile,
     clearCardImpact,
     extremeCardImpactProfile,
     extremeRatioSlamProfile,
     maxIntroCardImpactProfile,
+    maxNormalRatioBounceProfile,
+    normalRatioBounceProfile,
     randomCardImpactProfile,
     randomRatioBounceProfile,
+    selectSplatEntryMode,
   });
 })();

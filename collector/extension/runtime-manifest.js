@@ -12,7 +12,6 @@
     "push-sweat-preview-control.js",
     "splat-bounce-preview-control.js",
     "sync-monk-escape-preview-control.js",
-    "singularity-transition-preview-control.js",
     "storage-adapter.js",
     "usage-integration-adapters.js",
     "usage-providers.js",
@@ -88,6 +87,7 @@
     "./dashboard-cart-spill-methods.js",
     "./dashboard-pace-favicon-methods.js",
     "./dashboard-splat-fall-profile.js",
+    "./dashboard-splat-entry-playback.js",
     "./dashboard-splat-fall-methods.js",
     "./dashboard-splat-max-throw-methods.js",
     "./dashboard-speed-lines-methods.js",
@@ -103,7 +103,6 @@
     "./dashboard-reset-exhausted-arm-motion.js",
     "./dashboard-reset-exhausted-figure.js",
     "./dashboard-reset-exhausted-methods.js",
-    "./dashboard-singularity-transition-preview-methods.js",
     "./dashboard-history-methods.js",
     "./dashboard-event-methods.js",
     "./dashboard-dom-contract.js",
@@ -113,7 +112,6 @@
   const DEV_FLAGS_ONLY_SCRIPT_SOURCES = Object.freeze([
     "./dev-flags-rendering.js",
     "./dev-flags-current-mode.js",
-    "./dev-flags-singularity-controls.js",
     "./dev-flags-preview-actions.js",
     "./dev-flags.js",
   ]);
@@ -186,7 +184,6 @@
     "./dashboard-splat-fall-methods.js",
     "./dashboard-train-roll-methods.js",
     "./dashboard-singularity-transition-methods.js",
-    "./dashboard-singularity-transition-preview-methods.js",
   ]);
 
   const COMMON_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
@@ -286,6 +283,8 @@
       "./dashboard-splat-fall-methods.js",
     ),
     dashboardFileEdge("splat-fall-profile", "splat-fall-methods"),
+    dashboardFileEdge("splat-fall-profile", "splat-entry-playback"),
+    dashboardFileEdge("splat-entry-playback", "splat-fall-methods"),
     dashboardFileEdge("splat-fall-methods", "splat-max-throw-methods"),
     dependencyEdge(
       "./sprint-intensity.js",
@@ -295,12 +294,6 @@
     dashboardFileEdge("pace-core", "pace-controller"),
     dashboardFileEdge("pace-rail-methods", "pace-controller"),
     dashboardFileEdge("pace-controller", "app-core"),
-    dependencyEdge(
-      "./singularity-transition-preview-control.js",
-      "./dashboard-singularity-transition-preview-methods.js",
-    ),
-    dashboardFileEdge("pace-data", "singularity-transition-preview-methods"),
-    dashboardFileEdge("app-core", "singularity-transition-preview-methods"),
     dashboardFileEdge("app-core", "reset-exhausted-methods"),
     dashboardFileEdge("reset-exhausted-arm-motion", "reset-exhausted-figure"),
     dashboardFileEdge("reset-exhausted-figure", "reset-exhausted-methods"),
@@ -311,10 +304,6 @@
       "./dashboard-reset-exhausted-methods.js",
     ),
     dashboardFileEdge("reset-exhausted-methods", ""),
-    dashboardFileEdge(
-      "singularity-transition-preview-methods",
-      "event-methods",
-    ),
     dashboardFileEdge("app-core", ""),
     dashboardFileEdge("history-methods", ""),
     dashboardFileEdge("event-methods", ""),
@@ -323,18 +312,9 @@
 
   const DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("./dev-flags-rendering.js", "./dev-flags.js"),
-    dependencyEdge(
-      "./dev-flags-rendering.js",
-      "./dev-flags-singularity-controls.js",
-    ),
     dependencyEdge("./dev-flags-current-mode.js", "./dev-flags.js"),
-    dependencyEdge("./dev-flags-singularity-controls.js", "./dev-flags.js"),
     dependencyEdge("./developer-options.js", "./dev-flags.js"),
     dependencyEdge("./pace-state-data.js", "./dev-flags.js"),
-    dependencyEdge(
-      "./singularity-transition-preview-control.js",
-      "./dev-flags-preview-actions.js",
-    ),
     dependencyEdge(
       "./push-sweat-preview-control.js",
       "./dev-flags-preview-actions.js",

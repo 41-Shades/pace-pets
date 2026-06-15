@@ -6,10 +6,19 @@
   const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const PROFILE = globalThis.PacePetsDashboardSplatFallProfile;
   const PREVIEW = globalThis.PacePetsSplatBouncePreviewControl;
-  if (!DATA || !Controller || !DASHBOARD_PREFERENCES || !PROFILE || !PREVIEW) {
+  const SPLAT_ENTRY = globalThis.PacePetsDashboardSplatEntryPlayback;
+  if (
+    !DATA ||
+    !Controller ||
+    !DASHBOARD_PREFERENCES ||
+    !PROFILE ||
+    !PREVIEW ||
+    !SPLAT_ENTRY
+  ) {
     throw new Error(
       [
-        "Pace data, core, preferences, Splat profiles, and preview controls must load before",
+        "Pace data, core, preferences, Splat profiles, Splat entry playback,",
+        "and preview controls must load before",
         "dashboard-splat-fall-methods.js.",
       ].join(" "),
     );
@@ -69,11 +78,6 @@
     cleanupMs: SPLAT_FALL_CLEANUP_MS,
     durationMs: SPLAT_FALL_DURATION_MS,
     impactMs: SPLAT_FALL_IMPACT_MS,
-  });
-  const MAX_SPLAT_FALL_TIMING = Object.freeze({
-    cleanupMs: 720,
-    durationMs: 720,
-    impactMs: 576,
   });
 
   const RATIO_BOUNCE_PIXEL_PROPERTIES = Object.freeze([
@@ -253,18 +257,10 @@
 
       this.clearPaceIconEffects?.(this.elements.paceIcon);
       this.clearSplatMaxBouncePreview();
-      const ratioRect = this.elements.paceRatioValue?.getBoundingClientRect();
-      this.splatMaxBounceRatioOriginRect = ratioRect
-        ? {
-            height: ratioRect.height,
-            left: ratioRect.left,
-            top: ratioRect.top,
-            width: ratioRect.width,
-          }
-        : null;
+      this.splatMaxBounceRatioOriginRect = SPLAT_ENTRY.ratioOriginRect(this);
       this.elements.paceIcon.dataset.splatFallIntro = "true";
       this.renderSplatFallEffect(this.elements.paceIcon, {
-        fallTiming: MAX_SPLAT_FALL_TIMING,
+        fallTiming: SPLAT_ENTRY.maxSplatFallTiming,
         impactProfile: {
           card: PROFILE.maxIntroCardImpactProfile(),
           ratio: null,
@@ -315,10 +311,11 @@
 
       const { image, layer } = createSplatFallLayer(DATA.SPLAT_FREE_FALL_IMAGE);
       this.renderSplatFallMotionLines(layer);
-      const resolvedImpactProfile = impactProfile || {
-        card: PROFILE.randomCardImpactProfile(this),
-        ratio: PROFILE.randomRatioBounceProfile(this),
-      };
+      const playback = SPLAT_ENTRY.resolve(this, {
+        fallTiming,
+        impactProfile,
+        onImpact,
+      });
 
       let finished = false;
       let cardImpactTimer = null;
@@ -348,13 +345,13 @@
       };
       const impactTimer = window.setTimeout(() => {
         container.classList.add("is-splat-impacting");
-        if (this.elements.paceCard && resolvedImpactProfile.card) {
+        if (this.elements.paceCard && playback.impactProfile.card) {
           PROFILE.applyCardImpactProfile(
             this.elements.paceCard,
-            resolvedImpactProfile.card,
+            playback.impactProfile.card,
           );
-          if (resolvedImpactProfile.ratio) {
-            this.renderSplatRatioBounceClone(resolvedImpactProfile.ratio);
+          if (playback.impactProfile.ratio) {
+            this.renderSplatRatioBounceClone(playback.impactProfile.ratio);
           }
           restartClassAnimation(
             this.elements.paceCard,
@@ -364,18 +361,18 @@
             clearCardImpact,
             Math.max(
               SPLAT_CARD_IMPACT_DURATION_MS,
-              (resolvedImpactProfile.ratio?.durationMs || 0) + 100,
+              (playback.impactProfile.ratio?.durationMs || 0) + 100,
             ),
           );
         }
-        onImpact?.();
-      }, fallTiming.impactMs);
+        playback.onImpact?.();
+      }, playback.fallTiming.impactMs);
       const finishTimer = window.setTimeout(
         () => finish({ clearCardImpact: false }),
-        fallTiming.cleanupMs,
+        playback.fallTiming.cleanupMs,
       );
 
-      applySplatFallTimingStyles(container, fallTiming);
+      applySplatFallTimingStyles(container, playback.fallTiming);
       container.classList.add(
         "has-pace-icon-effect-splat-fall",
         "is-splat-fall-running",

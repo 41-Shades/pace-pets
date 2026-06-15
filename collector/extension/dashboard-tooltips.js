@@ -176,7 +176,6 @@
     finishHide() {
       this.tooltipElement.hidden = true;
       delete this.tooltipElement.dataset.motion;
-      delete this.tooltipElement.dataset.variant;
     }
 
     hide({ immediate = false } = {}) {
@@ -209,16 +208,10 @@
 
     applyTargetDecorations(target) {
       const motion = target.dataset.tooltipMotion?.trim() || "";
-      const variant = target.dataset.tooltipVariant?.trim() || "";
       if (motion) {
         this.tooltipElement.dataset.motion = motion;
       } else {
         delete this.tooltipElement.dataset.motion;
-      }
-      if (variant) {
-        this.tooltipElement.dataset.variant = variant;
-      } else {
-        delete this.tooltipElement.dataset.variant;
       }
     }
 

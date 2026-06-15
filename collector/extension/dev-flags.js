@@ -6,7 +6,6 @@
   const PACE_STATE_DATA = globalThis.PacePetsPaceStateData;
   const PREVIEW_ACTIONS = globalThis.PacePetsDevFlagsPreviewActions;
   const RENDERING = globalThis.PacePetsDevFlagsRendering;
-  const SINGULARITY_CONTROLS = globalThis.PacePetsDevFlagsSingularityControls;
   const STORAGE = globalThis.CodexExtensionStorage;
   if (
     !CURRENT_MODE ||
@@ -14,7 +13,6 @@
     !PACE_STATE_DATA ||
     !PREVIEW_ACTIONS ||
     !RENDERING ||
-    !SINGULARITY_CONTROLS ||
     !STORAGE
   ) {
     throw new Error("Dev controls dependencies did not load.");
@@ -48,9 +46,6 @@
     currentModeSummary: requiredElementById("current-mode-summary"),
     featurePreviewList: requiredElementById("feature-preview-list"),
     resetAll: requiredElementById("reset-all"),
-    singularityTransitionPreviewList: requiredElementById(
-      "singularity-transition-preview-list",
-    ),
     sprintIntensityPreviewList: requiredElementById(
       "sprint-intensity-preview-list",
     ),
@@ -71,7 +66,6 @@
   let currentMaxPoolFill = false;
   let currentResetExhaustedPreview = false;
   let currentSprintIntensityPreview = null;
-  let singularityTransitionPreviewActive = false;
   let statusTimer = null;
 
   function setStatus(message) {
@@ -236,22 +230,6 @@
     });
   }
 
-  function setSingularityTransitionPreviewActive(active) {
-    singularityTransitionPreviewActive = active;
-    render();
-  }
-
-  function renderSingularityControls() {
-    SINGULARITY_CONTROLS.render({
-      optionRow,
-      previewActions: PREVIEW_ACTIONS,
-      previewActive: singularityTransitionPreviewActive,
-      previewList: elements.singularityTransitionPreviewList,
-      setPreviewActive: setSingularityTransitionPreviewActive,
-      setStatus,
-    });
-  }
-
   function renderSprintIntensityPreviews() {
     const sprintStateKey = PACE_STATE_DATA.PACE_STATES.wellAhead.key;
     elements.sprintIntensityPreviewList.replaceChildren(
@@ -308,7 +286,6 @@
   function render() {
     renderCurrentMode();
     renderStateOverrideColumns();
-    renderSingularityControls();
     renderSprintIntensityPreviews();
     renderFeaturePreviews();
     elements.resetAll.hidden = !hasActiveOverride();

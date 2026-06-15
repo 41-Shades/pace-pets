@@ -122,6 +122,10 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
     "./dashboard-preferences.js",
     "./dashboard-shell-controls.js",
   ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-splat-entry-playback.js",
+    "./dashboard-splat-fall-methods.js",
+  ]);
 }
 
 function expectDevFlagsRuntimeDependencyEdges(runtime) {
@@ -131,14 +135,6 @@ function expectDevFlagsRuntimeDependencyEdges(runtime) {
   ]);
   expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dev-flags-current-mode.js",
-    "./dev-flags.js",
-  ]);
-  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-    "./dev-flags-rendering.js",
-    "./dev-flags-singularity-controls.js",
-  ]);
-  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
-    "./dev-flags-singularity-controls.js",
     "./dev-flags.js",
   ]);
 }
@@ -228,7 +224,6 @@ describe("CodexExtensionRuntime script sources", () => {
     expect(runtime.DEV_FLAGS_ONLY_SCRIPT_SOURCES).toEqual([
       "./dev-flags-rendering.js",
       "./dev-flags-current-mode.js",
-      "./dev-flags-singularity-controls.js",
       "./dev-flags-preview-actions.js",
       "./dev-flags.js",
     ]);

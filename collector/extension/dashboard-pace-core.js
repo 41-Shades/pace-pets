@@ -23,6 +23,7 @@
       Object.assign(this, options);
       this.paceIconEffectCleanups = new WeakMap();
       this.lastForcedPaceStateKey = null;
+      this.currentPaceSummaryTimePercent = null;
       this.perfectZeroEclipseIcon = null;
       this.perfectZeroPageBackgroundScene = null;
       this.singularityTransitionInFlight = false;
