@@ -28,7 +28,6 @@ const sourceOnlyFiles = new Set([
   "dev-flags-loader.js",
   "dev-flags-preview-actions.js",
   "dev-flags-rendering.js",
-  "dev-flags-singularity-controls.js",
 ]);
 const allowedPackagedExtensions = new Set([
   ".css",

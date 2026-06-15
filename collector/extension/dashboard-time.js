@@ -158,13 +158,7 @@
   }
 
   function resetCountdownDisplaysZero(value, atMs = Date.now()) {
-    const resetMs = dateMs(value);
-    if (resetMs === null) {
-      return false;
-    }
-
-    const remainingMs = resetMs - atMs;
-    return remainingMs > 0 && Math.floor(remainingMs / MS_PER_MINUTE) === 0;
+    return PacePetsLogic.resetCountdownDisplaysZero(value, atMs);
   }
 
   globalThis.PacePetsDashboardTime = Object.freeze({

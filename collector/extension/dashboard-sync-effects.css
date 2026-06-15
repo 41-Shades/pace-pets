@@ -21,6 +21,16 @@
   z-index: 3;
 }
 
+body.has-sync-sunburst-page-background {
+  --sync-sunburst-panel-bg: 255 255 255;
+  --sync-sunburst-sync-card-bg: 238 251 248;
+}
+
+html[data-theme="dark"] body.has-sync-sunburst-page-background {
+  --sync-sunburst-panel-bg: 32 39 38;
+  --sync-sunburst-sync-card-bg: 23 52 50;
+}
+
 .sync-monk-escape > img,
 .sync-monk-escape > svg {
   display: block;
@@ -48,7 +58,9 @@ body.has-sync-monk-escape .pace-card.pace-sync .pace-icon > svg {
 }
 
 body.has-sync-sunburst-page-background .usage-panel {
-  background-color: rgb(255 255 255 / var(--sync-sunburst-panel-bg-opacity, 1));
+  background-color: rgb(
+    var(--sync-sunburst-panel-bg) / var(--sync-sunburst-panel-bg-opacity, 1)
+  );
   border-color: rgb(
     248 213 89 / calc(18% + var(--sync-sunburst-ui-glow-opacity, 0) * 28%)
   );
@@ -56,7 +68,9 @@ body.has-sync-sunburst-page-background .usage-panel {
 }
 
 body.has-sync-sunburst-page-background .pace-card.pace-sync {
-  background-color: rgb(238 251 248 / var(--sync-sunburst-panel-bg-opacity, 1));
+  background-color: rgb(
+    var(--sync-sunburst-sync-card-bg) / var(--sync-sunburst-panel-bg-opacity, 1)
+  );
   border-color: rgb(
     244 202 69 / calc(34% + var(--sync-sunburst-ui-glow-opacity, 0) * 30%)
   );

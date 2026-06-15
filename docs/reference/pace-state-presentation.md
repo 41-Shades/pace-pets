@@ -53,15 +53,16 @@ bounded to `0..100` and then rounded with `Math.round()` before the perfect-stat
 rules compare them. A round zero can therefore be a small positive source value
 that displays as `0%`.
 
-| State                        | Surface                     | Rule                                                                                              | Presentation                                                                                                             |
-| ---------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Perfect sync (`sync`)        | Dashboard and toolbar badge | Rounded remaining-usage percent equals rounded time-remaining percent.                            | Uses the `sync` state with a controlled display ratio of `1.00`.                                                         |
-| Perfect zero (`perfectZero`) | Dashboard and toolbar badge | Perfect sync is valid and rounded remaining-usage percent is `0`.                                 | Uses the `perfectZero` state with a controlled display ratio of `0.00`.                                                  |
-| Singularity (`singularity`)  | Dashboard and toolbar badge | Perfect zero is valid and `Resets In` also displays zero while `resetsAt` is still in the future. | Uses the `singularity` state with a controlled display ratio of `0.00` and a reset countdown presentation of `0d 0h 0m`. |
+| State                        | Surface                                   | Rule                                                                                              | Presentation                                                                                                             |
+| ---------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Perfect sync (`sync`)        | Dashboard and toolbar badge               | Rounded remaining-usage percent equals rounded time-remaining percent.                            | Uses the `sync` state with a controlled display ratio of `1.00`.                                                         |
+| Perfect zero (`perfectZero`) | Dashboard and toolbar badge               | Perfect sync is valid and rounded remaining-usage percent is `0`.                                 | Uses the `perfectZero` state with a controlled display ratio of `0.00`.                                                  |
+| Singularity (`singularity`)  | Dashboard, browser tab, and toolbar badge | Perfect zero is valid and `Resets In` also displays zero while `resetsAt` is still in the future. | Uses the `singularity` state with a controlled display ratio of `0.00` and a reset countdown presentation of `0d 0h 0m`. |
 
 The three perfect states are mutually ordered by specificity. Singularity wins
-over Perfect Zero on the dashboard when its reset-countdown rule is also true.
-Perfect Zero wins over Perfect Sync when the matching rounded percent is zero.
+over Perfect Zero on live presentation surfaces when its reset-countdown rule is
+also true. Perfect Zero wins over Perfect Sync when the matching rounded percent
+is zero.
 
 Perfect presentation is suppressed when the reset window is stale, meaning
 `resetsAt` is at or before the current time. Perfect Zero can also be disallowed
@@ -119,11 +120,15 @@ replay the animation. Leaving forced Splat active in dev controls also does not
 replay on interval refreshes, but turning Splat on again or reloading the
 dashboard while Splat is active can replay it once. At the impact moment, the
 status card briefly teeters and the ratio stat pops upward before both settle.
-Each Splat entry randomizes the ratio pop height, drift, rebound, duration, and
-card teeter profile, with a bias toward occasional higher bounces. Dev controls
-can request a deterministic Max Splat bounce preview that replays the full Splat
-entry sequence: the free-fall figure lands on a faster max-preview fall, a
-larger first card teeter plays, then the ratio launches after a `60ms` beat,
+When the displayed time-remaining percent is over `50%`, Splat always plays the
+full rare Max Splat sequence. At `50%` or below, each Splat entry chooses one of
+three entry modes: a normal ratio bounce 75% of the time, a max-normal regular
+ratio bounce 20% of the time, or the full rare Max Splat sequence 5% of the
+time. Normal and max-normal entries still randomize the ratio pop drift,
+rebound, duration, and card teeter profile. Dev controls can request a
+deterministic Max Splat bounce preview that replays the full rare entry
+sequence: the free-fall figure lands on a faster max-preview fall, a larger
+first card teeter plays, then the ratio launches after a `60ms` beat,
 rockets visibly through `-620px` toward `-5000px`, hangs briefly, descends
 through visible checkpoints, slams back to `138px`, and throws the same
 free-fall figure from the severe 0.00-slam impact peak into a rotated Splat icon

@@ -118,36 +118,33 @@ removed, so the dashboard now has one canonical Singularity transition. Local
 developer controls no longer store selectors for the whole transition or the
 black-hole phase.
 
-The local `Preview entry` dev action can be launched from another displayed
-pace state. It fades the live dashboard chrome out, writes the forced
-Singularity developer state, then lets the space fade, chrome fade-in, and
-black-hole approach run. If the dashboard tab is hidden when the action is
-requested, the preview is queued until that dashboard tab becomes visible.
+The local developer controls can still force the Singularity state from any
+other displayed pace state. If the dashboard tab is hidden when developer
+controls set Singularity, the transition is queued until that dashboard tab
+becomes visible.
 
 ## Development Preview Checklist
 
 1. Reload the unpacked extension from `chrome://extensions`.
 2. Reload both extension pages: `dashboard.html` and `dev-flags.html`.
 3. In Dev Controls, choose a prior state such as `Keep pace` or `Perfect zero`.
-4. Click `Preview entry`.
-5. If Dev Controls reports that the preview is queued, switch to the dashboard
-   tab.
+4. Choose `Singularity`.
+5. If the dashboard tab was hidden, switch to the dashboard tab.
 
-Expected timing: the prior dashboard state fades out for about 2 seconds, the
-forced Singularity state fades into space over 2 seconds, the dashboard chrome
-fades in over 6 seconds, then the black-hole approach builds for about 7.6
-seconds. A whole-dashboard jitter starts when the black-hole approach begins
-and ramps until chrome collapse starts around the glint suction point. The
-chrome-collapse pressure then begins, and main-panel containers plus state-rail
-items immediately split, orbit inward, recede into CSS perspective, rotate in
-3D, and distort. A second inner-fragment pass starts shortly after the parent
-pieces begin falling, so text, icons, controls, and bars continue breaking up
-while everything shrinks into the horizon as one continuous pull. As soon as
-the black-hole approach completes, the same black-hole shader keeps advancing
-behind the collapsing chrome, expands the horizon into the full viewport,
-crosses into a cone/funnel grid, falls through the singularity point into a
-whiteout, and returns through a checkerboard decimation reveal to the current
-dashboard state.
+Expected timing: Singularity fades into space over 2 seconds, the dashboard
+chrome fades in over 6 seconds, then the black-hole approach builds for about
+7.6 seconds. A whole-dashboard jitter starts when the black-hole approach
+begins and ramps until chrome collapse starts around the glint suction point.
+The chrome-collapse pressure then begins, and main-panel containers plus
+state-rail items immediately split, orbit inward, recede into CSS perspective,
+rotate in 3D, and distort. A second inner-fragment pass starts shortly after
+the parent pieces begin falling, so text, icons, controls, and bars continue
+breaking up while everything shrinks into the horizon as one continuous pull.
+As soon as the black-hole approach completes, the same black-hole shader keeps
+advancing behind the collapsing chrome, expands the horizon into the full
+viewport, crosses into a cone/funnel grid, falls through the singularity point
+into a whiteout, and returns through a checkerboard decimation reveal to the
+current dashboard state.
 
 ## Trigger Flow
 
@@ -166,7 +163,6 @@ Developer-control path:
 
 ```text
 dev-flags.html writes forcedPaceState = singularity
-dev-flags.html may send Preview entry message
   -> dashboard storage listener calls loadDashboard()
   -> refreshForcedPaceStateOverride()
   -> renderForcedPaceStateOverride()
@@ -229,9 +225,6 @@ or `desktopCapture` for this effect.
 - `collector/extension/dashboard-singularity-chrome-collapse-scene.js`:
   chrome pressure and split/orbit/depth-recession/shrink lifecycle, owned-piece
   marking during the collapse, plus teardown restoration.
-- `collector/extension/dashboard-singularity-transition-preview-methods.js`:
-  dev-only entry preview action that fades out live dashboard chrome, then
-  forces Singularity so the transition can run.
 - `collector/extension/dashboard-singularity-transition-methods.js`: pace
   controller integration, entry gating, hidden-tab queueing, and scene launch.
 - `collector/extension/dashboard-singularity-transition.css`: body shell

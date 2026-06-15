@@ -90,16 +90,6 @@ describe("CodexExtensionStorage", () => {
   });
 });
 
-describe("PacePetsSingularityTransitionPreviewControl", () => {
-  it("creates launch messages for Singularity transition previews", () => {
-    const preview = globalThis.PacePetsSingularityTransitionPreviewControl;
-    const message = preview.launchMessage();
-
-    expect(preview.isLaunchMessage(message)).toBe(true);
-    expect(preview.isLaunchMessage({ type: "other" })).toBe(false);
-  });
-});
-
 describe("CodexProductMetadata", () => {
   it("exposes shared product labels and runtime titles", () => {
     const metadata = globalThis.CodexProductMetadata;

@@ -12,7 +12,6 @@
 
   const HIDDEN_CLASS = "is-singularity-space-hidden";
   const REVEAL_CLASS = "is-singularity-space-reveal";
-  const ENTRY_EXIT_CLASS = "is-singularity-entry-exit";
   const JITTER_CLASS = "is-singularity-chrome-jitter";
   const FINAL_REVEAL_CLASS = "is-singularity-final-reveal";
   const SPACE_ENTER_CLASS = "is-singularity-space-enter";
@@ -56,7 +55,6 @@
       this.done = new Promise((resolve) => {
         this.resolveDone = resolve;
       });
-      document.body.classList.remove(ENTRY_EXIT_CLASS);
       if (this.motionDisabled) {
         this.finish(true);
         return this.done;
@@ -212,7 +210,6 @@
       this.chromeCollapseScene = null;
       this.stopped = true;
       document.body.classList.remove(
-        ENTRY_EXIT_CLASS,
         FINAL_REVEAL_CLASS,
         HIDDEN_CLASS,
         JITTER_CLASS,

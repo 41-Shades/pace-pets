@@ -139,33 +139,6 @@ body,
     transform 1600ms ease;
 }
 
-.app-tooltip[data-variant="speech"] {
-  --speech-bubble-bg: rgb(255 255 255 / 96%);
-  --speech-bubble-outline: #c5cbd3;
-  --speech-bubble-soft-edge: rgb(226 232 240 / 74%);
-
-  background:
-    radial-gradient(
-      ellipse at 38% 22%,
-      rgb(255 255 255 / 92%) 0 58%,
-      transparent 72%
-    ),
-    var(--speech-bubble-bg);
-  border: 1.5px solid var(--speech-bubble-outline);
-  border-radius: 56% 44% 48% 52% / 55% 52% 48% 45%;
-  box-shadow:
-    inset 2px 2px 0 var(--speech-bubble-soft-edge),
-    0 4px 10px rgb(var(--tooltip-shadow) / 8%);
-  color: #7b828c;
-  display: grid;
-  font-size: 0.6rem;
-  line-height: 1.1;
-  min-height: 42px;
-  min-width: 78px;
-  padding: 8px 16px 9px;
-  place-items: center;
-}
-
 .app-tooltip[hidden] {
   display: none;
 }
@@ -218,11 +191,6 @@ body,
   border-left: 0;
   left: auto;
   right: -5px;
-}
-
-.app-tooltip[data-variant="speech"]::before,
-.app-tooltip[data-variant="speech"]::after {
-  display: none;
 }
 
 .shell {

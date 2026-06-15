@@ -1,3 +1,17 @@
+.reset-countdown-card {
+  --reset-exhausted-face-line: #172b3a;
+  --reset-exhausted-head-fill: #ffffff;
+  --reset-exhausted-linework: #243a4b;
+  --reset-exhausted-message-color: #172b3a;
+}
+
+[data-theme="dark"] .reset-countdown-card {
+  --reset-exhausted-face-line: #172b3a;
+  --reset-exhausted-head-fill: #f8fafc;
+  --reset-exhausted-linework: #eef4f2;
+  --reset-exhausted-message-color: var(--reset-exhausted-linework);
+}
+
 .reset-exhausted-figure {
   --reset-exhausted-figure-opacity: 0.96;
 
@@ -47,7 +61,7 @@
 .reset-exhausted-trace-linework path,
 .reset-exhausted-trace-face path {
   fill: none;
-  stroke: #243a4b;
+  stroke: var(--reset-exhausted-linework);
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -57,20 +71,20 @@
 }
 
 .reset-exhausted-trace-head {
-  fill: #ffffff;
-  stroke: #243a4b;
+  fill: var(--reset-exhausted-head-fill);
+  stroke: var(--reset-exhausted-linework);
   stroke-width: 5.8px;
 }
 
 .reset-exhausted-trace-face path {
-  stroke: #172b3a;
+  stroke: var(--reset-exhausted-face-line);
   stroke-width: 5.1px;
 }
 
 .reset-exhausted-message {
   block-size: 17px;
   bottom: 37px;
-  color: #172b3a;
+  color: var(--reset-exhausted-message-color);
   font-family:
     Inter,
     ui-sans-serif,

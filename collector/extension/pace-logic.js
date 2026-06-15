@@ -2,6 +2,7 @@
   "use strict";
 
   const PERFECT_PACE_RATIO = 1;
+  const MS_PER_MINUTE = 60 * 1000;
   const PACE_RATIO_DISPLAY_MAX = 100;
   const PACE_RATIO_CHART_MIN = 0;
   const PACE_RATIO_CHART_MAX = 50;
@@ -91,6 +92,7 @@
 
   function controlledPaceDisplayRatio(state) {
     return state.key === PACE_STATES.perfectZero.key ||
+      state.key === PACE_STATES.singularity.key ||
       state.key === PACE_STATES.splat.key
       ? 0
       : PERFECT_PACE_RATIO;
@@ -128,6 +130,35 @@
     };
   }
 
+  function resetCountdownDisplaysZero(value, atMs = Date.now()) {
+    const resetMs = dateMs(value);
+    if (resetMs === null) {
+      return false;
+    }
+
+    const remainingMs = resetMs - atMs;
+    return remainingMs > 0 && Math.floor(remainingMs / MS_PER_MINUTE) === 0;
+  }
+
+  function shouldPromoteSingularityPresentation(
+    windowData,
+    controlledPresentation,
+    atMs,
+  ) {
+    return (
+      controlledPresentation?.state.key === PACE_STATES.perfectZero.key &&
+      resetCountdownDisplaysZero(windowData?.resetsAt, atMs)
+    );
+  }
+
+  function singularityPacePresentation(controlledPresentation) {
+    return {
+      ...controlledPresentation,
+      displayRatio: controlledPaceDisplayRatio(PACE_STATES.singularity),
+      state: PACE_STATES.singularity,
+    };
+  }
+
   function controlledPacePresentationForWindow(
     windowData,
     { allowPerfectZero = true, atMs = Date.now() } = {},
@@ -136,11 +167,18 @@
       return null;
     }
 
-    return controlledPacePresentationForValues(
+    const controlledPresentation = controlledPacePresentationForValues(
       windowData?.remainingPercent,
       timeRemainingPercentAt(windowData, atMs),
       { allowPerfectZero },
     );
+    return shouldPromoteSingularityPresentation(
+      windowData,
+      controlledPresentation,
+      atMs,
+    )
+      ? singularityPacePresentation(controlledPresentation)
+      : controlledPresentation;
   }
 
   function isResetWindowStale(windowData, atMs = Date.now()) {
@@ -326,6 +364,7 @@
     paceRatioForWindow,
     resetWindowBounds,
     resetWindowSamples,
+    resetCountdownDisplaysZero,
     roundedDisplayPercent,
     timeRemainingPercent,
     timeRemainingPercentAt,

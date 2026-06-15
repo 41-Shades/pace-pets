@@ -94,6 +94,24 @@ describe("PacePetsLogic controlled presentations", () => {
     expect(activeZeroPresentation.state.key).toBe("perfectZero");
     expect(activeZeroPresentation.displayRatio).toBe(0);
 
+    const singularityPresentation =
+      globalThis.PacePetsLogic.controlledPacePresentationForWindow(
+        {
+          remainingPercent: 0.4,
+          resetsAt: "2026-05-25T12:00:30.000Z",
+          windowMinutes: 300,
+        },
+        { atMs: Date.parse("2026-05-25T12:00:00.000Z") },
+      );
+    expect(singularityPresentation.state.key).toBe("singularity");
+    expect(singularityPresentation.displayRatio).toBe(0);
+    expect(
+      globalThis.PacePetsLogic.resetCountdownDisplaysZero(
+        "2026-05-25T12:00:30.000Z",
+        Date.parse("2026-05-25T12:00:00.000Z"),
+      ),
+    ).toBe(true);
+
     expect(
       globalThis.PacePetsLogic.controlledPacePresentationForWindow(
         {
