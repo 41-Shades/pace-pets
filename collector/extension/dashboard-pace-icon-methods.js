@@ -267,6 +267,7 @@
 
     stopMotionEffects() {
       this.clearPaceIconEffects(this.elements.paceIcon);
+      this.clearSplatMaxThrow?.();
       this.stopPerfectZeroPageBackgroundScene?.();
       this.stopSyncSunburstPageBackground?.();
       this.stopSyncMonkEscape?.();
@@ -320,6 +321,9 @@
     ) {
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const state = this.paceStateForClassName(level);
+      if (state.key !== DATA.PACE_STATES.splat.key) {
+        this.clearSplatMaxThrow?.();
+      }
       const playSplatFall =
         motionPreferenceEnabled(this) &&
         shouldPlaySplatFall({

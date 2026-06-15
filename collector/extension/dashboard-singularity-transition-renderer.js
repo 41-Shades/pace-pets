@@ -14,6 +14,7 @@
   const REVEAL_CLASS = "is-singularity-space-reveal";
   const ENTRY_EXIT_CLASS = "is-singularity-entry-exit";
   const JITTER_CLASS = "is-singularity-chrome-jitter";
+  const FINAL_REVEAL_CLASS = "is-singularity-final-reveal";
   const SPACE_ENTER_CLASS = "is-singularity-space-enter";
   const SPACE_ENTER_VISIBLE_CLASS = "is-singularity-space-enter-visible";
   const JITTER_DURATION_PROPERTY = "--singularity-chrome-jitter-duration";
@@ -24,6 +25,10 @@
   const CHROME_COLLAPSE_DELAY_MS = Math.round(
     BLACK_HOLE_APPROACH_DURATION_MS * GLINT_SUCTION_PROGRESS,
   );
+  const FINAL_REVEAL_DELAY_MS = Math.round(
+    BLACK_HOLE_APPROACH_DURATION_MS * 3.98,
+  );
+  const FINAL_REVEAL_DURATION_MS = 6000;
 
   class SingularityTransitionRenderer {
     constructor({ motionDisabled = false } = {}) {
@@ -33,6 +38,8 @@
       this.chromeCollapseScene = null;
       this.chromeCollapseTimer = null;
       this.done = null;
+      this.finalRevealStarted = false;
+      this.finalRevealTimer = null;
       this.motionDisabled = motionDisabled;
       this.resolveDone = null;
       this.revealTimer = null;
@@ -106,10 +113,14 @@
         this.chromeCollapseTimer = null;
         this.startChromeCollapse();
       }, CHROME_COLLAPSE_DELAY_MS);
+      this.finalRevealTimer = root.setTimeout(() => {
+        this.finalRevealTimer = null;
+        this.startFinalReveal();
+      }, FINAL_REVEAL_DELAY_MS);
       scene
         .play()
         .then((completed) => {
-          if (this.stopped) {
+          if (this.stopped || this.finalRevealStarted) {
             return;
           }
 
@@ -138,7 +149,7 @@
         .play()
         .then((completed) => {
           this.chromeCollapseCompleted = completed;
-          if (this.stopped) {
+          if (this.stopped || this.finalRevealStarted) {
             return;
           }
 
@@ -152,6 +163,25 @@
         });
     }
 
+    startFinalReveal() {
+      if (this.stopped || this.finalRevealStarted) {
+        return;
+      }
+
+      this.finalRevealStarted = true;
+      document.body.classList.add(FINAL_REVEAL_CLASS);
+      this.blackHoleScene?.stop();
+      this.blackHoleScene = null;
+      this.chromeCollapseScene?.stop();
+      this.chromeCollapseScene = null;
+      document.body.classList.remove(JITTER_CLASS, REVEAL_CLASS);
+      document.body.style.removeProperty(JITTER_DURATION_PROPERTY);
+      this.finishTimer = root.setTimeout(() => {
+        this.finishTimer = null;
+        this.finish(true);
+      }, FINAL_REVEAL_DURATION_MS);
+    }
+
     stop() {
       this.finish(false);
     }
@@ -161,12 +191,14 @@
       root.clearTimeout(this.finishTimer);
       root.clearTimeout(this.spaceEnterTimer);
       root.clearTimeout(this.chromeCollapseTimer);
+      root.clearTimeout(this.finalRevealTimer);
       if (this.spaceEnterFrame) {
         root.cancelAnimationFrame(this.spaceEnterFrame);
       }
       this.revealTimer = null;
       this.finishTimer = null;
       this.chromeCollapseTimer = null;
+      this.finalRevealTimer = null;
       this.blackHoleApproachCompleted = null;
       this.chromeCollapseCompleted = null;
       this.spaceEnterFrame = null;
@@ -178,6 +210,7 @@
       this.stopped = true;
       document.body.classList.remove(
         ENTRY_EXIT_CLASS,
+        FINAL_REVEAL_CLASS,
         HIDDEN_CLASS,
         JITTER_CLASS,
         REVEAL_CLASS,

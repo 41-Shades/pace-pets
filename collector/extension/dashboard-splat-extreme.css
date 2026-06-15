@@ -8,6 +8,47 @@
   animation-timing-function: linear;
 }
 
+.splat-max-throw-actor {
+  animation: splat-max-throw var(--splat-max-throw-sequence-duration, 6810ms)
+    linear both;
+  backface-visibility: hidden;
+  display: block;
+  pointer-events: none;
+  position: fixed;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  z-index: 36;
+}
+
+.splat-max-throw-actor img {
+  display: block;
+  height: 100%;
+  inset: 0;
+  object-fit: contain;
+  position: absolute;
+  width: 100%;
+}
+
+.splat-max-throw-flight-image {
+  animation: splat-max-throw-flight-image
+    var(--splat-max-throw-sequence-duration, 6810ms) linear both;
+}
+
+.splat-max-throw-wall-image {
+  animation: splat-max-throw-wall-image
+    var(--splat-max-throw-sequence-duration, 6810ms) linear both;
+  opacity: 0;
+  transform-origin: center;
+}
+
+.pace-icon.is-splat-max-throwing > img {
+  opacity: 0;
+}
+
+html[data-motion="off"] .splat-max-throw-actor {
+  display: none;
+}
+
 @keyframes splat-card-extreme-teeter {
   0%,
   100% {
@@ -15,27 +56,232 @@
   }
 
   8% {
-    transform: translate3d(0, var(--splat-card-drop-y, 80px), 0)
-      rotate(var(--splat-card-rotate-first, -31.5deg));
+    transform: translate3d(0, var(--splat-card-drop-y, 130px), 0)
+      rotate(var(--splat-card-rotate-first, 58deg));
   }
 
   24% {
-    transform: translate3d(0, var(--splat-card-rebound-y, -45.5px), 0)
-      rotate(var(--splat-card-rotate-second, 21deg));
+    transform: translate3d(0, var(--splat-card-rebound-y, -78px), 0)
+      rotate(var(--splat-card-rotate-second, -44deg));
   }
 
   46% {
-    transform: translate3d(0, var(--splat-card-settle-y, 31.5px), 0)
-      rotate(var(--splat-card-rotate-third, -12.3deg));
+    transform: translate3d(0, var(--splat-card-settle-y, 52px), 0)
+      rotate(var(--splat-card-rotate-third, 26deg));
   }
 
   70% {
-    transform: translate3d(0, var(--splat-card-final-y, -8.8px), 0)
-      rotate(var(--splat-card-rotate-fourth, 4.9deg));
+    transform: translate3d(0, var(--splat-card-final-y, -14px), 0)
+      rotate(var(--splat-card-rotate-fourth, -11deg));
   }
 
   88% {
     transform: translate3d(0, 2px, 0) rotate(-0.8deg);
+  }
+}
+
+@keyframes splat-max-throw {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(-8deg) scale(0.96);
+  }
+
+  2.5% {
+    opacity: 1;
+  }
+
+  3.3% {
+    transform: translate3d(
+        var(--splat-max-throw-mid-x, 260px),
+        var(--splat-max-throw-mid-y, -122px),
+        0
+      )
+      rotate(280deg) scale(1.08);
+  }
+
+  6.1% {
+    animation-timing-function: cubic-bezier(0.16, 0.86, 0.22, 1);
+    opacity: 1;
+    transform: translate3d(
+        var(--splat-max-throw-x, 548px),
+        var(--splat-max-throw-y, -95px),
+        0
+      )
+      rotate(620deg) scale(1);
+  }
+
+  6.4% {
+    transform: translate3d(
+        var(--splat-max-throw-x, 548px),
+        var(--splat-max-throw-y, -95px),
+        0
+      )
+      rotate(0deg) scale(1);
+  }
+
+  13.1% {
+    transform: translate3d(
+        var(--splat-max-throw-x, 548px),
+        var(--splat-max-throw-y, -95px),
+        0
+      )
+      rotate(0deg) scale(1);
+  }
+
+  36.6% {
+    animation-timing-function: cubic-bezier(0.24, 0.78, 0.34, 1);
+    transform: translate3d(
+        var(--splat-max-throw-x, 548px),
+        var(--splat-max-wall-slide-y, 110px),
+        0
+      )
+      rotate(0deg) scale(1);
+  }
+
+  41.9% {
+    transform: translate3d(
+        var(--splat-max-floor-spin-x, 534px),
+        var(--splat-max-floor-spin-y, 215px),
+        0
+      )
+      rotate(0deg) scale(1);
+  }
+
+  91.8% {
+    animation-timing-function: cubic-bezier(0.08, 0.88, 0.12, 1);
+    transform: translate3d(
+        var(--splat-max-floor-spin-x, 534px),
+        var(--splat-max-floor-spin-y, 215px),
+        0
+      )
+      rotate(0deg) scale(1);
+  }
+
+  95.7% {
+    animation-timing-function: cubic-bezier(0.1, 0.82, 0.16, 1);
+    transform: translate3d(
+        var(--splat-max-floor-x, 520px),
+        var(--splat-max-floor-y, 320px),
+        0
+      )
+      rotate(0deg) scale(1);
+  }
+
+  100% {
+    opacity: 0.96;
+    transform: translate3d(
+        var(--splat-max-floor-x, 520px),
+        var(--splat-max-floor-y, 320px),
+        0
+      )
+      rotate(0deg) scale(1);
+  }
+}
+
+@keyframes splat-max-throw-flight-image {
+  0%,
+  6.4% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+
+  6.5%,
+  36.4% {
+    opacity: 0;
+    transform: rotate(120deg) scale(0.9);
+  }
+
+  36.7% {
+    opacity: 1;
+    transform: rotate(-16deg) scale(0.96);
+  }
+
+  41.9% {
+    opacity: 1;
+    transform: rotate(240deg) scale(1.02);
+  }
+
+  91.8% {
+    opacity: 1;
+    transform: rotate(8880deg) scale(1.04);
+  }
+
+  95.7%,
+  100% {
+    opacity: 0;
+    transform: rotate(9240deg) scale(1.14, 0.76);
+  }
+}
+
+@keyframes splat-max-throw-wall-image {
+  0%,
+  6.4% {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.92);
+  }
+
+  6.5% {
+    opacity: 1;
+    transform: rotate(90deg) scale(1.34, 0.52);
+  }
+
+  13.1%,
+  36.6% {
+    opacity: 1;
+    transform: rotate(90deg) scale(1.22, 0.58);
+  }
+
+  36.7%,
+  95.4% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.9);
+  }
+
+  95.7% {
+    opacity: 1;
+    transform: translateX(-78px) rotate(0deg) scale(3.05, 0.24);
+  }
+
+  97.2% {
+    opacity: 1;
+    transform: translateX(-88px) rotate(0deg) scale(3.25, 0.22);
+  }
+
+  98.3% {
+    opacity: 1;
+    transform: translateX(-46px) rotate(0deg) scale(1.72, 0.5);
+  }
+
+  99.1% {
+    opacity: 1;
+    transform: translateX(-58px) rotate(0deg) scale(2.25, 0.34);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(-28px) rotate(0deg) scale(1.4, 0.62);
+  }
+}
+
+.splat-max-throw-actor.is-splat-max-final-pulsing
+  .splat-max-throw-flight-image {
+  animation: none;
+  opacity: 0;
+}
+
+.splat-max-throw-actor.is-splat-max-final-pulsing .splat-max-throw-wall-image {
+  animation: splat-max-final-subtle-pulse 4800ms ease-in-out infinite;
+  opacity: 1;
+}
+
+@keyframes splat-max-final-subtle-pulse {
+  0%,
+  100% {
+    transform: translateX(-28px) rotate(0deg) scale(1.4, 0.62);
+  }
+
+  50% {
+    transform: translateX(-29px) rotate(0deg) scale(1.44, 0.61);
   }
 }
 

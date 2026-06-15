@@ -73,7 +73,6 @@ vec3 plasmaColor(float angle, float grain, float front) {
   vec3 color = mix(blue, gold, heat);
   return mix(color, white, front * 0.34);
 }
-
 float glintFromCell(vec2 grid, vec2 cell, float violence) {
   float seed = hash(cell);
   float active = step(mix(0.88, 0.82, violence), seed);
@@ -144,19 +143,21 @@ void main() {
 
   float rawProgress = u_progress;
   float progress = easeInOut(min(rawProgress, 1.0));
-  float postApproach = clampUnit((rawProgress - 1.0) / 1.18);
-  float liveHold = 1.0 - pow(1.0 - postApproach, 1.45);
+  float continuationPhase = clampUnit((rawProgress - 0.96) / 1.25);
+  float continuation = 1.0 - pow(1.0 - continuationPhase, 1.35);
   float consumeRamp = clampUnit((rawProgress - 1.22) / 1.16);
-  float consume = consumeRamp * consumeRamp * (3.0 - 2.0 * consumeRamp);
+  float consume = consumeRamp * consumeRamp * (2.0 - consumeRamp);
+  float handoffEnergy = smoothstep(0.88, 1.06, rawProgress) * (1.0 - smoothstep(1.52, 2.0, rawProgress));
   float crossing = smoothstep(1.82, 2.58, rawProgress);
   float descent = smoothstep(2.12, 3.18, rawProgress);
   float singularity = smoothstep(2.82, 3.55, rawProgress);
+  float plunge = smoothstep(3.08, 3.86, rawProgress);
   float recenterRamp = smoothstep(1.78, 2.78, rawProgress);
   vec2 approachCenter = mix(vec2(-0.22, 0.2), vec2(0.1, 0.02), progress);
   vec2 liveCenter =
     approachCenter +
-    vec2(-0.034, -0.022) * liveHold +
-    vec2(sin(u_time * 0.52), cos(u_time * 0.39)) * 0.007 * postApproach;
+    vec2(-0.048, -0.03) * continuation +
+    vec2(sin(u_time * 0.52), cos(u_time * 0.39)) * 0.006 * continuationPhase;
   vec2 center = mix(
     liveCenter,
     vec2(0.0, -0.04),
@@ -167,11 +168,14 @@ void main() {
   float approachRadius = mix(0.012, 0.34, progress);
   float livingRadius =
     approachRadius *
-    (1.0 + liveHold * 0.13 + sin(u_time * 1.18) * postApproach * 0.018);
+    (1.0 + continuation * 0.18 +
+      sin(u_time * 1.18) * continuationPhase * 0.018);
   float radius = mix(livingRadius, 2.34, consume);
-  float gravityPulse = exp(-pow((progress - 0.93) / 0.045, 2.0));
-  float violence = smoothstep(0.55, 1.0, progress);
-  float collapseViolence = smoothstep(0.72, 1.0, progress);
+  float gravityPulse =
+    exp(-pow((progress - 0.93) / 0.045, 2.0)) +
+    handoffEnergy * (0.16 + 0.08 * sin(u_time * 4.2));
+  float violence = min(1.16, smoothstep(0.55, 1.0, progress) + handoffEnergy * 0.1);
+  float collapseViolence = min(1.14, smoothstep(0.72, 1.0, progress) + handoffEnergy * 0.12);
   float surge = collapseViolence * (0.5 + 0.5 * sin(u_time * 7.4));
   float violentFlicker =
     violence * (0.72 + 0.28 * sin(u_time * 11.0 + distanceFromCenter * 24.0));
@@ -218,7 +222,8 @@ void main() {
   disk *= 0.64 + arcBreakup * 0.36;
   disk *= 1.0 + gravityPulse * 0.12 + violence * turbulentGrain * 0.22;
 
-  float ellipseRadius = length(vec2(fromCenter.x, fromCenter.y / 0.62));
+  float horizonWobble = 1.0 + handoffEnergy * 0.026 * sin(angle * 5.0 + u_time * 5.6 + turbulentGrain * 2.0);
+  float ellipseRadius = length(vec2(fromCenter.x, fromCenter.y / 0.62)) / horizonWobble;
   float horizon = 1.0 - smoothstep(radius * 0.73, radius * 0.79, ellipseRadius);
   float ringAsymmetry = 0.66 + blueShift * 0.34 + frontSide * 0.14;
   ringAsymmetry *=
@@ -328,12 +333,12 @@ void main() {
   color = mix(color, vec3(0.0), gravityVeil);
 
   float tunnelAngle = atan(fromCenter.y, fromCenter.x);
-  float tunnelRadius = max(distanceFromCenter, 0.001);
+  float tunnelRadius = max(distanceFromCenter / mix(1.0, 5.6, plunge), 0.001);
   float tunnelTravel =
-    descent * 5.8 +
-    u_time * mix(0.1, 0.34, descent) +
-    1.0 / (tunnelRadius + 0.025) * mix(0.1, 0.7, descent);
-  float tunnelTwist = tunnelAngle / TAU + tunnelTravel * mix(0.08, 0.34, descent);
+    descent * 5.8 + plunge * 10.0 +
+    u_time * mix(0.1, 0.52, max(descent, plunge)) +
+    1.0 / (tunnelRadius + 0.025) * mix(0.1, 0.9, max(descent, plunge));
+  float tunnelTwist = tunnelAngle / TAU + tunnelTravel * mix(0.08, 0.42, max(descent, plunge));
   float radialGrid = lineGlow(
     fract(tunnelTravel * mix(1.8, 4.8, descent)) - 0.5,
     mix(0.13, 0.026, descent)
@@ -356,13 +361,16 @@ void main() {
     smoothstep(-0.2, 0.9, sin(tunnelTwist * TAU + tunnelTravel))
   );
   float finalPoint =
-    exp(-dot(fromCenter, fromCenter) * mix(72.0, 260.0, singularity)) *
+    exp(-dot(fromCenter, fromCenter) * mix(mix(72.0, 260.0, singularity), 8.0, plunge)) *
     smoothstep(2.55, 3.18, rawProgress);
+  float whiteout = smoothstep(3.38, 3.92, rawProgress);
+  float whiteBloom = exp(-dot(fromCenter, fromCenter) * mix(38.0, 0.7, whiteout)) * whiteout;
 
-  color = mix(color, vec3(0.0), horizon * (1.0 - crossing * 0.92));
-  color += tunnelColor * (tunnel + streamers * 0.34) * (1.0 - singularity * 0.66);
+  color = mix(color, vec3(0.0), horizon * (1.0 - crossing * 0.92) * (1.0 - plunge));
+  color += tunnelColor * (tunnel + streamers * 0.34) * (1.0 - singularity * 0.66) * (1.0 - whiteout * 0.62);
   color = mix(color, vec3(0.0), singularity * 0.58);
   color += vec3(0.9, 1.0, 1.0) * finalPoint * (1.2 + singularity * 0.8);
+  color = mix(color + vec3(0.75, 0.9, 1.0) * whiteBloom, vec3(0.98, 1.0, 1.0), whiteout);
 
   float alpha = max(glow, lens);
   alpha = max(alpha, gravityVeil);
@@ -379,6 +387,7 @@ void main() {
   alpha = max(alpha, tunnel * 0.8 + streamers * 0.34);
   alpha = max(alpha, finalPoint);
   alpha = max(alpha, singularity * 0.98);
+  alpha = max(alpha, whiteout);
 
   gl_FragColor = vec4(color, clampUnit(alpha));
 }

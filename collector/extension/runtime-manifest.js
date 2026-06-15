@@ -89,6 +89,7 @@
     "./dashboard-pace-favicon-methods.js",
     "./dashboard-splat-fall-profile.js",
     "./dashboard-splat-fall-methods.js",
+    "./dashboard-splat-max-throw-methods.js",
     "./dashboard-speed-lines-methods.js",
     "./dashboard-sprint-smoke-methods.js",
     "./dashboard-train-smoke-data.js",
@@ -285,6 +286,7 @@
       "./dashboard-splat-fall-methods.js",
     ),
     dashboardFileEdge("splat-fall-profile", "splat-fall-methods"),
+    dashboardFileEdge("splat-fall-methods", "splat-max-throw-methods"),
     dependencyEdge(
       "./sprint-intensity.js",
       "./dashboard-sprint-smoke-methods.js",

@@ -57,9 +57,9 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
   elements. When the black-hole approach completes, the same WebGL scene keeps
   advancing behind the still-collapsing chrome, keeps the horizon attached to
   the existing black-hole center, expands into the viewport, crosses into a
-  cone/funnel descent, and holds on a singularity point with unclaimed
-  replacement dashboard chrome hidden until Singularity exits. The transition
-  does not request Chrome tab screenshots.
+  cone/funnel descent, falls through the singularity point into whiteout, and
+  clears a checkerboard overlay to reveal the current dashboard state. The
+  transition does not request Chrome tab screenshots.
 - `collector/extension/vendor/chart.umd.min.js` is the optional vendored Chart.js runtime used by the dashboard chart; the rest of the dashboard still renders if the chart asset cannot load.
 
 ## Collection Flow
