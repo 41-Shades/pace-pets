@@ -24,7 +24,8 @@ body.is-singularity-space-hidden .content-grid,
 body.is-singularity-space-reveal .content-grid,
 body.is-singularity-chrome-jitter .content-grid,
 body.is-singularity-chrome-pressure .content-grid,
-body.is-singularity-chrome-collapse .content-grid {
+body.is-singularity-chrome-collapse .content-grid,
+body.is-singularity-final-reveal .content-grid {
   pointer-events: none;
 }
 

@@ -42,6 +42,15 @@
 
   const MAX_INNER_FRAGMENTS_PER_CONTAINER = 8;
 
+  function seededUnit(index, salt) {
+    const value = Math.sin((index + 1) * (salt + 6.37) * 71.9) * 10000;
+    return value - Math.floor(value);
+  }
+
+  function fragmentOrder(fragment, runSeed) {
+    return seededUnit(fragment.parentIndex * 31 + fragment.index, runSeed);
+  }
+
   function viewportSize() {
     const rootElement = document.documentElement;
     return {
@@ -76,7 +85,7 @@
     return rect;
   }
 
-  function collectSplitContainers() {
+  function collectSplitContainers({ runSeed = 0 } = {}) {
     const containers = [];
     const seen = new Set();
     document
@@ -99,7 +108,11 @@
     );
     return containers.map((container) => ({
       ...container,
-      innerFragments: collectInnerFragments(container, containerElements),
+      innerFragments: collectInnerFragments(
+        container,
+        containerElements,
+        runSeed,
+      ),
     }));
   }
 
@@ -114,15 +127,15 @@
     return current === containerElement;
   }
 
-  function collectInnerFragments(container, containerElements) {
-    const fragments = [];
+  function collectInnerFragments(container, containerElements, runSeed) {
+    const candidates = [];
+    let fragmentIndex = 0;
     const seen = new Set();
     container.element
       .querySelectorAll(INNER_FRAGMENT_SELECTORS.join(","))
       .forEach((element) => {
         const rect = visibleRect(element);
         if (
-          fragments.length < MAX_INNER_FRAGMENTS_PER_CONTAINER &&
           !seen.has(element) &&
           !containerElements.has(element) &&
           ownsFragment(element, container.element, containerElements) &&
@@ -131,15 +144,23 @@
           rect.height >= 4
         ) {
           seen.add(element);
-          fragments.push({
+          candidates.push({
             element,
-            index: fragments.length,
+            index: fragmentIndex,
             parentIndex: container.index,
             rect,
           });
+          fragmentIndex += 1;
         }
       });
-    return fragments;
+    return candidates
+      .map((fragment) => ({
+        fragment,
+        order: fragmentOrder(fragment, runSeed),
+      }))
+      .sort((a, b) => a.order - b.order)
+      .slice(0, MAX_INNER_FRAGMENTS_PER_CONTAINER)
+      .map(({ fragment }) => fragment);
   }
 
   root.PacePetsDashboardSingularityChromeCollapseFragments = Object.freeze({
