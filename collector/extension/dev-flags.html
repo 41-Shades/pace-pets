@@ -16,7 +16,13 @@
 
       <div class="dev-controls-layout">
         <section class="current-mode-panel" aria-live="polite">
-          <div class="current-mode-summary" id="current-mode-summary"></div>
+          <div class="current-mode-summary" id="current-mode-summary">
+            <output
+              class="current-mode-status"
+              id="status-message"
+              role="status"
+            ></output>
+          </div>
           <button class="live-data-button" id="reset-all" type="button" hidden>
             Return to live data
           </button>
@@ -84,10 +90,6 @@
           </div>
         </section>
       </div>
-
-      <footer class="dev-controls-status">
-        <output id="status-message" role="status"></output>
-      </footer>
     </main>
 
     <script src="./runtime-manifest.js"></script>

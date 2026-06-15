@@ -85,16 +85,23 @@ Current sequence target:
     to shear, torque, shrink, and recede as their parent containers fall.
 12. Near the horizon, containers and inner fragments compress, darken, and
     disappear into the black hole without an explosion.
+13. As the black-hole approach completes, the same WebGL scene keeps advancing
+    behind the still-collapsing DOM chrome. Its horizon continues expanding
+    into the viewport, crosses into a funnel/cone visualization, and falls
+    toward one held singularity point.
 
 The black-hole canvas intentionally remains below `.content-grid` while the
 approach holds. During collapse, the real `.content-grid` remains visible with
 CSS perspective for the container split/orbit/depth-recession/shrink phase; no
 temporary debris layer or explosive breakup handoff is active in the current
-implementation. The collapse scene marks the live DOM pieces it owns; while the
-unfinished hold is active, unclaimed replacement dashboard or rail chrome stays
-hidden so normal dashboard refreshes cannot repaint clean UI over the collapsed
-state. After successful chrome collapse, the scene intentionally holds because
-the next Singularity phase has not been designed yet.
+implementation. The black-hole scene continues past approach completion so the
+same center, horizon, and shader clock keep moving while the app is consumed
+instead of plateauing during chrome collapse. The horizon remains attached to
+the existing black-hole center until the viewport is mostly consumed, then
+recenters inside the cone. The collapse scene marks the live DOM pieces it
+owns; while the singularity hold is active, unclaimed replacement dashboard or
+rail chrome stays hidden so normal dashboard refreshes cannot repaint clean UI
+over the collapsed state.
 
 ## Versioning
 
@@ -128,7 +135,10 @@ chrome-collapse pressure then begins, and main-panel containers plus state-rail
 items immediately split, orbit inward, recede into CSS perspective, rotate in
 3D, and distort. A second inner-fragment pass starts shortly after the parent
 pieces begin falling, so text, icons, controls, and bars continue breaking up
-while everything shrinks into the horizon as one continuous pull.
+while everything shrinks into the horizon as one continuous pull. As soon as
+the black-hole approach completes, the same black-hole shader keeps advancing
+behind the collapsing chrome, expands the horizon into the full viewport,
+crosses into a cone/funnel grid, and settles on a held singularity point.
 
 ## Trigger Flow
 
@@ -172,8 +182,9 @@ dashboard page
   -> renderer fades dashboard chrome in
   -> renderer starts the WebGL black-hole approach scene
   -> renderer starts live chrome container split/orbit during black-hole approach
+  -> black-hole shader continues past approach completion into horizon growth
   -> renderer compresses containers into the horizon without a shard explosion
-  -> renderer holds the unfinished post-collapse state until Singularity exits
+  -> renderer holds the singularity point until Singularity exits
 ```
 
 The manifest does not request `activeTab`, `<all_urls>`, `tabs`, `tabCapture`,
@@ -184,17 +195,19 @@ or `desktopCapture` for this effect.
 - `collector/extension/dashboard-singularity-transition-renderer.js`: canonical
   Singularity transition renderer. It fades into the normal Singularity
   page/backdrop over 2 seconds, fades dashboard chrome in over 6 seconds, and
-  starts the black-hole approach scene and pre-collapse jitter ramp. Successful
-  collapse currently holds instead of tearing down because the next phase is
-  intentionally unfinished.
+  starts the black-hole approach scene, pre-collapse jitter ramp, chrome
+  collapse, and continuous horizon/descent phase. The singularity point holds
+  until Singularity exits.
 - `collector/extension/dashboard-singularity-black-hole-v2-shaders.js`:
   WebGL vertex and fragment shader sources for the black-hole scene, including
   the progress-driven violence ramp for turbulence, flares, shock ripples,
-  jet flicker, and glint acceleration.
+  jet flicker, glint acceleration, full-viewport horizon growth, cone/funnel
+  descent, and held singularity point.
 - `collector/extension/dashboard-singularity-black-hole-v2-scene.js`:
   temporary WebGL canvas lifecycle, shader setup, high-DPI sizing, animation
   frame loop, context-loss handling, approach completion, and teardown for the
-  black-hole scene.
+  black-hole scene. Approach completion resolves the renderer cue but does not
+  stop the shader clock.
 - `collector/extension/dashboard-singularity-chrome-collapse-fragments.js`:
   DOM-geometry collection for live containers and their owned inner fragments
   that split away from the dashboard chrome.
@@ -203,14 +216,14 @@ or `desktopCapture` for this effect.
   split/orbit/stretch/depth-recession/torque/shrink animation timing.
 - `collector/extension/dashboard-singularity-chrome-collapse-scene.js`:
   chrome pressure and split/orbit/depth-recession/shrink lifecycle, owned-piece
-  marking for the unfinished hold, plus teardown restoration.
+  marking for the singularity hold, plus teardown restoration.
 - `collector/extension/dashboard-singularity-transition-preview-methods.js`:
   dev-only entry preview action that fades out live dashboard chrome, then
   forces Singularity so the transition can run.
 - `collector/extension/dashboard-singularity-transition-methods.js`: pace
   controller integration, entry gating, hidden-tab queueing, and scene launch.
 - `collector/extension/dashboard-singularity-transition.css`: body shell
-  visibility styles, black-hole canvas layers, pressure ripple, and live
+  visibility styles, black-hole canvas layer, pressure ripple, and live
   chrome-collapse state. The black-hole scene stays behind the dashboard chrome
   while real chrome containers animate above it.
 
@@ -230,15 +243,16 @@ chrome-collapse scene. That scene animates real main-panel containers and
 state-rail items as stretched DOM pieces along circular inward paths while they
 recede through CSS perspective and rotate with pull-direction 3D torque. Their
 owned inner fragments start an overlapping secondary breakup while the parent
-pieces are already falling, then everything compresses into the horizon without
-an explosive breakup. During the hold, the claimed animated DOM pieces stay as
-the only visible dashboard chrome; any replacement dashboard or rail nodes from
-normal refresh work remain hidden until Singularity exits. Successful collapse
-holds in that unfinished state until Singularity exits.
+pieces are already falling. When the black-hole approach completes, the same
+black-hole scene keeps advancing behind those falling pieces, grows the
+horizon into the viewport, crosses into a cone/funnel visualization, and holds
+on a singularity point. During the hold, the claimed animated DOM pieces stay
+as the only dashboard chrome owned by the transition; any replacement dashboard
+or rail nodes from normal refresh work remain hidden until Singularity exits.
 
-Teardown removes temporary body classes, removes the temporary black-hole
-canvas, restores the live dashboard chrome, and cancels active animation frames
-or chrome-collapse animations when Singularity exits, motion is disabled, or a
+Teardown removes temporary body classes, removes the temporary WebGL canvas,
+restores the live dashboard chrome, and cancels active animation frames or
+chrome-collapse animations when Singularity exits, motion is disabled, or a
 transition phase fails.
 
 Leaving Singularity increments the transition run ID, stops any active scene,

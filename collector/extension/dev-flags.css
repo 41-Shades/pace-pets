@@ -222,13 +222,6 @@ input {
   line-height: 1.15;
 }
 
-.dev-controls-status {
-  color: var(--muted);
-  min-height: 1.4em;
-  padding-top: 14px;
-  text-align: right;
-}
-
 @media (width <= 980px) {
   .dev-flags-shell {
     padding: 28px 18px;

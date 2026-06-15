@@ -121,8 +121,12 @@ dashboard while Splat is active can replay it once. At the impact moment, the
 status card briefly teeters and the ratio stat pops upward before both settle.
 Each Splat entry randomizes the ratio pop height, drift, rebound, duration, and
 card teeter profile, with a bias toward occasional higher bounces. Dev controls
-can request a deterministic max-bounce preview: `560px` peak height, `1500ms`
-duration, `1.20` peak scale, and the strongest card teeter profile.
+can request a deterministic Max Splat bounce preview that replays the full Splat
+entry sequence: the free-fall figure lands on a faster max-preview fall, a
+larger first card teeter plays, then the ratio launches after a `60ms` beat,
+rockets visibly through `-620px` toward `-5000px`, hangs briefly, descends
+through visible checkpoints, slams back to `138px`, and settles while the status
+card runs a larger teeter aligned to the slam-back moment.
 
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects.
@@ -316,13 +320,16 @@ inward paths, recedes them through CSS perspective, rotates them with
 pull-direction 3D torque, and stretches them toward the black hole. Owned inner
 fragments then tear loose on an overlapping delay while the parent pieces
 continue falling, and all pieces shrink into the horizon without an explosive
-breakup. Same-state refreshes do not replay the transition. If Singularity is
-selected from the separate developer controls while the dashboard tab is
-hidden, the transition is queued and plays when the dashboard becomes visible.
-Reduced-motion users skip the animated sequence. Successful collapse
-intentionally holds in the unfinished post-collapse state; the renderer removes
-the temporary black-hole canvas and restores distorted chrome only when
-Singularity exits or the active transition is cancelled. See
+breakup. When the black-hole approach completes, the same WebGL scene keeps
+advancing behind the still-collapsing chrome, keeps the horizon attached to the
+existing black-hole center, expands into the viewport, descends through a
+cone/funnel visualization, and holds on a singularity point. Same-state
+refreshes do not replay the transition. If Singularity is selected from the
+separate developer controls while the dashboard tab is hidden, the transition
+is queued and plays when the dashboard becomes visible. Reduced-motion users
+skip the animated sequence. The renderer removes the temporary WebGL canvas and
+restores distorted chrome only when Singularity exits or the active transition
+is cancelled. See
 `docs/reference/singularity-transition.md` for the full architecture and
 lifecycle contract.
 

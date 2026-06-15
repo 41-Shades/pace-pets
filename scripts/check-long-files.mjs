@@ -20,6 +20,11 @@ const IGNORED_DIRS = new Set([
 
 const files = [];
 
+function countLines(text) {
+  const normalizedText = text.endsWith("\n") ? text.slice(0, -1) : text;
+  return normalizedText ? normalizedText.split("\n").length : 0;
+}
+
 function collectFiles(directory) {
   if (!fs.existsSync(directory)) {
     return;
@@ -46,7 +51,7 @@ for (const directory of SOURCE_DIRS) {
 const longFiles = files
   .map((file) => ({
     file: path.relative(projectRoot, file),
-    lines: fs.readFileSync(file, "utf8").split("\n").length,
+    lines: countLines(fs.readFileSync(file, "utf8")),
   }))
   .filter(({ lines }) => lines > MAX_LINES);
 

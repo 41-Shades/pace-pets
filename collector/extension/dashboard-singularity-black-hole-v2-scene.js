@@ -269,7 +269,7 @@
 
     drawFrame(elapsedMs) {
       const gl = this.gl;
-      const progress = Math.min(1, elapsedMs / APPROACH_DURATION_MS);
+      const progress = elapsedMs / APPROACH_DURATION_MS;
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.useProgram(this.resources.program);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.resources.quadBuffer);

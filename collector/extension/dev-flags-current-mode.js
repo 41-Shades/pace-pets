@@ -56,6 +56,7 @@
     modeLabel,
     panel,
     resetButton,
+    statusMessage,
     summary,
   }) {
     panel.classList.toggle("has-override", hasOverride);
@@ -65,12 +66,18 @@
 
     const primary = document.createElement("div");
     const detail = document.createElement("div");
+    const source = document.createElement("div");
+    const statusColumn = document.createElement("div");
     primary.className = "current-mode-cell current-mode-primary";
     detail.className = "current-mode-cell current-mode-detail";
-    detail.append(
+    source.className = "current-mode-source";
+    statusColumn.className = "current-mode-status-column";
+    source.append(
       textElement("span", "current-mode-label", "Current source"),
       textElement("span", "current-mode-value", modeLabel),
     );
+    statusColumn.append(statusMessage);
+    detail.append(source, statusColumn);
 
     if (hasOverride) {
       primary.classList.add("has-reset-action");

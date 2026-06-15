@@ -145,8 +145,6 @@
           if (!completed || this.blackHoleApproachCompleted === false) {
             this.finish(false);
           }
-          // The successful post-collapse hold is intentional until the next
-          // Singularity phase is designed.
         })
         .catch((error) => {
           console.warn("Pace Pets Singularity chrome collapse failed:", error);

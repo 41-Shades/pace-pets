@@ -12,7 +12,11 @@
   const RATIO_SECOND_Y_RANGE_PX = Object.freeze([6, 20]);
   const RATIO_PEAK_SCALE_RANGE_PERCENT = Object.freeze([108, 120]);
   const RATIO_REBOUND_SCALE_RANGE_PERMILLE = Object.freeze([975, 995]);
-  const MAX_RATIO_BOUNCE_DURATION_MS = 1500;
+  const EXTREME_RATIO_SLAM_DURATION_MS = 2400;
+  const EXTREME_RATIO_SLAM_IMPACT_PROGRESS = 0.76;
+  const EXTREME_RATIO_SLAM_PEAK_Y_PX = -5000;
+  const EXTREME_CARD_IMPACT_DURATION_MS = 840;
+  const MAX_INTRO_CARD_IMPACT_DURATION_MS = 640;
 
   const CARD_DURATION_RANGE_MS = Object.freeze([560, 720]);
   const CARD_DROP_Y_RANGE_PX = Object.freeze([6, 11]);
@@ -25,6 +29,7 @@
   const CARD_ROTATE_FOURTH_HUNDREDTHS_RANGE_DEG = Object.freeze([16, 32]);
   const CARD_ORIGIN_X_RANGE_PERCENT = Object.freeze([50, 54]);
   const CARD_ORIGIN_Y_RANGE_PERCENT = Object.freeze([68, 76]);
+  const CARD_EXTREME_CLASS = "is-splat-card-extreme-impacting";
   const CARD_STYLE_PROPERTIES = Object.freeze([
     "--splat-card-teeter-duration",
     "--splat-card-drop-y",
@@ -81,17 +86,28 @@
     };
   }
 
-  function maxRatioBounceProfile() {
+  function extremeRatioSlamProfile() {
     return {
-      durationMs: MAX_RATIO_BOUNCE_DURATION_MS,
-      peakScale: 1.2,
-      peakXPx: 14,
-      peakYPx: -RATIO_HEIGHT_WILD_RANGE_PX[1],
-      reboundScale: 0.995,
-      reboundXPx: -8,
-      reboundYPx: RATIO_REBOUND_Y_RANGE_PX[1],
-      secondYPx: -RATIO_SECOND_Y_RANGE_PX[1],
-      settleYPx: RATIO_SETTLE_Y_RANGE_PX[1],
+      durationMs: EXTREME_RATIO_SLAM_DURATION_MS,
+      peakScale: 1.24,
+      peakXPx: 18,
+      peakYPx: EXTREME_RATIO_SLAM_PEAK_Y_PX,
+      reboundScale: 0.9,
+      reboundXPx: 0,
+      reboundYPx: 138,
+      secondYPx: -62,
+      settleYPx: 0,
+      slamDescentFinalYPx: -48,
+      slamDescentHighYPx: -960,
+      slamDescentMidYPx: -520,
+      slamDescentNearYPx: -220,
+      slamSettleYPx: 36,
+      slamSmallBounceYPx: -12,
+      slamYPx: 138,
+      slamImpactDelayMs: Math.round(
+        EXTREME_RATIO_SLAM_DURATION_MS * EXTREME_RATIO_SLAM_IMPACT_PROGRESS,
+      ),
+      typeClass: "is-splat-ratio-extreme-slam",
     };
   }
 
@@ -129,19 +145,36 @@
     };
   }
 
-  function maxCardImpactProfile() {
+  function extremeCardImpactProfile() {
     return {
-      durationMs: CARD_DURATION_RANGE_MS[1],
-      dropYPx: CARD_DROP_Y_RANGE_PX[1],
-      finalYPx: CARD_FINAL_Y_TENTHS_RANGE_PX[0] / 10,
-      firstRotateDeg: CARD_ROTATE_FIRST_TENTHS_RANGE_DEG[0] / 10,
-      fourthRotateDeg: CARD_ROTATE_FOURTH_HUNDREDTHS_RANGE_DEG[1] / 100,
+      cardClassName: CARD_EXTREME_CLASS,
+      durationMs: EXTREME_CARD_IMPACT_DURATION_MS,
+      dropYPx: 80,
+      finalYPx: -8.8,
+      firstRotateDeg: -31.5,
+      fourthRotateDeg: 4.9,
+      originXPercent: 56,
+      originYPercent: 82,
+      reboundYPx: -45.5,
+      secondRotateDeg: 21,
+      settleYPx: 31.5,
+      thirdRotateDeg: -12.3,
+    };
+  }
+
+  function maxIntroCardImpactProfile() {
+    return {
+      durationMs: MAX_INTRO_CARD_IMPACT_DURATION_MS,
+      dropYPx: 35,
+      finalYPx: -2.5,
+      firstRotateDeg: -17.5,
+      fourthRotateDeg: 1.9,
       originXPercent: CARD_ORIGIN_X_RANGE_PERCENT[1],
-      originYPercent: CARD_ORIGIN_Y_RANGE_PERCENT[1],
-      reboundYPx: CARD_REBOUND_Y_TENTHS_RANGE_PX[0] / 10,
-      secondRotateDeg: CARD_ROTATE_SECOND_HUNDREDTHS_RANGE_DEG[1] / 100,
-      settleYPx: CARD_SETTLE_Y_TENTHS_RANGE_PX[1] / 10,
-      thirdRotateDeg: CARD_ROTATE_THIRD_HUNDREDTHS_RANGE_DEG[0] / 100,
+      originYPercent: 78,
+      reboundYPx: -17.5,
+      secondRotateDeg: 9.5,
+      settleYPx: 10.2,
+      thirdRotateDeg: -4.9,
     };
   }
 
@@ -156,7 +189,7 @@
   }
 
   function clearCardImpact(card) {
-    card?.classList.remove("is-splat-card-impacting");
+    card?.classList.remove("is-splat-card-impacting", CARD_EXTREME_CLASS);
     clearStyleProperties(card, CARD_STYLE_PROPERTIES);
   }
 
@@ -165,6 +198,10 @@
       return;
     }
 
+    card.classList.toggle(CARD_EXTREME_CLASS, false);
+    if (profile.cardClassName) {
+      card.classList.add(profile.cardClassName);
+    }
     card.style.setProperty(
       "--splat-card-teeter-duration",
       `${profile.durationMs}ms`,
@@ -202,8 +239,9 @@
   globalThis.PacePetsDashboardSplatFallProfile = Object.freeze({
     applyCardImpactProfile,
     clearCardImpact,
-    maxCardImpactProfile,
-    maxRatioBounceProfile,
+    extremeCardImpactProfile,
+    extremeRatioSlamProfile,
+    maxIntroCardImpactProfile,
     randomCardImpactProfile,
     randomRatioBounceProfile,
   });
