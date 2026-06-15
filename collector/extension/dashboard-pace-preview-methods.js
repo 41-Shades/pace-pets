@@ -89,6 +89,7 @@
 
       const forcedStateChanged = this.lastForcedPaceStateKey !== state.key;
       this.lastForcedPaceStateKey = state.key;
+      this.setPreviewPercentPair(previewWindow.percentPair);
       this.setPaceLevel(state.className, {
         playSplatFallOnEntry: false,
         replaySplatFall:
@@ -101,7 +102,6 @@
       this.elements.paceRatioStat.hidden = false;
       this.elements.paceRatioValue.textContent =
         PacePetsLogic.formatPaceRatioValue(forcedPaceRatio);
-      this.setPreviewPercentPair(previewWindow.percentPair);
       this.renderPreviewChart(state.key, forcedPaceRatio, previewWindow);
       this.applyPreviewResetTiming(state, previewWindow);
       this.renderPaceAltRatio(

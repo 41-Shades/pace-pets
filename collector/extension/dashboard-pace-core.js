@@ -57,6 +57,7 @@
     }
 
     setPreviewPercentPair(percentPair) {
+      this.currentPaceSummaryTimePercent = percentPair?.timePercent ?? null;
       if (!percentPair) {
         this.setPercent(
           this.elements.usagePercent,
