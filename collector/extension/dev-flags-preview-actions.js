@@ -41,7 +41,7 @@
             reject(
               new Error(
                 response?.message ||
-                  "Open the dashboard on Splat before previewing max bounce.",
+                  "Open the dashboard on Splat before previewing Max Splat bounce.",
               ),
             );
             return;

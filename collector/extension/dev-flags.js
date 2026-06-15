@@ -223,6 +223,7 @@
       modeLabel: currentModeLabel(),
       panel: elements.currentModePanel,
       resetButton: elements.resetAll,
+      statusMessage: elements.statusMessage,
       summary: elements.currentModeSummary,
     });
   }

@@ -49,7 +49,8 @@
   transform-origin: center;
 }
 
-.pace-card.pace-splat.is-splat-card-impacting .pace-ratio-stat strong {
+.pace-card.pace-splat.is-splat-card-impacting .pace-ratio-stat strong,
+.pace-card.pace-splat.is-splat-ratio-source-hidden .pace-ratio-stat strong {
   visibility: hidden;
 }
 
