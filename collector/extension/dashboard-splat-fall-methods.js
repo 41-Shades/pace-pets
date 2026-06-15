@@ -19,7 +19,6 @@
   const SPLAT_FALL_CLEANUP_MS = 1105;
   const SPLAT_CARD_IMPACT_DURATION_MS = SPLAT_FALL_DURATION_MS + 20;
   const SPLAT_FALL_IMPACT_MS = 960;
-  const SPLAT_MAX_BOUNCE_SLAM_DELAY_MS = 60;
   const SPLAT_EXTREME_CARD_DROP_PROGRESS = 0.08;
 
   function motionPreferenceEnabled() {
@@ -206,6 +205,7 @@
       ratioProfile.removeDelayMs = Math.max(
         ratioProfile.durationMs + 100,
         cardImpactDelayMs + cardProfile.durationMs + 100,
+        this.splatMaxThrowRemoveDelayMs?.(cardImpactDelayMs, cardProfile) || 0,
       );
       ratioProfile.originRect = this.splatMaxBounceRatioOriginRect;
 
@@ -223,8 +223,9 @@
           "is-splat-card-impacting",
         );
       }, cardImpactDelayMs);
+      this.queueSplatMaxThrowForCardImpact?.(cardImpactDelayMs, cardProfile);
       this.splatMaxBouncePreviewTimer = window.setTimeout(
-        () => this.clearSplatMaxBouncePreview(),
+        () => this.clearSplatMaxBouncePreview({ clearThrow: false }),
         ratioProfile.removeDelayMs,
       );
     },
@@ -268,13 +269,7 @@
           card: PROFILE.maxIntroCardImpactProfile(),
           ratio: null,
         },
-        onImpact: () => {
-          window.clearTimeout(this.splatMaxBouncePreviewTimer);
-          this.splatMaxBouncePreviewTimer = window.setTimeout(
-            () => this.playSplatMaxBounceSlam(),
-            SPLAT_MAX_BOUNCE_SLAM_DELAY_MS,
-          );
-        },
+        onImpact: () => this.queueSplatMaxBounceSlam(),
       });
       return { ok: true };
     },

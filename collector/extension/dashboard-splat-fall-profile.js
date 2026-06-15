@@ -15,7 +15,7 @@
   const EXTREME_RATIO_SLAM_DURATION_MS = 2400;
   const EXTREME_RATIO_SLAM_IMPACT_PROGRESS = 0.76;
   const EXTREME_RATIO_SLAM_PEAK_Y_PX = -5000;
-  const EXTREME_CARD_IMPACT_DURATION_MS = 840;
+  const EXTREME_CARD_IMPACT_DURATION_MS = 640;
   const MAX_INTRO_CARD_IMPACT_DURATION_MS = 640;
 
   const CARD_DURATION_RANGE_MS = Object.freeze([560, 720]);
@@ -27,8 +27,7 @@
   const CARD_ROTATE_SECOND_HUNDREDTHS_RANGE_DEG = Object.freeze([120, 220]);
   const CARD_ROTATE_THIRD_HUNDREDTHS_RANGE_DEG = Object.freeze([-90, -45]);
   const CARD_ROTATE_FOURTH_HUNDREDTHS_RANGE_DEG = Object.freeze([16, 32]);
-  const CARD_ORIGIN_X_RANGE_PERCENT = Object.freeze([50, 54]);
-  const CARD_ORIGIN_Y_RANGE_PERCENT = Object.freeze([68, 76]);
+  const CARD_ORIGIN_CENTER_PERCENT = 50;
   const CARD_EXTREME_CLASS = "is-splat-card-extreme-impacting";
   const CARD_STYLE_PROPERTIES = Object.freeze([
     "--splat-card-teeter-duration",
@@ -124,12 +123,8 @@
         controller.randomIntegerInRange(
           CARD_ROTATE_FOURTH_HUNDREDTHS_RANGE_DEG,
         ) / 100,
-      originXPercent: controller.randomIntegerInRange(
-        CARD_ORIGIN_X_RANGE_PERCENT,
-      ),
-      originYPercent: controller.randomIntegerInRange(
-        CARD_ORIGIN_Y_RANGE_PERCENT,
-      ),
+      originXPercent: CARD_ORIGIN_CENTER_PERCENT,
+      originYPercent: CARD_ORIGIN_CENTER_PERCENT,
       reboundYPx:
         controller.randomIntegerInRange(CARD_REBOUND_Y_TENTHS_RANGE_PX) / 10,
       secondRotateDeg:
@@ -149,32 +144,32 @@
     return {
       cardClassName: CARD_EXTREME_CLASS,
       durationMs: EXTREME_CARD_IMPACT_DURATION_MS,
-      dropYPx: 80,
-      finalYPx: -8.8,
-      firstRotateDeg: -31.5,
-      fourthRotateDeg: 4.9,
-      originXPercent: 56,
-      originYPercent: 82,
-      reboundYPx: -45.5,
-      secondRotateDeg: 21,
-      settleYPx: 31.5,
-      thirdRotateDeg: -12.3,
+      dropYPx: 130,
+      finalYPx: -14,
+      firstRotateDeg: 58,
+      fourthRotateDeg: -11,
+      originXPercent: CARD_ORIGIN_CENTER_PERCENT,
+      originYPercent: CARD_ORIGIN_CENTER_PERCENT,
+      reboundYPx: -78,
+      secondRotateDeg: -44,
+      settleYPx: 52,
+      thirdRotateDeg: 26,
     };
   }
 
   function maxIntroCardImpactProfile() {
     return {
       durationMs: MAX_INTRO_CARD_IMPACT_DURATION_MS,
-      dropYPx: 35,
-      finalYPx: -2.5,
-      firstRotateDeg: -17.5,
-      fourthRotateDeg: 1.9,
-      originXPercent: CARD_ORIGIN_X_RANGE_PERCENT[1],
-      originYPercent: 78,
-      reboundYPx: -17.5,
-      secondRotateDeg: 9.5,
-      settleYPx: 10.2,
-      thirdRotateDeg: -4.9,
+      dropYPx: 58,
+      finalYPx: -4,
+      firstRotateDeg: -34,
+      fourthRotateDeg: 4.5,
+      originXPercent: CARD_ORIGIN_CENTER_PERCENT,
+      originYPercent: CARD_ORIGIN_CENTER_PERCENT,
+      reboundYPx: -32,
+      secondRotateDeg: 21,
+      settleYPx: 18,
+      thirdRotateDeg: -11,
     };
   }
 

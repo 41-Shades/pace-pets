@@ -88,7 +88,11 @@ Current sequence target:
 13. As the black-hole approach completes, the same WebGL scene keeps advancing
     behind the still-collapsing DOM chrome. Its horizon continues expanding
     into the viewport, crosses into a funnel/cone visualization, and falls
-    toward one held singularity point.
+    toward one central singularity point.
+14. The camera falls through the singularity point into a full-frame whiteout.
+15. A white checkerboard overlay restores the current dashboard state
+    underneath, then decimates from fine cells to coarse cells before clearing
+    instead of replaying the entry animation.
 
 The black-hole canvas intentionally remains below `.content-grid` while the
 approach holds. During collapse, the real `.content-grid` remains visible with
@@ -99,9 +103,10 @@ same center, horizon, and shader clock keep moving while the app is consumed
 instead of plateauing during chrome collapse. The horizon remains attached to
 the existing black-hole center until the viewport is mostly consumed, then
 recenters inside the cone. The collapse scene marks the live DOM pieces it
-owns; while the singularity hold is active, unclaimed replacement dashboard or
-rail chrome stays hidden so normal dashboard refreshes cannot repaint clean UI
-over the collapsed state.
+owns until the terminal whiteout. The renderer then covers the screen with a
+white overlay, tears down the WebGL and DOM-collapse presentation state, and
+clears the overlay with a checkerboard decimation reveal to show the current
+dashboard state.
 
 ## Versioning
 
@@ -138,7 +143,9 @@ pieces begin falling, so text, icons, controls, and bars continue breaking up
 while everything shrinks into the horizon as one continuous pull. As soon as
 the black-hole approach completes, the same black-hole shader keeps advancing
 behind the collapsing chrome, expands the horizon into the full viewport,
-crosses into a cone/funnel grid, and settles on a held singularity point.
+crosses into a cone/funnel grid, falls through the singularity point into a
+whiteout, and returns through a checkerboard decimation reveal to the current
+dashboard state.
 
 ## Trigger Flow
 
@@ -184,7 +191,8 @@ dashboard page
   -> renderer starts live chrome container split/orbit during black-hole approach
   -> black-hole shader continues past approach completion into horizon growth
   -> renderer compresses containers into the horizon without a shard explosion
-  -> renderer holds the singularity point until Singularity exits
+  -> black-hole shader falls through the singularity point into a whiteout
+  -> renderer clears a checkerboard overlay over the restored dashboard state
 ```
 
 The manifest does not request `activeTab`, `<all_urls>`, `tabs`, `tabCapture`,
@@ -196,13 +204,13 @@ or `desktopCapture` for this effect.
   Singularity transition renderer. It fades into the normal Singularity
   page/backdrop over 2 seconds, fades dashboard chrome in over 6 seconds, and
   starts the black-hole approach scene, pre-collapse jitter ramp, chrome
-  collapse, and continuous horizon/descent phase. The singularity point holds
-  until Singularity exits.
+  collapse, continuous horizon/descent phase, terminal whiteout, and
+  checkerboard dashboard reveal.
 - `collector/extension/dashboard-singularity-black-hole-v2-shaders.js`:
   WebGL vertex and fragment shader sources for the black-hole scene, including
   the progress-driven violence ramp for turbulence, flares, shock ripples,
   jet flicker, glint acceleration, full-viewport horizon growth, cone/funnel
-  descent, and held singularity point.
+  descent, singularity point, and final whiteout.
 - `collector/extension/dashboard-singularity-black-hole-v2-scene.js`:
   temporary WebGL canvas lifecycle, shader setup, high-DPI sizing, animation
   frame loop, context-loss handling, approach completion, and teardown for the
@@ -216,16 +224,17 @@ or `desktopCapture` for this effect.
   split/orbit/stretch/depth-recession/torque/shrink animation timing.
 - `collector/extension/dashboard-singularity-chrome-collapse-scene.js`:
   chrome pressure and split/orbit/depth-recession/shrink lifecycle, owned-piece
-  marking for the singularity hold, plus teardown restoration.
+  marking during the collapse, plus teardown restoration.
 - `collector/extension/dashboard-singularity-transition-preview-methods.js`:
   dev-only entry preview action that fades out live dashboard chrome, then
   forces Singularity so the transition can run.
 - `collector/extension/dashboard-singularity-transition-methods.js`: pace
   controller integration, entry gating, hidden-tab queueing, and scene launch.
 - `collector/extension/dashboard-singularity-transition.css`: body shell
-  visibility styles, black-hole canvas layer, pressure ripple, and live
-  chrome-collapse state. The black-hole scene stays behind the dashboard chrome
-  while real chrome containers animate above it.
+  visibility styles, black-hole canvas layer, pressure ripple, live
+  chrome-collapse state, and checkerboard whiteout-to-dashboard reveal overlay. The
+  black-hole scene stays behind the dashboard chrome while real chrome
+  containers animate above it.
 
 `collector/extension/runtime-manifest.js` owns the script order. The WebGL
 shaders must load before the black-hole scene, chrome-collapse container
@@ -245,10 +254,12 @@ recede through CSS perspective and rotate with pull-direction 3D torque. Their
 owned inner fragments start an overlapping secondary breakup while the parent
 pieces are already falling. When the black-hole approach completes, the same
 black-hole scene keeps advancing behind those falling pieces, grows the
-horizon into the viewport, crosses into a cone/funnel visualization, and holds
-on a singularity point. During the hold, the claimed animated DOM pieces stay
-as the only dashboard chrome owned by the transition; any replacement dashboard
-or rail nodes from normal refresh work remain hidden until Singularity exits.
+horizon into the viewport, crosses into a cone/funnel visualization, and falls
+through the singularity point into a whiteout. During the terminal reveal, a
+fixed white overlay covers the screen while the renderer removes the temporary
+WebGL canvas and restores live dashboard chrome; the overlay then decimates
+from fine checkerboard cells to coarse cells before clearing to reveal the
+current dashboard state.
 
 Teardown removes temporary body classes, removes the temporary WebGL canvas,
 restores the live dashboard chrome, and cancels active animation frames or
