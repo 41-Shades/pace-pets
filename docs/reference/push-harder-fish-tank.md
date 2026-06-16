@@ -50,9 +50,9 @@ the top of the water instead of continuing through the filled tank. Previous
 pulse sweat trails, including rare pulse trails, continue until their selected
 drop tracks have actually completed.
 
-Dev Controls can send a one-shot Rare sweat request while Push harder is active;
-the next pulse cycle uses the rare sweat profile, then normal weighted selection
-resumes.
+Dev Controls can send a one-shot Rare burst (5%) request while Push harder is
+active; the next pulse cycle uses the rare profile, then normal weighted
+selection resumes.
 
 Reduced-motion mode skips the Push harder motion effect, so the tank is not
 attached in that mode.
