@@ -113,10 +113,11 @@ States. Choosing a state stores
 ratio string from `1.55` through `7.00`. Returning to live data removes those
 overrides. `collector/extension/dev-preview-action-registry.js` owns the
 one-shot dev action catalog, message types, button labels, requested-status
-copy, and fallback error copy for Brake hard max debris burst, rare sweat, Max
-Splat bounce, and monk escape previews. Those actions send runtime messages to
-dashboard pages and do not store developer option state; the individual preview
-control modules remain thin compatibility adapters around the shared registry.
+copy, and fallback error copy for Brake hard max debris burst, Rare burst (5%),
+Max Splat bounce, and monk escape previews. Those actions send runtime messages
+to dashboard pages and do not store developer option state; the individual
+preview control modules remain thin compatibility adapters around the shared
+registry.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, and toolbar badge match

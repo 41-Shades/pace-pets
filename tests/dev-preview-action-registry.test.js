@@ -48,6 +48,17 @@ describe("PacePetsDevPreviewActionRegistry", () => {
     expect(registry.responseErrorMessage(actionKey, {})).toBe(
       action.fallbackErrorMessage,
     );
+    expect(
+      registry.requireActionForKey(registry.ACTION_KEYS.rareSweat),
+    ).toMatchObject({
+      fallbackErrorMessage:
+        "Open the dashboard on Push harder before previewing Rare burst (5%).",
+      key: "rareSweat",
+      label: "Rare burst (5%)",
+      messageType: "pacePets.pushSweatPreview.rare",
+      responseRequired: true,
+      status: "Rare burst (5%) requested.",
+    });
     expect(() => registry.requireActionForKey("unsupported")).toThrow(
       "Unknown dev preview action: unsupported",
     );
@@ -91,7 +102,7 @@ describe("PacePetsDevPreviewActionRegistry", () => {
     await expect(
       actions.requestPreviewAction(registry.ACTION_KEYS.rareSweat),
     ).rejects.toThrow(
-      "Open the dashboard on Push harder before forcing rare sweat.",
+      "Open the dashboard on Push harder before previewing Rare burst (5%).",
     );
     expect(globalThis.chrome.runtime.sendMessage).toHaveBeenCalledWith(
       registry.messageForKey(registry.ACTION_KEYS.rareSweat),

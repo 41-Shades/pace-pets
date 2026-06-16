@@ -298,9 +298,10 @@ the active Push harder effect is preserved across same-state refreshes to keep
 the pool from resetting. Leaving Push harder or reloading the dashboard tears
 down the effect and resets the pool. The local developer controls include a
 max-pool-fill preview that forces that water layer to its configured cap for
-inspection. The legend rail remains static. The first pulse after entering Push
-harder is normal; each later pulse chooses normal, extreme, or rare at
-75% / 20% / 5% odds.
+inspection and a one-shot Rare burst (5%) action that forces the next pulse to
+the rare profile. The legend rail remains static. The first pulse after
+entering Push harder is normal; each later pulse chooses normal, extreme, or
+rare at 75% / 20% / 5% odds.
 Extreme and rare pulses use progressively longer expansion lines and larger
 cone-shaped head stretch.
 

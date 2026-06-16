@@ -34,12 +34,12 @@
       controlMessageName: "forceRareMessage",
       controlPredicateName: "isForceRareMessage",
       fallbackErrorMessage:
-        "Open the dashboard on Push harder before forcing rare sweat.",
+        "Open the dashboard on Push harder before previewing Rare burst (5%).",
       key: ACTION_KEYS.rareSweat,
-      label: "Rare sweat",
+      label: "Rare burst (5%)",
       messageType: "pacePets.pushSweatPreview.rare",
       responseRequired: true,
-      status: "Rare sweat requested.",
+      status: "Rare burst (5%) requested.",
     }),
     [ACTION_KEYS.maxSplatBounce]: previewAction({
       controlMessageName: "maxBounceMessage",
