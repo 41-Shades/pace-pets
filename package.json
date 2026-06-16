@@ -1,6 +1,6 @@
 {
   "name": "pace-pets",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "private": true,
   "description": "Local Chrome extension dashboard for sanitized Codex usage pace.",
   "license": "MIT",
