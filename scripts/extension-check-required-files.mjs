@@ -115,6 +115,19 @@ function themeAssetPaths(themeAssets) {
       (relativePath) =>
         `${themeAssets.THEME_BASE_PATH.slice(2)}/${relativePath}`,
     ),
+    ...(themeAssets.CART_SPILL_GROCERY_ICON_FILES || []).map((file) =>
+      extensionPagePath(
+        themeAssets.cartSpillGroceryIconPath(file),
+        `${file} grocery icon`,
+      ),
+    ),
+    ...Object.keys(themeAssets.PUSH_TANK_OCEAN_ICON_FILES_BY_KEY || {}).map(
+      (assetKey) =>
+        extensionPagePath(
+          themeAssets.pushTankOceanIconPath(assetKey),
+          `${assetKey} ocean icon`,
+        ),
+    ),
   ];
 }
 

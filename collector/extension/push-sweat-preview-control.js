@@ -1,18 +1,14 @@
 ((root) => {
   "use strict";
 
-  const FORCE_RARE_MESSAGE_TYPE = "pacePets.pushSweatPreview.rare";
-
-  function forceRareMessage() {
-    return Object.freeze({ type: FORCE_RARE_MESSAGE_TYPE });
+  const REGISTRY = root.PacePetsDevPreviewActionRegistry;
+  if (!REGISTRY) {
+    throw new Error(
+      "Pace Pets dev preview action registry must load before push-sweat-preview-control.js.",
+    );
   }
 
-  function isForceRareMessage(message) {
-    return message?.type === FORCE_RARE_MESSAGE_TYPE;
-  }
-
-  root.PacePetsPushSweatPreviewControl = Object.freeze({
-    forceRareMessage,
-    isForceRareMessage,
-  });
+  root.PacePetsPushSweatPreviewControl = REGISTRY.controlForAction(
+    REGISTRY.ACTION_KEYS.rareSweat,
+  );
 })(globalThis);

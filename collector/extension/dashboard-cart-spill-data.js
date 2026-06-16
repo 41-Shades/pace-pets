@@ -8,37 +8,6 @@
     );
   }
 
-  const GROCERY_ICON_FILES = Object.freeze([
-    "apple.png",
-    "bananas.png",
-    "bread.png",
-    "butter.png",
-    "cereal.png",
-    "cheese.png",
-    "chips.png",
-    "chocolate.png",
-    "cleaner.png",
-    "coffee.png",
-    "biscuit.png",
-    "detergent.png",
-    "eggs.png",
-    "frozen_vegetables.png",
-    "jam.png",
-    "lettuce.png",
-    "milk.png",
-    "olive_oil.png",
-    "orange.png",
-    "paper_towels.png",
-    "pasta.png",
-    "peanut_butter.png",
-    "rice.png",
-    "soup.png",
-    "tea.png",
-    "toilet_paper.png",
-    "water.png",
-    "yogurt.png",
-  ]);
-
   const SPILL_PROFILES = Object.freeze({
     extreme: Object.freeze({
       countRange: Object.freeze([5, 7]),
@@ -68,19 +37,17 @@
     }),
   });
 
-  function groceryIconPath(file) {
-    return `${THEME_ASSETS.THEME_BASE_PATH}/grocery_icons/${file}`;
-  }
-
   function groceryIcon(file) {
     return Object.freeze({
       key: file.replace(/\.png$/, ""),
-      src: groceryIconPath(file),
+      src: THEME_ASSETS.cartSpillGroceryIconPath(file),
     });
   }
 
   globalThis.PacePetsDashboardCartSpillData = Object.freeze({
-    ICONS: Object.freeze(GROCERY_ICON_FILES.map(groceryIcon)),
+    ICONS: Object.freeze(
+      THEME_ASSETS.CART_SPILL_GROCERY_ICON_FILES.map(groceryIcon),
+    ),
     SPILL_PROFILES,
   });
 })();

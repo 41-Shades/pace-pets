@@ -101,6 +101,7 @@ export default [
         PacePetsLogic: "readonly",
         PacePetsPreviewControl: "readonly",
         PacePetsRefreshControl: "readonly",
+        PacePetsRefreshSchedule: "readonly",
       },
     },
     rules: {

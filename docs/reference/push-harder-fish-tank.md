@@ -72,6 +72,10 @@ The active tank subset is intentionally smaller than the full extracted palette:
 - Bottom/decor: `seaweed`, `coral`, `crab`, `shrimp`, `starfish`, `sea_urchin`
 - Special visitors: `shark`, `whale`
 
+The active runtime file mapping for those icons lives in
+`collector/extension/themes/default/asset-manifest.js`; this module owns tank
+staging and movement metadata, not themed asset paths.
+
 Unused extracted assets can remain available for future tuning, but adding them
 to the active subset should be deliberate. The card becomes noisy quickly.
 

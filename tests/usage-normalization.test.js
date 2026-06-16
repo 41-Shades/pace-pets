@@ -4,6 +4,39 @@ import { describe, expect, it } from "vitest";
 
 installExtensionRuntimeHooks();
 
+describe("CodexWeeklyUsage provider normalization", () => {
+  it("normalizes through the default provider while preserving source markers", () => {
+    const provider = globalThis.CodexUsageProviders.DEFAULT_USAGE_PROVIDER;
+    const rawUsage = {
+      subscription: {
+        primary: {
+          remaining_percent: 42,
+          reset_after_seconds: 60 * 60,
+        },
+      },
+    };
+
+    expect(
+      globalThis.CodexWeeklyUsage.normalizeUsageWithProvider(
+        rawUsage,
+        provider,
+        { sourceMarkerKey: "background" },
+      ),
+    ).toMatchObject({
+      source: provider.sourceMarkers.background,
+      windows: {
+        fiveHour: {
+          remainingPercent: 42,
+          windowMinutes: 300,
+        },
+      },
+    });
+    expect(
+      globalThis.CodexWeeklyUsage.normalizeWhamUsage(rawUsage).source,
+    ).toBe(provider.sourceMarkers.normalizedUsage);
+  });
+});
+
 describe("CodexWeeklyUsage.normalizeWhamUsage", () => {
   it("normalizes weekly and five-hour windows from canonical subscription usage", () => {
     const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({

@@ -237,8 +237,7 @@
     previewSplatMaxBounce() {
       if (this.currentPaceLevel() !== DATA.PACE_STATES.splat.className) {
         return {
-          message:
-            "Open the dashboard on Splat before previewing Max Splat bounce.",
+          message: PREVIEW.fallbackErrorMessage,
           ok: false,
         };
       }

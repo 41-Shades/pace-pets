@@ -1,8 +1,16 @@
 (() => {
   "use strict";
 
-  const AUTO_CHECKS_STATUS_TOOLTIP = "Auto-checks every 5m";
-  const CHECKS_EVERY_ARIA = "Checks every 5 minutes.";
+  const REFRESH_SCHEDULE = globalThis.PacePetsRefreshSchedule;
+  if (!REFRESH_SCHEDULE) {
+    throw new Error(
+      "Refresh schedule must load before dashboard-status-logic.js.",
+    );
+  }
+
+  const AUTO_CHECKS_STATUS_TOOLTIP =
+    REFRESH_SCHEDULE.AUTO_CHECKS_STATUS_TOOLTIP;
+  const CHECKS_EVERY_ARIA = REFRESH_SCHEDULE.CHECKS_EVERY_ARIA;
   const COLLECTION_STATUS_TITLE = "Usage collection status";
   const STATUS_TEXT = Object.freeze({
     live: "Live",

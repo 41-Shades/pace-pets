@@ -76,7 +76,7 @@
   }
 
   function iconPath(key) {
-    return `${THEME_ASSETS.THEME_BASE_PATH}/ocean-icons/${key}.png`;
+    return THEME_ASSETS.pushTankOceanIconPath(key);
   }
 
   function preloadImages(keys) {

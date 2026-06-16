@@ -2,10 +2,11 @@
   "use strict";
 
   const DATA = globalThis.PacePetsDashboardPaceData;
+  const BRAKE_EXTREME_PREVIEW = globalThis.PacePetsBrakeExtremePreviewControl;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !Controller) {
+  if (!DATA || !BRAKE_EXTREME_PREVIEW || !Controller) {
     throw new Error(
-      "Pace data and core must load before dashboard-pace-wobble-methods.js.",
+      "Pace data, preview controls, and core must load before dashboard-pace-wobble-methods.js.",
     );
   }
 
@@ -34,6 +35,18 @@
         ? DATA.BRAKE_WOBBLE_EXTREME_SHAKE_COUNT_RANGE
         : DATA.BRAKE_WOBBLE_SHAKE_COUNT_RANGE;
     return controller.randomIntegerInRange(shakeRange);
+  }
+
+  function brakeDebrisState({ isActive = true, isFirstBurst = true } = {}) {
+    return {
+      debrisAnimationCleanups: new Set(),
+      debrisLayers: new Set(),
+      debrisTimers: new Set(),
+      delayTimer: null,
+      isFirstBurst,
+      isActive,
+      settleTimer: null,
+    };
   }
 
   Object.assign(Controller.prototype, {
@@ -88,16 +101,63 @@
       }, durationMs);
     },
 
-    startBrakeWobbleEffect(container) {
-      const state = {
-        debrisAnimationCleanups: new Set(),
-        debrisLayers: new Set(),
-        debrisTimers: new Set(),
-        delayTimer: null,
-        isFirstBurst: true,
-        isActive: true,
-        settleTimer: null,
+    launchBrakeExtremeDebrisPreview() {
+      const brakeHardClassName = DATA.PACE_STATES.criticalBehind.className;
+      if (this.currentPaceLevel() !== brakeHardClassName) {
+        return {
+          message: BRAKE_EXTREME_PREVIEW.fallbackErrorMessage,
+          ok: false,
+        };
+      }
+      if (this.motionPreferenceEnabled?.() === false) {
+        return {
+          message: "Turn motion on before previewing Max debris burst.",
+          ok: false,
+        };
+      }
+
+      const container = this.elements.paceIcon;
+      const burst = {
+        rangeKey: "extreme",
+        shakeCount: DATA.BRAKE_WOBBLE_EXTREME_SHAKE_COUNT_RANGE[1],
       };
+      const durationMs =
+        DATA.BRAKE_WOBBLE_DURATION_MS_BY_SHAKE_COUNT[burst.shakeCount];
+      const state = brakeDebrisState({ isFirstBurst: false });
+      container.dataset.brakeWobbleRange = burst.rangeKey;
+      container.dataset.brakeWobbleShakes = String(burst.shakeCount);
+      container.classList.add("is-brake-wobbling");
+      this.launchBrakeDebrisBurst(container, burst, state);
+      window.setTimeout(
+        () => this.clearBrakeWobbleBurstClasses(container),
+        durationMs,
+      );
+      return { ok: true };
+    },
+
+    bindBrakeExtremePreviewRequests() {
+      if (
+        this.brakeExtremePreviewRequestsBound ||
+        !globalThis.chrome?.runtime?.onMessage
+      ) {
+        return;
+      }
+
+      this.brakeExtremePreviewRequestsBound = true;
+      globalThis.chrome.runtime.onMessage.addListener(
+        (message, _sender, sendResponse) => {
+          if (!BRAKE_EXTREME_PREVIEW.isMaxBurstMessage(message)) {
+            return false;
+          }
+
+          sendResponse?.(this.launchBrakeExtremeDebrisPreview());
+          return false;
+        },
+      );
+    },
+
+    startBrakeWobbleEffect(container) {
+      const state = brakeDebrisState();
 
       this.clearBrakeWobbleEffectClasses(container);
       container.classList.add("has-pace-icon-effect-brake-wobble");

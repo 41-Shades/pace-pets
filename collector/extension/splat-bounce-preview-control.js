@@ -1,18 +1,14 @@
 ((root) => {
   "use strict";
 
-  const MAX_BOUNCE_MESSAGE_TYPE = "pacePets.splatBouncePreview.max";
-
-  function maxBounceMessage() {
-    return Object.freeze({ type: MAX_BOUNCE_MESSAGE_TYPE });
+  const REGISTRY = root.PacePetsDevPreviewActionRegistry;
+  if (!REGISTRY) {
+    throw new Error(
+      "Pace Pets dev preview action registry must load before splat-bounce-preview-control.js.",
+    );
   }
 
-  function isMaxBounceMessage(message) {
-    return message?.type === MAX_BOUNCE_MESSAGE_TYPE;
-  }
-
-  root.PacePetsSplatBouncePreviewControl = Object.freeze({
-    isMaxBounceMessage,
-    maxBounceMessage,
-  });
+  root.PacePetsSplatBouncePreviewControl = REGISTRY.controlForAction(
+    REGISTRY.ACTION_KEYS.maxSplatBounce,
+  );
 })(globalThis);

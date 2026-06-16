@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import zlib from "node:zlib";
 
 const projectRoot = path.resolve(
@@ -18,16 +18,24 @@ const outputPath = path.join(distDir, `${packageBaseName}.zip`);
 const metadataPath = path.join(distDir, `${packageBaseName}.release.json`);
 const checksumPath = path.join(distDir, `${packageBaseName}.zip.sha256`);
 const fixedZipDate = new Date(Date.UTC(2024, 0, 1, 0, 0, 0));
-const sourceOnlyFiles = new Set([
+await import(pathToFileURL(path.join(extensionRoot, "runtime-manifest.js")));
+const runtimeManifest = globalThis.CodexExtensionRuntime;
+assert(runtimeManifest, "Runtime manifest must be importable by the packager.");
+assert(
+  Array.isArray(runtimeManifest.DEV_FLAGS_ONLY_SCRIPT_SOURCES),
+  "Runtime manifest must declare dev-controls-only scripts.",
+);
+
+const sourceOnlyExtensionFiles = [
   "README.md",
   "dev-flags-current-mode.css",
-  "dev-flags-current-mode.js",
   "dev-flags.css",
   "dev-flags.html",
-  "dev-flags.js",
   "dev-flags-loader.js",
-  "dev-flags-preview-actions.js",
-  "dev-flags-rendering.js",
+];
+const sourceOnlyFiles = new Set([
+  ...sourceOnlyExtensionFiles,
+  ...runtimeManifest.DEV_FLAGS_ONLY_SCRIPT_SOURCES.map(extensionPageSourcePath),
 ]);
 const allowedPackagedExtensions = new Set([
   ".css",
@@ -84,6 +92,14 @@ function readJson(filePath) {
 
 function normalizePackagePath(filePath) {
   return filePath.replace(/\\/g, "/");
+}
+
+function extensionPageSourcePath(source) {
+  assert(
+    source.startsWith("./") && !/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(source),
+    `Source-only dev-control script must be extension-local: ${source}`,
+  );
+  return source.slice(2);
 }
 
 function listFiles(directory) {

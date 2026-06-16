@@ -8,7 +8,10 @@
     "usage-values.js",
     "persisted-text.js",
     "refresh-status.js",
+    "refresh-schedule.js",
     "refresh-control.js",
+    "dev-preview-action-registry.js",
+    "brake-extreme-preview-control.js",
     "push-sweat-preview-control.js",
     "splat-bounce-preview-control.js",
     "sync-monk-escape-preview-control.js",
@@ -111,8 +114,10 @@
 
   const DEV_FLAGS_ONLY_SCRIPT_SOURCES = Object.freeze([
     "./dev-flags-rendering.js",
+    "./dev-flags-dom-contract.js",
     "./dev-flags-current-mode.js",
     "./dev-flags-preview-actions.js",
+    "./dev-flags-feature-previews.js",
     "./dev-flags.js",
   ]);
 
@@ -195,6 +200,12 @@
     dependencyEdge("persisted-text.js", "history-store.js"),
     dependencyEdge("refresh-status.js", "refresh-control.js"),
     dependencyEdge("refresh-status.js", "history-store.js"),
+    ...[
+      "brake-extreme-preview-control.js",
+      "push-sweat-preview-control.js",
+      "splat-bounce-preview-control.js",
+      "sync-monk-escape-preview-control.js",
+    ].map((source) => dependencyEdge("dev-preview-action-registry.js", source)),
     dependencyEdge("usage-values.js", "pace-logic.js"),
     dependencyEdge("storage-adapter.js", "usage.js"),
     dependencyEdge("usage-integration-adapters.js", "usage-providers.js"),
@@ -231,10 +242,15 @@
       "./perfect-zero-space-scene.js",
     ),
     dashboardFileEdge("status-logic", "status-controller"),
+    dependencyEdge("./refresh-schedule.js", "./dashboard-status-logic.js"),
     dependencyEdge("./sprint-intensity.js", "./dashboard-pace-data.js"),
     dashboardFileEdge("pace-data", "brake-extreme-canvas-methods"),
     dashboardFileEdge("pace-core", "brake-extreme-canvas-methods"),
     dashboardFileEdge("brake-debris-data", "brake-extreme-canvas-methods"),
+    dependencyEdge(
+      "./brake-extreme-preview-control.js",
+      "./dashboard-pace-wobble-methods.js",
+    ),
     dashboardFileEdge("push-stretch-renderer", "push-stretch-methods"),
     dashboardFileEdge("push-sweat-variation", "push-sweat-renderer"),
     dashboardFileEdge("push-sweat-renderer", "push-stretch-methods"),
@@ -290,6 +306,14 @@
       "./sprint-intensity.js",
       "./dashboard-sprint-smoke-methods.js",
     ),
+    dependencyEdge(
+      "./themes/default/asset-manifest.js",
+      "./dashboard-cart-spill-data.js",
+    ),
+    dependencyEdge(
+      "./themes/default/asset-manifest.js",
+      "./dashboard-push-tank-renderer.js",
+    ),
     dashboardFileEdge("train-smoke-data", "train-smoke"),
     dashboardFileEdge("pace-core", "pace-controller"),
     dashboardFileEdge("pace-rail-methods", "pace-controller"),
@@ -311,23 +335,27 @@
   ]);
 
   const DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
+    dependencyEdge("./dev-flags-dom-contract.js", "./dev-flags.js"),
     dependencyEdge("./dev-flags-rendering.js", "./dev-flags.js"),
     dependencyEdge("./dev-flags-current-mode.js", "./dev-flags.js"),
     dependencyEdge("./developer-options.js", "./dev-flags.js"),
+    dependencyEdge("./developer-options.js", "./dev-flags-feature-previews.js"),
     dependencyEdge("./pace-state-data.js", "./dev-flags.js"),
+    dependencyEdge("./pace-state-data.js", "./dev-flags-feature-previews.js"),
     dependencyEdge(
-      "./push-sweat-preview-control.js",
+      "./dev-preview-action-registry.js",
       "./dev-flags-preview-actions.js",
     ),
     dependencyEdge(
-      "./splat-bounce-preview-control.js",
-      "./dev-flags-preview-actions.js",
+      "./dev-preview-action-registry.js",
+      "./dev-flags-feature-previews.js",
     ),
     dependencyEdge(
-      "./sync-monk-escape-preview-control.js",
       "./dev-flags-preview-actions.js",
+      "./dev-flags-feature-previews.js",
     ),
     dependencyEdge("./dev-flags-preview-actions.js", "./dev-flags.js"),
+    dependencyEdge("./dev-flags-feature-previews.js", "./dev-flags.js"),
     dependencyEdge("./storage-adapter.js", "./dev-flags.js"),
   ]);
 

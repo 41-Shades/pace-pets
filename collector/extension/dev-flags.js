@@ -3,63 +3,28 @@
 
   const DEVELOPER_OPTIONS = globalThis.PacePetsDeveloperOptions;
   const CURRENT_MODE = globalThis.PacePetsDevFlagsCurrentMode;
+  const DEV_FLAGS_DOM = globalThis.PacePetsDevFlagsDom;
+  const FEATURE_PREVIEWS = globalThis.PacePetsDevFlagsFeaturePreviews;
   const PACE_STATE_DATA = globalThis.PacePetsPaceStateData;
-  const PREVIEW_ACTIONS = globalThis.PacePetsDevFlagsPreviewActions;
   const RENDERING = globalThis.PacePetsDevFlagsRendering;
   const STORAGE = globalThis.CodexExtensionStorage;
   if (
     !CURRENT_MODE ||
+    !DEV_FLAGS_DOM ||
     !DEVELOPER_OPTIONS ||
+    !FEATURE_PREVIEWS ||
     !PACE_STATE_DATA ||
-    !PREVIEW_ACTIONS ||
     !RENDERING ||
     !STORAGE
   ) {
     throw new Error("Dev controls dependencies did not load.");
   }
 
-  const FEATURE_PREVIEW_ACTIONS = Object.freeze([
-    Object.freeze({
-      label: "Rare sweat",
-      run: () => PREVIEW_ACTIONS.requestRarePushSweatPreview(),
-      status: "Rare sweat requested.",
-    }),
-    Object.freeze({
-      label: "Max Splat bounce",
-      run: () => PREVIEW_ACTIONS.requestSplatMaxBouncePreview(),
-      status: "Max Splat bounce preview requested.",
-    }),
-    Object.freeze({
-      label: "Monk escape",
-      run: () => {
-        PREVIEW_ACTIONS.requestSyncMonkEscapeLaunch();
-        return Promise.resolve();
-      },
-      status: "Monk escape launch requested.",
-    }),
-  ]);
+  const { optionButton } = RENDERING;
 
-  const { optionButton, requiredElement, requiredElementById } = RENDERING;
+  const elements = DEV_FLAGS_DOM.collectElements(document, DEVELOPER_OPTIONS);
 
-  const elements = {
-    currentModePanel: requiredElement(".current-mode-panel"),
-    currentModeSummary: requiredElementById("current-mode-summary"),
-    featurePreviewList: requiredElementById("feature-preview-list"),
-    resetAll: requiredElementById("reset-all"),
-    sprintIntensityPreviewList: requiredElementById(
-      "sprint-intensity-preview-list",
-    ),
-    statusMessage: requiredElementById("status-message"),
-  };
-
-  const stateGroupElements = Object.freeze(
-    Object.fromEntries(
-      DEVELOPER_OPTIONS.FORCEABLE_PACE_STATE_GROUPS.map((group) => [
-        group.key,
-        requiredElementById(group.listElementId),
-      ]),
-    ),
-  );
+  const { stateGroupElements } = elements;
   let currentForcedPaceStateKey = null;
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
@@ -255,32 +220,13 @@
   }
 
   function renderFeaturePreviews() {
-    const options = currentDeveloperOptions();
-    elements.featurePreviewList.replaceChildren(
-      ...DEVELOPER_OPTIONS.FEATURE_PREVIEW_OPTIONS.map((preview) =>
-        optionRow({
-          indicator: false,
-          labelText: preview.label,
-          pressed: Boolean(options[preview.key]),
-          onClick: async ({ pressed }) => {
-            const enabled = !pressed;
-            await persistDeveloperOptions({ [preview.key]: enabled });
-            setStatus(enabled ? preview.enableStatus : preview.disableStatus);
-          },
-        }),
-      ),
-      ...FEATURE_PREVIEW_ACTIONS.map((preview) =>
-        optionRow({
-          action: true,
-          indicator: false,
-          labelText: preview.label,
-          onClick: async () => {
-            await preview.run();
-            setStatus(preview.status);
-          },
-        }),
-      ),
-    );
+    FEATURE_PREVIEWS.renderFeaturePreviews({
+      container: elements.featurePreviewList,
+      currentOptions: currentDeveloperOptions(),
+      optionRow,
+      persistDeveloperOptions,
+      setStatus,
+    });
   }
 
   function render() {
