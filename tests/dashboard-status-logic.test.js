@@ -35,6 +35,16 @@ beforeAll(async () => {
 });
 
 describe("PacePetsDashboardStatus empty history", () => {
+  it("uses refresh schedule copy for automatic-check labels", () => {
+    const schedule = globalThis.PacePetsRefreshSchedule;
+    const status = globalThis.PacePetsDashboardStatusLogic;
+
+    expect(status.AUTO_CHECKS_STATUS_TOOLTIP).toBe(
+      schedule.AUTO_CHECKS_STATUS_TOOLTIP,
+    );
+    expect(status.CHECKS_EVERY_ARIA).toBe(schedule.CHECKS_EVERY_ARIA);
+  });
+
   it("projects empty-history waiting and stale states from one policy", () => {
     const status = globalThis.PacePetsDashboardStatus;
 

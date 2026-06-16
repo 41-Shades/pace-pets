@@ -36,7 +36,10 @@ version.
 ## Zip Contents
 
 The zip root is `collector/extension/` without the source-only extension
-`README.md`.
+`README.md` and unpacked-extension dev controls. Dev-control script exclusions
+are derived from `collector/extension/runtime-manifest.js`, so new
+dev-controls-only modules stay out of release packages when they are added to
+the runtime manifest.
 
 Packaged files are limited to extension runtime assets with these extensions:
 

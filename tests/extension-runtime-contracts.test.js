@@ -160,6 +160,20 @@ describe("CodexThemeAssets", () => {
     expect(assets.effectAssetPath("resetExhaustedPerson")).toBe(
       `${assets.THEME_BASE_PATH}/${assets.EFFECT_ASSET_FILES.resetExhaustedPerson}`,
     );
+    expect(assets.CART_SPILL_GROCERY_ICON_FILES).toContain("apple.png");
+    expect(assets.cartSpillGroceryIconPath("apple.png")).toBe(
+      `${assets.THEME_BASE_PATH}/grocery_icons/apple.png`,
+    );
+    expect(assets.cartSpillGroceryIconPath("grocery-items-palette.png")).toBe(
+      "",
+    );
+    expect(assets.PUSH_TANK_OCEAN_ICON_FILES_BY_KEY.clownfish).toBe(
+      "ocean-icons/clownfish.png",
+    );
+    expect(assets.pushTankOceanIconPath("clownfish")).toBe(
+      `${assets.THEME_BASE_PATH}/ocean-icons/clownfish.png`,
+    );
+    expect(assets.pushTankOceanIconPath("clam")).toBe("");
     expect(assets.paceIconPathForState("muted")).toBe("");
   });
 });

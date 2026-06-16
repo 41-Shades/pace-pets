@@ -52,6 +52,7 @@
     adapterKey: USAGE_INTEGRATION_ADAPTERS.CHATGPT_WHAM_ADAPTER_KEY,
     authFailureStatusCodes: AUTH_FAILURE_STATUS_CODES,
     authSessionUrls: INTEGRATION_CONFIG.AUTH_SESSION_URLS,
+    displayName: "ChatGPT",
     hostPermission: INTEGRATION_CONFIG.CHATGPT_HOST_PERMISSION,
     key: CHATGPT_WHAM_PROVIDER_KEY,
     origin: INTEGRATION_CONFIG.CHATGPT_ORIGIN,
@@ -65,6 +66,14 @@
 
   function providerForKey(providerKey) {
     return PROVIDERS[providerKey] || null;
+  }
+
+  function requireProviderForKey(providerKey) {
+    const provider = providerForKey(providerKey);
+    if (!provider) {
+      throw new Error(`Unknown usage provider: ${providerKey}`);
+    }
+    return provider;
   }
 
   function valueAtPath(data, path) {
@@ -114,9 +123,10 @@
   }
 
   function usageFailureMessage(provider, status, accessToken) {
+    const displayName = provider.displayName || "Usage";
     return accessToken
-      ? `ChatGPT usage endpoint returned ${status} with session token.`
-      : `Could not read ChatGPT session token; usage endpoint returned ${status}.`;
+      ? `${displayName} usage endpoint returned ${status} with session token.`
+      : `Could not read ${displayName} session token; usage endpoint returned ${status}.`;
   }
 
   root.CodexUsageProviders = Object.freeze({
@@ -129,6 +139,7 @@
     extractAccessTokenFromSessionResponse,
     isAuthFailureStatus,
     providerForKey,
+    requireProviderForKey,
     shouldRetryUsageResponse,
     usageFailureMessage,
     usageHeaders,

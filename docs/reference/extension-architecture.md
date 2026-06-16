@@ -35,7 +35,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/storage-adapter.js` owns Promise-based `chrome.storage.local` reads/writes, shared Chrome `lastError` callback wrapping, and local-storage change helpers shared by history, background, and dashboard code.
 - `collector/extension/usage.js` owns raw-to-safe usage normalization through the default WHAM adapter into supported usage windows.
 - `collector/extension/history-store.js` owns sample normalization, dedupe, retention, and sample caps.
-- `collector/extension/themes/default/asset-manifest.js` owns the packaged theme asset manifest for app icons, pace icons, icon variants, and the pace-state exceptions that intentionally do not ship themed PNG art.
+- `collector/extension/themes/default/asset-manifest.js` owns the packaged theme asset manifest for app icons, pace icons, icon variants, effect assets, cart-spill grocery icons, push-tank ocean icons, and the pace-state exceptions that intentionally do not ship themed PNG art.
 - `collector/extension/themes/default/` contains the default replaceable extension artwork.
 - `collector/extension/developer-options.js` owns local developer state-override normalization and projects forceable state groups from the pace-state catalog. `collector/extension/dev-flags.html` and `collector/extension/dev-flags-loader.js` are unpacked-extension tooling only, load shared scripts through the runtime manifest's dev-controls target, and are excluded from Chrome Web Store release packages.
 - `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, pace-state group metadata, inline icon geometry, legend metadata, controlled Perfect Sync/Perfect Zero/Singularity presentation, reset-countdown display-zero checks, and stale-reset guards. Dashboard pace helpers own the dashboard-only Singularity transition when valid Perfect Zero also reaches the reset-countdown display-zero band.
@@ -67,16 +67,27 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 ## Collection Flow
 
 1. Chrome starts or installs the extension.
-2. `background.js` bootstraps shared scripts from `runtime-manifest.js` and schedules the `refresh-codex-weekly-usage` alarm plus the presentation-only `refresh-pace-badge-presentation` alarm.
+2. `background.js` bootstraps shared scripts from `runtime-manifest.js` and schedules the usage-refresh alarm plus the presentation-only badge-refresh alarm from `refresh-schedule.js`.
 3. On each usage collection alarm, `background.js` skips duplicate same-worker refresh work if a prior refresh is still in flight, then probes the configured ChatGPT auth-session endpoints with browser credentials to read a session token in memory from the signed-in browser session.
-4. `background.js` calls the default `usage-providers.js` usage endpoint on `chatgpt.com` with browser credentials, JSON accept headers, the current Chrome UI language as `oai-language`, and a bearer authorization header only when a session token was found. Provider-declared auth-failure responses are retried once only when the first usage request used a token.
-5. `usage.js` normalizes the WHAM response through the default provider's adapter from `usage-integration-adapters.js`, mapping adapter-declared weekly and five-hour paths first, then bounded path-matched candidates when the live WHAM shape is nested under adapter-recognized usage containers. It does not accept unrelated exact-duration quota-shaped objects as supported windows.
+4. `background.js` calls the default `usage-providers.js` provider through the provider-aware `background-usage-source.js` fetch path. The provider owns the usage endpoint, auth-session endpoints, display name, source markers, retry policy, and parser adapter. Requests use browser credentials, JSON accept headers, the current Chrome UI language as `oai-language`, and a bearer authorization header only when a session token was found. Provider-declared auth-failure responses are retried once only when the first usage request used a token.
+5. `usage.js` normalizes the response through the selected provider's adapter from `usage-integration-adapters.js`, mapping adapter-declared weekly and five-hour paths first, then bounded path-matched candidates when the live usage shape is nested under adapter-recognized usage containers. It does not accept unrelated exact-duration quota-shaped objects as supported windows.
 6. `history-store.js` appends a safe normalized sample to `chrome.storage.local`.
 7. `background.js` updates the selected toolbar badge view, applies the critical-window badge attention override when needed, and writes refresh status through `refresh-status.js`.
-8. Between usage polls, `background.js` refreshes only the toolbar badge presentation from stored history once per minute so time-derived pace ratios stay current without calling the usage endpoint. It skips that presentation refresh while a network refresh is in flight or after a same-worker refresh failure so the failure badge remains visible.
+8. Between usage polls, `background.js` refreshes only the toolbar badge presentation from stored history at the presentation interval defined by `refresh-schedule.js` so time-derived pace ratios stay current without calling the usage endpoint. It skips that presentation refresh while a network refresh is in flight or after a same-worker refresh failure so the failure badge remains visible.
 9. `dashboard.js` renders summaries, reset timing, and pace state from extension-local storage plus the page-local dashboard window selection, delegates chart rendering to the dashboard chart helper, then reuses cached state for minute-by-minute countdown and pace updates until storage changes or the page window selection changes.
 
-The dashboard can also request a user-initiated refresh when the visible status is actionable, such as a missing ChatGPT sign-in, failed check, stale refresh, or first-run waiting state, and near the end of a supported reset window. The toolbar action context menu exposes the same background refresh as an always-available `Check usage now` action outside the dashboard surface. Manual requests use the shared `refresh-control.js` message/response contract where a caller needs a response, then the same guarded background refresh path as the alarm. The background worker stores only the manual-refresh cooldown-until timestamp in `chrome.storage.local`, so the dashboard and toolbar entry point remain cooldown-limited across Manifest V3 worker restarts.
+`refresh-schedule.js` is the single owner for alarm names, initial delays,
+periods, and dashboard automatic-check copy. The dashboard can also request a
+user-initiated refresh when the visible status is actionable, such as a missing
+ChatGPT sign-in, failed check, stale refresh, or first-run waiting state, and
+near the end of a supported reset window. The toolbar action context menu
+exposes the same background refresh as an always-available `Check usage now`
+action outside the dashboard surface. Manual requests use the shared
+`refresh-control.js` message/response contract where a caller needs a response,
+then the same guarded background refresh path as the alarm. The background
+worker stores only the manual-refresh cooldown-until timestamp in
+`chrome.storage.local`, so the dashboard and toolbar entry point remain
+cooldown-limited across Manifest V3 worker restarts.
 
 ## Developer Controls
 
@@ -84,21 +95,28 @@ The unpacked extension includes `collector/extension/dev-flags.html` as a
 local-only developer control surface. Open it from the installed unpacked
 extension origin, for example
 `chrome-extension://<local-extension-id>/dev-flags.html`.
+`collector/extension/dev-flags-dom-contract.js` owns the dev-control selector
+map, required element IDs, and state-group element collection used by the
+dev-controls bootstrap.
 
 The page controls only display state and feature-preview overrides. It does not
 gate shipped product features. The state choices are derived from the
 pace-state catalog and grouped as Pace Levels, Perfect States, and Imperfect
 States. Choosing a state stores
 `forcedPaceState` under `pacePetsDeveloperOptions` in
-`chrome.storage.local`; enabling the brake-hard badge preview stores
+`chrome.storage.local`; enabling the extension-badge preview stores
 `criticalBadgeWindow`; enabling the refresh-link preview stores
 `manualRefreshLeadWindow`; enabling the max-pool-fill preview stores
 `maxPoolFill`; enabling the reset exhaustion preview stores
 `resetExhaustedPreview`. Choosing a Sprint faster intensity preview stores
 `forcedPaceState` as `wellAhead` plus `sprintIntensityPreview` as an exact
 ratio string from `1.55` through `7.00`. Returning to live data removes those
-overrides. The monk escape feature preview is a one-shot dev action: it sends
-a runtime message to dashboard pages and does not store developer option state.
+overrides. `collector/extension/dev-preview-action-registry.js` owns the
+one-shot dev action catalog, message types, button labels, requested-status
+copy, and fallback error copy for Brake hard max debris burst, rare sweat, Max
+Splat bounce, and monk escape previews. Those actions send runtime messages to
+dashboard pages and do not store developer option state; the individual preview
+control modules remain thin compatibility adapters around the shared registry.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, and toolbar badge match

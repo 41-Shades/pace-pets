@@ -72,6 +72,9 @@ describe("extension check required files", () => {
     expect(requiredFiles).toContain(
       "themes/default/effects/reset-exhausted/exhausted-person.png",
     );
+    expect(requiredFiles).toContain("themes/default/grocery_icons/apple.png");
+    expect(requiredFiles).toContain("themes/default/ocean-icons/clownfish.png");
+    expect(requiredFiles).toContain("themes/default/ocean-icons/whale.png");
     expect(new Set(requiredFiles).size).toBe(requiredFiles.length);
   });
 });

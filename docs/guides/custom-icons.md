@@ -57,13 +57,13 @@ Effect assets are also PNGs with transparent backgrounds and are listed in the
 same asset manifest.
 
 Grocery spill assets are PNGs used by the Slow down cart-spill effect. Their
-current filenames are owned by
-`collector/extension/dashboard-cart-spill-data.js`, not the theme asset
-manifest.
+current runtime filenames and paths are owned by
+`collector/extension/themes/default/asset-manifest.js`.
 
 Ocean assets are PNGs used by the Push harder fish-tank water effect. The active
-subset and staged presentation are owned by
-`collector/extension/dashboard-push-tank-renderer.js`.
+runtime subset and paths are owned by
+`collector/extension/themes/default/asset-manifest.js`; staged presentation and
+movement metadata stay in the dashboard tank modules.
 
 `effects/reset-exhausted/exhausted-person.png` is currently retained as the
 reference/source visual for the reset exhaustion presentation. Live Splat can
@@ -87,11 +87,12 @@ If you rename app icon files, update `APP_ICON_FILES_BY_SIZE` in
 `collector/extension/manifest.json` pointed at the same files. Chrome reads app
 icons directly from its manifest, so those paths have to stay aligned.
 
-If you rename grocery spill files, update `GROCERY_ICON_FILES` in
-`collector/extension/dashboard-cart-spill-data.js`.
+If you rename grocery spill files, update `CART_SPILL_GROCERY_ICON_FILES` in
+`collector/extension/themes/default/asset-manifest.js`.
 
-If you rename ocean fish-tank files, update the icon choices and source
-directions in `collector/extension/dashboard-push-tank-renderer.js`.
+If you rename ocean fish-tank files, update
+`PUSH_TANK_OCEAN_ICON_FILES_BY_KEY` in
+`collector/extension/themes/default/asset-manifest.js`.
 
 If you rename effect asset files, update `EFFECT_ASSET_FILES` in
 `collector/extension/themes/default/asset-manifest.js`.

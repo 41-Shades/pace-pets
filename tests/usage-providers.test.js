@@ -13,6 +13,7 @@ describe("CodexUsageProviders", () => {
 
     expect(provider).toBe(providers.CHATGPT_WHAM_PROVIDER);
     expect(provider.key).toBe(providers.CHATGPT_WHAM_PROVIDER_KEY);
+    expect(provider.displayName).toBe("ChatGPT");
     expect(provider.hostPermission).toBe(config.CHATGPT_HOST_PERMISSION);
     expect(provider.usageEndpoint).toBe(config.CHATGPT_USAGE_ENDPOINT);
     expect(provider.authSessionUrls).toEqual(config.AUTH_SESSION_URLS);
@@ -20,6 +21,10 @@ describe("CodexUsageProviders", () => {
     expect(provider.adapterKey).toBe(adapters.CHATGPT_WHAM_ADAPTER_KEY);
     expect(provider.sourceMarkers).toBe(config.SOURCE_MARKERS);
     expect(providers.providerForKey(provider.key)).toBe(provider);
+    expect(providers.requireProviderForKey(provider.key)).toBe(provider);
+    expect(() => providers.requireProviderForKey("unsupported")).toThrow(
+      "Unknown usage provider: unsupported",
+    );
   });
 
   it("owns auth token extraction, request headers, and retry policy", async () => {
@@ -51,5 +56,8 @@ describe("CodexUsageProviders", () => {
       false,
     );
     expect(providers.isAuthFailureStatus(provider, 403)).toBe(true);
+    expect(providers.usageFailureMessage(provider, 401, "token")).toBe(
+      "ChatGPT usage endpoint returned 401 with session token.",
+    );
   });
 });

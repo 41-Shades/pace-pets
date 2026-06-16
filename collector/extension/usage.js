@@ -257,6 +257,7 @@
   function normalizeUsageWithAdapter(
     rawUsage,
     adapter = DEFAULT_USAGE_ADAPTER,
+    { source = DEFAULT_USAGE_PROVIDER.sourceMarkers.normalizedUsage } = {},
   ) {
     const windows = {};
 
@@ -278,15 +279,26 @@
 
     return {
       windows,
-      source: DEFAULT_USAGE_PROVIDER.sourceMarkers.normalizedUsage,
+      source,
     };
+  }
+
+  function sourceMarkerForProvider(provider, sourceMarkerKey) {
+    return (
+      provider?.sourceMarkers?.[sourceMarkerKey] ||
+      provider?.sourceMarkers?.normalizedUsage ||
+      DEFAULT_USAGE_PROVIDER.sourceMarkers.normalizedUsage
+    );
   }
 
   function normalizeUsageWithProvider(
     rawUsage,
     provider = DEFAULT_USAGE_PROVIDER,
+    { sourceMarkerKey = "normalizedUsage" } = {},
   ) {
-    return normalizeUsageWithAdapter(rawUsage, provider.adapter);
+    return normalizeUsageWithAdapter(rawUsage, provider.adapter, {
+      source: sourceMarkerForProvider(provider, sourceMarkerKey),
+    });
   }
 
   function normalizeWhamUsage(rawUsage) {

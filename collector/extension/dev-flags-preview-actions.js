@@ -1,15 +1,8 @@
 (() => {
   "use strict";
 
-  const PUSH_SWEAT_PREVIEW = globalThis.PacePetsPushSweatPreviewControl;
-  const SPLAT_BOUNCE_PREVIEW = globalThis.PacePetsSplatBouncePreviewControl;
-  const SYNC_MONK_ESCAPE_PREVIEW =
-    globalThis.PacePetsSyncMonkEscapePreviewControl;
-  if (
-    !PUSH_SWEAT_PREVIEW ||
-    !SPLAT_BOUNCE_PREVIEW ||
-    !SYNC_MONK_ESCAPE_PREVIEW
-  ) {
+  const REGISTRY = globalThis.PacePetsDevPreviewActionRegistry;
+  if (!REGISTRY) {
     throw new Error("Dev preview action dependencies did not load.");
   }
 
@@ -20,14 +13,10 @@
     return chrome.runtime;
   }
 
-  function requestSyncMonkEscapeLaunch() {
-    runtimeMessaging().sendMessage(SYNC_MONK_ESCAPE_PREVIEW.launchMessage());
-  }
-
-  function requestSplatMaxBouncePreview() {
+  function requestPreviewActionWithResponse(action) {
     return new Promise((resolve, reject) => {
       runtimeMessaging().sendMessage(
-        SPLAT_BOUNCE_PREVIEW.maxBounceMessage(),
+        REGISTRY.messageForKey(action.key),
         (response) => {
           const error = chrome.runtime.lastError;
           if (error) {
@@ -36,10 +25,7 @@
           }
           if (!response?.ok) {
             reject(
-              new Error(
-                response?.message ||
-                  "Open the dashboard on Splat before previewing Max Splat bounce.",
-              ),
+              new Error(REGISTRY.responseErrorMessage(action.key, response)),
             );
             return;
           }
@@ -48,35 +34,37 @@
         },
       );
     });
+  }
+
+  function requestPreviewAction(actionKey) {
+    const action = REGISTRY.requireActionForKey(actionKey);
+    if (!action.responseRequired) {
+      runtimeMessaging().sendMessage(REGISTRY.messageForKey(action.key));
+      return Promise.resolve();
+    }
+
+    return requestPreviewActionWithResponse(action);
+  }
+
+  function requestBrakeMaxBurstPreview() {
+    return requestPreviewAction(REGISTRY.ACTION_KEYS.brakeMaxBurst);
   }
 
   function requestRarePushSweatPreview() {
-    return new Promise((resolve, reject) => {
-      runtimeMessaging().sendMessage(
-        PUSH_SWEAT_PREVIEW.forceRareMessage(),
-        (response) => {
-          const error = chrome.runtime.lastError;
-          if (error) {
-            reject(new Error(error.message));
-            return;
-          }
-          if (!response?.ok) {
-            reject(
-              new Error(
-                response?.message ||
-                  "Open the dashboard on Push harder before forcing rare sweat.",
-              ),
-            );
-            return;
-          }
+    return requestPreviewAction(REGISTRY.ACTION_KEYS.rareSweat);
+  }
 
-          resolve(response);
-        },
-      );
-    });
+  function requestSplatMaxBouncePreview() {
+    return requestPreviewAction(REGISTRY.ACTION_KEYS.maxSplatBounce);
+  }
+
+  function requestSyncMonkEscapeLaunch() {
+    return requestPreviewAction(REGISTRY.ACTION_KEYS.monkEscape);
   }
 
   globalThis.PacePetsDevFlagsPreviewActions = Object.freeze({
+    requestPreviewAction,
+    requestBrakeMaxBurstPreview,
     requestRarePushSweatPreview,
     requestSplatMaxBouncePreview,
     requestSyncMonkEscapeLaunch,

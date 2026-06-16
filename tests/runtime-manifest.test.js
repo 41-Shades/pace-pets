@@ -51,6 +51,10 @@ function expectCommonRuntimeDependencyEdges(runtime) {
     "persisted-text.js",
     "history-store.js",
   ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "dev-preview-action-registry.js",
+    "brake-extreme-preview-control.js",
+  ]);
 }
 
 function expectTargetRuntimeDependencyEdges(runtime) {
@@ -85,6 +89,10 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-status-logic.js",
     "./dashboard-status-controller.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./refresh-schedule.js",
+    "./dashboard-status-logic.js",
   ]);
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-dom-contract.js",
@@ -126,9 +134,21 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
     "./dashboard-splat-entry-playback.js",
     "./dashboard-splat-fall-methods.js",
   ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./themes/default/asset-manifest.js",
+    "./dashboard-cart-spill-data.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./themes/default/asset-manifest.js",
+    "./dashboard-push-tank-renderer.js",
+  ]);
 }
 
 function expectDevFlagsRuntimeDependencyEdges(runtime) {
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-flags-dom-contract.js",
+    "./dev-flags.js",
+  ]);
   expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./developer-options.js",
     "./dev-flags.js",
@@ -136,6 +156,10 @@ function expectDevFlagsRuntimeDependencyEdges(runtime) {
   expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dev-flags-current-mode.js",
     "./dev-flags.js",
+  ]);
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-preview-action-registry.js",
+    "./dev-flags-preview-actions.js",
   ]);
 }
 
@@ -168,6 +192,13 @@ describe("CodexExtensionRuntime script sources", () => {
 
     expect(runtime.COMMON_SCRIPT_SOURCES).toContain("usage-providers.js");
     expect(runtime.COMMON_SCRIPT_SOURCES).toContain("persisted-text.js");
+    expect(runtime.COMMON_SCRIPT_SOURCES).toContain("refresh-schedule.js");
+    expect(runtime.COMMON_SCRIPT_SOURCES).toContain(
+      "dev-preview-action-registry.js",
+    );
+    expect(
+      runtime.COMMON_SCRIPT_SOURCES.indexOf("refresh-schedule.js"),
+    ).toBeLessThan(runtime.COMMON_SCRIPT_SOURCES.indexOf("refresh-control.js"));
     expect(
       runtime.COMMON_SCRIPT_SOURCES.indexOf("pace-state-data.js"),
     ).toBeLessThan(
@@ -207,6 +238,9 @@ describe("CodexExtensionRuntime script sources", () => {
       "./dashboard-singularity-chrome-collapse-scene.js",
     );
     expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toContain("./dev-flags.js");
+    expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toContain(
+      "./dev-flags-dom-contract.js",
+    );
   });
 
   it("keeps target-only and optional dashboard scripts explicit", () => {
@@ -223,8 +257,10 @@ describe("CodexExtensionRuntime script sources", () => {
     );
     expect(runtime.DEV_FLAGS_ONLY_SCRIPT_SOURCES).toEqual([
       "./dev-flags-rendering.js",
+      "./dev-flags-dom-contract.js",
       "./dev-flags-current-mode.js",
       "./dev-flags-preview-actions.js",
+      "./dev-flags-feature-previews.js",
       "./dev-flags.js",
     ]);
     expect(runtime.OPTIONAL_DASHBOARD_SCRIPT_SOURCES).toEqual([

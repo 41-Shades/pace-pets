@@ -1,17 +1,13 @@
 importScripts("runtime-manifest.js");
 importScripts(...CodexExtensionRuntime.BACKGROUND_SCRIPT_SOURCES);
 
-const POLL_ALARM = "refresh-codex-weekly-usage";
-const BADGE_PRESENTATION_ALARM = "refresh-pace-badge-presentation";
-const POLL_MINUTES = 5;
-const BADGE_PRESENTATION_MINUTES = 1;
-const INITIAL_REFRESH_DELAY_MINUTES = 1;
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
 const DEVELOPER_OPTIONS_STORAGE_KEY = PacePetsDeveloperOptions.STORAGE_KEY;
 const HISTORY_STORAGE_KEY = CodexUsageHistory.HISTORY_STORAGE_KEY;
 const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
   PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY;
+const USAGE_PROVIDER = CodexWeeklyUsage.DEFAULT_USAGE_PROVIDER;
 let lastRefreshState = CodexRefreshStatus.initialState();
 let scheduledRefreshPromise = null;
 let manualRefreshCooldownUntilMs = 0;
@@ -150,10 +146,13 @@ async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
 }
 
 async function refreshUsage() {
-  const rawUsage = await PacePetsBackgroundUsageSource.fetchWhamUsage();
-  const payload = CodexWeeklyUsage.normalizeWhamUsage(rawUsage);
-  payload.source =
-    CodexWeeklyUsage.DEFAULT_USAGE_PROVIDER.sourceMarkers.background;
+  const rawUsage =
+    await PacePetsBackgroundUsageSource.fetchUsageWithProvider(USAGE_PROVIDER);
+  const payload = CodexWeeklyUsage.normalizeUsageWithProvider(
+    rawUsage,
+    USAGE_PROVIDER,
+    { sourceMarkerKey: "background" },
+  );
   const { history, sample, stored, checkedAt } =
     await CodexUsageHistory.appendUsageSnapshot(payload);
   const badgeState = await updatePaceBadge(sample.windows, history);
@@ -275,16 +274,17 @@ async function runManualRefresh() {
 }
 
 function scheduleRefresh() {
-  chrome.alarms.create(POLL_ALARM, {
-    delayInMinutes: INITIAL_REFRESH_DELAY_MINUTES,
-    periodInMinutes: POLL_MINUTES,
-  });
-  chrome.alarms.create(BADGE_PRESENTATION_ALARM, {
-    delayInMinutes: BADGE_PRESENTATION_MINUTES,
-    periodInMinutes: BADGE_PRESENTATION_MINUTES,
-  });
+  const { badgePresentation, usageRefresh } = PacePetsRefreshSchedule.ALARMS;
+  chrome.alarms.create(
+    usageRefresh.name,
+    PacePetsRefreshSchedule.alarmCreateOptions(usageRefresh),
+  );
+  chrome.alarms.create(
+    badgePresentation.name,
+    PacePetsRefreshSchedule.alarmCreateOptions(badgePresentation),
+  );
   runBadgePresentationRefresh().catch((error) => {
-    console.warn("Codex usage badge restore failed:", error);
+    console.warn("Codex usage badge presentation refresh failed:", error);
   });
 }
 
@@ -345,12 +345,12 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
   });
 });
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === POLL_ALARM) {
+  if (alarm.name === PacePetsRefreshSchedule.USAGE_REFRESH_ALARM_NAME) {
     runScheduledRefresh();
     return;
   }
 
-  if (alarm.name === BADGE_PRESENTATION_ALARM) {
+  if (alarm.name === PacePetsRefreshSchedule.BADGE_PRESENTATION_ALARM_NAME) {
     runBadgePresentationRefresh().catch((error) => {
       console.warn("Codex usage badge presentation update failed:", error);
     });

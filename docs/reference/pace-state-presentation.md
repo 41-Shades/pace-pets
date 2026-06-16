@@ -360,10 +360,11 @@ state's badge color, while the tooltip carries the exact critical pace value.
 When both windows are critical, the lower pace ratio wins; equal ratios prefer
 the stored badge window.
 
-The toolbar badge recomputes its presentation from stored history once per
-minute, separately from the five-minute usage collection alarm. That keeps
-time-derived pace ratios aligned with the dashboard's minute-level cached
-history refresh without making extra usage endpoint requests.
+The toolbar badge recomputes its presentation from stored history at the
+`refresh-schedule.js` presentation interval, separately from the
+`refresh-schedule.js` usage collection alarm. That keeps time-derived pace
+ratios aligned with the dashboard's cached history refresh without making extra
+usage endpoint requests.
 
 The chart clamps plotted pace values to `0..50` through
 `PacePetsLogic.chartPaceRatio()`. `dashboard.js` narrows the visible y-axis for
