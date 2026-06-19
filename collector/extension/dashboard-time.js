@@ -195,6 +195,9 @@
     if (unitMs === MS_PER_MINUTE && value < 10) {
       return Number(value.toFixed(1)).toString();
     }
+    if (value > 0 && value < 1) {
+      return "<1";
+    }
 
     return Math.round(value).toString();
   }
