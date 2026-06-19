@@ -6,6 +6,7 @@
   const CRITICAL_BADGE_WINDOW_KEY = "criticalBadgeWindow";
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
   const MAX_POOL_FILL_KEY = "maxPoolFill";
+  const RAIL_HIDDEN_KEY = "railHidden";
   const RESET_EXHAUSTED_PREVIEW_KEY = "resetExhaustedPreview";
   const SPLAT_TIME_REMAINING_PREVIEW_KEY = "splatTimeRemainingPreview";
   const SPRINT_INTENSITY_PREVIEW_KEY = "sprintIntensityPreview";
@@ -43,6 +44,7 @@
   }
 
   function featurePreviewOption({
+    activeLabel = null,
     disableStatus,
     enableStatus,
     key,
@@ -50,6 +52,7 @@
     value,
   }) {
     return Object.freeze({
+      activeLabel,
       disableStatus,
       enableStatus,
       key,
@@ -101,6 +104,14 @@
       value: "max-pool-fill",
     }),
     featurePreviewOption({
+      disableStatus: "Rail items shown.",
+      enableStatus: "Rail items hidden.",
+      key: RAIL_HIDDEN_KEY,
+      activeLabel: "Show rail items",
+      label: "Hide rail items",
+      value: "rail-hidden",
+    }),
+    featurePreviewOption({
       disableStatus: "Exhausted man hidden.",
       enableStatus: "Exhausted man shown.",
       key: RESET_EXHAUSTED_PREVIEW_KEY,
@@ -144,6 +155,10 @@
     return value === true;
   }
 
+  function normalizeRailHidden(value) {
+    return value === true;
+  }
+
   function normalizeResetExhaustedPreview(value) {
     return value === true;
   }
@@ -159,28 +174,28 @@
   }
 
   function normalizeDeveloperOptions(value) {
+    const source = isPlainObject(value) ? value : {};
     const forcedPaceStateKey = normalizeForcedPaceStateKey(
-      isPlainObject(value) ? value[FORCED_PACE_STATE_KEY] : null,
+      source[FORCED_PACE_STATE_KEY],
     );
     const sprintIntensityPreview = normalizeSprintIntensityPreview(
-      isPlainObject(value) ? value[SPRINT_INTENSITY_PREVIEW_KEY] : null,
+      source[SPRINT_INTENSITY_PREVIEW_KEY],
     );
     const splatTimeRemainingPreview = normalizeSplatTimeRemainingPreview(
-      isPlainObject(value) ? value[SPLAT_TIME_REMAINING_PREVIEW_KEY] : null,
+      source[SPLAT_TIME_REMAINING_PREVIEW_KEY],
     );
     return Object.freeze({
       criticalBadgeWindow: normalizeCriticalBadgeWindow(
-        isPlainObject(value) ? value[CRITICAL_BADGE_WINDOW_KEY] : null,
+        source[CRITICAL_BADGE_WINDOW_KEY],
       ),
       forcedPaceStateKey,
       manualRefreshLeadWindow: normalizeManualRefreshLeadWindow(
-        isPlainObject(value) ? value[MANUAL_REFRESH_LEAD_WINDOW_KEY] : null,
+        source[MANUAL_REFRESH_LEAD_WINDOW_KEY],
       ),
-      maxPoolFill: normalizeMaxPoolFill(
-        isPlainObject(value) ? value[MAX_POOL_FILL_KEY] : null,
-      ),
+      maxPoolFill: normalizeMaxPoolFill(source[MAX_POOL_FILL_KEY]),
+      railHidden: normalizeRailHidden(source[RAIL_HIDDEN_KEY]),
       resetExhaustedPreview: normalizeResetExhaustedPreview(
-        isPlainObject(value) ? value[RESET_EXHAUSTED_PREVIEW_KEY] : null,
+        source[RESET_EXHAUSTED_PREVIEW_KEY],
       ),
       splatTimeRemainingPreview:
         forcedPaceStateKey === PACE_STATE_DATA.PACE_STATES.splat.key
@@ -204,6 +219,7 @@
         options.forcedPaceStateKey ?? options[FORCED_PACE_STATE_KEY],
       [MANUAL_REFRESH_LEAD_WINDOW_KEY]: options.manualRefreshLeadWindow,
       [MAX_POOL_FILL_KEY]: options.maxPoolFill,
+      [RAIL_HIDDEN_KEY]: options.railHidden,
       [RESET_EXHAUSTED_PREVIEW_KEY]: options.resetExhaustedPreview,
       [SPLAT_TIME_REMAINING_PREVIEW_KEY]: options.splatTimeRemainingPreview,
       [SPRINT_INTENSITY_PREVIEW_KEY]: options.sprintIntensityPreview,
@@ -226,6 +242,9 @@
     }
     if (normalized.maxPoolFill) {
       value[MAX_POOL_FILL_KEY] = true;
+    }
+    if (normalized.railHidden) {
+      value[RAIL_HIDDEN_KEY] = true;
     }
     if (normalized.resetExhaustedPreview) {
       value[RESET_EXHAUSTED_PREVIEW_KEY] = true;
@@ -270,6 +289,7 @@
     FORCED_PACE_STATE_KEY,
     MANUAL_REFRESH_LEAD_WINDOW_KEY,
     MAX_POOL_FILL_KEY,
+    RAIL_HIDDEN_KEY,
     RESET_EXHAUSTED_PREVIEW_KEY,
     SPLAT_TIME_REMAINING_PREVIEW_KEY,
     SPLAT_TIME_REMAINING_PREVIEW_OPTIONS,
@@ -287,6 +307,7 @@
     normalizeForcedPaceStateKey,
     normalizeManualRefreshLeadWindow,
     normalizeMaxPoolFill,
+    normalizeRailHidden,
     normalizeResetExhaustedPreview,
     normalizeSplatTimeRemainingPreview,
     normalizeSprintIntensityPreview,

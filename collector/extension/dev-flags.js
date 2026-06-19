@@ -29,6 +29,7 @@
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
   let currentMaxPoolFill = false;
+  let currentRailHidden = false;
   let currentResetExhaustedPreview = false;
   let currentSplatTimeRemainingPreview = null;
   let currentSprintIntensityPreview = null;
@@ -65,6 +66,7 @@
       forcedPaceStateKey: currentForcedPaceStateKey,
       manualRefreshLeadWindow: currentManualRefreshLeadWindow,
       maxPoolFill: currentMaxPoolFill,
+      railHidden: currentRailHidden,
       resetExhaustedPreview: currentResetExhaustedPreview,
       splatTimeRemainingPreview: currentSplatTimeRemainingPreview,
       sprintIntensityPreview: currentSprintIntensityPreview,
@@ -85,6 +87,7 @@
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     currentMaxPoolFill = options.maxPoolFill;
+    currentRailHidden = options.railHidden;
     currentResetExhaustedPreview = options.resetExhaustedPreview;
     currentSplatTimeRemainingPreview = options.splatTimeRemainingPreview;
     currentSprintIntensityPreview = options.sprintIntensityPreview;

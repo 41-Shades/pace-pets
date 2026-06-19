@@ -30,7 +30,7 @@
     ]),
     BRAKE_EXTREME_CANVAS_BURST_PROFILE: Object.freeze({
       ANGLE_RANGE_DEG: Object.freeze([145, 395]),
-      COUNT_MULTIPLIER: 100,
+      COUNT_RANGE: Object.freeze([5000, 10000]),
       DELAY_RANGE_MS: Object.freeze([0, 240]),
       DPR_MAX: 2,
       DRIFT_RANGE_PX_PER_SECOND: Object.freeze([-85, 85]),

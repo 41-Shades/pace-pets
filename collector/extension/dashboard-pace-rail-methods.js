@@ -109,6 +109,15 @@
         return;
       }
 
+      const railHidden = this.getCurrentRailHidden?.() === true;
+      if (this.elements.paceStateRail) {
+        this.elements.paceStateRail.hidden = railHidden;
+      }
+      if (railHidden) {
+        this.elements.paceStateStack.hidden = true;
+        return;
+      }
+
       const columns = [
         this.renderStateColumn(
           "state-column-levels",
@@ -144,6 +153,9 @@
         );
       }
 
+      if (this.elements.paceStateRail) {
+        this.elements.paceStateRail.hidden = !columns.length;
+      }
       this.elements.paceStateStack.hidden = !columns.length;
       this.elements.paceStateStack.replaceChildren(...columns);
       const activeState = this.paceStateForClassName(this.currentPaceLevel());

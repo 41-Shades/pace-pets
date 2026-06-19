@@ -94,7 +94,7 @@
     "Segoe UI",
     sans-serif;
   font-size: 12px;
-  font-weight: 430;
+  font-weight: 500;
   letter-spacing: 0;
   line-height: 1;
   opacity: 0;
@@ -153,7 +153,7 @@
 
 .reset-exhausted-message-save {
   animation-name: reset-exhausted-message-save;
-  font-weight: 200;
+  font-weight: 300;
 }
 
 .reset-exhausted-message-save-text {

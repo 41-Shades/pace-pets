@@ -53,6 +53,28 @@
       );
     },
 
+    setPaceBurnoutMetrics(windowData, atMs) {
+      this.elements.paceBurnoutIn.textContent =
+        this.DASHBOARD_TIME.paceBurnoutCountdown(windowData, atMs);
+    },
+
+    clearPaceBurnoutMetrics() {
+      this.elements.paceBurnoutIn.textContent = "--";
+    },
+
+    setResetBudgetRate(windowData, atMs) {
+      const rate = this.DASHBOARD_TIME.resetBudgetRate(windowData, atMs);
+      this.elements.resetBudgetRateValue.textContent = rate.value;
+      this.elements.resetBudgetRateUnit.textContent = rate.unit;
+      this.elements.resetBudgetRate.hidden = rate.value === "--";
+    },
+
+    clearResetBudgetRate() {
+      this.elements.resetBudgetRateValue.textContent = "--";
+      this.elements.resetBudgetRateUnit.textContent = "";
+      this.elements.resetBudgetRate.hidden = true;
+    },
+
     applyPaceSummaryResetCountdown(paceSummary, applyPaceSummary) {
       if (!applyPaceSummary || !paceSummary?.resetCountdownOverride) {
         return;
@@ -61,6 +83,7 @@
       this.elements.resetsIn.textContent = paceSummary.resetCountdownOverride;
       this.elements.paceBurnoutIn.textContent =
         paceSummary.resetCountdownOverride;
+      this.clearResetBudgetRate();
     },
 
     renderSummaryWindowPace({
@@ -137,8 +160,8 @@
         windowData?.resetsAt,
         atMs,
       );
-      this.elements.paceBurnoutIn.textContent =
-        this.DASHBOARD_TIME.paceBurnoutCountdown(windowData, atMs);
+      this.setResetBudgetRate(windowData, atMs);
+      this.setPaceBurnoutMetrics(windowData, atMs);
       this.renderSummaryWindowPace({
         applyPaceSummary,
         history,
@@ -177,7 +200,8 @@
       );
       this.DASHBOARD_TIME.setResetParts(this.elements, null, spec);
       this.elements.resetsIn.textContent = "--";
-      this.elements.paceBurnoutIn.textContent = "--";
+      this.clearResetBudgetRate();
+      this.clearPaceBurnoutMetrics();
       if (!this.paceView.hasForcedPaceStateOverride()) {
         this.paceView.setPaceSummary({
           copy: state.paceCopy,
@@ -212,7 +236,8 @@
       );
       this.DASHBOARD_TIME.setResetParts(this.elements, null, spec);
       this.elements.resetsIn.textContent = "--";
-      this.elements.paceBurnoutIn.textContent = "--";
+      this.clearResetBudgetRate();
+      this.clearPaceBurnoutMetrics();
       if (!this.paceView.hasForcedPaceStateOverride()) {
         this.paceView.setPaceSummary({
           copy: "Could not read local history.",

@@ -4,6 +4,8 @@
   const MS_PER_MINUTE = 60 * 1000;
   const MINUTES_PER_HOUR = 60;
   const HOURS_PER_DAY = 24;
+  const MS_PER_HOUR = MINUTES_PER_HOUR * MS_PER_MINUTE;
+  const MS_PER_DAY = HOURS_PER_DAY * MS_PER_HOUR;
 
   function dateMs(value) {
     return PacePetsLogic.dateMs(value);
@@ -97,15 +99,25 @@
     );
   }
 
-  function durationCountdown(remainingMs, { alwaysShowDays = false } = {}) {
+  function durationCountdown(
+    remainingMs,
+    {
+      alwaysShowDays = false,
+      minuteLabel = "m",
+      padMinutes = true,
+      suffix = "",
+    } = {},
+  ) {
     const totalMinutes = Math.floor(remainingMs / MS_PER_MINUTE);
     const days = Math.floor(totalMinutes / (HOURS_PER_DAY * MINUTES_PER_HOUR));
     const hours = Math.floor(
       (totalMinutes % (HOURS_PER_DAY * MINUTES_PER_HOUR)) / MINUTES_PER_HOUR,
     );
     const minutes = totalMinutes % MINUTES_PER_HOUR;
-    const time = `${hours}h ${String(minutes).padStart(2, "0")}m`;
-    return alwaysShowDays || days > 0 ? `${days}d ${time}` : time;
+    const minuteValue = padMinutes ? String(minutes).padStart(2, "0") : minutes;
+    const time = `${hours}h ${minuteValue}${minuteLabel}`;
+    const countdown = alwaysShowDays || days > 0 ? `${days}d ${time}` : time;
+    return `${countdown}${suffix}`;
   }
 
   function resetCountdown(value, atMs = Date.now()) {
@@ -131,7 +143,7 @@
     );
   }
 
-  function paceBurnoutCountdown(windowData, atMs = Date.now()) {
+  function burnoutTiming(windowData, atMs) {
     const startMs = PacePetsLogic.windowStartMs(windowData);
     const resetMs = dateMs(windowData?.resetsAt);
     const remainingPercent = PacePetsLogic.boundedPercent(
@@ -139,22 +151,104 @@
     );
 
     if (!hasBurnoutCountdownInputs(startMs, resetMs, remainingPercent)) {
+      return null;
+    }
+
+    return { atMs, remainingPercent, resetMs, startMs };
+  }
+
+  function burnoutProjection(timing) {
+    if (!timing || timing.atMs >= timing.resetMs) {
+      return null;
+    }
+    const elapsedMs = timing.atMs - timing.startMs;
+    const usedPercent = 100 - timing.remainingPercent;
+    if (elapsedMs <= 0 || usedPercent <= 0) {
+      return null;
+    }
+
+    const burnoutAtMs = timing.startMs + (elapsedMs * 100) / usedPercent;
+    return {
+      burnoutRemainingMs: Math.max(0, burnoutAtMs - timing.atMs),
+      remainingPercent: timing.remainingPercent,
+    };
+  }
+
+  function resetBudgetRateUnit(remainingMs) {
+    if (remainingMs >= MS_PER_DAY) {
+      return { label: "day", ms: MS_PER_DAY };
+    }
+    if (remainingMs >= MS_PER_HOUR) {
+      return { label: "hour", ms: MS_PER_HOUR };
+    }
+
+    return { label: "min", ms: MS_PER_MINUTE };
+  }
+
+  function formatResetBudgetRatePercent(value, unitMs) {
+    if (!Number.isFinite(value)) {
       return "--";
     }
-    if (atMs >= resetMs) {
+    if (unitMs === MS_PER_MINUTE && value > 0 && value < 0.1) {
+      return "<0.1";
+    }
+    if (unitMs === MS_PER_MINUTE && value < 10) {
+      return Number(value.toFixed(1)).toString();
+    }
+    if (value > 0 && value < 1) {
+      return "<1";
+    }
+
+    return Math.round(value).toString();
+  }
+
+  function paceBurnoutCountdown(windowData, atMs = Date.now()) {
+    const timing = burnoutTiming(windowData, atMs);
+    if (!timing) {
+      return "--";
+    }
+    if (atMs >= timing.resetMs) {
       return "Window ended";
     }
 
-    const elapsedMs = atMs - startMs;
-    const usedPercent = 100 - remainingPercent;
-    if (elapsedMs <= 0 || usedPercent <= 0) {
+    const projection = burnoutProjection(timing);
+    if (!projection) {
       return "--";
     }
 
-    const burnoutAtMs = startMs + (elapsedMs * 100) / usedPercent;
-    return durationCountdown(Math.max(0, burnoutAtMs - atMs), {
+    return durationCountdown(projection.burnoutRemainingMs, {
       alwaysShowDays: true,
+      minuteLabel: "min",
+      padMinutes: false,
     });
+  }
+
+  function resetBudgetRate(windowData, atMs = Date.now()) {
+    const unavailableRate = { unit: "", value: "--" };
+    const resetMs = dateMs(windowData?.resetsAt);
+    const remainingPercent = PacePetsLogic.boundedPercent(
+      windowData?.remainingPercent,
+    );
+    if (
+      resetMs === null ||
+      remainingPercent === null ||
+      remainingPercent <= 0
+    ) {
+      return unavailableRate;
+    }
+
+    const resetRemainingMs = resetMs - atMs;
+    if (resetRemainingMs <= 0) {
+      return unavailableRate;
+    }
+
+    const displayUnit = resetBudgetRateUnit(resetRemainingMs);
+    const percentPerUnit =
+      (remainingPercent * displayUnit.ms) / resetRemainingMs;
+    return {
+      unit: `/ ${displayUnit.label}`,
+      value: `${formatResetBudgetRatePercent(percentPerUnit, displayUnit.ms)}%`,
+    };
   }
 
   function resetCountdownDisplaysZero(value, atMs = Date.now()) {
@@ -166,6 +260,7 @@
     formatClockTime,
     isResetWindowStale: PacePetsLogic.isResetWindowStale,
     paceBurnoutCountdown,
+    resetBudgetRate,
     resetCountdown,
     resetCountdownDisplaysZero,
     setResetParts,

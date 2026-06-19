@@ -273,6 +273,14 @@
                         <circle cx="12" cy="14" r="8"></circle>
                       </svg>
                       <span>Resets in</span>
+                      <span
+                        class="reset-budget-rate"
+                        id="reset-budget-rate"
+                        hidden
+                      >
+                        <strong id="reset-budget-rate-value">--</strong>
+                        <span id="reset-budget-rate-unit">/ day</span>
+                      </span>
                     </span>
                     <strong id="resets-in">--</strong>
                     <span
@@ -280,7 +288,7 @@
                       tabindex="0"
                       data-tooltip="Time to 100% usage at current pace,&#10;even past reset."
                     >
-                      <span>Burnout in:</span>
+                      <span class="pace-burnout-label">Burnout:</span>
                       <strong id="pace-burnout-in">--</strong>
                     </span>
                     <span class="reset-note">
