@@ -81,6 +81,7 @@
     whale: frozen({
       delayMs: [30000, 62000],
       durationMs: [28000, 42000],
+      exitFade: 0.045,
       holdBobble: 0.018,
       holdChance: 0.82,
       holdProgress: [0.34, 0.62],

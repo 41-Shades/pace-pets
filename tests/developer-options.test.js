@@ -48,7 +48,14 @@ describe("PacePetsDeveloperOptions storage", () => {
     );
     expect(options.MAX_POOL_FILL_KEY).toBe("maxPoolFill");
     expect(options.RESET_EXHAUSTED_PREVIEW_KEY).toBe("resetExhaustedPreview");
+    expect(options.SPLAT_TIME_REMAINING_PREVIEW_KEY).toBe(
+      "splatTimeRemainingPreview",
+    );
     expect(options.SPRINT_INTENSITY_PREVIEW_KEY).toBe("sprintIntensityPreview");
+    expect(options.SPLAT_TIME_REMAINING_PREVIEW_VALUES).toEqual({
+      over50: "over50",
+      under50: "under50",
+    });
     expect(options.SPRINT_INTENSITY_PREVIEW_VALUES).toEqual([
       "1.55",
       "2.00",
@@ -68,6 +75,10 @@ describe("PacePetsDeveloperOptions storage", () => {
     expect(options.normalizeMaxPoolFill("true")).toBe(false);
     expect(options.normalizeResetExhaustedPreview(true)).toBe(true);
     expect(options.normalizeResetExhaustedPreview("true")).toBe(false);
+    expect(options.normalizeSplatTimeRemainingPreview("over50")).toBe("over50");
+    expect(
+      options.normalizeSplatTimeRemainingPreview("unsupported"),
+    ).toBeNull();
     expect(options.normalizeSprintIntensityPreview("4.00")).toBe("4.00");
     expect(options.normalizeSprintIntensityPreview("unsupported")).toBeNull();
     expect(
@@ -91,11 +102,22 @@ describe("PacePetsDeveloperOptions storage", () => {
     expect(
       options.normalizeDeveloperOptions({
         forcedPaceState: "perfectZero",
+        splatTimeRemainingPreview: "over50",
         sprintIntensityPreview: "7.00",
       }),
     ).toMatchObject({
       forcedPaceStateKey: "perfectZero",
+      splatTimeRemainingPreview: null,
       sprintIntensityPreview: null,
+    });
+    expect(
+      options.normalizeDeveloperOptions({
+        forcedPaceState: "splat",
+        splatTimeRemainingPreview: "under50",
+      }),
+    ).toMatchObject({
+      forcedPaceStateKey: "splat",
+      splatTimeRemainingPreview: "under50",
     });
     expect(options.normalizeDeveloperOptions(null)).toMatchObject({
       criticalBadgeWindow: false,
@@ -103,6 +125,7 @@ describe("PacePetsDeveloperOptions storage", () => {
       manualRefreshLeadWindow: false,
       maxPoolFill: false,
       resetExhaustedPreview: false,
+      splatTimeRemainingPreview: null,
       sprintIntensityPreview: null,
     });
   });
@@ -132,10 +155,20 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
     expect(
       options.storedDeveloperOptionsValue({
         forcedPaceStateKey: "perfectZero",
+        splatTimeRemainingPreview: "over50",
         sprintIntensityPreview: "7.00",
       }),
     ).toEqual({
       forcedPaceState: "perfectZero",
+    });
+    expect(
+      options.storedDeveloperOptionsValue({
+        forcedPaceStateKey: "splat",
+        splatTimeRemainingPreview: "over50",
+      }),
+    ).toEqual({
+      forcedPaceState: "splat",
+      splatTimeRemainingPreview: "over50",
     });
     expect(
       options.developerOptionsStorageItems({

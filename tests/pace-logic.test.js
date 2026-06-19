@@ -1,9 +1,6 @@
 import { installExtensionRuntimeHooks } from "./helpers/extension-runtime.js";
-
 import { describe, expect, it } from "vitest";
-
 installExtensionRuntimeHooks();
-
 describe("PacePetsLogic", () => {
   it("computes bounded time percent and pace ratios for a reset window", () => {
     const windowData = {
@@ -11,7 +8,6 @@ describe("PacePetsLogic", () => {
       resetsAt: "2026-05-25T14:00:00.000Z",
       windowMinutes: 300,
     };
-
     expect(
       globalThis.PacePetsLogic.timeRemainingPercentAt(
         windowData,
@@ -56,7 +52,6 @@ describe("PacePetsLogic", () => {
     );
   });
 });
-
 describe("PacePetsLogic controlled presentations", () => {
   it("builds controlled pace presentations for badge and dashboard sync states", () => {
     const syncPresentation =
@@ -327,6 +322,22 @@ describe("PacePetsPreviewControl", () => {
       timePercent: 0,
     });
     expect(
+      preview.forcedPercentPairForState("splat", {
+        splatTimeRemainingPreview: "over50",
+      }),
+    ).toEqual({
+      remainingPercent: 0,
+      timePercent: 75,
+    });
+    expect(
+      preview.forcedPercentPairForState("splat", {
+        splatTimeRemainingPreview: "under50",
+      }),
+    ).toEqual({
+      remainingPercent: 0,
+      timePercent: 49,
+    });
+    expect(
       preview.forcedPreviewWindowForState("wellAhead", {
         atMs: Date.parse("2026-05-25T12:00:00.000Z"),
         durationMinutes: 300,
@@ -361,6 +372,29 @@ describe("PacePetsPreviewControl", () => {
       resetsAt: "2026-05-25T13:00:00.000Z",
       usedPercent: 100,
       windowMinutes: 300,
+    });
+    expect(
+      preview.forcedPreviewWindowForState("splat", {
+        atMs: Date.parse("2026-05-25T12:00:00.000Z"),
+        durationMinutes: 300,
+        splatTimeRemainingPreview: "over50",
+        windowData: {
+          remainingPercent: 44,
+          resetsAt: "2026-05-25T13:00:00.000Z",
+          windowMinutes: 300,
+        },
+      }),
+    ).toMatchObject({
+      percentPair: {
+        remainingPercent: 0,
+        timePercent: 75,
+      },
+      windowData: {
+        remainingPercent: 0,
+        resetsAt: "2026-05-25T15:45:00.000Z",
+        usedPercent: 100,
+        windowMinutes: 300,
+      },
     });
   });
 });

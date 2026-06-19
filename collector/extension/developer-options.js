@@ -7,6 +7,7 @@
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
   const MAX_POOL_FILL_KEY = "maxPoolFill";
   const RESET_EXHAUSTED_PREVIEW_KEY = "resetExhaustedPreview";
+  const SPLAT_TIME_REMAINING_PREVIEW_KEY = "splatTimeRemainingPreview";
   const SPRINT_INTENSITY_PREVIEW_KEY = "sprintIntensityPreview";
   const PACE_STATE_DATA = root.PacePetsPaceStateData;
   const SPRINT_INTENSITY = root.PacePetsSprintIntensity;
@@ -57,6 +58,14 @@
     });
   }
 
+  function splatTimeRemainingPreviewOption({ label, status, value }) {
+    return Object.freeze({
+      label,
+      status,
+      value,
+    });
+  }
+
   const FORCEABLE_PACE_STATE_GROUPS = Object.freeze(
     PACE_STATE_DATA.PACE_STATE_GROUPS.map(forceablePaceStateGroup),
   );
@@ -92,11 +101,27 @@
       value: "max-pool-fill",
     }),
     featurePreviewOption({
-      disableStatus: "Reset exhaustion hidden.",
-      enableStatus: "Reset exhaustion shown.",
+      disableStatus: "Exhausted man hidden.",
+      enableStatus: "Exhausted man shown.",
       key: RESET_EXHAUSTED_PREVIEW_KEY,
-      label: "Reset exhaustion",
+      label: "Exhausted man",
       value: "reset-exhausted-preview",
+    }),
+  ]);
+  const SPLAT_TIME_REMAINING_PREVIEW_VALUES = Object.freeze({
+    over50: "over50",
+    under50: "under50",
+  });
+  const SPLAT_TIME_REMAINING_PREVIEW_OPTIONS = Object.freeze([
+    splatTimeRemainingPreviewOption({
+      label: "Splat >50%",
+      status: "Splat time remaining forced over 50%.",
+      value: SPLAT_TIME_REMAINING_PREVIEW_VALUES.over50,
+    }),
+    splatTimeRemainingPreviewOption({
+      label: "Splat <50%",
+      status: "Splat time remaining forced under 50%.",
+      value: SPLAT_TIME_REMAINING_PREVIEW_VALUES.under50,
     }),
   ]);
   function isPlainObject(value) {
@@ -127,12 +152,21 @@
     return SPRINT_INTENSITY.normalizePreviewValue(value);
   }
 
+  function normalizeSplatTimeRemainingPreview(value) {
+    return Object.values(SPLAT_TIME_REMAINING_PREVIEW_VALUES).includes(value)
+      ? value
+      : null;
+  }
+
   function normalizeDeveloperOptions(value) {
     const forcedPaceStateKey = normalizeForcedPaceStateKey(
       isPlainObject(value) ? value[FORCED_PACE_STATE_KEY] : null,
     );
     const sprintIntensityPreview = normalizeSprintIntensityPreview(
       isPlainObject(value) ? value[SPRINT_INTENSITY_PREVIEW_KEY] : null,
+    );
+    const splatTimeRemainingPreview = normalizeSplatTimeRemainingPreview(
+      isPlainObject(value) ? value[SPLAT_TIME_REMAINING_PREVIEW_KEY] : null,
     );
     return Object.freeze({
       criticalBadgeWindow: normalizeCriticalBadgeWindow(
@@ -148,6 +182,10 @@
       resetExhaustedPreview: normalizeResetExhaustedPreview(
         isPlainObject(value) ? value[RESET_EXHAUSTED_PREVIEW_KEY] : null,
       ),
+      splatTimeRemainingPreview:
+        forcedPaceStateKey === PACE_STATE_DATA.PACE_STATES.splat.key
+          ? splatTimeRemainingPreview
+          : null,
       sprintIntensityPreview:
         forcedPaceStateKey === PACE_STATE_DATA.PACE_STATES.wellAhead.key
           ? sprintIntensityPreview
@@ -167,6 +205,7 @@
       [MANUAL_REFRESH_LEAD_WINDOW_KEY]: options.manualRefreshLeadWindow,
       [MAX_POOL_FILL_KEY]: options.maxPoolFill,
       [RESET_EXHAUSTED_PREVIEW_KEY]: options.resetExhaustedPreview,
+      [SPLAT_TIME_REMAINING_PREVIEW_KEY]: options.splatTimeRemainingPreview,
       [SPRINT_INTENSITY_PREVIEW_KEY]: options.sprintIntensityPreview,
     };
   }
@@ -190,6 +229,10 @@
     }
     if (normalized.resetExhaustedPreview) {
       value[RESET_EXHAUSTED_PREVIEW_KEY] = true;
+    }
+    if (normalized.splatTimeRemainingPreview) {
+      value[SPLAT_TIME_REMAINING_PREVIEW_KEY] =
+        normalized.splatTimeRemainingPreview;
     }
     if (normalized.sprintIntensityPreview) {
       value[SPRINT_INTENSITY_PREVIEW_KEY] = normalized.sprintIntensityPreview;
@@ -228,6 +271,9 @@
     MANUAL_REFRESH_LEAD_WINDOW_KEY,
     MAX_POOL_FILL_KEY,
     RESET_EXHAUSTED_PREVIEW_KEY,
+    SPLAT_TIME_REMAINING_PREVIEW_KEY,
+    SPLAT_TIME_REMAINING_PREVIEW_OPTIONS,
+    SPLAT_TIME_REMAINING_PREVIEW_VALUES,
     SPRINT_INTENSITY_PREVIEW_KEY,
     SPRINT_INTENSITY_PREVIEW_OPTIONS: SPRINT_INTENSITY.PREVIEW_OPTIONS,
     SPRINT_INTENSITY_PREVIEW_VALUES: SPRINT_INTENSITY.PREVIEW_VALUES,
@@ -242,6 +288,7 @@
     normalizeManualRefreshLeadWindow,
     normalizeMaxPoolFill,
     normalizeResetExhaustedPreview,
+    normalizeSplatTimeRemainingPreview,
     normalizeSprintIntensityPreview,
     storedDeveloperOptionsValue,
   });

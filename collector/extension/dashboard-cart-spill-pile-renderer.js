@@ -75,6 +75,9 @@
 
   function clearCartSpillPile(state) {
     state.cartSpillPileLayer?.remove();
+    for (const layer of document.querySelectorAll(".cart-spill-pile-layer")) {
+      layer.remove();
+    }
     state.cartSpillPileLayer = null;
     state.cartSpillPileColumns?.clear();
   }

@@ -117,7 +117,7 @@
     return {
       durationMs: EXTREME_RATIO_SLAM_DURATION_MS,
       peakScale: 1.24,
-      peakXPx: 18,
+      peakXPx: 0,
       peakYPx: EXTREME_RATIO_SLAM_PEAK_Y_PX,
       reboundScale: 0.9,
       reboundXPx: 0,

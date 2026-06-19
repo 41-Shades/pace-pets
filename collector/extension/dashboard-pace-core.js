@@ -30,6 +30,7 @@
       this.singularityTransitionPending = false;
       this.singularityTransitionRunId = 0;
       this.singularityTransitionScene = null;
+      this.splatMaxBounceRatioClone = null;
       this.splatMaxBouncePreviewTimer = null;
       this.syncMonkEscapeEnteredAtMs = null;
       this.syncMonkEscapeLaunchedForEnteredAtMs = null;
@@ -93,6 +94,7 @@
       const windowKey = this.selectedSupportedWindowKey();
       return PREVIEW_CONTROL.forcedPreviewWindowForState(stateKey, {
         durationMinutes: this.windowSpecs[windowKey]?.durationMinutes,
+        splatTimeRemainingPreview: this.getCurrentSplatTimeRemainingPreview?.(),
         sprintIntensityPreview: this.getCurrentSprintIntensityPreview?.(),
         windowData: this.selectedSummaryWindowForChartPreview(),
       });
@@ -120,8 +122,20 @@
 
     forcedPaceRatioForState(stateKey) {
       return PREVIEW_CONTROL.forcedPaceRatioForState(stateKey, {
+        splatTimeRemainingPreview: this.getCurrentSplatTimeRemainingPreview?.(),
         sprintIntensityPreview: this.getCurrentSprintIntensityPreview?.(),
       });
+    }
+
+    forcedPacePreviewChangeKey(stateKey) {
+      if (stateKey !== DATA.PACE_STATES.splat.key) {
+        return stateKey;
+      }
+
+      return [
+        stateKey,
+        this.getCurrentSplatTimeRemainingPreview?.() || "live",
+      ].join(":");
     }
 
     paceStateForClassName(className) {

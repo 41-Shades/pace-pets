@@ -8,15 +8,23 @@ function assertRuntimeOrder(assert, sources, orderedPairs, label) {
   }
 }
 
+function hasDashboardId({ dashboardHtml, dashboardTemplateSource }, requiredId) {
+  return (
+    dashboardHtml.includes(`id="${requiredId}"`) ||
+    dashboardTemplateSource.includes(`id: "${requiredId}"`)
+  );
+}
+
 function assertDashboardHtml({
   assert,
-  assertIncludes,
   dashboardHtml,
+  dashboardTemplateSource = "",
   dashboardDomContract,
   extensionDocsHtml,
   productMetadata,
   themeAssets,
 }) {
+  const dashboardMarkupSource = `${dashboardHtml}\n${dashboardTemplateSource}`;
   assert(
     dashboardHtml.includes(`<title>${productMetadata.NAME}</title>`) &&
       dashboardHtml.includes(
@@ -40,10 +48,9 @@ function assertDashboardHtml({
     "Dashboard DOM required ID contract must be an array.",
   );
   for (const requiredId of dashboardDomContract.REQUIRED_DASHBOARD_ELEMENT_IDS) {
-    assertIncludes(
-      dashboardHtml,
-      `id="${requiredId}"`,
-      `dashboard id ${requiredId}`,
+    assert(
+      hasDashboardId({ dashboardHtml: dashboardMarkupSource, dashboardTemplateSource }, requiredId),
+      `Missing dashboard id ${requiredId}: id="${requiredId}"`,
     );
   }
   assert(

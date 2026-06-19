@@ -79,17 +79,31 @@ describe("PacePetsDashboardSplatFallProfile", () => {
     expect(ranges[0]).toEqual([480, 560]);
     expect(bounce.peakYPx).toBe(-520);
   });
+
+  it("keeps the extreme ratio slam vertical while preserving the settle bounce", () => {
+    const profile = globalThis.PacePetsDashboardSplatFallProfile;
+    const slam = profile.extremeRatioSlamProfile();
+
+    expect(slam.peakXPx).toBe(0);
+    expect(slam.reboundXPx).toBe(0);
+    expect(slam.secondYPx).toBeLessThan(0);
+    expect(slam.slamSettleYPx).toBeGreaterThan(0);
+    expect(slam.slamSmallBounceYPx).toBeLessThan(0);
+  });
 });
 
 describe("PacePetsDashboardSplatEntryPlayback", () => {
   it("resolves rare Splat entries to Max Splat playback", () => {
     const playback = globalThis.PacePetsDashboardSplatEntryPlayback;
-    const ratioRect = { height: 10, left: 20, top: 30, width: 40 };
+    let ratioReads = 0;
     let queued = false;
     const controller = {
       elements: {
         paceRatioValue: {
-          getBoundingClientRect: () => ratioRect,
+          getBoundingClientRect: () => {
+            ratioReads += 1;
+            return { height: 10, left: 20, top: 30, width: 40 };
+          },
         },
       },
       queueSplatMaxBounceSlam() {
@@ -105,14 +119,37 @@ describe("PacePetsDashboardSplatEntryPlayback", () => {
     });
 
     expect(resolved.fallTiming).toBe(playback.maxSplatFallTiming);
+    expect(resolved.captureRatioOriginBeforeImpact).toBe(true);
     expect(resolved.impactProfile.ratio).toBeNull();
-    expect(controller.splatMaxBounceRatioOriginRect).toEqual(ratioRect);
+    expect(controller.splatMaxBounceRatioOriginRect).toBeUndefined();
+    expect(ratioReads).toBe(0);
 
     resolved.onImpact();
 
     expect(queued).toBe(true);
   });
 
+  it("ignores no-layout ratio origins", () => {
+    const playback = globalThis.PacePetsDashboardSplatEntryPlayback;
+    const controller = {
+      elements: {
+        paceRatioValue: {
+          getBoundingClientRect: () => ({
+            height: 0,
+            left: 0,
+            top: 0,
+            width: 0,
+          }),
+        },
+      },
+      randomIntegerInRange: () => 96,
+    };
+
+    expect(playback.ratioOriginRect(controller)).toBeNull();
+  });
+});
+
+describe("PacePetsDashboardSplatEntryPlayback timing", () => {
   it("forces Max Splat playback when displayed time remaining is over 50%", () => {
     const playback = globalThis.PacePetsDashboardSplatEntryPlayback;
     let randomRolls = 0;

@@ -54,10 +54,6 @@
     return requestPreviewAction(REGISTRY.ACTION_KEYS.rareSweat);
   }
 
-  function requestSplatMaxBouncePreview() {
-    return requestPreviewAction(REGISTRY.ACTION_KEYS.maxSplatBounce);
-  }
-
   function requestSyncMonkEscapeLaunch() {
     return requestPreviewAction(REGISTRY.ACTION_KEYS.monkEscape);
   }
@@ -66,7 +62,6 @@
     requestPreviewAction,
     requestBrakeMaxBurstPreview,
     requestRarePushSweatPreview,
-    requestSplatMaxBouncePreview,
     requestSyncMonkEscapeLaunch,
   });
 })();

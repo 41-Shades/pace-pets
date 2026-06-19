@@ -5,20 +5,18 @@
   const Controller = globalThis.PacePetsDashboardPaceController;
   const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
   const PROFILE = globalThis.PacePetsDashboardSplatFallProfile;
-  const PREVIEW = globalThis.PacePetsSplatBouncePreviewControl;
   const SPLAT_ENTRY = globalThis.PacePetsDashboardSplatEntryPlayback;
   if (
     !DATA ||
     !Controller ||
     !DASHBOARD_PREFERENCES ||
     !PROFILE ||
-    !PREVIEW ||
     !SPLAT_ENTRY
   ) {
     throw new Error(
       [
         "Pace data, core, preferences, Splat profiles, Splat entry playback,",
-        "and preview controls must load before",
+        "must load before",
         "dashboard-splat-fall-methods.js.",
       ].join(" "),
     );
@@ -29,6 +27,7 @@
   const SPLAT_CARD_IMPACT_DURATION_MS = SPLAT_FALL_DURATION_MS + 20;
   const SPLAT_FALL_IMPACT_MS = 960;
   const SPLAT_EXTREME_CARD_DROP_PROGRESS = 0.08;
+  const SPLAT_EXTREME_SLAM_CLASS = "is-splat-ratio-extreme-slam";
 
   function motionPreferenceEnabled() {
     return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
@@ -45,6 +44,18 @@
     element.classList.remove(className);
     element.getBoundingClientRect();
     element.classList.add(className);
+  }
+
+  function usableRect(rect) {
+    return (
+      rect &&
+      Number.isFinite(rect.height) &&
+      Number.isFinite(rect.left) &&
+      Number.isFinite(rect.top) &&
+      Number.isFinite(rect.width) &&
+      rect.height > 0 &&
+      rect.width > 0
+    );
   }
 
   function createSplatFallLayer(imageSrc) {
@@ -123,12 +134,21 @@
     });
   }
 
+  function ratioCloneRemoveDelayMs(profile) {
+    const configuredDelayMs = Number.isFinite(profile.removeDelayMs)
+      ? profile.removeDelayMs
+      : profile.durationMs;
+    return Math.max(profile.durationMs, configuredDelayMs);
+  }
+
   Object.assign(Controller.prototype, {
     clearSplatMaxBouncePreview() {
       window.clearTimeout(this.splatMaxBouncePreviewTimer);
       window.clearTimeout(this.splatMaxBounceCardTimer);
       this.splatMaxBouncePreviewTimer = null;
       this.splatMaxBounceCardTimer = null;
+      this.splatMaxBounceRatioClone?.remove();
+      this.splatMaxBounceRatioClone = null;
       this.splatMaxBounceRatioOriginRect = null;
       PROFILE.clearCardImpact(this.elements.paceCard);
       this.elements.paceCard?.classList.remove("is-splat-ratio-source-hidden");
@@ -160,13 +180,15 @@
     renderSplatRatioBounceClone(profile) {
       const source = this.elements.paceRatioValue;
       const currentRect = source?.getBoundingClientRect();
-      if (!source || !currentRect?.width || !currentRect.height) {
+      if (!source || !usableRect(currentRect)) {
         return;
       }
 
       const bounceProfile = profile || PROFILE.randomRatioBounceProfile(this);
       const computedStyle = globalThis.getComputedStyle(source);
-      const rect = bounceProfile.originRect || currentRect;
+      const rect = usableRect(bounceProfile.originRect)
+        ? bounceProfile.originRect
+        : currentRect;
       const clone = document.createElement("span");
       clone.className = "pace-ratio-splat-pop-clone";
       clone.classList.add(...[bounceProfile.typeClass].filter(Boolean));
@@ -188,9 +210,19 @@
         width: `${rect.width}px`,
       });
 
-      const removeClone = () => clone.remove();
-      const removeDelayMs =
-        bounceProfile.removeDelayMs || bounceProfile.durationMs;
+      const trackMaxSplatClone =
+        bounceProfile.typeClass === SPLAT_EXTREME_SLAM_CLASS;
+      if (trackMaxSplatClone) {
+        this.splatMaxBounceRatioClone?.remove();
+        this.splatMaxBounceRatioClone = clone;
+      }
+      const removeClone = () => {
+        if (this.splatMaxBounceRatioClone === clone) {
+          this.splatMaxBounceRatioClone = null;
+        }
+        clone.remove();
+      };
+      const removeDelayMs = ratioCloneRemoveDelayMs(bounceProfile);
       if (removeDelayMs <= bounceProfile.durationMs) {
         clone.addEventListener("animationend", removeClone, { once: true });
       }
@@ -211,7 +243,8 @@
         cardImpactDelayMs + cardProfile.durationMs + 100,
         this.splatMaxThrowRemoveDelayMs?.(cardImpactDelayMs, cardProfile) || 0,
       );
-      ratioProfile.originRect = this.splatMaxBounceRatioOriginRect;
+      ratioProfile.originRect =
+        this.splatMaxBounceRatioOriginRect || SPLAT_ENTRY.ratioOriginRect(this);
 
       this.renderSplatRatioBounceClone(ratioProfile);
       this.elements.paceCard?.classList.add("is-splat-ratio-source-hidden");
@@ -231,62 +264,6 @@
       this.splatMaxBouncePreviewTimer = window.setTimeout(
         () => this.clearSplatMaxBouncePreview({ clearThrow: false }),
         ratioProfile.removeDelayMs,
-      );
-    },
-
-    previewSplatMaxBounce() {
-      if (this.currentPaceLevel() !== DATA.PACE_STATES.splat.className) {
-        return {
-          message: PREVIEW.fallbackErrorMessage,
-          ok: false,
-        };
-      }
-      if (!motionPreferenceEnabled()) {
-        return {
-          message: "Turn motion on before previewing Max Splat bounce.",
-          ok: false,
-        };
-      }
-      if (!DATA.SPLAT_FREE_FALL_IMAGE) {
-        return {
-          message: "Splat free-fall art is unavailable.",
-          ok: false,
-        };
-      }
-
-      this.clearPaceIconEffects?.(this.elements.paceIcon);
-      this.clearSplatMaxBouncePreview();
-      this.splatMaxBounceRatioOriginRect = SPLAT_ENTRY.ratioOriginRect(this);
-      this.elements.paceIcon.dataset.splatFallIntro = "true";
-      this.renderSplatFallEffect(this.elements.paceIcon, {
-        fallTiming: SPLAT_ENTRY.maxSplatFallTiming,
-        impactProfile: {
-          card: PROFILE.maxIntroCardImpactProfile(),
-          ratio: null,
-        },
-        onImpact: () => this.queueSplatMaxBounceSlam(),
-      });
-      return { ok: true };
-    },
-
-    bindSplatBouncePreviewRequests() {
-      if (
-        this.splatBouncePreviewRequestsBound ||
-        !globalThis.chrome?.runtime?.onMessage
-      ) {
-        return;
-      }
-
-      this.splatBouncePreviewRequestsBound = true;
-      globalThis.chrome.runtime.onMessage.addListener(
-        (message, _sender, sendResponse) => {
-          if (!PREVIEW.isMaxBounceMessage(message)) {
-            return false;
-          }
-
-          sendResponse?.(this.previewSplatMaxBounce());
-          return false;
-        },
       );
     },
 
@@ -344,6 +321,10 @@
       };
       const impactTimer = window.setTimeout(() => {
         container.classList.add("is-splat-impacting");
+        if (playback.captureRatioOriginBeforeImpact) {
+          this.splatMaxBounceRatioOriginRect =
+            SPLAT_ENTRY.ratioOriginRect(this);
+        }
         if (this.elements.paceCard && playback.impactProfile.card) {
           PROFILE.applyCardImpactProfile(
             this.elements.paceCard,

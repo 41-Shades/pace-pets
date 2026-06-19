@@ -27,8 +27,10 @@
       this.currentMaxPoolFill = false;
       this.currentResetExhaustedPreview = false;
       this.currentResetExhaustedSplatActive = false;
+      this.currentSplatTimeRemainingPreview = null;
       this.currentSprintIntensityPreview = null;
       this.resetExhaustedArmAnimationFrame = null;
+      this.resetExhaustedPreviewRepeatTimer = null;
       this.resetExhaustedSplatLaunchTimer = null;
       this.resetExhaustedSplatRepeatTimer = null;
       this.resetExhaustedSequenceStartTimer = null;
@@ -81,6 +83,8 @@
         getCurrentHistory: () => this.currentHistory,
         getCurrentMaxPoolFill: () => this.currentMaxPoolFill,
         getCurrentRefreshStatus: () => this.currentRefreshStatus,
+        getCurrentSplatTimeRemainingPreview: () =>
+          this.currentSplatTimeRemainingPreview,
         getCurrentSprintIntensityPreview: () =>
           this.currentSprintIntensityPreview,
         getSelectedWindowKey: () => this.selectedWindowKey,
@@ -220,6 +224,8 @@
       this.currentMaxPoolFill = developerOptions.maxPoolFill;
       this.currentResetExhaustedPreview =
         developerOptions.resetExhaustedPreview;
+      this.currentSplatTimeRemainingPreview =
+        developerOptions.splatTimeRemainingPreview;
       this.currentSprintIntensityPreview =
         developerOptions.sprintIntensityPreview;
       this.currentHistory = history;

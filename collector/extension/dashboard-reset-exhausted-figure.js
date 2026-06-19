@@ -4,7 +4,7 @@
   const ARM_MOTION = globalThis.PacePetsResetExhaustedArmMotion;
   if (!ARM_MOTION) {
     throw new Error(
-      "Reset exhausted arm motion must load before dashboard-reset-exhausted-figure.js.",
+      "Exhausted man arm motion must load before dashboard-reset-exhausted-figure.js.",
     );
   }
 
