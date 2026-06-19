@@ -54,6 +54,10 @@ function classElement() {
       toggle() {},
     },
     dataset: {},
+    removeAttribute() {},
+    style: {
+      removeProperty() {},
+    },
   };
 }
 
@@ -78,6 +82,22 @@ function controllerElements() {
     usageBar: barElement(),
     usagePercent: textElement(),
   };
+}
+
+function splatPreviewController() {
+  const Controller = globalThis.PacePetsDashboardPaceController;
+  const data = globalThis.PacePetsDashboardPaceData;
+  const controller = new Controller({
+    elements: controllerElements(),
+  });
+  controller.currentPaceLevel = () => data.PACE_STATES.splat.className;
+  controller.paceStateForClassName = (className) =>
+    className === data.PACE_STATES.splat.className
+      ? data.PACE_STATES.splat
+      : data.PACE_STATES.on;
+  controller.clearSplatMaxBouncePreview = vi.fn();
+  controller.clearSplatMaxThrow = vi.fn();
+  return { controller, data };
 }
 
 describe("Dashboard forced pace previews", () => {
@@ -175,17 +195,7 @@ describe("Dashboard forced pace previews", () => {
 
 describe("Splat preview cleanup", () => {
   it("clears stale Max Splat previews before replaying a Splat timing preview", () => {
-    const Controller = globalThis.PacePetsDashboardPaceController;
-    const data = globalThis.PacePetsDashboardPaceData;
-    const controller = new Controller({
-      elements: controllerElements(),
-    });
-    controller.currentPaceLevel = () => data.PACE_STATES.splat.className;
-    controller.paceStateForClassName = (className) =>
-      className === data.PACE_STATES.splat.className
-        ? data.PACE_STATES.splat
-        : data.PACE_STATES.on;
-    controller.clearSplatMaxBouncePreview = vi.fn();
+    const { controller, data } = splatPreviewController();
     controller.renderPaceIcon = vi.fn();
 
     controller.setPaceLevel(data.PACE_STATES.splat.className, {
@@ -196,5 +206,23 @@ describe("Splat preview cleanup", () => {
 
     expect(controller.clearSplatMaxBouncePreview).toHaveBeenCalledOnce();
     expect(controller.elements.paceIcon.dataset.splatFallIntro).toBe("true");
+  });
+
+  it("clears the full Max Splat preview when hidden-tab motion pauses", () => {
+    const { controller } = splatPreviewController();
+
+    controller.pauseHiddenDocumentMotionEffects();
+
+    expect(controller.clearSplatMaxBouncePreview).toHaveBeenCalledOnce();
+    expect(controller.clearSplatMaxThrow).not.toHaveBeenCalled();
+  });
+
+  it("clears the full Max Splat preview when motion stops", () => {
+    const { controller } = splatPreviewController();
+
+    controller.stopMotionEffects();
+
+    expect(controller.clearSplatMaxBouncePreview).toHaveBeenCalledOnce();
+    expect(controller.clearSplatMaxThrow).not.toHaveBeenCalled();
   });
 });
