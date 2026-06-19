@@ -162,6 +162,9 @@ const dashboardSource = [
 ]
   .map((file) => readText(`collector/extension/${file}`))
   .join("\n");
+const dashboardTemplateSource = ["dashboard-info-template.js"]
+  .map((file) => readText(`collector/extension/${file}`))
+  .join("\n");
 const dashboardStatusControllerJs = readText(
   "collector/extension/dashboard-status-controller.js",
 );
@@ -190,6 +193,7 @@ checkDashboardSmoke({
   assertIncludes,
   backgroundSource: backgroundJs,
   dashboardHtml,
+  dashboardTemplateSource,
   dashboardDomContract,
   dashboardSource,
   dashboardStatusLogicSource: dashboardStatusLogicJs,

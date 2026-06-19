@@ -30,6 +30,7 @@
   let currentManualRefreshLeadWindow = false;
   let currentMaxPoolFill = false;
   let currentResetExhaustedPreview = false;
+  let currentSplatTimeRemainingPreview = null;
   let currentSprintIntensityPreview = null;
   let statusTimer = null;
 
@@ -65,6 +66,7 @@
       manualRefreshLeadWindow: currentManualRefreshLeadWindow,
       maxPoolFill: currentMaxPoolFill,
       resetExhaustedPreview: currentResetExhaustedPreview,
+      splatTimeRemainingPreview: currentSplatTimeRemainingPreview,
       sprintIntensityPreview: currentSprintIntensityPreview,
     };
   }
@@ -84,6 +86,7 @@
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
     currentMaxPoolFill = options.maxPoolFill;
     currentResetExhaustedPreview = options.resetExhaustedPreview;
+    currentSplatTimeRemainingPreview = options.splatTimeRemainingPreview;
     currentSprintIntensityPreview = options.sprintIntensityPreview;
   }
 
@@ -110,10 +113,28 @@
     );
   }
 
+  function activeSplatTimeRemainingPreviewOption() {
+    if (
+      currentForcedPaceStateKey !== PACE_STATE_DATA.PACE_STATES.splat.key ||
+      !currentSplatTimeRemainingPreview
+    ) {
+      return null;
+    }
+
+    return (
+      DEVELOPER_OPTIONS.SPLAT_TIME_REMAINING_PREVIEW_OPTIONS.find(
+        (option) => option.value === currentSplatTimeRemainingPreview,
+      ) || null
+    );
+  }
+
   function currentModeLabel() {
     const labels = [];
     if (currentForcedPaceStateKey) {
-      labels.push(stateLabelForKey(currentForcedPaceStateKey));
+      labels.push(
+        activeSplatTimeRemainingPreviewOption()?.label ||
+          stateLabelForKey(currentForcedPaceStateKey),
+      );
     }
     const sprintIntensityPreview = activeSprintIntensityPreviewOption();
     if (sprintIntensityPreview) {
@@ -153,7 +174,32 @@
   }
 
   function optionRowsForStateOptions(stateOptions) {
-    return stateOptions.map((option) => {
+    return stateOptions.flatMap((option) => {
+      if (option.key === PACE_STATE_DATA.PACE_STATES.splat.key) {
+        return DEVELOPER_OPTIONS.SPLAT_TIME_REMAINING_PREVIEW_OPTIONS.map(
+          (preview) =>
+            optionRow({
+              labelText: preview.label,
+              pressed:
+                currentForcedPaceStateKey === option.key &&
+                currentSplatTimeRemainingPreview === preview.value,
+              onClick: async ({ pressed }) => {
+                const forcedPaceStateKey = pressed ? null : option.key;
+                await persistDeveloperOptions({
+                  forcedPaceStateKey,
+                  splatTimeRemainingPreview: pressed ? null : preview.value,
+                  sprintIntensityPreview: null,
+                });
+                setStatus(
+                  forcedPaceStateKey
+                    ? `State override: ${preview.label}.`
+                    : "State override cleared.",
+                );
+              },
+            }),
+        );
+      }
+
       const label = stateLabelForKey(option.key);
       return optionRow({
         labelText: label,
@@ -162,6 +208,7 @@
           const forcedPaceStateKey = pressed ? null : option.key;
           await persistDeveloperOptions({
             forcedPaceStateKey,
+            splatTimeRemainingPreview: null,
             sprintIntensityPreview: null,
           });
           setStatus(
@@ -210,6 +257,7 @@
 
             await persistDeveloperOptions({
               forcedPaceStateKey: sprintStateKey,
+              splatTimeRemainingPreview: null,
               sprintIntensityPreview: preview.value,
             });
             setStatus(preview.status);
@@ -247,6 +295,7 @@
         ]),
       ),
       forcedPaceStateKey: null,
+      splatTimeRemainingPreview: null,
       sprintIntensityPreview: null,
     });
     setStatus("Dev overrides reset.");

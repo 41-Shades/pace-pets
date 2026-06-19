@@ -276,6 +276,12 @@
     layer.remove();
   }
 
+  function removeCartSpillLayerElements() {
+    for (const layer of document.querySelectorAll(".cart-spill-layer")) {
+      layer.remove();
+    }
+  }
+
   Object.assign(Controller.prototype, {
     clearSlowCartSpillLayers(state) {
       for (const timer of state.cartSpillTimers) {
@@ -286,6 +292,7 @@
         layer.remove();
       }
       state.cartSpillLayers.clear();
+      removeCartSpillLayerElements();
       PILE_RENDERER.clearCartSpillPile(state);
     },
 

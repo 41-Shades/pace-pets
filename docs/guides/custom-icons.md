@@ -66,9 +66,9 @@ runtime subset and paths are owned by
 movement metadata stay in the dashboard tank modules.
 
 `effects/reset-exhausted/exhausted-person.png` is currently retained as the
-reference/source visual for the reset exhaustion presentation. Live Splat can
+reference/source visual for the Exhausted man presentation. Live Splat can
 show that rescue sequence after the Splat fall, and local developer controls can
-force it with the reset exhaustion preview. The active presentation renders a
+force it with the Exhausted man preview. The active presentation renders a
 traced inline SVG so limbs can move independently, but the PNG remains the pose,
 scale, and face target for trace adjustments or future layered artwork.
 

@@ -44,12 +44,7 @@ body.is-singularity-space-enter.is-singularity-space-enter-visible::before {
 
 body.is-singularity-final-reveal::before {
   animation: singularity-final-checker-reveal 6000ms steps(1, end) forwards;
-  background: radial-gradient(
-    circle at 50% 50%,
-    #ffffff 0%,
-    #f8fcff 46%,
-    #dceeff 100%
-  );
+  background: #faffff;
   content: "";
   inset: 0;
   opacity: 1;

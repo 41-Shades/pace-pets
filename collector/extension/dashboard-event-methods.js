@@ -211,8 +211,21 @@
       window.addEventListener("resize", () => this.appTooltips.hide());
       window.addEventListener("scroll", () => this.appTooltips.hide(), true);
       document.addEventListener("visibilitychange", () => {
-        this.paceView.playPendingSingularityTransition?.();
+        this.handleVisibilityChange();
       });
+    },
+
+    handleVisibilityChange() {
+      if (document.hidden) {
+        this.appTooltips.hide();
+        this.paceView.pauseHiddenDocumentMotionEffects?.();
+        return;
+      }
+
+      this.paceView.playPendingSingularityTransition?.();
+      this.refreshDashboardTimeSensitiveViews().catch((error) =>
+        this.renderHistoryLoadFailure(error),
+      );
     },
 
     bindEvents() {

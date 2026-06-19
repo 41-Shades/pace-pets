@@ -86,9 +86,11 @@
       }
       const { forcedPaceRatio, previewWindow, state } = preview;
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
+      const forcedPreviewChangeKey = this.forcedPacePreviewChangeKey(state.key);
 
-      const forcedStateChanged = this.lastForcedPaceStateKey !== state.key;
-      this.lastForcedPaceStateKey = state.key;
+      const forcedStateChanged =
+        this.lastForcedPaceStateKey !== forcedPreviewChangeKey;
+      this.lastForcedPaceStateKey = forcedPreviewChangeKey;
       this.setPreviewPercentPair(previewWindow.percentPair);
       this.setPaceLevel(state.className, {
         playSplatFallOnEntry: false,

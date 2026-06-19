@@ -3,6 +3,8 @@
 
   const DEFAULT_PACE_STATE_PREVIEW_TIME_PERCENT = 50;
   const PERFECT_ZERO_PREVIEW_TIME_PERCENT = 0.4;
+  const SPLAT_OVER_50_PREVIEW_TIME_PERCENT = 75;
+  const SPLAT_UNDER_50_PREVIEW_TIME_PERCENT = 49;
   const MS_PER_MINUTE = 60 * 1000;
   const PACE_LOGIC = root.PacePetsLogic;
   if (!PACE_LOGIC) {
@@ -17,6 +19,12 @@
     );
   }
   const PACE_STATES = PACE_LOGIC.PACE_STATES;
+  const DEVELOPER_OPTIONS = root.PacePetsDeveloperOptions;
+  if (!DEVELOPER_OPTIONS) {
+    throw new Error(
+      "Pace Pets developer options must load before preview-control.js.",
+    );
+  }
   const SPRINT_INTENSITY = root.PacePetsSprintIntensity;
   if (!SPRINT_INTENSITY) {
     throw new Error(
@@ -63,6 +71,16 @@
     }),
     [PACE_STATES.splat.key]: pacePreviewPercentPair(0),
   });
+  const SPLAT_TIME_REMAINING_PREVIEW_PERCENT_PAIRS = Object.freeze({
+    [DEVELOPER_OPTIONS.SPLAT_TIME_REMAINING_PREVIEW_VALUES.over50]:
+      pacePreviewPercentPair(0, {
+        timePercent: SPLAT_OVER_50_PREVIEW_TIME_PERCENT,
+      }),
+    [DEVELOPER_OPTIONS.SPLAT_TIME_REMAINING_PREVIEW_VALUES.under50]:
+      pacePreviewPercentPair(0, {
+        timePercent: SPLAT_UNDER_50_PREVIEW_TIME_PERCENT,
+      }),
+  });
 
   function normalizePreviewStateKey(stateKey) {
     return PACE_STATES[stateKey]?.key || null;
@@ -83,13 +101,24 @@
         });
   }
 
+  function splatTimeRemainingPercentPair(splatTimeRemainingPreview) {
+    return (
+      SPLAT_TIME_REMAINING_PREVIEW_PERCENT_PAIRS[splatTimeRemainingPreview] ||
+      null
+    );
+  }
+
   function forcedPercentPairOverrideForState(
     stateKey,
-    { sprintIntensityPreview = null } = {},
+    { splatTimeRemainingPreview = null, sprintIntensityPreview = null } = {},
   ) {
-    return stateKey === PACE_STATES.wellAhead.key
-      ? sprintIntensityPercentPair(sprintIntensityPreview)
-      : null;
+    if (stateKey === PACE_STATES.wellAhead.key) {
+      return sprintIntensityPercentPair(sprintIntensityPreview);
+    }
+    if (stateKey === PACE_STATES.splat.key) {
+      return splatTimeRemainingPercentPair(splatTimeRemainingPreview);
+    }
+    return null;
   }
 
   function livePreviewTimePercent(stateKey, windowData, atMs) {
@@ -132,24 +161,29 @@
     stateKey,
     {
       atMs = Date.now(),
+      splatTimeRemainingPreview = null,
       sprintIntensityPreview = null,
       windowData = null,
     } = {},
   ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    const percentPair =
-      forcedPercentPairOverrideForState(normalizedStateKey, {
+    const overridePercentPair = forcedPercentPairOverrideForState(
+      normalizedStateKey,
+      {
+        splatTimeRemainingPreview,
         sprintIntensityPreview,
-      }) || FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey];
+      },
+    );
+    const percentPair =
+      overridePercentPair ||
+      FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey];
     if (!percentPair) {
       return null;
     }
 
-    const liveTimePercent = livePreviewTimePercent(
-      normalizedStateKey,
-      windowData,
-      atMs,
-    );
+    const liveTimePercent = overridePercentPair
+      ? null
+      : livePreviewTimePercent(normalizedStateKey, windowData, atMs);
     return liveTimePercent === null
       ? percentPair
       : Object.freeze({
@@ -161,7 +195,7 @@
   function previewWindowDataForPercentPair(
     stateKey,
     percentPair,
-    { atMs, durationMinutes, windowData },
+    { atMs, durationMinutes, useLiveReset = true, windowData },
   ) {
     const remainingPercent = PACE_LOGIC.boundedPercent(
       percentPair?.remainingPercent,
@@ -176,7 +210,9 @@
       return null;
     }
 
-    const liveResetMs = livePreviewResetMs(stateKey, windowData, atMs);
+    const liveResetMs = useLiveReset
+      ? livePreviewResetMs(stateKey, windowData, atMs)
+      : null;
     const resetMs =
       liveResetMs ?? atMs + (windowMinutes * MS_PER_MINUTE * timePercent) / 100;
     return Object.freeze({
@@ -192,20 +228,34 @@
     {
       atMs = Date.now(),
       durationMinutes = null,
+      splatTimeRemainingPreview = null,
       sprintIntensityPreview = null,
       windowData = null,
     } = {},
   ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
+    const overridePercentPair = forcedPercentPairOverrideForState(
+      normalizedStateKey,
+      {
+        splatTimeRemainingPreview,
+        sprintIntensityPreview,
+      },
+    );
     const percentPair = forcedPercentPairForState(normalizedStateKey, {
       atMs,
+      splatTimeRemainingPreview,
       sprintIntensityPreview,
       windowData,
     });
     const previewWindowData = previewWindowDataForPercentPair(
       normalizedStateKey,
       percentPair,
-      { atMs, durationMinutes, windowData },
+      {
+        atMs,
+        durationMinutes,
+        useLiveReset: !overridePercentPair,
+        windowData,
+      },
     );
     return previewWindowData
       ? Object.freeze({
@@ -218,10 +268,11 @@
 
   function forcedPaceRatioForState(
     stateKey,
-    { sprintIntensityPreview = null } = {},
+    { splatTimeRemainingPreview = null, sprintIntensityPreview = null } = {},
   ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
     const percentPair = forcedPercentPairForState(normalizedStateKey, {
+      splatTimeRemainingPreview,
       sprintIntensityPreview,
     });
     if (!percentPair) {

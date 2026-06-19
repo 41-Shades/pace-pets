@@ -81,11 +81,6 @@ describe("PacePetsDevPreviewActionRegistry", () => {
       ),
     ).toBe(true);
     expect(
-      globalThis.PacePetsSplatBouncePreviewControl.isMaxBounceMessage(
-        registry.messageForKey(registry.ACTION_KEYS.maxSplatBounce),
-      ),
-    ).toBe(true);
-    expect(
       globalThis.PacePetsSyncMonkEscapePreviewControl.isLaunchMessage(
         registry.messageForKey(registry.ACTION_KEYS.monkEscape),
       ),

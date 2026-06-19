@@ -64,7 +64,6 @@
       stateKey: PACE_STATES.sync.key,
     }),
     featurePreviewGroup({
-      actionKeys: [ACTION_KEYS.maxSplatBounce],
       key: "splat",
       optionKeys: [DEVELOPER_OPTIONS.RESET_EXHAUSTED_PREVIEW_KEY],
       stateKey: PACE_STATES.splat.key,

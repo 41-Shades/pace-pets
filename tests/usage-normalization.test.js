@@ -191,6 +191,36 @@ describe("CodexWeeklyUsage.normalizeWhamUsage live paths", () => {
       },
     });
   });
+
+  it("documents observed live integer used_percent precision", () => {
+    const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
+      rate_limit: {
+        primary_window: {
+          used_percent: 3,
+          reset_after_seconds: 60 * 60,
+          limit_window_sec: 5 * 60 * 60,
+        },
+        secondary_window: {
+          used_percent: 100,
+          reset_at: "2026-05-26T12:00:00.000Z",
+          window_duration_mins: 7 * 24 * 60,
+        },
+      },
+    });
+
+    expect(usage.windows).toMatchObject({
+      fiveHour: {
+        remainingPercent: 97,
+        resetsAt: "2026-05-25T13:00:00.000Z",
+        windowMinutes: 300,
+      },
+      weekly: {
+        remainingPercent: 0,
+        resetsAt: "2026-05-26T12:00:00.000Z",
+        windowMinutes: 10080,
+      },
+    });
+  });
 });
 
 describe("CodexWeeklyUsage.normalizeWhamUsage fallbacks", () => {

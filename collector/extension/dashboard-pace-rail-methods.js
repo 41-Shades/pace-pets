@@ -11,16 +11,16 @@
 
   function tooltipForState(state) {
     if (state.key === DATA.PACE_STATES.sync.key) {
-      return "Usage and time perfectly match.";
+      return "Usage and time move as one.";
     }
     if (state.key === DATA.PACE_STATES.perfectZero.key) {
-      return "Usage and time perfectly round to zero, without running out.";
+      return "A zero with impeccable timing.";
     }
     if (state.key === DATA.PACE_STATES.singularity.key) {
-      return "A perfect singularity of round zeros, but not actually zero.";
+      return "The final minute of all zeros collapsing.";
     }
     if (state.key === DATA.PACE_STATES.splat.key) {
-      return "An imperfect splat against time.";
+      return "Zero arrived early. The floor did the rest.";
     }
 
     return state.copy;

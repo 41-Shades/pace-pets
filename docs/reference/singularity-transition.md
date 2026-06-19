@@ -260,12 +260,13 @@ current dashboard state.
 
 Teardown removes temporary body classes, removes the temporary WebGL canvas,
 restores the live dashboard chrome, and cancels active animation frames or
-chrome-collapse animations when Singularity exits, motion is disabled, or a
-transition phase fails.
+chrome-collapse animations when motion is disabled, the transition is explicitly
+stopped, or a transition phase fails.
 
-Leaving Singularity increments the transition run ID, stops any active scene,
-clears queued playback, and prevents stale transition work from continuing after
-the state changed.
+Leaving Singularity before a hidden-tab queued transition starts clears queued
+playback. Once the transition has started, ordinary pace-state changes do not
+stop the active scene; they update the dashboard DOM underneath so the terminal
+checkerboard reveal exposes the latest rendered dashboard state.
 
 ## Validation Notes
 
@@ -279,5 +280,7 @@ The important functional checks are:
   visible;
 - force Singularity from `dev-flags.html`, then switch back to the dashboard;
 - confirm same-state refreshes do not replay the transition;
-- confirm leaving Singularity cancels any queued or active transition;
+- confirm leaving Singularity before playback starts cancels a queued transition;
+- confirm leaving Singularity during active playback does not cancel the
+  transition and the checkerboard reveal exposes the latest dashboard state;
 - confirm reduced-motion skips the animated sequence.

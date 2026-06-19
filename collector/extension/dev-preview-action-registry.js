@@ -3,14 +3,12 @@
 
   const ACTION_KEYS = Object.freeze({
     brakeMaxBurst: "brakeMaxBurst",
-    maxSplatBounce: "maxSplatBounce",
     monkEscape: "monkEscape",
     rareSweat: "rareSweat",
   });
   const ACTION_ORDER = Object.freeze([
     ACTION_KEYS.brakeMaxBurst,
     ACTION_KEYS.rareSweat,
-    ACTION_KEYS.maxSplatBounce,
     ACTION_KEYS.monkEscape,
   ]);
 
@@ -40,17 +38,6 @@
       messageType: "pacePets.pushSweatPreview.rare",
       responseRequired: true,
       status: "Rare burst (5%) requested.",
-    }),
-    [ACTION_KEYS.maxSplatBounce]: previewAction({
-      controlMessageName: "maxBounceMessage",
-      controlPredicateName: "isMaxBounceMessage",
-      fallbackErrorMessage:
-        "Open the dashboard on Splat before previewing Max Splat bounce.",
-      key: ACTION_KEYS.maxSplatBounce,
-      label: "Max Splat bounce",
-      messageType: "pacePets.splatBouncePreview.max",
-      responseRequired: true,
-      status: "Max Splat bounce preview requested.",
     }),
     [ACTION_KEYS.monkEscape]: previewAction({
       controlMessageName: "launchMessage",

@@ -24,6 +24,18 @@
     return Math.round(Math.max(0, Math.min(100, numericValue)));
   }
 
+  function usableRect(rect) {
+    return (
+      rect &&
+      Number.isFinite(rect.height) &&
+      Number.isFinite(rect.left) &&
+      Number.isFinite(rect.top) &&
+      Number.isFinite(rect.width) &&
+      rect.height > 0 &&
+      rect.width > 0
+    );
+  }
+
   function shouldForceRareMax(controller) {
     const timePercent = roundedDisplayPercent(
       controller.currentPaceSummaryTimePercent,
@@ -37,7 +49,7 @@
   function ratioOriginRect(controller) {
     const ratioRect =
       controller.elements.paceRatioValue?.getBoundingClientRect();
-    return ratioRect
+    return usableRect(ratioRect)
       ? {
           height: ratioRect.height,
           left: ratioRect.left,
@@ -58,8 +70,8 @@
   }
 
   function rareMaxPlayback(controller) {
-    controller.splatMaxBounceRatioOriginRect = ratioOriginRect(controller);
     return {
+      captureRatioOriginBeforeImpact: true,
       fallTiming: MAX_SPLAT_FALL_TIMING,
       impactProfile: {
         card: PROFILE.maxIntroCardImpactProfile(),

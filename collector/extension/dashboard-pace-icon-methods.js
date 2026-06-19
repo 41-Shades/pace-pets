@@ -21,6 +21,15 @@
     return controller.motionPreferenceEnabled?.() !== false;
   }
 
+  function clearSplatMaxPreview(controller) {
+    if (typeof controller.clearSplatMaxBouncePreview === "function") {
+      controller.clearSplatMaxBouncePreview();
+      return;
+    }
+
+    controller.clearSplatMaxThrow?.();
+  }
+
   function hasMatchingPlayfulPaceIcon(container, state) {
     const image = container.firstElementChild;
     return (
@@ -246,7 +255,7 @@
     },
 
     renderPaceIconEffect(container, state) {
-      if (!motionPreferenceEnabled(this)) {
+      if (!motionPreferenceEnabled(this) || document.hidden) {
         return;
       }
 
@@ -272,6 +281,14 @@
       this.stopSyncSunburstPageBackground?.();
       this.stopSyncMonkEscape?.();
       this.stopSingularityTransition?.();
+    },
+
+    pauseHiddenDocumentMotionEffects() {
+      this.clearPaceIconEffects(this.elements.paceIcon);
+      this.clearSplatMaxThrow?.();
+      this.stopPerfectZeroPageBackgroundScene?.();
+      this.stopSyncSunburstPageBackground?.();
+      this.stopSyncMonkEscape?.();
     },
 
     renderPaceIcon(
@@ -322,7 +339,7 @@
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const state = this.paceStateForClassName(level);
       if (state.key !== DATA.PACE_STATES.splat.key) {
-        this.clearSplatMaxThrow?.();
+        clearSplatMaxPreview(this);
       }
       const playSplatFall =
         motionPreferenceEnabled(this) &&
@@ -332,6 +349,9 @@
           replay: replaySplatFall,
           state,
         });
+      if (playSplatFall) {
+        clearSplatMaxPreview(this);
+      }
       setSplatFallIntro(this.elements.paceIcon, playSplatFall);
       setSyncSunburstPageBackground(this, previousState, state);
       const staleClasses = DATA.PACE_CLASSES.filter((name) => name !== level);

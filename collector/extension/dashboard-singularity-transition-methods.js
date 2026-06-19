@@ -32,6 +32,12 @@
 
     updateSingularityTransitionState(previousState, state) {
       if (!isSingularityState(state)) {
+        if (this.singularityTransitionInFlight) {
+          // Let the final checkerboard reveal the latest dashboard DOM state.
+          this.singularityTransitionPending = false;
+          return;
+        }
+
         this.stopSingularityTransition();
         return;
       }

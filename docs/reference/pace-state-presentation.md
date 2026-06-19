@@ -26,6 +26,9 @@ percent is zero, the ratio is unavailable and the muted state is used.
 
 Percent inputs are bounded to `0..100`. Display surfaces choose their own
 formatting, but the stored history keeps source precision after normalization.
+Current observed WHAM usage-window data reports whole-number `used_percent`
+values, so fractional state behavior is supported by normalization but is not
+the current observed provider contract.
 
 ## Threshold States
 
@@ -48,15 +51,19 @@ can override the displayed state when their exact rule matches.
 
 ## Perfect State Contract
 
-Perfect states use display rounding, not exact raw equality. Percent values are
-bounded to `0..100` and then rounded with `Math.round()` before the perfect-state
-rules compare them. A round zero can therefore be a small positive source value
-that displays as `0%`.
+Perfect states compare display-scale percent values, not hidden source
+precision. Percent values are bounded to `0..100` and then rounded with
+`Math.round()` before the perfect-state rules compare them. Current observed
+WHAM usage-window data already reports whole-number `used_percent` values, so
+live usage normally reaches display zero only when reported used percent is
+`100`. The meaningful live rounding band is the locally computed time remaining
+percent. In current WHAM data, display-scale usage is the reported integer
+remaining percent; display-scale time is computed locally and rounded.
 
 | State                        | Surface                                   | Rule                                                                                              | Presentation                                                                                                             |
 | ---------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Perfect sync (`sync`)        | Dashboard and toolbar badge               | Rounded remaining-usage percent equals rounded time-remaining percent.                            | Uses the `sync` state with a controlled display ratio of `1.00`.                                                         |
-| Perfect zero (`perfectZero`) | Dashboard and toolbar badge               | Perfect sync is valid and rounded remaining-usage percent is `0`.                                 | Uses the `perfectZero` state with a controlled display ratio of `0.00`.                                                  |
+| Perfect sync (`sync`)        | Dashboard and toolbar badge               | Display-scale remaining-usage percent equals display-scale time-remaining percent.                | Uses the `sync` state with a controlled display ratio of `1.00`.                                                         |
+| Perfect zero (`perfectZero`) | Dashboard and toolbar badge               | Perfect sync is valid and display-scale remaining-usage percent is `0`.                           | Uses the `perfectZero` state with a controlled display ratio of `0.00`.                                                  |
 | Singularity (`singularity`)  | Dashboard, browser tab, and toolbar badge | Perfect zero is valid and `Resets In` also displays zero while `resetsAt` is still in the future. | Uses the `singularity` state with a controlled display ratio of `0.00` and a reset countdown presentation of `0d 0h 0m`. |
 
 The three perfect states are mutually ordered by specificity. Singularity wins
@@ -71,11 +78,71 @@ zero while rounded time still displayed above zero in that same window.
 Singularity inherits that Perfect Zero guard and also requires the countdown
 display-zero band, not an ended window.
 
+## Display-Zero Timing Bands
+
+Display-zero bands are separate product rules. They should not be treated as one
+shared "zero" moment.
+
+| Value                         | Display-zero rule                                                              | 5h window threshold               | 7d window threshold               |
+| ----------------------------- | ------------------------------------------------------------------------------ | --------------------------------- | --------------------------------- |
+| Usage remaining percent       | Current WHAM reports `used_percent: 100`, normalized to `remainingPercent: 0`. | No fractional live band observed. | No fractional live band observed. |
+| Time remaining percent        | `Math.round(timeRemainingPercent) === 0` while `resetsAt` is still future.     | Final `< 90s`                     | Final `< 50m 24s` (`< 50.4m`)     |
+| `Resets In` countdown display | `Math.floor(remainingMs / 60000) === 0` while `resetsAt` is still future.      | Final `< 60s`                     | Final `< 60s`                     |
+
+At exactly the time-percent half-point, `Math.round(0.5)` returns `1`, so the
+time percent still displays `1%`: exactly `90s` remaining for the 5h window, and
+exactly `50m 24s` remaining for the 7d window. At exactly reset time, the
+countdown displays `Window ended`, not zero.
+
+Product implications:
+
+- Perfect Zero can only appear after usage is reported as `0%` remaining and the
+  time percent display also reaches `0%`: final `< 90s` for 5h, final `< 50m
+24s` for 7d.
+- Singularity is narrower than Perfect Zero because `Resets In` must also display
+  zero: final `< 60s` for both windows.
+- Splat wins when usage is reported as `0%` remaining while time percent still
+  displays above zero: `>= 90s` remaining for 5h, `>= 50m 24s` remaining for 7d.
+- If history already shows usage reached display zero earlier in the same reset
+  window, the current guard disallows later Perfect Zero and therefore also
+  disallows Singularity for that window.
+
+## Rough Countdown Transition Conditions
+
+These rough countdown bands assume current WHAM integer usage precision. `R` is
+the reported remaining usage percent after normalization, where `R = 100 -
+used_percent`. The rows below assume `R = 0`; Perfect Zero and Singularity also
+require no earlier reported-zero history block in the same reset window.
+
+### 5h Window
+
+| Usage remaining | Time remaining          | `Resets In` display | Duration              | State                        |
+| --------------- | ----------------------- | ------------------- | --------------------- | ---------------------------- |
+| 0%              | 90 seconds or more      | 1 minute or more    | Until 90 seconds left | Splat (`splat`)              |
+| 0%              | 60 to 89 seconds        | 1 minute            | About 30 seconds      | Perfect zero (`perfectZero`) |
+| 0%              | 1 to 59 seconds         | 0 minutes           | About 59 seconds      | Singularity (`singularity`)  |
+| Any             | 0 seconds or past reset | Window ended        | Ended                 | Ended or stale window        |
+
+### 7d Window
+
+| Usage remaining | Time remaining                      | `Resets In` display | Duration           | State                        |
+| --------------- | ----------------------------------- | ------------------- | ------------------ | ---------------------------- |
+| 0%              | 50 minutes 24 seconds or more       | 50 minutes or more  | Until 50m 24s left | Splat (`splat`)              |
+| 0%              | 60 seconds to 50 minutes 23 seconds | 1 to 50 minutes     | About 49m 24s      | Perfect zero (`perfectZero`) |
+| 0%              | 1 to 59 seconds                     | 0 minutes           | About 59 seconds   | Singularity (`singularity`)  |
+| Any             | 0 seconds or past reset             | Window ended        | Ended              | Ended or stale window        |
+
+If the first observed `R = 0` sample arrives during the final countdown minute
+and no earlier reported-zero history blocks perfect presentation, the display can
+enter Singularity directly. If `R = 0` is observed earlier, the current history
+guard blocks later Perfect Zero and Singularity for that reset window.
+
 ## Imperfect State Contract
 
-Splat is an imperfect special state. It uses source-reported zero usage, but it
-only wins before the final rounded time band because upstream source precision
-can be whole-percent at the low end.
+Splat is an imperfect special state. It uses normalized zero remaining usage,
+which is commonly derived from source-reported `used_percent: 100` in current
+WHAM data. It only wins before the final rounded time band because upstream
+source precision can be whole-percent at the low end.
 
 | State           | Surface                     | Rule                                                                                    | Presentation                                                      |
 | --------------- | --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -111,7 +178,10 @@ Zero uses a small positive pair that displays as `0%` for usage and time, while
 forced Singularity uses exact zero and keeps the explicit `0d 0h 0m` countdown.
 Forced Splat keeps usage at exact zero while reusing the selected live window's
 time remaining when available, so its `Time remaining` percent stays aligned
-with the live `Resets in` countdown.
+with the live `Resets in` countdown. Dev controls expose explicit Splat timing
+variants for the two animation branches: `splatTimeRemainingPreview: "over50"`
+uses `75%` time remaining, and `splatTimeRemainingPreview: "under50"` uses
+`49%` time remaining.
 
 Splat's active status icon plays a one-time free-fall animation on entry into
 the state. The resting Splat icon stays hidden until the falling icon reaches
@@ -121,22 +191,23 @@ replay on interval refreshes, but turning Splat on again or reloading the
 dashboard while Splat is active can replay it once. At the impact moment, the
 status card briefly teeters and the ratio stat pops upward before both settle.
 When the displayed time-remaining percent is over `50%`, Splat always plays the
-full rare Max Splat sequence. At `50%` or below, each Splat entry chooses one of
+full rare Max Splat sequence. Dev controls use the `Splat >50%` timing preview
+to force that full sequence. At `50%` or below, each Splat entry chooses one of
 three entry modes: a normal ratio bounce 75% of the time, a max-normal regular
 ratio bounce 20% of the time, or the full rare Max Splat sequence 5% of the
 time. Normal and max-normal entries still randomize the ratio pop drift,
-rebound, duration, and card teeter profile. Dev controls can request a
-deterministic Max Splat bounce preview that replays the full rare entry
-sequence: the free-fall figure lands on a faster max-preview fall, a larger
-first card teeter plays, then the ratio launches after a `60ms` beat,
-rockets visibly through `-620px` toward `-5000px`, hangs briefly, descends
-through visible checkpoints, slams back to `138px`, and throws the same
-free-fall figure from the severe 0.00-slam impact peak into a rotated Splat icon
-on the browser side wall. The wall Splat then slides down, switches back to the
-free-fall figure for a short drop, pauses midair for an extended spin, and slams
-into a rubber-wide final Splat icon on the bottom browser edge. The final Splat
-icon holds with a subtle widening pulse until the dashboard leaves Splat, while
-the status card runs a larger teeter aligned to the slam-back moment.
+rebound, duration, and card teeter profile. In the full rare sequence, the
+free-fall figure lands on a faster max-preview fall, a larger first card teeter
+plays, then the ratio launches after a `60ms` beat, rockets straight up through
+`-620px` toward `-5000px`, hangs briefly, descends through vertical checkpoints,
+slams down to `138px`, quickly settles back at the ratio stat, and throws the
+same free-fall figure from the severe 0.00-slam impact peak into a rotated Splat
+icon on the browser side wall. The wall Splat then slides down, switches back to
+the free-fall figure for a short drop, pauses midair for an extended spin, and
+slams into a rubber-wide final
+Splat icon on the bottom browser edge. The final Splat icon holds with a subtle
+widening pulse until the dashboard leaves Splat, while the status card runs a
+larger teeter aligned to the slam-back moment.
 
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects.
@@ -165,15 +236,17 @@ selected puffs onto a much longer cubic float up and away path. Same-state
 refreshes preserve the running effect, reduced-motion settings disable smoke,
 and the legend rail remains static.
 
-The reset countdown card has a reset-exhausted rescue presentation owned by
+The reset countdown card has an Exhausted man rescue presentation owned by
 `collector/extension/dashboard-reset-exhausted-methods.js` and
 `collector/extension/dashboard-reset-exhausted.css`. Local developer controls
 can force it with `resetExhaustedPreview`, and live Splat can also schedule it
-after the falling Splat intro finishes. While Splat remains current, the rescue
-sequence waits for a bounded delay, shows the traced tired figure and message,
-then repeats on later bounded delays until the dashboard leaves Splat. The
-developer override is the only stored field; live Splat rescue state is
-transient dashboard timer and DOM state.
+after the falling Splat intro finishes. The developer preview shows the traced
+tired figure and message immediately, then repeats on the same bounded cadence
+while the preview remains enabled and the dashboard is not currently in Splat.
+While Splat remains current, the rescue sequence waits for a bounded delay,
+shows the traced tired figure and message, then repeats on later bounded delays
+until the dashboard leaves Splat. The developer override is the only stored
+field; live Splat rescue state is transient dashboard timer and DOM state.
 
 The same card shows projected pace burn out by linearly extrapolating the
 current window's used percent over elapsed time, including projections that land
@@ -339,9 +412,11 @@ whiteout, then clears a checkerboard overlay to reveal the current dashboard
 state. Same-state refreshes do not replay the transition. If Singularity is
 selected from the separate developer controls while the dashboard tab is
 hidden, the transition is queued and plays when the dashboard becomes visible.
-Reduced-motion users skip the animated sequence. The renderer removes the
-temporary WebGL canvas and restores distorted chrome at terminal whiteout,
-when Singularity exits, or when the active transition is cancelled. See
+After playback starts, ordinary pace-state changes update the dashboard DOM
+under the active transition instead of cancelling it. Reduced-motion users skip
+the animated sequence. The renderer removes the temporary WebGL canvas and
+restores distorted chrome at terminal whiteout, when motion effects are
+explicitly stopped, or when a transition phase fails. See
 `docs/reference/singularity-transition.md` for the full architecture and
 lifecycle contract.
 

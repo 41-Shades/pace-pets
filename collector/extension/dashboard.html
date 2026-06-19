@@ -58,24 +58,6 @@
             <div class="panel-actions">
               <div class="panel-controls">
                 <button
-                  class="motion-toggle"
-                  id="motion-toggle"
-                  type="button"
-                  aria-label="Turn all motion off"
-                  aria-pressed="true"
-                >
-                  <span class="motion-toggle-icon" aria-hidden="true"></span>
-                </button>
-                <button
-                  class="theme-toggle"
-                  id="theme-toggle"
-                  type="button"
-                  aria-label="Switch theme"
-                  data-tooltip="Switch theme"
-                >
-                  <span class="theme-toggle-icon" aria-hidden="true"></span>
-                </button>
-                <button
                   class="window-toggle"
                   id="window-toggle"
                   type="button"
@@ -89,6 +71,24 @@
                   <span class="window-toggle-option" data-window-key="fiveHour">
                     5h
                   </span>
+                </button>
+                <button
+                  class="theme-toggle"
+                  id="theme-toggle"
+                  type="button"
+                  aria-label="Switch theme"
+                  data-tooltip="Switch theme"
+                >
+                  <span class="theme-toggle-icon" aria-hidden="true"></span>
+                </button>
+                <button
+                  class="motion-toggle"
+                  id="motion-toggle"
+                  type="button"
+                  aria-label="Turn all motion off"
+                  aria-pressed="true"
+                >
+                  <span class="motion-toggle-icon" aria-hidden="true"></span>
                 </button>
                 <button
                   class="info-toggle"
@@ -118,7 +118,6 @@
                   <span
                     class="collection-pulse live"
                     id="collection-pulse"
-                    aria-hidden="true"
                   ></span>
                   <span
                     class="last-collected"
@@ -126,9 +125,12 @@
                     aria-label="Checked: waiting."
                   >
                     <span class="last-collected-label">Checked:</span>
-                    <span class="last-collected-value" id="last-collected-value"
-                      >waiting</span
+                    <span
+                      class="last-collected-value"
+                      id="last-collected-value"
                     >
+                      waiting
+                    </span>
                   </span>
                 </span>
                 <span id="collector-version" hidden>v...</span>
@@ -306,79 +308,6 @@
                       </span>
                     </span>
                   </div>
-                </div>
-              </div>
-            </section>
-          </div>
-          <div class="info-overlay" id="info-overlay" hidden>
-            <section
-              class="info-panel"
-              role="dialog"
-              aria-modal="true"
-              aria-label="About Pace Pets"
-            >
-              <header class="info-panel-header">
-                <button
-                  class="info-close"
-                  id="info-close"
-                  type="button"
-                  aria-label="Close dashboard info"
-                >
-                  <span class="info-close-icon" aria-hidden="true"></span>
-                </button>
-              </header>
-              <div class="info-panel-content">
-                <div class="info-panel-grid">
-                  <p class="info-panel-item">
-                    <span class="info-panel-label">Pace:</span> Compares usage
-                    remaining with time remaining.
-                  </p>
-                  <p class="info-panel-item">
-                    <span class="info-panel-label">Source:</span> Uses the
-                    ChatGPT session already signed in to this Chrome profile to
-                    check usage status from chatgpt.com.
-                  </p>
-                  <p class="info-panel-item">
-                    <span class="info-panel-label">Local:</span> Usage and reset
-                    history stay in this browser; no server, account, or sync.
-                    Pace Pets cannot read chats or page contents.
-                  </p>
-                  <p class="info-panel-item">
-                    <span class="info-panel-label">Affiliation:</span> Pace Pets
-                    is an independent 41 Shades utility and is not an OpenAI
-                    product. The ChatGPT usage data source may change or stop
-                    working.
-                  </p>
-                </div>
-                <div class="info-panel-meta-row">
-                  <p class="info-panel-meta">
-                    <span class="info-panel-meta-label">Publisher:</span>
-                    <a
-                      class="info-panel-meta-link"
-                      href="https://www.41-shades.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >41 Shades</a
-                    >
-                    <span class="info-panel-meta-separator">·</span>
-                    <span class="info-panel-meta-label">Code:</span>
-                    <a
-                      class="info-panel-meta-link"
-                      href="https://github.com/41-Shades/pace-pets"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >GitHub</a
-                    >
-                  </p>
-                  <button
-                    class="info-panel-clear-data"
-                    id="clear-data-button"
-                    type="button"
-                    aria-label="Clears all local usage history. Resets Pace Pets."
-                    data-tooltip="Clears all local usage history.&#10;Resets Pace Pets."
-                  >
-                    Clear data
-                  </button>
                 </div>
               </div>
             </section>

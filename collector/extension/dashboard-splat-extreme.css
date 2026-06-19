@@ -293,41 +293,33 @@ html[data-motion="off"] .splat-max-throw-actor {
 
   3.5% {
     animation-timing-function: cubic-bezier(0.12, 0.72, 0.2, 1);
-    transform: translate3d(var(--splat-pop-peak-x, 18px), -620px, 0) scale(1.14);
+    transform: translate3d(0, -620px, 0) scale(1.14);
   }
 
   7.5% {
     animation-timing-function: steps(1, end);
-    transform: translate3d(
-        var(--splat-pop-peak-x, 18px),
-        var(--splat-pop-peak-y, -5000px),
-        0
-      )
+    transform: translate3d(0, var(--splat-pop-peak-y, -5000px), 0)
       scale(var(--splat-pop-peak-scale, 1.24));
   }
 
   64% {
     animation-timing-function: cubic-bezier(0.66, 0, 0.98, 0.34);
-    transform: translate3d(
-        var(--splat-pop-peak-x, 18px),
-        var(--splat-pop-peak-y, -5000px),
-        0
-      )
+    transform: translate3d(0, var(--splat-pop-peak-y, -5000px), 0)
       scale(var(--splat-pop-peak-scale, 1.24));
   }
 
   67% {
-    transform: translate3d(12px, var(--splat-extreme-descent-high-y, -960px), 0)
+    transform: translate3d(0, var(--splat-extreme-descent-high-y, -960px), 0)
       scale(1.2);
   }
 
   70% {
-    transform: translate3d(8px, var(--splat-extreme-descent-mid-y, -520px), 0)
+    transform: translate3d(0, var(--splat-extreme-descent-mid-y, -520px), 0)
       scale(1.12);
   }
 
   73% {
-    transform: translate3d(4px, var(--splat-extreme-descent-near-y, -220px), 0)
+    transform: translate3d(0, var(--splat-extreme-descent-near-y, -220px), 0)
       scale(1.05);
   }
 

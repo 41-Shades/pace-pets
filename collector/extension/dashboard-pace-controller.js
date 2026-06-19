@@ -12,12 +12,13 @@
   function createController(options) {
     const controller = new Controller(options);
     controller.bindBrakeExtremePreviewRequests?.();
-    controller.bindSplatBouncePreviewRequests?.();
     controller.bindSyncMonkEscapePreviewRequests?.();
     return Object.freeze({
       hasForcedPaceStateOverride:
         controller.hasForcedPaceStateOverride.bind(controller),
       mutedClassName: DATA.MUTED_PACE_CLASS,
+      pauseHiddenDocumentMotionEffects:
+        controller.pauseHiddenDocumentMotionEffects.bind(controller),
       playPendingSingularityTransition:
         controller.playPendingSingularityTransition.bind(controller),
       refreshForcedPaceStateOverride:

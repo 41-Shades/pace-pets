@@ -7,7 +7,7 @@
   const FIGURE = globalThis.PacePetsResetExhaustedFigure;
   if (!App || !ARM_MOTION || !DATA || !FIGURE) {
     throw new Error(
-      "Reset exhausted dependencies must load before dashboard-reset-exhausted-methods.js.",
+      "Exhausted man dependencies must load before dashboard-reset-exhausted-methods.js.",
     );
   }
 
@@ -33,6 +33,11 @@
       this.resetExhaustedSplatRepeatTimer = null;
     },
 
+    clearResetExhaustedPreviewRepeat() {
+      window.clearTimeout(this.resetExhaustedPreviewRepeatTimer);
+      this.resetExhaustedPreviewRepeatTimer = null;
+    },
+
     clearResetExhaustedSequenceStart() {
       window.clearTimeout(this.resetExhaustedSequenceStartTimer);
       this.resetExhaustedSequenceStartTimer = null;
@@ -40,10 +45,14 @@
       this.resetExhaustedArmAnimationFrame = null;
     },
 
-    clearResetExhaustedSplatTimers() {
+    clearResetExhaustedSplatTimers({
+      preserveActivePreviewSequence = false,
+    } = {}) {
       this.clearResetExhaustedSplatLaunch();
       this.clearResetExhaustedSplatRepeat();
-      this.clearResetExhaustedSequenceStart();
+      if (!preserveActivePreviewSequence) {
+        this.clearResetExhaustedSequenceStart();
+      }
     },
 
     ensureResetExhaustedFigure({ sequenceDelayMs = 0 } = {}) {
@@ -72,7 +81,10 @@
 
     handlePaceStateChanged({ playSplatFall = false, previousState, state }) {
       if (state.key !== DATA.PACE_STATES.splat.key) {
-        this.clearResetExhaustedSplatTimers();
+        this.clearResetExhaustedSplatTimers({
+          preserveActivePreviewSequence:
+            this.currentResetExhaustedPreview === true,
+        });
         this.currentResetExhaustedSplatActive = false;
         this.renderResetExhaustedPreview();
         return;
@@ -120,8 +132,15 @@
       );
     },
 
+    shouldStartResetExhaustedSequence({ elementsWereHidden, restart }) {
+      return (
+        restart || elementsWereHidden || !this.resetExhaustedElementsConnected()
+      );
+    },
+
     hideResetExhaustedPreview() {
       this.clearResetExhaustedSequenceStart();
+      this.clearResetExhaustedPreviewRepeat();
       if (this.resetExhaustedFigure) {
         this.resetExhaustedFigure.hidden = true;
       }
@@ -152,9 +171,28 @@
       this.showResetExhaustedPreview({ restart, sequenceDelayMs });
     },
 
+    syncResetExhaustedPreviewRepeat({ sequenceDelayMs, shouldStartSequence }) {
+      if (!this.resetExhaustedPreviewRepeatEligible()) {
+        this.clearResetExhaustedPreviewRepeat();
+        return;
+      }
+
+      if (
+        shouldStartSequence ||
+        this.resetExhaustedPreviewRepeatTimer === null
+      ) {
+        this.scheduleResetExhaustedPreviewRepeat({ sequenceDelayMs });
+      }
+    },
+
     showResetExhaustedPreview({ restart = false, sequenceDelayMs = 0 } = {}) {
-      const shouldStartSequence =
-        restart || !this.resetExhaustedElementsConnected();
+      const elementsWereHidden =
+        this.resetExhaustedFigure?.hidden === true ||
+        this.resetExhaustedMessage?.hidden === true;
+      const shouldStartSequence = this.shouldStartResetExhaustedSequence({
+        elementsWereHidden,
+        restart,
+      });
       if (restart) {
         this.resetResetExhaustedElements();
       }
@@ -168,10 +206,48 @@
       if (shouldStartSequence) {
         this.startResetExhaustedArmSequence({ sequenceDelayMs });
       }
+      this.syncResetExhaustedPreviewRepeat({
+        sequenceDelayMs,
+        shouldStartSequence,
+      });
+    },
+
+    resetExhaustedPreviewRepeatEligible() {
+      return (
+        this.currentResetExhaustedPreview === true &&
+        !this.isResetExhaustedSplatCurrent()
+      );
+    },
+
+    scheduleResetExhaustedPreviewRepeat({ sequenceDelayMs = 0 } = {}) {
+      this.clearResetExhaustedPreviewRepeat();
+      if (
+        !this.resetExhaustedPreviewRepeatEligible() ||
+        !this.motionPreferenceEnabled()
+      ) {
+        return;
+      }
+
+      const delay =
+        sequenceDelayMs +
+        RESET_EXHAUSTED_SEQUENCE_MS +
+        randomIntegerInRange(SPLAT_EXHAUSTED_POST_FALL_DELAY_RANGE_MS);
+      this.resetExhaustedPreviewRepeatTimer = window.setTimeout(() => {
+        this.resetExhaustedPreviewRepeatTimer = null;
+        if (
+          !this.resetExhaustedPreviewRepeatEligible() ||
+          !this.motionPreferenceEnabled()
+        ) {
+          return;
+        }
+
+        this.renderResetExhaustedPreview({ restart: true });
+      }, delay);
     },
 
     scheduleResetExhaustedSplatLaunch({ playSplatFall }) {
       this.clearResetExhaustedSplatTimers();
+      this.clearResetExhaustedPreviewRepeat();
       this.currentResetExhaustedSplatActive = false;
       this.renderResetExhaustedPreview();
       if (!this.motionPreferenceEnabled()) {
@@ -216,6 +292,7 @@
         return;
       }
 
+      this.clearResetExhaustedPreviewRepeat();
       const sequenceDelayMs = enter ? RESET_EXHAUSTED_ENTER_MS : 0;
       this.currentResetExhaustedSplatActive = true;
       this.renderResetExhaustedPreview({
