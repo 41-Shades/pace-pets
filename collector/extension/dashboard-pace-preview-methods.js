@@ -58,6 +58,13 @@
         previewWindow.windowData?.resetsAt,
         previewWindow.atMs,
       );
+      const resetBudgetRate = DASHBOARD_TIME.resetBudgetRate(
+        previewWindow.windowData,
+        previewWindow.atMs,
+      );
+      this.elements.resetBudgetRateValue.textContent = resetBudgetRate.value;
+      this.elements.resetBudgetRateUnit.textContent = resetBudgetRate.unit;
+      this.elements.resetBudgetRate.hidden = resetBudgetRate.value === "--";
       this.elements.paceBurnoutIn.textContent =
         DASHBOARD_TIME.paceBurnoutCountdown(
           previewWindow.windowData,
@@ -70,6 +77,9 @@
 
       this.elements.resetsIn.textContent =
         DATA.SINGULARITY_RESET_COUNTDOWN_TEXT;
+      this.elements.resetBudgetRateValue.textContent = "--";
+      this.elements.resetBudgetRateUnit.textContent = "";
+      this.elements.resetBudgetRate.hidden = true;
       this.elements.paceBurnoutIn.textContent =
         DATA.SINGULARITY_RESET_COUNTDOWN_TEXT;
       this.elements.resetProgressFill.style.setProperty(

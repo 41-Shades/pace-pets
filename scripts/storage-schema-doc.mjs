@@ -51,6 +51,11 @@ function supportedWindowList(usageWindows) {
   }).join("\n");
 }
 
+function codeValueList(values) {
+  const list = Array.isArray(values) ? values : Object.values(values || {});
+  return list.map((value) => `\`${value}\``).join(", ");
+}
+
 async function importProjectScript(relativePath) {
   await import(pathToFileURL(path.join(projectRoot, relativePath)));
 }
@@ -128,8 +133,17 @@ function developerOptionsExample({ developerOptions }) {
     forcedPaceStateKey: "wellAhead",
     manualRefreshLeadWindow: true,
     maxPoolFill: true,
+    railHidden: true,
     resetExhaustedPreview: true,
     sprintIntensityPreview: "4.00",
+  });
+}
+
+function developerSplatTimingPreviewExample({ developerOptions }) {
+  return developerOptions.storedDeveloperOptionsValue({
+    forcedPaceStateKey: "splat",
+    splatTimeRemainingPreview:
+      developerOptions.SPLAT_TIME_REMAINING_PREVIEW_OPTIONS[0]?.value,
   });
 }
 
@@ -149,6 +163,8 @@ export async function storageSchemaGeneratedMarkdown() {
   const history = historyExample({ ...contracts, packageJson, usageSample });
   const refreshStatus = refreshStatusExample({ historyStore, usageSample });
   const developerOptionsStorage = developerOptionsExample(contracts);
+  const developerSplatTimingPreviewStorage =
+    developerSplatTimingPreviewExample(contracts);
 
   return [
     generatedStart,
@@ -169,6 +185,10 @@ export async function storageSchemaGeneratedMarkdown() {
     "",
     fencedJson(developerOptionsStorage),
     "",
+    "### Developer Splat Timing Preview Shape",
+    "",
+    fencedJson(developerSplatTimingPreviewStorage),
+    "",
     "### Runtime Constants",
     "",
     `- Storage key: \`${historyStore.HISTORY_STORAGE_KEY}\``,
@@ -185,7 +205,8 @@ export async function storageSchemaGeneratedMarkdown() {
     `- Developer-options key: \`${developerOptions.STORAGE_KEY}\``,
     `- Supported forced pace-state values: ${developerOptions.FORCEABLE_PACE_STATE_KEYS.map((key) => `\`${key}\``).join(", ")}`,
     `- Developer feature preview fields: ${developerOptions.FEATURE_PREVIEW_OPTIONS.map((option) => `\`${option.key}\``).join(", ")}`,
-    `- Developer Sprint faster intensity preview field: \`${developerOptions.SPRINT_INTENSITY_PREVIEW_KEY}\`; supported values: ${developerOptions.SPRINT_INTENSITY_PREVIEW_VALUES.map((value) => `\`${value}\``).join(", ")}; stored only with \`${developerOptions.FORCED_PACE_STATE_KEY}: "wellAhead"\``,
+    `- Developer Sprint faster intensity preview field: \`${developerOptions.SPRINT_INTENSITY_PREVIEW_KEY}\`; supported values: ${codeValueList(developerOptions.SPRINT_INTENSITY_PREVIEW_VALUES)}; stored only with \`${developerOptions.FORCED_PACE_STATE_KEY}: "wellAhead"\``,
+    `- Developer Splat time remaining preview field: \`${developerOptions.SPLAT_TIME_REMAINING_PREVIEW_KEY}\`; supported values: ${codeValueList(developerOptions.SPLAT_TIME_REMAINING_PREVIEW_VALUES)}; stored only with \`${developerOptions.FORCED_PACE_STATE_KEY}: "splat"\``,
     `- Dashboard window session key: \`${dashboardPreferences.DASHBOARD_WINDOW_SESSION_KEY}\``,
     `- Dashboard theme preference key: \`${dashboardPreferences.THEME_STORAGE_KEY}\``,
     `- Supported dashboard theme values: ${dashboardPreferences.THEME_VALUES.map((theme) => `\`${theme}\``).join(", ")}`,

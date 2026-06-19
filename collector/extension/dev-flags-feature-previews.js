@@ -73,6 +73,7 @@
       optionKeys: [
         DEVELOPER_OPTIONS.CRITICAL_BADGE_WINDOW_KEY,
         DEVELOPER_OPTIONS.MANUAL_REFRESH_LEAD_WINDOW_KEY,
+        DEVELOPER_OPTIONS.RAIL_HIDDEN_KEY,
       ],
       title: "Other Previews",
     }),
@@ -85,7 +86,6 @@
   function featurePreviewOptionRow(preview, context) {
     return context.optionRow({
       indicator: false,
-      labelText: preview.label,
       pressed: Boolean(context.currentOptions[preview.key]),
       onClick: async ({ pressed }) => {
         const enabled = !pressed;
@@ -94,6 +94,10 @@
           enabled ? preview.enableStatus : preview.disableStatus,
         );
       },
+      labelText:
+        context.currentOptions[preview.key] && preview.activeLabel
+          ? preview.activeLabel
+          : preview.label,
     });
   }
 

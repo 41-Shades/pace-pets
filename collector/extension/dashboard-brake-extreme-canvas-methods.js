@@ -48,12 +48,7 @@
   }
 
   function extremeParticleCountRange(profile) {
-    const escapeCountRange =
-      DATA.BRAKE_DEBRIS_BURST_PROFILES.escape.COUNT_RANGE;
-    return Object.freeze([
-      escapeCountRange[0] * profile.COUNT_MULTIPLIER,
-      escapeCountRange[1] * profile.COUNT_MULTIPLIER,
-    ]);
+    return profile.COUNT_RANGE;
   }
 
   function createExtremeParticle(controller, profile, origin) {

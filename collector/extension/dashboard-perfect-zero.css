@@ -139,6 +139,10 @@ body.has-perfect-zero-page-background #resets-in {
   font-weight: 780;
 }
 
+body.has-perfect-zero-page-background #reset-budget-rate {
+  color: var(--perfect-zero-space-text-tertiary);
+}
+
 body.has-perfect-zero-page-background #pace-burnout-in {
   color: var(--perfect-zero-space-text-tertiary);
 }

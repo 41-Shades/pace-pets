@@ -47,6 +47,7 @@ describe("PacePetsDeveloperOptions storage", () => {
       "manualRefreshLeadWindow",
     );
     expect(options.MAX_POOL_FILL_KEY).toBe("maxPoolFill");
+    expect(options.RAIL_HIDDEN_KEY).toBe("railHidden");
     expect(options.RESET_EXHAUSTED_PREVIEW_KEY).toBe("resetExhaustedPreview");
     expect(options.SPLAT_TIME_REMAINING_PREVIEW_KEY).toBe(
       "splatTimeRemainingPreview",
@@ -73,6 +74,8 @@ describe("PacePetsDeveloperOptions storage", () => {
     expect(options.normalizeManualRefreshLeadWindow("true")).toBe(false);
     expect(options.normalizeMaxPoolFill(true)).toBe(true);
     expect(options.normalizeMaxPoolFill("true")).toBe(false);
+    expect(options.normalizeRailHidden(true)).toBe(true);
+    expect(options.normalizeRailHidden("true")).toBe(false);
     expect(options.normalizeResetExhaustedPreview(true)).toBe(true);
     expect(options.normalizeResetExhaustedPreview("true")).toBe(false);
     expect(options.normalizeSplatTimeRemainingPreview("over50")).toBe("over50");
@@ -87,6 +90,7 @@ describe("PacePetsDeveloperOptions storage", () => {
         forcedPaceState: "wellAhead",
         manualRefreshLeadWindow: true,
         maxPoolFill: true,
+        railHidden: true,
         resetExhaustedPreview: true,
         sprintIntensityPreview: "4.00",
         unsupported: false,
@@ -96,6 +100,7 @@ describe("PacePetsDeveloperOptions storage", () => {
       forcedPaceStateKey: "wellAhead",
       manualRefreshLeadWindow: true,
       maxPoolFill: true,
+      railHidden: true,
       resetExhaustedPreview: true,
       sprintIntensityPreview: "4.00",
     });
@@ -124,6 +129,7 @@ describe("PacePetsDeveloperOptions storage", () => {
       forcedPaceStateKey: null,
       manualRefreshLeadWindow: false,
       maxPoolFill: false,
+      railHidden: false,
       resetExhaustedPreview: false,
       splatTimeRemainingPreview: null,
       sprintIntensityPreview: null,
@@ -141,6 +147,7 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
         forcedPaceStateKey: "wellAhead",
         manualRefreshLeadWindow: true,
         maxPoolFill: true,
+        railHidden: true,
         resetExhaustedPreview: true,
         sprintIntensityPreview: "7.00",
       }),
@@ -149,6 +156,7 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
       forcedPaceState: "wellAhead",
       manualRefreshLeadWindow: true,
       maxPoolFill: true,
+      railHidden: true,
       resetExhaustedPreview: true,
       sprintIntensityPreview: "7.00",
     });

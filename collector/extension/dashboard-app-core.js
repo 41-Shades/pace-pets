@@ -25,6 +25,7 @@
       this.currentForcedPaceStateKey = null;
       this.currentManualRefreshLeadWindow = false;
       this.currentMaxPoolFill = false;
+      this.currentRailHidden = false;
       this.currentResetExhaustedPreview = false;
       this.currentResetExhaustedSplatActive = false;
       this.currentSplatTimeRemainingPreview = null;
@@ -82,6 +83,7 @@
         getCurrentForcedPaceStateKey: () => this.currentForcedPaceStateKey,
         getCurrentHistory: () => this.currentHistory,
         getCurrentMaxPoolFill: () => this.currentMaxPoolFill,
+        getCurrentRailHidden: () => this.currentRailHidden,
         getCurrentRefreshStatus: () => this.currentRefreshStatus,
         getCurrentSplatTimeRemainingPreview: () =>
           this.currentSplatTimeRemainingPreview,
@@ -222,6 +224,7 @@
       this.currentManualRefreshLeadWindow =
         developerOptions.manualRefreshLeadWindow;
       this.currentMaxPoolFill = developerOptions.maxPoolFill;
+      this.currentRailHidden = developerOptions.railHidden;
       this.currentResetExhaustedPreview =
         developerOptions.resetExhaustedPreview;
       this.currentSplatTimeRemainingPreview =

@@ -89,7 +89,8 @@
       {
         "aria-label": "Clears all local usage history. Resets Pace Pets.",
         class: "info-panel-clear-data",
-        "data-tooltip": "Clears all local usage history.&#10;Resets Pace Pets.",
+        "data-tooltip": "Clears all local usage history.",
+        "data-tooltip-hint": "Resets Pace Pets.",
         id: "clear-data-button",
         type: "button",
       },
