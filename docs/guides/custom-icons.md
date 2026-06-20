@@ -106,9 +106,13 @@ If you rename effect asset files, update `EFFECT_ASSET_FILES` in
 - `behind`: ease up
 - `wellBehind`: slow down
 - `criticalBehind`: brake hard
+- `bigBang`: big bang
 - `sync`: perfect sync
 - `perfectZero`: perfect zero
 - `splat`: splat
+
+Singularity uses generated in-memory art instead of a replaceable pace-icon PNG
+file.
 
 `perfect-zero-glow.png` is a dashboard-only variant used when the main
 `PERFECT ZERO` status card renders its animated space background. The normal

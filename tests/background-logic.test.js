@@ -173,6 +173,33 @@ describe("PacePetsBackgroundLogic badge selection", () => {
     expect(display.badgePaceRatio).toBeCloseTo(0.45);
     expect(display.title).toBe("Pace Pets - 5h Brake hard! pace 0.45");
   });
+});
+
+describe("PacePetsBackgroundLogic special badge states", () => {
+  it("promotes live reset-start perfect hundred to a Big Bang badge", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const states = globalThis.PacePetsLogic.PACE_STATES;
+    const atMs = Date.parse("2026-05-25T12:00:00.000Z");
+    const display = logic.badgeDisplayForWindows({
+      atMs,
+      forcedBadgeState: null,
+      history: { samples: [] },
+      preferredWindowKey: "weekly",
+      windows: {
+        weekly: {
+          remainingPercent: 100,
+          resetsAt: "2026-06-01T12:00:00.000Z",
+          windowMinutes: 10080,
+        },
+      },
+    });
+
+    expect(display.badgeText).toBe("1.00");
+    expect(display.badgeColor).toBe(states.bigBang.badgeColor);
+    expect(display.badgePaceRatio).toBe(1);
+    expect(display.title).toBe("Pace Pets - 7d pace 1.00");
+    expect(display.windowKey).toBe("weekly");
+  });
 
   it("promotes live final-minute perfect zero to a Singularity badge", () => {
     const logic = globalThis.PacePetsBackgroundLogic;

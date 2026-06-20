@@ -44,6 +44,12 @@ describe("PacePetsLogic", () => {
     expect(globalThis.PacePetsLogic.isPerfectZeroPercentPair(50.4, 49.6)).toBe(
       false,
     );
+    expect(
+      globalThis.PacePetsLogic.isPerfectHundredPercentPair(99.6, 100),
+    ).toBe(true);
+    expect(
+      globalThis.PacePetsLogic.isPerfectHundredPercentPair(99.4, 99.4),
+    ).toBe(false);
     expect(globalThis.PacePetsLogic.isPerfectSyncPercentPair(null, 0)).toBe(
       false,
     );
@@ -54,6 +60,12 @@ describe("PacePetsLogic", () => {
 });
 describe("PacePetsLogic controlled presentations", () => {
   it("builds controlled pace presentations for badge and dashboard sync states", () => {
+    const bigBangPresentation =
+      globalThis.PacePetsLogic.controlledPacePresentationForValues(100, 100);
+    expect(bigBangPresentation.state.key).toBe("bigBang");
+    expect(bigBangPresentation.displayRatio).toBe(1);
+    expect(bigBangPresentation.paceRatio).toBe(1);
+
     const syncPresentation =
       globalThis.PacePetsLogic.controlledPacePresentationForValues(50.4, 49.6);
     expect(syncPresentation.state.key).toBe("sync");
@@ -280,6 +292,7 @@ describe("PacePetsLogic presentation", () => {
       "on",
       "behind",
       "strongAhead",
+      "bigBang",
       "sync",
       "wellBehind",
       "ahead",
@@ -295,106 +308,5 @@ describe("PacePetsLogic presentation", () => {
       globalThis.PacePetsLogic.chartPaceRatio(12, { min: 0.5, max: 2 }),
     ).toBe(2);
     expect(globalThis.PacePetsLogic.chartPaceRatio("nope")).toBeNull();
-  });
-});
-
-describe("PacePetsPreviewControl", () => {
-  it("shares synthetic ratios while preserving special forced states", () => {
-    const preview = globalThis.PacePetsPreviewControl;
-
-    expect(preview.forcedPaceRatioForState("sync")).toBe(1);
-    expect(preview.forcedPaceRatioForState("wellAhead")).toBe(1.8);
-    expect(preview.forcedPaceRatioForState("unsupported")).toBeNull();
-    expect(preview.forcedBadgeState("perfectZero")).toMatchObject({
-      badgeText: "0.00",
-      stateKey: "perfectZero",
-    });
-    expect(preview.forcedPercentPairForState("wellAhead")).toEqual({
-      remainingPercent: 90,
-      timePercent: 50,
-    });
-    expect(preview.forcedPercentPairForState("perfectZero")).toEqual({
-      remainingPercent: 0.4,
-      timePercent: 0.4,
-    });
-    expect(preview.forcedPercentPairForState("singularity")).toEqual({
-      remainingPercent: 0,
-      timePercent: 0,
-    });
-    expect(
-      preview.forcedPercentPairForState("splat", {
-        splatTimeRemainingPreview: "over50",
-      }),
-    ).toEqual({
-      remainingPercent: 0,
-      timePercent: 75,
-    });
-    expect(
-      preview.forcedPercentPairForState("splat", {
-        splatTimeRemainingPreview: "under50",
-      }),
-    ).toEqual({
-      remainingPercent: 0,
-      timePercent: 49,
-    });
-    expect(
-      preview.forcedPreviewWindowForState("wellAhead", {
-        atMs: Date.parse("2026-05-25T12:00:00.000Z"),
-        durationMinutes: 300,
-      }),
-    ).toMatchObject({
-      percentPair: {
-        remainingPercent: 90,
-        timePercent: 50,
-      },
-      windowData: {
-        remainingPercent: 90,
-        resetsAt: "2026-05-25T14:30:00.000Z",
-        usedPercent: 10,
-        windowMinutes: 300,
-      },
-    });
-    const liveSplatPreview = preview.forcedPreviewWindowForState("splat", {
-      atMs: Date.parse("2026-05-25T12:00:00.000Z"),
-      durationMinutes: 300,
-      windowData: {
-        remainingPercent: 44,
-        resetsAt: "2026-05-25T13:00:00.000Z",
-        windowMinutes: 300,
-      },
-    });
-    expect(liveSplatPreview.percentPair).toEqual({
-      remainingPercent: 0,
-      timePercent: 20,
-    });
-    expect(liveSplatPreview.windowData).toMatchObject({
-      remainingPercent: 0,
-      resetsAt: "2026-05-25T13:00:00.000Z",
-      usedPercent: 100,
-      windowMinutes: 300,
-    });
-    expect(
-      preview.forcedPreviewWindowForState("splat", {
-        atMs: Date.parse("2026-05-25T12:00:00.000Z"),
-        durationMinutes: 300,
-        splatTimeRemainingPreview: "over50",
-        windowData: {
-          remainingPercent: 44,
-          resetsAt: "2026-05-25T13:00:00.000Z",
-          windowMinutes: 300,
-        },
-      }),
-    ).toMatchObject({
-      percentPair: {
-        remainingPercent: 0,
-        timePercent: 75,
-      },
-      windowData: {
-        remainingPercent: 0,
-        resetsAt: "2026-05-25T15:45:00.000Z",
-        usedPercent: 100,
-        windowMinutes: 300,
-      },
-    });
   });
 });

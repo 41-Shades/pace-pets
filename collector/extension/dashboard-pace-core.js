@@ -24,8 +24,13 @@
       this.paceIconEffectCleanups = new WeakMap();
       this.lastForcedPaceStateKey = null;
       this.currentPaceSummaryTimePercent = null;
+      this.bigBangTransitionInFlight = false;
+      this.bigBangTransitionPending = false;
+      this.bigBangTransitionRunId = 0;
+      this.bigBangTransitionScene = null;
       this.perfectZeroEclipseIcon = null;
       this.perfectZeroPageBackgroundScene = null;
+      this.specialTransitions = null;
       this.singularityTransitionInFlight = false;
       this.singularityTransitionPending = false;
       this.singularityTransitionRunId = 0;

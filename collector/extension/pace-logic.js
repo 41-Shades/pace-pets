@@ -74,6 +74,13 @@
     );
   }
 
+  function isPerfectHundredPercentPair(remainingPercent, timePercent) {
+    return (
+      isPerfectSyncPercentPair(remainingPercent, timePercent) &&
+      roundedDisplayPercent(remainingPercent) === 100
+    );
+  }
+
   function isUsageAbsoluteZeroBeforeFinalTimeBand(
     remainingPercent,
     timePercent,
@@ -122,7 +129,12 @@
       return null;
     }
 
-    const state = perfectZero ? PACE_STATES.perfectZero : PACE_STATES.sync;
+    let state = PACE_STATES.sync;
+    if (perfectZero) {
+      state = PACE_STATES.perfectZero;
+    } else if (isPerfectHundredPercentPair(remainingPercent, timePercent)) {
+      state = PACE_STATES.bigBang;
+    }
     return {
       displayRatio: controlledPaceDisplayRatio(state),
       paceRatio: paceRatioForValues(remainingPercent, timePercent),
@@ -354,6 +366,7 @@
     elapsedWindowPercentAt,
     formatPaceRatioValue,
     isPerfectSyncPercentPair,
+    isPerfectHundredPercentPair,
     isPerfectZeroPercentPair,
     isUsageAbsoluteZeroBeforeFinalTimeBand,
     isResetWindowStale,

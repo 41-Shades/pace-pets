@@ -21,19 +21,18 @@
     "history-store.js",
     "themes/default/asset-manifest.js",
     "pace-state-art.js",
+    "pace-state-special-data.js",
     "pace-state-data.js",
     "sprint-intensity.js",
     "developer-options.js",
     "pace-logic.js",
     "preview-control.js",
   ]);
-
   const BACKGROUND_ONLY_SCRIPT_SOURCES = Object.freeze([
     "background-logic.js",
     "background-usage-source.js",
     "background-context-menu.js",
   ]);
-
   const DASHBOARD_ONLY_SCRIPT_SOURCES = Object.freeze([
     "./vendor/chart.umd.min.js",
     "./perfect-zero-space-data.js",
@@ -74,6 +73,14 @@
     "./dashboard-sync-monk-escape-scene.js",
     "./dashboard-sync-monk-escape-methods.js",
     "./dashboard-sync-sunburst-methods.js",
+    "./dashboard-big-bang-scene-factory.js",
+    "./dashboard-big-bang-ejecta-draw.js",
+    "./dashboard-big-bang-particle-draw.js",
+    "./dashboard-big-bang-recede-draw.js",
+    "./dashboard-big-bang-plume-draw.js",
+    "./dashboard-big-bang-scene-draw.js",
+    "./dashboard-big-bang-scene.js",
+    "./dashboard-big-bang-transition-renderer.js",
     "./dashboard-singularity-black-hole-v2-shaders.js",
     "./dashboard-singularity-black-hole-v2-scene.js",
     "./dashboard-singularity-chrome-collapse-fragments.js",
@@ -111,7 +118,6 @@
     "./dashboard-dom-contract.js",
     "./dashboard.js",
   ]);
-
   const DEV_FLAGS_ONLY_SCRIPT_SOURCES = Object.freeze([
     "./dev-flags-rendering.js",
     "./dev-flags-dom-contract.js",
@@ -120,34 +126,24 @@
     "./dev-flags-feature-previews.js",
     "./dev-flags.js",
   ]);
-
   function extensionPageSource(source) {
     return `./${source}`;
   }
-
-  function dashboardSource(source) {
-    return extensionPageSource(source);
-  }
-
   const BACKGROUND_SCRIPT_SOURCES = Object.freeze([
     ...COMMON_SCRIPT_SOURCES,
     ...BACKGROUND_ONLY_SCRIPT_SOURCES,
   ]);
-
   const DASHBOARD_SCRIPT_SOURCES = Object.freeze([
-    ...COMMON_SCRIPT_SOURCES.map(dashboardSource),
+    ...COMMON_SCRIPT_SOURCES.map(extensionPageSource),
     ...DASHBOARD_ONLY_SCRIPT_SOURCES,
   ]);
-
   const OPTIONAL_DASHBOARD_SCRIPT_SOURCES = Object.freeze([
     "./vendor/chart.umd.min.js",
   ]);
-
   const DEV_FLAGS_SCRIPT_SOURCES = Object.freeze([
     ...COMMON_SCRIPT_SOURCES.map(extensionPageSource),
     ...DEV_FLAGS_ONLY_SCRIPT_SOURCES,
   ]);
-
   function dependencyEdge(before, after) {
     return Object.freeze([before, after]);
   }
@@ -157,10 +153,6 @@
       extensionPageSource(edge[0]),
       extensionPageSource(edge[1]),
     );
-  }
-
-  function dashboardDependencyEdge(edge) {
-    return extensionPageDependencyEdge(edge);
   }
 
   function dashboardFile(name) {
@@ -211,7 +203,12 @@
     dependencyEdge("usage-providers.js", "usage.js"),
     dependencyEdge("usage-providers.js", "history-store.js"),
     dependencyEdge("themes/default/asset-manifest.js", "pace-logic.js"),
-    dependencyEdge("pace-state-art.js", "pace-state-data.js"),
+    dependencyEdge(
+      "themes/default/asset-manifest.js",
+      "pace-state-special-data.js",
+    ),
+    dependencyEdge("pace-state-art.js", "pace-state-special-data.js"),
+    dependencyEdge("pace-state-special-data.js", "pace-state-data.js"),
     dependencyEdge("sprint-intensity.js", "developer-options.js"),
     dependencyEdge("sprint-intensity.js", "preview-control.js"),
     dependencyEdge("pace-state-data.js", "developer-options.js"),
@@ -262,6 +259,17 @@
     dashboardFileEdge("push-tank-renderer", "push-water-renderer"),
     dashboardFileEdge("push-water-renderer", "push-stretch-methods"),
     dashboardFileEdge("sync-sunburst-rays", "sync-sunburst-renderer"),
+    dashboardFileEdge("big-bang-scene-factory", "big-bang-scene"),
+    dashboardFileEdge("big-bang-ejecta-draw", "big-bang-scene-draw"),
+    dashboardFileEdge("big-bang-particle-draw", "big-bang-scene-draw"),
+    dashboardFileEdge("big-bang-recede-draw", "big-bang-scene-draw"),
+    dashboardFileEdge("big-bang-plume-draw", "big-bang-scene-draw"),
+    dashboardFileEdge("big-bang-scene-draw", "big-bang-scene"),
+    dashboardFileEdge("big-bang-scene", "big-bang-transition-renderer"),
+    dashboardFileEdge(
+      "big-bang-transition-renderer",
+      "singularity-transition-methods",
+    ),
     dashboardFileEdge(
       "singularity-black-hole-v2-shaders",
       "singularity-black-hole-v2-scene",
@@ -361,7 +369,7 @@
   ]);
 
   const DASHBOARD_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
-    ...COMMON_RUNTIME_DEPENDENCY_EDGES.map(dashboardDependencyEdge),
+    ...COMMON_RUNTIME_DEPENDENCY_EDGES.map(extensionPageDependencyEdge),
     ...DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES,
   ]);
 

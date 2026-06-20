@@ -222,7 +222,7 @@
         return;
       }
 
-      this.paceView.playPendingSingularityTransition?.();
+      this.paceView.playPendingSpecialTransition?.();
       this.refreshDashboardTimeSensitiveViews().catch((error) =>
         this.renderHistoryLoadFailure(error),
       );

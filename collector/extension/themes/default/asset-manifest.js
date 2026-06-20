@@ -19,6 +19,7 @@
     behind: "pace-icons/ease-up.png",
     wellBehind: "pace-icons/slow-down-shopping-cart.png",
     criticalBehind: "pace-icons/brake-hard.png",
+    bigBang: "pace-icons/big-bang.png",
     sync: "pace-icons/perfect-sync.png",
     perfectZero: "pace-icons/perfect-zero.png",
     splat: "pace-icons/06-slow-down-splat-transparent.png",

@@ -288,6 +288,12 @@ body.has-perfect-zero-page-background .pace-sync {
   --pace-icon-bg: #1b423e;
 }
 
+body.has-perfect-zero-page-background .pace-big-bang {
+  --pace-color: #facc15;
+  --pace-border: #d97706;
+  --pace-icon-bg: #4a310d;
+}
+
 body.has-perfect-zero-page-background .pace-perfect-zero {
   --pace-color: #d1d5db;
   --pace-border: #9ca3af;

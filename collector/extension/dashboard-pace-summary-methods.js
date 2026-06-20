@@ -112,7 +112,7 @@
           : PacePetsLogic.formatPaceRatioValue(paceRatioForDisplay);
       this.renderPaceAltRatio(comparisonPaceRatio);
       this.updateTabTitle(title, paceRatioForDisplay);
-      this.updateSingularityTransitionState?.(
+      this.updateSpecialTransitionState?.(
         previousState,
         this.paceStateForClassName(level),
       );

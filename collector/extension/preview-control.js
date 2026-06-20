@@ -57,6 +57,12 @@
   });
   const FORCED_PACE_STATE_PERCENT_PAIRS = Object.freeze({
     ...PACE_STATE_PREVIEW_PERCENT_PAIRS,
+    [PACE_STATES.bigBang.key]: pacePreviewPercentPair(
+      PACE_LOGIC.PERFECT_PACE_RATIO,
+      {
+        timePercent: 100,
+      },
+    ),
     [PACE_STATES.sync.key]: pacePreviewPercentPair(
       PACE_LOGIC.PERFECT_PACE_RATIO,
     ),

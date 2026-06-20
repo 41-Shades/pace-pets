@@ -132,6 +132,13 @@
   --pace-icon-bg: #ccfbf1;
 }
 
+.pace-big-bang {
+  --pace-color: #b45309;
+  --pace-bg: #fff7ed;
+  --pace-border: #facc15;
+  --pace-icon-bg: #fef3c7;
+}
+
 .pace-perfect-zero {
   --pace-color: #4b5563;
   --pace-bg: #f8fafc;
@@ -283,6 +290,13 @@
   --pace-bg: #173432;
   --pace-border: #4f9187;
   --pace-icon-bg: #1b423e;
+}
+
+[data-theme="dark"] .pace-big-bang {
+  --pace-color: #facc15;
+  --pace-bg: #2a2111;
+  --pace-border: #d97706;
+  --pace-icon-bg: #4a310d;
 }
 
 [data-theme="dark"] .pace-perfect-zero {
