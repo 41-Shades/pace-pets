@@ -120,7 +120,7 @@
         this.forcedPaceRatioLabel(state, forcedPaceRatio),
       );
       this.updateTabTitle(state.title, forcedPaceRatio);
-      this.updateSingularityTransitionState?.(previousState, state);
+      this.updateSpecialTransitionState?.(previousState, state);
       return true;
     },
 

@@ -117,6 +117,9 @@ const themeAssets = globalThis.CodexThemeAssets;
 assert(themeAssets, "Theme asset manifest must be importable by checks.");
 await import(pathToFileURL(path.join(extensionRoot, "usage-values.js")));
 await import(pathToFileURL(path.join(extensionRoot, "pace-state-art.js")));
+await import(
+  pathToFileURL(path.join(extensionRoot, "pace-state-special-data.js"))
+);
 await import(pathToFileURL(path.join(extensionRoot, "pace-state-data.js")));
 const paceStateData = globalThis.PacePetsPaceStateData;
 assert(paceStateData, "Pace state catalog must be importable by checks.");

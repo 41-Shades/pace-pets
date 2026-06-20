@@ -10,6 +10,9 @@
   }
 
   function tooltipForState(state) {
+    if (state.key === DATA.PACE_STATES.bigBang.key) {
+      return "The first moments of full usage and full time.";
+    }
     if (state.key === DATA.PACE_STATES.sync.key) {
       return "Usage and time move as one.";
     }

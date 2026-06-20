@@ -143,6 +143,7 @@ describe("CodexThemeAssets", () => {
       new Set(Object.keys(assets.PACE_ICON_FILES_BY_STATE)),
     );
     expect(assets.isPackagedPaceIconState("wellAhead")).toBe(true);
+    expect(assets.isPackagedPaceIconState("bigBang")).toBe(true);
     expect(assets.isPackagedPaceIconState("singularity")).toBe(false);
     expect(assets.PACE_ICON_STATE_EXCLUSIONS).toEqual({
       muted: "No playful image.",
@@ -156,6 +157,9 @@ describe("CodexThemeAssets", () => {
     );
     expect(assets.paceIconPathForState("perfectZero")).toBe(
       `${assets.THEME_BASE_PATH}/${assets.PACE_ICON_FILES_BY_STATE.perfectZero}`,
+    );
+    expect(assets.paceIconPathForState("bigBang")).toBe(
+      `${assets.THEME_BASE_PATH}/${assets.PACE_ICON_FILES_BY_STATE.bigBang}`,
     );
     expect(assets.effectAssetPath("resetExhaustedPerson")).toBe(
       `${assets.THEME_BASE_PATH}/${assets.EFFECT_ASSET_FILES.resetExhaustedPerson}`,

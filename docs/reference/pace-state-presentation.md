@@ -45,7 +45,7 @@ the current observed provider contract.
 | `wellAhead`      | `pace-well-ahead`      | `> 1.55`                | Sprint faster!    |
 | `muted`          | `pace-muted`           | unavailable             | Waiting for usage |
 
-Perfect Sync, Perfect Zero, Splat, and Singularity are controlled
+Big Bang, Perfect Sync, Perfect Zero, Splat, and Singularity are controlled
 presentation states, not threshold states. They sit above threshold mapping and
 can override the displayed state when their exact rule matches.
 
@@ -62,14 +62,16 @@ remaining percent; display-scale time is computed locally and rounded.
 
 | State                        | Surface                                   | Rule                                                                                              | Presentation                                                                                                             |
 | ---------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Big Bang (`bigBang`)         | Dashboard and toolbar badge               | Display-scale remaining-usage percent and time-remaining percent both equal `100`.                | Uses the `bigBang` state with a controlled display ratio of `1.00`.                                                      |
 | Perfect sync (`sync`)        | Dashboard and toolbar badge               | Display-scale remaining-usage percent equals display-scale time-remaining percent.                | Uses the `sync` state with a controlled display ratio of `1.00`.                                                         |
 | Perfect zero (`perfectZero`) | Dashboard and toolbar badge               | Perfect sync is valid and display-scale remaining-usage percent is `0`.                           | Uses the `perfectZero` state with a controlled display ratio of `0.00`.                                                  |
 | Singularity (`singularity`)  | Dashboard, browser tab, and toolbar badge | Perfect zero is valid and `Resets In` also displays zero while `resetsAt` is still in the future. | Uses the `singularity` state with a controlled display ratio of `0.00` and a reset countdown presentation of `0d 0h 0m`. |
 
-The three perfect states are mutually ordered by specificity. Singularity wins
-over Perfect Zero on live presentation surfaces when its reset-countdown rule is
-also true. Perfect Zero wins over Perfect Sync when the matching rounded percent
-is zero.
+The perfect states are mutually ordered by specificity. Big Bang wins over
+Perfect Sync when the matching rounded percent is `100`. Singularity wins over
+Perfect Zero on live presentation surfaces when its reset-countdown rule is also
+true. Perfect Zero wins over Perfect Sync when the matching rounded percent is
+zero.
 
 Perfect presentation is suppressed when the reset window is stale, meaning
 `resetsAt` is at or before the current time. Perfect Zero can also be disallowed
@@ -106,6 +108,16 @@ Product implications:
 - If history already shows usage reached display zero earlier in the same reset
   window, the current guard disallows later Perfect Zero and therefore also
   disallows Singularity for that window.
+
+## Display-Hundred Timing Bands
+
+Big Bang uses the same display-scale rounding model as the other perfect states.
+It can appear only when usage remaining and time remaining both display as
+`100%`. With current WHAM integer usage precision, usage normally displays
+`100%` only when the provider reports `used_percent: 0`. Time remaining displays
+`100%` at the start of a reset window until the locally computed time remaining
+falls below `99.5%`: the first `90s` of a 5h window, and the first `50m 24s` of
+a 7d window.
 
 ## Rough Countdown Transition Conditions
 
@@ -161,7 +173,7 @@ catalog:
 
 ```text
 levels: wellAhead, strongAhead, ahead, on, behind, wellBehind, criticalBehind
-perfect: sync, perfectZero, singularity
+perfect: bigBang, sync, perfectZero, singularity
 imperfect: splat
 ```
 
@@ -172,16 +184,16 @@ controls can still force regular, perfect, and imperfect states for inspection.
 Forced toolbar badge states use the same synthetic ratio model.
 
 Synthetic and forced developer states use one preview timing model for percent
-bars, chart data, reset dates, reset progress, and `Resets in`. Regular
-examples derive reset timing from their synthetic percent pair. Forced Perfect
-Zero uses a small positive pair that displays as `0%` for usage and time, while
-forced Singularity uses exact zero and keeps the explicit `0d 0h 0m` countdown.
-Forced Splat keeps usage at exact zero while reusing the selected live window's
-time remaining when available, so its `Time remaining` percent stays aligned
-with the live `Resets in` countdown. Dev controls expose explicit Splat timing
-variants for the two animation branches: `splatTimeRemainingPreview: "over50"`
-uses `75%` time remaining, and `splatTimeRemainingPreview: "under50"` uses
-`49%` time remaining.
+bars, chart data, reset dates, reset progress, and `Resets in`. Regular examples
+derive reset timing from their synthetic percent pair. Forced Big Bang uses exact
+`100%` usage and time. Forced Perfect Zero uses a small positive pair that
+displays as `0%` for usage and time, while forced Singularity uses exact zero
+and keeps the explicit `0d 0h 0m` countdown. Forced Splat keeps usage at exact
+zero while reusing the selected live window's time remaining when available, so
+its `Time remaining` percent stays aligned with the live `Resets in` countdown.
+Dev controls expose explicit Splat timing variants for the two animation
+branches: `splatTimeRemainingPreview: "over50"` uses `75%` time remaining, and
+`splatTimeRemainingPreview: "under50"` uses `49%` time remaining.
 
 Splat's active status icon plays a one-time free-fall animation on entry into
 the state. The resting Splat icon stays hidden until the falling icon reaches
@@ -390,6 +402,22 @@ before launch and uses the larger/wobbling orbit timing.
 The forced developer override can also render perfect and imperfect context
 states outside the regular pace levels.
 
+The `bigBang` state runs a dashboard-only transition when the dashboard enters
+that state from any other state. The transition immediately hides dashboard
+chrome, plays a full-viewport generated canvas scene with a small bright
+opening flash inside billowing vapor and dust plumes, then follows with a more
+violent broken shock-front burst. It throws only sparks, specks, dust, and stars
+outward, lets the blast take over the viewport, then shrinks the remaining
+energy back into the center as if receding into the distance. The resulting Big
+Bang star field holds briefly before the canvas starts a gradual fade into the
+shared full-page space backdrop while the dashboard chrome stays hidden; the
+dashboard fades in later, after the space scene has its own transition beat.
+Same-state refreshes do not replay the transition. If Big Bang is selected from
+the developer controls while the dashboard tab is hidden, the transition is
+queued and plays when the dashboard becomes visible. After playback starts,
+ordinary pace-state changes update the dashboard DOM under the active transition
+instead of cancelling it. Reduced-motion users skip the animated sequence.
+
 The `singularity` state runs a dashboard-only transition when the dashboard
 enters that state from any other state. The transition fades from the prior
 state into the shared space backdrop, holds briefly on blank space, fades the
@@ -451,9 +479,12 @@ values when raw pace is outside the plotted bounds.
 
 Each shipped pace state gets its image path from
 `collector/extension/themes/default/asset-manifest.js`. The same manifest owns
-the explicit non-packaged pace-state exceptions used by static checks; the
-muted state has no playful image, and Singularity uses generated in-memory art.
-Perfect Zero also uses the dedicated canvas scene in
+the explicit non-packaged pace-state exceptions used by static checks; the muted
+state has no playful image, and Singularity uses generated in-memory art. Big
+Bang uses the packaged `pace-icons/big-bang.png` raster icon for dashboard and
+state-rail presentation. Its dashboard-only transition uses a temporary
+generated canvas overlay and the shared full-page space backdrop. Perfect Zero
+also uses the dedicated canvas scene in
 `collector/extension/perfect-zero-space-scene.js` when the main dashboard card
 enters the Perfect Zero presentation, plus the dashboard-only canvas eclipse in
 `collector/extension/dashboard-eclipse-icon.js` for the theme control while the

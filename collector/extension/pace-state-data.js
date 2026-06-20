@@ -5,9 +5,11 @@
   if (!THEME_ASSETS) {
     throw new Error("Codex theme assets must load before pace-logic.js.");
   }
-  const STATE_ART = root.PacePetsPaceStateArt;
-  if (!STATE_ART) {
-    throw new Error("Pace state art must load before pace-state-data.js.");
+  const SPECIAL_STATE_DATA = root.PacePetsPaceStateSpecialData;
+  if (!SPECIAL_STATE_DATA) {
+    throw new Error(
+      "Pace state special data must load before pace-state-data.js.",
+    );
   }
   const USAGE_VALUES = root.CodexUsageValues;
   if (!USAGE_VALUES) {
@@ -114,167 +116,11 @@
         { tag: "path", attrs: { d: "m8.5 12.5 2.5 2.5 4.5-5" } },
       ],
     }),
-    sync: paceState({
-      key: "sync",
-      className: "pace-sync",
-      title: "Perfect sync",
-      copy: "Time and pace are in harmony. Ascendent.",
-      ratioLabel: "Usage = Time",
-      badgeColor: "#0f766e",
-      favicon: { bg: "#edf6f4", color: "#0f766e" },
-      playfulImage: THEME_ASSETS.paceIconPathForState("sync"),
-      iconParts: [
-        { tag: "circle", attrs: { cx: "12", cy: "12", r: "8" } },
-        { tag: "circle", attrs: { cx: "12", cy: "12", r: "3" } },
-        { tag: "path", attrs: { d: "M12 2v3" } },
-        { tag: "path", attrs: { d: "M12 19v3" } },
-        { tag: "path", attrs: { d: "M2 12h3" } },
-        { tag: "path", attrs: { d: "M19 12h3" } },
-      ],
-    }),
-    perfectZero: paceState({
-      key: "perfectZero",
-      className: "pace-perfect-zero",
-      title: "Perfect zero",
-      copy: "A beautiful, unreasonable zero.",
-      ratioLabel: "Usage = Time = 0",
-      badgeColor: "#6b7280",
-      favicon: {
-        bg: "#020617",
-        color: "#e5e7eb",
-        iconParts: [
-          {
-            tag: "ellipse",
-            attrs: { cx: "12", cy: "12", rx: "5.5", ry: "8" },
-          },
-        ],
-      },
-      playfulImage: THEME_ASSETS.paceIconPathForState("perfectZero"),
-      iconParts: [
-        {
-          tag: "ellipse",
-          attrs: { cx: "12", cy: "12", rx: "5.5", ry: "8" },
-        },
-        {
-          tag: "path",
-          attrs: {
-            d: "M9 8.5c1.5-1.3 4.3-1.5 6-.2",
-            "stroke-width": "2.2",
-          },
-        },
-      ],
-    }),
-    singularity: paceState({
-      key: "singularity",
-      className: "pace-singularity",
-      title: "Singularity",
-      copy: "It all ends in nothingness. Maybe.",
-      ratioLabel: "Usage = Time = Resets In = 0",
-      previewRatioLabel: "The black hole of zero",
-      badgeColor: "#000000",
-      favicon: {
-        bg: "#111827",
-        color: "#f8fafc",
-        iconParts: [
-          {
-            tag: "ellipse",
-            attrs: {
-              cx: "12",
-              cy: "12",
-              rx: "9.3",
-              ry: "3.7",
-              stroke: "#67e8f9",
-              "stroke-width": "2",
-              transform: "rotate(-18 12 12)",
-            },
-          },
-          {
-            tag: "circle",
-            attrs: {
-              fill: "#000000",
-              cx: "12",
-              cy: "12",
-              r: "5",
-              stroke: "#f8fafc",
-              "stroke-width": "1.35",
-            },
-          },
-          {
-            tag: "circle",
-            attrs: {
-              cx: "18.8",
-              cy: "5.7",
-              fill: "#fbbf24",
-              r: "1",
-              stroke: "none",
-            },
-          },
-        ],
-      },
-      iconParts: [
-        {
-          tag: "ellipse",
-          attrs: {
-            cx: "12",
-            cy: "12",
-            rx: "9.5",
-            ry: "3.8",
-            stroke: "#67e8f9",
-            "stroke-width": "2",
-            transform: "rotate(-18 12 12)",
-          },
-        },
-        {
-          tag: "circle",
-          attrs: {
-            cx: "12",
-            cy: "12",
-            r: "5.4",
-            fill: "#000000",
-            stroke: "#f8fafc",
-            "stroke-width": "1.35",
-          },
-        },
-        {
-          tag: "circle",
-          attrs: {
-            cx: "18.8",
-            cy: "5.7",
-            fill: "#fbbf24",
-            r: "1.1",
-            stroke: "none",
-          },
-        },
-      ],
-      playfulImage: STATE_ART.SINGULARITY_ICON_DATA_URL,
-    }),
-    splat: paceState({
-      key: "splat",
-      className: "pace-splat",
-      title: "Splat!",
-      copy: "The gravity of usage defeats you. Try again.",
-      ratioLabel: "Usage = 0. Nice try",
-      badgeColor: "#64748b",
-      favicon: {
-        bg: "#f8fafc",
-        color: "#64748b",
-        iconParts: [
-          { tag: "path", attrs: { d: "M7.5 6.5 16.5 17.5" } },
-          { tag: "path", attrs: { d: "M16.5 6.5 7.5 17.5" } },
-          { tag: "path", attrs: { d: "M12 3.5v3" } },
-          { tag: "path", attrs: { d: "M4.8 8 7 9.4" } },
-          { tag: "path", attrs: { d: "M19.2 8 17 9.4" } },
-        ],
-      },
-      iconParts: [
-        { tag: "path", attrs: { d: "M7.5 6.5 16.5 17.5" } },
-        { tag: "path", attrs: { d: "M16.5 6.5 7.5 17.5" } },
-        { tag: "path", attrs: { d: "M12 3.5v3" } },
-        { tag: "path", attrs: { d: "M4.8 8 7 9.4" } },
-        { tag: "path", attrs: { d: "M19.2 8 17 9.4" } },
-      ],
-      playfulImage: THEME_ASSETS.paceIconPathForState("splat"),
-    }),
+    ...Object.fromEntries(
+      Object.entries(SPECIAL_STATE_DATA.specialPaceStates()).map(
+        ([key, state]) => [key, paceState(state)],
+      ),
+    ),
     ahead: paceState({
       key: "ahead",
       className: "pace-ahead",
@@ -350,6 +196,7 @@
     "wellAhead",
   ]);
   const PACE_PERFECT_STATE_KEYS = Object.freeze([
+    "bigBang",
     "sync",
     "perfectZero",
     "singularity",
@@ -372,6 +219,7 @@
     "on",
     "behind",
     "strongAhead",
+    "bigBang",
     "sync",
     "wellBehind",
     "ahead",

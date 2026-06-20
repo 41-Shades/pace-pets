@@ -55,6 +55,10 @@ function expectCommonRuntimeDependencyEdges(runtime) {
     "dev-preview-action-registry.js",
     "brake-extreme-preview-control.js",
   ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "pace-state-special-data.js",
+    "pace-state-data.js",
+  ]);
 }
 
 function expectTargetRuntimeDependencyEdges(runtime) {
@@ -97,6 +101,34 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-dom-contract.js",
     "./dashboard.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-big-bang-scene-factory.js",
+    "./dashboard-big-bang-scene.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-big-bang-ejecta-draw.js",
+    "./dashboard-big-bang-scene-draw.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-big-bang-particle-draw.js",
+    "./dashboard-big-bang-scene-draw.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-big-bang-plume-draw.js",
+    "./dashboard-big-bang-scene-draw.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-big-bang-scene-draw.js",
+    "./dashboard-big-bang-scene.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-big-bang-scene.js",
+    "./dashboard-big-bang-transition-renderer.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-big-bang-transition-renderer.js",
+    "./dashboard-singularity-transition-methods.js",
   ]);
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-singularity-black-hole-v2-shaders.js",
@@ -204,6 +236,9 @@ describe("CodexExtensionRuntime script sources", () => {
     ).toBeLessThan(
       runtime.COMMON_SCRIPT_SOURCES.indexOf("developer-options.js"),
     );
+    expect(
+      runtime.COMMON_SCRIPT_SOURCES.indexOf("pace-state-special-data.js"),
+    ).toBeLessThan(runtime.COMMON_SCRIPT_SOURCES.indexOf("pace-state-data.js"));
     expect(runtime.BACKGROUND_SCRIPT_SOURCES).toEqual([
       ...runtime.COMMON_SCRIPT_SOURCES,
       ...runtime.BACKGROUND_ONLY_SCRIPT_SOURCES,
@@ -226,6 +261,36 @@ describe("CodexExtensionRuntime script sources", () => {
       "./dashboard-singularity-black-hole-v2-shaders.js",
     );
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
+      "./dashboard-big-bang-scene.js",
+    );
+    expect(
+      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-big-bang-ejecta-draw.js",
+      ),
+    ).toBeLessThan(
+      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-big-bang-scene-draw.js",
+      ),
+    );
+    expect(
+      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-big-bang-particle-draw.js",
+      ),
+    ).toBeLessThan(
+      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-big-bang-scene-draw.js",
+      ),
+    );
+    expect(
+      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-big-bang-plume-draw.js",
+      ),
+    ).toBeLessThan(
+      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-big-bang-scene-draw.js",
+      ),
+    );
+    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
       "./dashboard-singularity-black-hole-v2-scene.js",
     );
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
@@ -242,7 +307,9 @@ describe("CodexExtensionRuntime script sources", () => {
       "./dev-flags-dom-contract.js",
     );
   });
+});
 
+describe("CodexExtensionRuntime target-only script sources", () => {
   it("keeps target-only and optional dashboard scripts explicit", () => {
     const runtime = globalThis.CodexExtensionRuntime;
 

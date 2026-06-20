@@ -151,8 +151,11 @@
     { level, playSplatFall, previousState, state },
   ) {
     const isPerfectZeroState = state.key === DATA.PACE_STATES.perfectZero.key;
+    const isBigBangState = state.key === DATA.PACE_STATES.bigBang.key;
     const usesSpacePageBackground =
-      isPerfectZeroState || state.key === DATA.PACE_STATES.singularity.key;
+      isPerfectZeroState ||
+      isBigBangState ||
+      state.key === DATA.PACE_STATES.singularity.key;
     const pageBackgroundActive =
       motionPreferenceEnabled(controller) &&
       (controller.setPerfectZeroPageBackgroundActive?.(
@@ -280,7 +283,7 @@
       this.stopPerfectZeroPageBackgroundScene?.();
       this.stopSyncSunburstPageBackground?.();
       this.stopSyncMonkEscape?.();
-      this.stopSingularityTransition?.();
+      this.stopSpecialTransitions?.();
     },
 
     pauseHiddenDocumentMotionEffects() {

@@ -189,6 +189,20 @@
   color: var(--pace-color);
 }
 
+.state-chip.pace-big-bang {
+  color: var(--pace-color);
+}
+
+.state-chip.pace-big-bang:hover,
+.state-chip.pace-big-bang.is-active {
+  background: color-mix(in srgb, var(--pace-bg) 52%, var(--surface-mix));
+  border-color: var(--pace-color);
+}
+
+.state-chip.pace-big-bang strong {
+  color: var(--pace-color);
+}
+
 .state-chip.pace-singularity:hover,
 .state-chip.pace-singularity.is-active {
   background: color-mix(in srgb, var(--pace-bg) 46%, var(--surface-mix));

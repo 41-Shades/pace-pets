@@ -19,8 +19,8 @@
       mutedClassName: DATA.MUTED_PACE_CLASS,
       pauseHiddenDocumentMotionEffects:
         controller.pauseHiddenDocumentMotionEffects.bind(controller),
-      playPendingSingularityTransition:
-        controller.playPendingSingularityTransition.bind(controller),
+      playPendingSpecialTransition:
+        controller.playPendingSpecialTransition.bind(controller),
       refreshForcedPaceStateOverride:
         controller.refreshForcedPaceStateOverride.bind(controller),
       renderPaceSummary: controller.renderPaceSummary.bind(controller),
