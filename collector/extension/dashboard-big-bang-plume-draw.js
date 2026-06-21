@@ -1,6 +1,11 @@
 (function attachPacePetsDashboardBigBangPlumeDraw(root) {
   "use strict";
 
+  const ORIGIN = root.PacePetsDashboardBigBangOrigin;
+  if (!ORIGIN) {
+    throw new Error("Big Bang origin helper must load before plume draw.");
+  }
+
   const TWO_PI = Math.PI * 2;
 
   function clamp(value, min, max) {
@@ -202,9 +207,10 @@
     }
 
     const edge = Math.min(width, height);
+    const origin = ORIGIN.pointForSize(width, height);
     const center = {
-      x: width / 2 + Math.sin(elapsedMs * 0.0016) * edge * 0.006,
-      y: height / 2 + Math.cos(elapsedMs * 0.0014) * edge * 0.005,
+      x: origin.x + Math.sin(elapsedMs * 0.0016) * edge * 0.006,
+      y: origin.y + Math.cos(elapsedMs * 0.0014) * edge * 0.005,
     };
     const frame = { center, edge, elapsedMs, stageAlpha };
 

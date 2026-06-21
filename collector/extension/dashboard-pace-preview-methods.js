@@ -113,7 +113,7 @@
       this.elements.paceStats.hidden = false;
       this.elements.paceRatioStat.hidden = false;
       this.elements.paceRatioValue.textContent =
-        PacePetsLogic.formatPaceRatioValue(forcedPaceRatio);
+        this.formatFeaturedPaceRatioValue(state, forcedPaceRatio);
       this.renderPreviewChart(state.key, forcedPaceRatio, previewWindow);
       this.applyPreviewResetTiming(state, previewWindow);
       this.renderPaceAltRatio(

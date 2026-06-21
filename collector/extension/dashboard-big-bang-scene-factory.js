@@ -1,6 +1,11 @@
 (function attachPacePetsDashboardBigBangSceneFactory(root) {
   "use strict";
 
+  const ORIGIN = root.PacePetsDashboardBigBangOrigin;
+  if (!ORIGIN) {
+    throw new Error("Big Bang origin helper must load before scene factory.");
+  }
+
   const ENERGY_COLORS = Object.freeze([
     "255, 255, 255",
     "254, 243, 199",
@@ -92,6 +97,29 @@
     return colors[randomInteger(random, 0, colors.length - 1)];
   }
 
+  function createOpeningVariant(seed) {
+    const random = seededRandom((seed >>> 0) ^ 0x51f15e);
+    return {
+      plumeWarmth: randomBetween(random, 0.36, 0.84),
+      seedTwinkleScale: randomBetween(random, 0.88, 1.18),
+      sparkCountScale: randomBetween(random, 0.92, 1.2),
+      sparkIntensity: randomBetween(random, 0.92, 1.16),
+    };
+  }
+
+  function biasedColorChoice(random, colors, bias, startIndex, endIndex) {
+    const roll = random();
+    if (roll >= bias) {
+      const normalized = (roll - bias) / (1 - bias);
+      return colors[
+        Math.min(colors.length - 1, Math.floor(normalized * colors.length))
+      ];
+    }
+
+    const biasedLength = endIndex - startIndex + 1;
+    return colors[startIndex + Math.floor((roll / bias) * biasedLength)];
+  }
+
   function countForArea(width, height, base, max) {
     const areaScale = Math.sqrt(Math.max(1, width * height) / (820 * 720));
     return Math.min(max, Math.max(base, Math.round(base * areaScale)));
@@ -127,26 +155,36 @@
     };
   }
 
-  function createIgnitionDot(random, index) {
+  function createIgnitionDot(random, index, openingVariant) {
     return {
       angle: random() * TWO_PI,
       color: colorChoice(random, ENERGY_COLORS),
       delayMs: randomBetween(random, 0, 260),
       distanceRatio: randomBetween(random, 0.01, 0.072),
       durationMs: randomBetween(random, 420, 980),
-      opacity: randomBetween(random, 0.1, 0.42),
+      opacity: clamp(
+        randomBetween(random, 0.1, 0.42) * openingVariant.seedTwinkleScale,
+        0.08,
+        0.52,
+      ),
       phase: random() * TWO_PI,
       sizeRatio: randomBetween(random, 0.0012, 0.0062),
       index,
     };
   }
 
-  function createIgnitionPlume(random, index) {
+  function createIgnitionPlume(random, index, openingVariant) {
     const armCount = 11;
     const armAngle = ((index % armCount) / armCount) * TWO_PI;
     return {
       angle: armAngle + randomBetween(random, -0.28, 0.28),
-      color: colorChoice(random, PLUME_COLORS),
+      color: biasedColorChoice(
+        random,
+        PLUME_COLORS,
+        openingVariant.plumeWarmth,
+        2,
+        4,
+      ),
       curlRatio: randomBetween(random, -0.035, 0.035),
       delayMs: randomBetween(random, 50, 360),
       distanceRatio: randomBetween(random, 0.016, 0.118),
@@ -154,9 +192,17 @@
       flatten: randomBetween(random, 0.62, 1.18),
       index,
       lobeCount: randomInteger(random, 3, 5),
-      opacity: randomBetween(random, 0.07, 0.18),
+      opacity:
+        randomBetween(random, 0.07, 0.18) *
+        (0.94 + openingVariant.plumeWarmth * 0.16),
       phase: random() * TWO_PI,
-      rimColor: colorChoice(random, ENERGY_COLORS),
+      rimColor: biasedColorChoice(
+        random,
+        ENERGY_COLORS,
+        openingVariant.plumeWarmth,
+        1,
+        3,
+      ),
       roll: randomBetween(random, -0.48, 0.48),
       rollDirection: random() < 0.5 ? -1 : 1,
       sizeRatio: randomBetween(random, 0.0075, 0.021),
@@ -185,11 +231,20 @@
     };
   }
 
-  function createParticle(random, width, height, index, kind) {
+  function createParticle(random, dimensions, index, kind, openingVariant) {
+    const { height, width } = dimensions;
     const settings =
       PARTICLE_KIND_SETTINGS[kind] ?? PARTICLE_KIND_SETTINGS.star;
-    const centerX = width * randomBetween(random, 0.48, 0.52);
-    const centerY = height * randomBetween(random, 0.45, 0.53);
+    const opacityScale = kind === "spark" ? openingVariant.sparkIntensity : 1;
+    const sparkOrigin = ORIGIN.pointForSize(width, height);
+    const centerX =
+      kind === "spark"
+        ? sparkOrigin.x + width * randomBetween(random, -0.02, 0.02)
+        : width * randomBetween(random, 0.48, 0.52);
+    const centerY =
+      kind === "spark"
+        ? sparkOrigin.y + height * randomBetween(random, -0.04, 0.04)
+        : height * randomBetween(random, 0.45, 0.53);
     const angle = random() * Math.PI * 2;
     const minEdge = Math.min(width, height);
     const maxEdge = Math.max(width, height);
@@ -213,10 +268,14 @@
         settings.delayRange[0],
         settings.delayRange[1],
       ),
-      finalOpacity: randomBetween(
-        random,
-        settings.opacityRange[0],
-        settings.opacityRange[1],
+      finalOpacity: clamp(
+        randomBetween(
+          random,
+          settings.opacityRange[0],
+          settings.opacityRange[1],
+        ) * opacityScale,
+        0,
+        1,
       ),
       finalX: clamp(centerX + Math.cos(angle) * distance, -24, width + 24),
       finalY: clamp(centerY + Math.sin(angle) * distance, -24, height + 24),
@@ -240,6 +299,8 @@
 
   function createSceneState(width, height, seed) {
     const random = seededRandom(seed);
+    const openingVariant = createOpeningVariant(seed);
+    const dimensions = { height, width };
     const dustCount = countForArea(width, height, 360, 720);
     const ejectaCount = countForArea(
       width,
@@ -251,11 +312,14 @@
     const ignitionDotCount = countForArea(width, height, 24, 42);
     const ignitionPlumeCount = countForArea(width, height, 28, 46);
     const shockArcCount = countForArea(width, height, 20, 40);
-    const sparkCount = countForArea(width, height, 46, 82);
+    const sparkBaseCount = countForArea(width, height, 46, 82);
+    const sparkCount = Math.round(
+      sparkBaseCount * openingVariant.sparkCountScale,
+    );
     const starCount = countForArea(width, height, 220, 420);
     return {
       dust: Array.from({ length: dustCount }, (_, index) =>
-        createParticle(random, width, height, index, "dust"),
+        createParticle(random, dimensions, index, "dust", openingVariant),
       ),
       ejecta: Array.from({ length: ejectaCount }, (_, index) =>
         createEjecta(random, width, height, index),
@@ -265,20 +329,21 @@
       ),
       height,
       ignitionCloud: Array.from({ length: ignitionDotCount }, (_, index) =>
-        createIgnitionDot(random, index),
+        createIgnitionDot(random, index, openingVariant),
       ),
       ignitionPlumes: Array.from({ length: ignitionPlumeCount }, (_, index) =>
-        createIgnitionPlume(random, index),
+        createIgnitionPlume(random, index, openingVariant),
       ),
+      openingVariant,
       recedeSeed: random() * 1000,
       shockArcs: Array.from({ length: shockArcCount }, (_, index) =>
         createShockArc(random, index),
       ),
       sparks: Array.from({ length: sparkCount }, (_, index) =>
-        createParticle(random, width, height, index, "spark"),
+        createParticle(random, dimensions, index, "spark", openingVariant),
       ),
       stars: Array.from({ length: starCount }, (_, index) =>
-        createParticle(random, width, height, index, "star"),
+        createParticle(random, dimensions, index, "star", openingVariant),
       ),
       width,
     };

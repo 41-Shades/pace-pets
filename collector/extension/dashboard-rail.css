@@ -13,7 +13,7 @@
 .state-rail {
   --state-chip-gap-x: 28px;
   --state-chip-gap-y: 10px;
-  --state-chip-width: 234px;
+  --state-chip-width: 224px;
   --state-rail-top-inset: 28px;
   --state-section-gap-y: 18px;
   --state-stack-max-width: calc(
@@ -183,20 +183,14 @@
   opacity: 0.76;
 }
 
-.state-chip.pace-singularity {
-  --state-ratio-font-size: 0.64rem;
-
-  color: var(--pace-color);
-}
-
 .state-chip.pace-big-bang {
   color: var(--pace-color);
 }
 
 .state-chip.pace-big-bang:hover,
 .state-chip.pace-big-bang.is-active {
-  background: color-mix(in srgb, var(--pace-bg) 52%, var(--surface-mix));
-  border-color: var(--pace-color);
+  background: color-mix(in srgb, var(--pace-bg) 58%, var(--surface-mix));
+  border-color: color-mix(in srgb, var(--pace-border) 78%, var(--pace-color));
 }
 
 .state-chip.pace-big-bang strong {
@@ -211,13 +205,4 @@
 
 .state-chip.pace-singularity strong {
   color: var(--pace-color);
-}
-
-.state-chip.pace-singularity .state-ratio {
-  color: var(--pace-copy-color);
-  line-height: 1;
-}
-
-.state-chip.pace-singularity .state-meta {
-  color: var(--pace-copy-color);
 }

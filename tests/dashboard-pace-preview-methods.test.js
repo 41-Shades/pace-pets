@@ -26,6 +26,9 @@ beforeAll(async () => {
     "collector/extension/dashboard-pace-icon-methods.js",
   );
   await importExtensionScript(
+    "collector/extension/dashboard-pace-summary-methods.js",
+  );
+  await importExtensionScript(
     "collector/extension/dashboard-pace-preview-methods.js",
   );
 });

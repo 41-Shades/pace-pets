@@ -41,19 +41,25 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, pace-state group metadata, inline icon geometry, legend metadata, controlled Big Bang/Perfect Sync/Perfect Zero/Singularity presentation, reset-countdown display-zero checks, and stale-reset guards. Dashboard pace helpers own dashboard-only special transitions for Big Bang and Singularity.
 - `collector/extension/perfect-zero-space-scene.js` owns the `PERFECT ZERO` canvas scene, including icon and full-bleed profiles, reduced-motion handling, page-visibility pause/resume behavior, and scene teardown. `collector/extension/dashboard-eclipse-icon.js` owns the smaller Perfect Zero theme-control canvas, which uses canvas for organic corona plumes, wispy shimmer, and sparse rim glints where CSS gradients proved too uniform.
 - `collector/extension/dashboard.html`, ordered `dashboard*.css` stylesheets, dashboard helper scripts, and `dashboard.js` own the extension dashboard UI. `collector/extension/dashboard-dom-contract.js` owns the dashboard selector map, required element IDs, and element collection helper shared by dashboard bootstrap and static smoke checks. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and the tab-scoped dashboard window selection, while the 60-second status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Because that tick reapplies the current pace summary, `collector/extension/dashboard-pace-icon-methods.js` preserves same-state long-running icon effects that own live canvas state instead of tearing them down and recreating them. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture; Big Bang and Singularity reuse the full-page space backdrop without that icon-anchored planet.
-- `collector/extension/dashboard-big-bang-scene-factory.js`,
+- `collector/extension/dashboard-big-bang-origin.js`,
+  `collector/extension/dashboard-big-bang-scene-factory.js`,
   `collector/extension/dashboard-big-bang-ejecta-draw.js`,
+  `collector/extension/dashboard-big-bang-particle-draw.js`,
+  `collector/extension/dashboard-big-bang-recede-draw.js`,
   `collector/extension/dashboard-big-bang-plume-draw.js`,
+  `collector/extension/dashboard-big-bang-webgl-shaders.js`,
+  `collector/extension/dashboard-big-bang-webgl-renderer.js`,
   `collector/extension/dashboard-big-bang-scene-draw.js`,
   `collector/extension/dashboard-big-bang-scene.js`, and
   `collector/extension/dashboard-big-bang-transition-renderer.js` own the
   dashboard-only Big Bang transition. The renderer hides dashboard chrome,
-  plays a generated full-viewport canvas two-stage ignition with billowing
-  vapor/dust plumes, broken shock-front, spark, dust, and star sequence, expands
-  the blast over the viewport, shrinks it back toward the center, holds on the
-  generated star field, fades the shared space backdrop in under the canvas,
-  then fades dashboard chrome back after the space scene has appeared. It does
-  not capture screenshots or request page content.
+  plays a generated full-viewport Canvas opening cover with a dark pre-hold,
+  seed sparkle, first ignition, plumes, and sparks, overlays the WebGL flagship
+  ray/bloom expansion, fades the shared space backdrop in under the temporary
+  canvases, then fades dashboard chrome back after the space scene has appeared.
+  It does not capture screenshots or request page content. See
+  `docs/reference/big-bang-transition.md` for the detailed sequence contract,
+  timing, and animation lessons learned.
 - `collector/extension/dashboard-singularity-transition-renderer.js` owns the
   rare Singularity transition. It fades into the shared space backdrop, fades
   dashboard chrome back in, starts the WebGL black-hole scene behind the intact

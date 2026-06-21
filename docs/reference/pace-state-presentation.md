@@ -409,14 +409,45 @@ opening flash inside billowing vapor and dust plumes, then follows with a more
 violent broken shock-front burst. It throws only sparks, specks, dust, and stars
 outward, lets the blast take over the viewport, then shrinks the remaining
 energy back into the center as if receding into the distance. The resulting Big
-Bang star field holds briefly before the canvas starts a gradual fade into the
-shared full-page space backdrop while the dashboard chrome stays hidden; the
-dashboard fades in later, after the space scene has its own transition beat.
+Bang star field thins into residual matter while the shared full-page space
+backdrop is prepared underneath the opaque Big Bang canvases. The canvases then
+fade away over that real backdrop while the dashboard chrome stays hidden; the
+dashboard fades in later, after the shared space backdrop is already established.
 Same-state refreshes do not replay the transition. If Big Bang is selected from
 the developer controls while the dashboard tab is hidden, the transition is
 queued and plays when the dashboard becomes visible. After playback starts,
 ordinary pace-state changes update the dashboard DOM under the active transition
 instead of cancelling it. Reduced-motion users skip the animated sequence.
+
+Current Big Bang transition timing is measured from the first animation frame in
+`collector/extension/dashboard-big-bang-scene.js`. The scene has a 2-second
+blank pre-hold, then passes post-hold elapsed time into the 2D opening canvas
+and the WebGL flagship expansion overlay. The 2D opening draw still subtracts
+another 720ms for the seed sparkle before the stage-one bang helpers activate.
+
+| Approx visible window | Beat / code area                                                                                                                                                                                            |
+| --------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|            `0-2000ms` | Blank dark pre-hold (`PRE_BANG_HOLD_MS`).                                                                                                                                                                   |
+|         `2000-2720ms` | Tiny center seed sparkle (`SEED_SPARKLE_MS`).                                                                                                                                                               |
+|         `2720-4320ms` | First ignition flash, plumes, and near-center sparks (`drawStageOneExplosion()`, `drawIgnitionPlumes()`, spark particles).                                                                                  |
+|         `2520-5240ms` | Dense WebGL ray volley: fast hero rays, seeded needle-ray cascade, and spark-like streaks over the seed/stage-one opening (`crackRayBurst()`).                                                              |
+|        `4380-14600ms` | WebGL hard ray eruption, delayed bloom, residue, and sparse handoff matter; WebGL does not draw the final stable starfield (`dashboard-big-bang-webgl-renderer.js`, `dashboard-big-bang-webgl-shaders.js`). |
+|         `4600-7800ms` | Shared full-page space backdrop fades in underneath the Big Bang cover (`SPACE_BACKGROUND_REVEAL_AT_MS`, `SPACE_BACKGROUND_REVEAL_DURATION_MS`).                                                            |
+|         `7200-9600ms` | The opaque 2D Big Bang cover fades out, exposing the shared backdrop behind the WebGL explosion (`CANVAS_COVER_FADE_AT_MS`, `CANVAS_COVER_FADE_DURATION_MS`).                                               |
+|       `11400-14600ms` | WebGL Big Bang fades away over the already-visible shared backdrop (`SPACE_REVEAL_AT_MS`, `CANVAS_FADE_DURATION_MS`).                                                                                       |
+|             `14200ms` | Dashboard chrome reveal starts (`DASHBOARD_REVEAL_AT_MS`).                                                                                                                                                  |
+|             `14600ms` | Big Bang canvases are removed (`CANVAS_DONE_AT_MS`).                                                                                                                                                        |
+|       `14200-19400ms` | Dashboard chrome opacity fade (`DASHBOARD_FADE_DURATION_MS`).                                                                                                                                               |
+|             `19400ms` | Transition promise completes.                                                                                                                                                                               |
+
+The prior 2D middle/aftermath helpers remain in source for comparison, but the
+active WebGL trial disables legacy 2D ejecta, stage-two core, envelope, rays,
+shock arcs, receding envelope, dust, and star particle layers via constants in
+`collector/extension/dashboard-big-bang-scene-draw.js`.
+
+See `docs/reference/big-bang-transition.md` for the Big Bang-specific product
+contract, runtime file map, timing table, and animation lessons learned from
+the Canvas-only and Big Bang 2 trials.
 
 The `singularity` state runs a dashboard-only transition when the dashboard
 enters that state from any other state. The transition fades from the prior
