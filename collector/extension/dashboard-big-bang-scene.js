@@ -114,7 +114,10 @@
       }
 
       document.body.append(this.canvas);
-      this.mountWebglCanvas();
+      if (!this.mountWebglCanvas()) {
+        this.finish(false);
+        return this.done;
+      }
       this.sceneState = configureCanvas(
         this.canvas,
         this.context,
@@ -135,10 +138,11 @@
         this.webglRenderer.destroy();
         this.webglCanvas = null;
         this.webglRenderer = null;
-        return;
+        return false;
       }
 
       document.body.append(this.webglCanvas);
+      return true;
     }
 
     markDashboardRevealed() {

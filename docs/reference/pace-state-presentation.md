@@ -181,6 +181,9 @@ Preview controls are owned by `collector/extension/preview-control.js`.
 Synthetic preview ratios are based on a default `50%` time remaining. The
 dashboard rail is passive and highlights the active state; local developer
 controls can still force regular, perfect, and imperfect states for inspection.
+Rail size, spacing, type scale, and icon dimensions are owned by
+`collector/extension/dashboard-rail.css`; state and theme styles may adjust
+contrast for dark space presentations but should not redefine rail structure.
 Forced toolbar badge states use the same synthetic ratio model.
 
 Synthetic and forced developer states use one preview timing model for percent
