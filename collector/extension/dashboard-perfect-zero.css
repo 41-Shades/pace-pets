@@ -171,35 +171,16 @@ body.has-perfect-zero-page-background .pace-card.pace-perfect-zero #pace-copy {
   --perfect-zero-copy-rest-opacity: 0.6;
 }
 
-body.has-perfect-zero-page-background .state-rail {
-  --state-chip-gap-x: 24px;
-  --state-chip-gap-y: 8px;
-  --state-chip-width: 214px;
-  --state-section-gap-y: 14px;
-}
-
 body.has-perfect-zero-page-background .state-column-title {
   color: rgb(203 213 225 / 54%);
-  font-size: 0.7rem;
   font-weight: 640;
-  padding-left: 4px;
 }
 
 body.has-perfect-zero-page-background .state-rail .state-chip {
-  --state-icon-size: 30px;
-  --state-image-size: 27px;
-  --state-meta-font-size: 0.62rem;
-  --state-ratio-font-size: 0.6rem;
-  --state-title-font-size: 0.86rem;
-
   background: rgb(238 244 242 / 4%);
   border-color: rgb(238 244 242 / 8%);
   border-left-color: rgb(238 244 242 / 12%);
-  border-left-width: 2px;
   box-shadow: none;
-  gap: 8px;
-  min-height: 46px;
-  padding: 6px 12px 6px 10px;
 }
 
 body.has-perfect-zero-page-background .state-chip:hover {
@@ -221,12 +202,6 @@ body.has-perfect-zero-page-background .state-rail .state-icon {
   opacity: 0.62;
 }
 
-body.has-perfect-zero-page-background .state-rail .state-icon svg {
-  height: 22px;
-  stroke-width: 2.4;
-  width: 22px;
-}
-
 body.has-perfect-zero-page-background .state-rail .state-icon img {
   filter: saturate(0.52) brightness(0.86);
   opacity: 0.64;
@@ -240,7 +215,6 @@ body.has-perfect-zero-page-background
   filter: saturate(0.92) contrast(1.45) brightness(0.72)
     drop-shadow(0 0 1px rgb(238 244 242 / 38%));
   opacity: 0.96;
-  transform: translateY(1px) scale(1.68);
 }
 
 body.has-perfect-zero-page-background .state-rail .state-chip strong {
