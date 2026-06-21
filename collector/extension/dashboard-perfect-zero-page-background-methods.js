@@ -10,6 +10,9 @@
     );
   }
 
+  const BIG_BANG_REVEAL_BACKGROUND_CLASS = "is-big-bang-space-reveal";
+  const BIG_BANG_REVEAL_DURATION_PROPERTY = "--big-bang-space-reveal-duration";
+
   function canUsePerfectZeroPageBackground(controller) {
     return Boolean(
       controller.elements.shell &&
@@ -32,7 +35,26 @@
     );
   }
 
-  function preparePerfectZeroPageBackground(controller) {
+  function setBigBangRevealBackground(controller, durationMs) {
+    const background = controller.elements.perfectZeroPageBackground;
+    const shouldFade = Number.isFinite(durationMs) && durationMs > 0;
+    background.classList.toggle(BIG_BANG_REVEAL_BACKGROUND_CLASS, shouldFade);
+    if (shouldFade) {
+      background.style.setProperty(
+        BIG_BANG_REVEAL_DURATION_PROPERTY,
+        `${durationMs}ms`,
+      );
+      return;
+    }
+
+    background.style.removeProperty(BIG_BANG_REVEAL_DURATION_PROPERTY);
+  }
+
+  function preparePerfectZeroPageBackground(
+    controller,
+    { bigBangRevealFadeDurationMs = null } = {},
+  ) {
+    setBigBangRevealBackground(controller, bigBangRevealFadeDurationMs);
     controller.elements.perfectZeroPageBackground.hidden = false;
     document.body.classList.add("has-perfect-zero-page-background");
     controller.perfectZeroEclipseIconController()?.start();
@@ -73,6 +95,7 @@
       this.perfectZeroPageBackgroundFeaturedIconPlanet = null;
       this.perfectZeroEclipseIcon?.stop();
       if (this.elements.perfectZeroPageBackground) {
+        setBigBangRevealBackground(this, null);
         this.elements.perfectZeroPageBackground.hidden = true;
       }
       document.body.classList.remove("has-perfect-zero-page-background");
@@ -107,7 +130,7 @@
 
     setPerfectZeroPageBackgroundActive(
       active,
-      { featuredIconPlanet = true } = {},
+      { bigBangRevealFadeDurationMs = null, featuredIconPlanet = true } = {},
     ) {
       if (!canUsePerfectZeroPageBackground(this)) {
         return false;
@@ -119,12 +142,15 @@
       }
 
       if (hasMatchingPerfectZeroPageBackgroundScene(this, featuredIconPlanet)) {
+        if (bigBangRevealFadeDurationMs !== null) {
+          setBigBangRevealBackground(this, bigBangRevealFadeDurationMs);
+        }
         this.perfectZeroEclipseIconController()?.start();
         return true;
       }
 
       this.stopPerfectZeroPageBackgroundScene();
-      preparePerfectZeroPageBackground(this);
+      preparePerfectZeroPageBackground(this, { bigBangRevealFadeDurationMs });
       const scene = createPerfectZeroPageBackgroundScene(
         this,
         featuredIconPlanet,

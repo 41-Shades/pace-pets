@@ -11,7 +11,7 @@
 
   function tooltipForState(state) {
     if (state.key === DATA.PACE_STATES.bigBang.key) {
-      return "The first moments of full usage and full time.";
+      return "The explosive potential of 100%.";
     }
     if (state.key === DATA.PACE_STATES.sync.key) {
       return "Usage and time move as one.";
@@ -23,7 +23,7 @@
       return "The final minute of all zeros collapsing.";
     }
     if (state.key === DATA.PACE_STATES.splat.key) {
-      return "Zero arrived early. The floor did the rest.";
+      return "Zero arrived early. Gravity noticed.";
     }
 
     return state.copy;

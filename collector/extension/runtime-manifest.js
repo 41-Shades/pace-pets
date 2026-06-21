@@ -73,11 +73,14 @@
     "./dashboard-sync-monk-escape-scene.js",
     "./dashboard-sync-monk-escape-methods.js",
     "./dashboard-sync-sunburst-methods.js",
+    "./dashboard-big-bang-origin.js",
     "./dashboard-big-bang-scene-factory.js",
     "./dashboard-big-bang-ejecta-draw.js",
     "./dashboard-big-bang-particle-draw.js",
     "./dashboard-big-bang-recede-draw.js",
     "./dashboard-big-bang-plume-draw.js",
+    "./dashboard-big-bang-webgl-shaders.js",
+    "./dashboard-big-bang-webgl-renderer.js",
     "./dashboard-big-bang-scene-draw.js",
     "./dashboard-big-bang-scene.js",
     "./dashboard-big-bang-transition-renderer.js",
@@ -147,26 +150,21 @@
   function dependencyEdge(before, after) {
     return Object.freeze([before, after]);
   }
-
   function extensionPageDependencyEdge(edge) {
     return dependencyEdge(
       extensionPageSource(edge[0]),
       extensionPageSource(edge[1]),
     );
   }
-
   function dashboardFile(name) {
     return name ? `./dashboard-${name}.js` : "./dashboard.js";
   }
-
   function dashboardFileEdge(before, after) {
     return dependencyEdge(dashboardFile(before), dashboardFile(after));
   }
-
   function dashboardPreferenceDependencyEdge(after) {
     return dependencyEdge("./dashboard-preferences.js", after);
   }
-
   const DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS = Object.freeze([
     "./dashboard-shell-controls.js",
     "./dashboard-app-core.js",
@@ -182,7 +180,6 @@
     "./dashboard-train-roll-methods.js",
     "./dashboard-singularity-transition-methods.js",
   ]);
-
   const COMMON_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("integration-config.js", "usage.js"),
     dependencyEdge("usage-windows.js", "usage.js"),
@@ -216,13 +213,11 @@
     dependencyEdge("pace-logic.js", "preview-control.js"),
     dependencyEdge("usage-values.js", "preview-control.js"),
   ]);
-
   const BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("product-metadata.js", "background-logic.js"),
     dependencyEdge("developer-options.js", "background-logic.js"),
     dependencyEdge("usage-providers.js", "background-usage-source.js"),
   ]);
-
   const DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("./product-metadata.js", "./dashboard.js"),
     dependencyEdge("./developer-options.js", "./dashboard.js"),
@@ -259,11 +254,16 @@
     dashboardFileEdge("push-tank-renderer", "push-water-renderer"),
     dashboardFileEdge("push-water-renderer", "push-stretch-methods"),
     dashboardFileEdge("sync-sunburst-rays", "sync-sunburst-renderer"),
+    dashboardFileEdge("big-bang-origin", "big-bang-scene-factory"),
+    dashboardFileEdge("big-bang-origin", "big-bang-plume-draw"),
+    dashboardFileEdge("big-bang-origin", "big-bang-scene-draw"),
     dashboardFileEdge("big-bang-scene-factory", "big-bang-scene"),
     dashboardFileEdge("big-bang-ejecta-draw", "big-bang-scene-draw"),
     dashboardFileEdge("big-bang-particle-draw", "big-bang-scene-draw"),
     dashboardFileEdge("big-bang-recede-draw", "big-bang-scene-draw"),
     dashboardFileEdge("big-bang-plume-draw", "big-bang-scene-draw"),
+    dashboardFileEdge("big-bang-webgl-shaders", "big-bang-webgl-renderer"),
+    dashboardFileEdge("big-bang-webgl-renderer", "big-bang-scene"),
     dashboardFileEdge("big-bang-scene-draw", "big-bang-scene"),
     dashboardFileEdge("big-bang-scene", "big-bang-transition-renderer"),
     dashboardFileEdge(
@@ -337,7 +337,6 @@
     dashboardFileEdge("event-methods", ""),
     dashboardFileEdge("dom-contract", ""),
   ]);
-
   const DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("./dev-flags-dom-contract.js", "./dev-flags.js"),
     dependencyEdge("./dev-flags-rendering.js", "./dev-flags.js"),
@@ -362,22 +361,18 @@
     dependencyEdge("./dev-flags-feature-previews.js", "./dev-flags.js"),
     dependencyEdge("./storage-adapter.js", "./dev-flags.js"),
   ]);
-
   const BACKGROUND_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     ...COMMON_RUNTIME_DEPENDENCY_EDGES,
     ...BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES,
   ]);
-
   const DASHBOARD_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     ...COMMON_RUNTIME_DEPENDENCY_EDGES.map(extensionPageDependencyEdge),
     ...DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES,
   ]);
-
   const DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     ...COMMON_RUNTIME_DEPENDENCY_EDGES.map(extensionPageDependencyEdge),
     ...DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES,
   ]);
-
   root.CodexExtensionRuntime = Object.freeze({
     BACKGROUND_ONLY_SCRIPT_SOURCES,
     BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES,

@@ -80,6 +80,14 @@
       this.elements.paceAltRatio.hidden = false;
     },
 
+    formatFeaturedPaceRatioValue(state, paceRatio) {
+      if (state?.key === DATA.PACE_STATES.bigBang.key) {
+        return "100%";
+      }
+
+      return PacePetsLogic.formatPaceRatioValue(paceRatio);
+    },
+
     setPaceSummary({
       comparisonPaceRatio = null,
       copy,
@@ -98,6 +106,7 @@
           ? paceRatio
           : paceRatioDisplayOverride;
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
+      const displayState = this.paceStateForClassName(level);
 
       this.currentPaceSummaryTimePercent = timePercent;
       this.setPaceLevel(level);
@@ -109,13 +118,13 @@
       this.elements.paceRatioValue.textContent =
         paceRatioForDisplay === null
           ? "--"
-          : PacePetsLogic.formatPaceRatioValue(paceRatioForDisplay);
+          : this.formatFeaturedPaceRatioValue(
+              displayState,
+              paceRatioForDisplay,
+            );
       this.renderPaceAltRatio(comparisonPaceRatio);
       this.updateTabTitle(title, paceRatioForDisplay);
-      this.updateSpecialTransitionState?.(
-        previousState,
-        this.paceStateForClassName(level),
-      );
+      this.updateSpecialTransitionState?.(previousState, displayState);
     },
 
     waitingPaceSummary() {

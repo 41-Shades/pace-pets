@@ -3,19 +3,25 @@
 
   const DRAW = root.PacePetsDashboardBigBangSceneDraw;
   const FACTORY = root.PacePetsDashboardBigBangSceneFactory;
-  if (!DRAW || !FACTORY) {
+  const WEBGL = root.PacePetsDashboardBigBangWebglRenderer;
+  if (!DRAW || !FACTORY || !WEBGL) {
     throw new Error(
       "Big Bang scene helpers must load before dashboard-big-bang-scene.js.",
     );
   }
 
   const CANVAS_CLASS = "big-bang-transition-scene";
+  const WEBGL_CANVAS_CLASS = "big-bang-transition-webgl-scene";
   const MAX_PIXEL_RATIO = 1.4;
   const PRE_BANG_HOLD_MS = 2000;
   const SPACE_REVEAL_AT_MS = 9400;
   const DASHBOARD_REVEAL_AT_MS = 12200;
+  const CANVAS_COVER_FADE_AT_MS = 5200;
+  const CANVAS_COVER_FADE_DURATION_MS = 2400;
   const CANVAS_FADE_DURATION_MS = 3200;
   const DASHBOARD_FADE_DURATION_MS = 5200;
+  const SPACE_BACKGROUND_REVEAL_AT_MS = 2600;
+  const SPACE_BACKGROUND_REVEAL_DURATION_MS = CANVAS_FADE_DURATION_MS;
   const CANVAS_DONE_AT_MS = SPACE_REVEAL_AT_MS + CANVAS_FADE_DURATION_MS;
   const ANIMATION_TOTAL_DURATION_MS =
     DASHBOARD_REVEAL_AT_MS + DASHBOARD_FADE_DURATION_MS;
@@ -50,8 +56,23 @@
       : currentState;
   }
 
+  function drawDarkFrame(context, sceneState) {
+    context.fillStyle = "#020617";
+    context.fillRect(0, 0, sceneState.width, sceneState.height);
+  }
+
+  function fadeOutOpacity(elapsedMs, startMs, durationMs) {
+    return elapsedMs >= startMs
+      ? 1 - DRAW.unit((elapsedMs - startMs) / durationMs)
+      : 1;
+  }
+
   class BigBangScene {
-    constructor({ motionDisabled = false, onSettled = null } = {}) {
+    constructor({
+      motionDisabled = false,
+      onSettled = null,
+      onSpaceBackgroundRevealStart = null,
+    } = {}) {
       this.animationFrame = null;
       this.canvas = null;
       this.completionTimer = null;
@@ -59,12 +80,16 @@
       this.done = null;
       this.motionDisabled = motionDisabled;
       this.onSettled = onSettled;
+      this.onSpaceBackgroundRevealStart = onSpaceBackgroundRevealStart;
       this.resolveDone = null;
       this.sceneState = null;
       this.seed = Math.floor(Math.random() * 2 ** 32);
       this.dashboardRevealed = false;
+      this.spaceBackgroundRevealed = false;
       this.startedAtMs = null;
       this.stopped = false;
+      this.webglCanvas = null;
+      this.webglRenderer = null;
       this.render = this.render.bind(this);
     }
 
@@ -89,21 +114,31 @@
       }
 
       document.body.append(this.canvas);
+      this.mountWebglCanvas();
       this.sceneState = configureCanvas(
         this.canvas,
         this.context,
         this.sceneState,
         this.seed,
       );
-      this.context.fillStyle = "#020617";
-      this.context.fillRect(
-        0,
-        0,
-        this.sceneState.width,
-        this.sceneState.height,
-      );
+      drawDarkFrame(this.context, this.sceneState);
       this.animationFrame = root.requestAnimationFrame(this.render);
       return this.done;
+    }
+
+    mountWebglCanvas() {
+      this.webglCanvas = document.createElement("canvas");
+      this.webglCanvas.className = WEBGL_CANVAS_CLASS;
+      this.webglCanvas.setAttribute("aria-hidden", "true");
+      this.webglRenderer = WEBGL.create({ seed: this.seed });
+      if (!this.webglRenderer.mount(this.webglCanvas)) {
+        this.webglRenderer.destroy();
+        this.webglCanvas = null;
+        this.webglRenderer = null;
+        return;
+      }
+
+      document.body.append(this.webglCanvas);
     }
 
     markDashboardRevealed() {
@@ -115,15 +150,26 @@
       this.onSettled?.();
     }
 
-    render(frameTimeMs) {
-      this.animationFrame = null;
-      if (this.stopped || !this.canvas || !this.context) {
+    markSpaceBackgroundRevealed() {
+      if (this.spaceBackgroundRevealed) {
         return;
       }
 
+      this.spaceBackgroundRevealed = true;
+      this.onSpaceBackgroundRevealStart?.({
+        revealDurationMs: SPACE_BACKGROUND_REVEAL_DURATION_MS,
+      });
+    }
+
+    canRenderFrame() {
+      return !this.stopped && Boolean(this.canvas && this.context);
+    }
+
+    prepareFrame(frameTimeMs) {
       if (this.startedAtMs === null) {
         this.startedAtMs = frameTimeMs;
       }
+
       const totalElapsedMs = Math.min(
         TOTAL_DURATION_MS,
         frameTimeMs - this.startedAtMs,
@@ -134,44 +180,78 @@
         this.sceneState,
         this.seed,
       );
-      const elapsedMs = totalElapsedMs - PRE_BANG_HOLD_MS;
-      if (elapsedMs < 0) {
-        this.context.fillStyle = "#020617";
-        this.context.fillRect(
-          0,
-          0,
-          this.sceneState.width,
-          this.sceneState.height,
-        );
-        this.animationFrame = root.requestAnimationFrame(this.render);
-        return;
-      }
 
+      return totalElapsedMs - PRE_BANG_HOLD_MS;
+    }
+
+    requestNextFrame() {
+      this.animationFrame = root.requestAnimationFrame(this.render);
+    }
+
+    drawPreBangHold() {
+      drawDarkFrame(this.context, this.sceneState);
+    }
+
+    drawActiveFrame(elapsedMs) {
       DRAW.drawFrame(this.context, this.sceneState, elapsedMs);
+      const coverOpacity = fadeOutOpacity(
+        elapsedMs,
+        CANVAS_COVER_FADE_AT_MS,
+        CANVAS_COVER_FADE_DURATION_MS,
+      );
+      const transitionOpacity = fadeOutOpacity(
+        elapsedMs,
+        SPACE_REVEAL_AT_MS,
+        CANVAS_FADE_DURATION_MS,
+      );
+      this.webglRenderer?.render(elapsedMs, transitionOpacity);
 
-      if (elapsedMs >= SPACE_REVEAL_AT_MS) {
-        this.canvas.style.opacity = String(
-          1 -
-            DRAW.unit(
-              (elapsedMs - SPACE_REVEAL_AT_MS) / CANVAS_FADE_DURATION_MS,
-            ),
-        );
+      if (elapsedMs >= CANVAS_COVER_FADE_AT_MS) {
+        this.canvas.style.opacity = String(coverOpacity);
+      }
+    }
+
+    handleRevealMilestones(elapsedMs) {
+      if (elapsedMs >= SPACE_BACKGROUND_REVEAL_AT_MS) {
+        this.markSpaceBackgroundRevealed();
       }
       if (elapsedMs >= DASHBOARD_REVEAL_AT_MS) {
         this.markDashboardRevealed();
       }
+    }
 
+    handleCompletion(elapsedMs) {
       if (elapsedMs >= ANIMATION_TOTAL_DURATION_MS) {
         this.finish(true);
-        return;
+        return true;
       }
       if (elapsedMs >= CANVAS_DONE_AT_MS) {
         this.stopCanvas();
         this.scheduleCompletion(elapsedMs);
+        return true;
+      }
+
+      return false;
+    }
+
+    render(frameTimeMs) {
+      this.animationFrame = null;
+      if (!this.canRenderFrame()) {
         return;
       }
 
-      this.animationFrame = root.requestAnimationFrame(this.render);
+      const elapsedMs = this.prepareFrame(frameTimeMs);
+      if (elapsedMs < 0) {
+        this.drawPreBangHold();
+        this.requestNextFrame();
+        return;
+      }
+
+      this.drawActiveFrame(elapsedMs);
+      this.handleRevealMilestones(elapsedMs);
+      if (!this.handleCompletion(elapsedMs)) {
+        this.requestNextFrame();
+      }
     }
 
     scheduleCompletion(elapsedMs) {
@@ -195,6 +275,10 @@
       this.canvas = null;
       this.context = null;
       this.sceneState = null;
+      this.webglRenderer?.destroy();
+      this.webglRenderer = null;
+      this.webglCanvas?.remove();
+      this.webglCanvas = null;
     }
 
     finish(completed) {

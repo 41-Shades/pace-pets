@@ -91,6 +91,42 @@
     });
   }
 
+  function currentPaceState(controller) {
+    return controller.paceStateForClassName(controller.currentPaceLevel());
+  }
+
+  function restoreBigBangPageBackground(controller, details = {}) {
+    const { revealDurationMs } = details || {};
+    if (
+      !isTransitionState(
+        TRANSITION_DEFINITIONS.bigBang,
+        currentPaceState(controller),
+      )
+    ) {
+      return;
+    }
+
+    controller.setPerfectZeroPageBackgroundActive?.(true, {
+      bigBangRevealFadeDurationMs: revealDurationMs,
+      featuredIconPlanet: false,
+    });
+  }
+
+  function transitionRendererOptions(controller, definition) {
+    const options = { motionDisabled: !motionPreferenceEnabled() };
+    if (definition.key !== TRANSITION_DEFINITIONS.bigBang.key) {
+      return options;
+    }
+
+    return {
+      ...options,
+      onCanvasCoverEnd: (details) =>
+        restoreBigBangPageBackground(controller, details),
+      onCanvasCoverStart: () =>
+        controller.stopPerfectZeroPageBackgroundScene?.(),
+    };
+  }
+
   function stopTransition(controller, definition) {
     const state = transitionState(controller, definition);
     state.runId += 1;
@@ -164,9 +200,9 @@
     transition.inFlight = true;
     transition.pending = false;
 
-    const scene = definition.renderer.create({
-      motionDisabled: !motionPreferenceEnabled(),
-    });
+    const scene = definition.renderer.create(
+      transitionRendererOptions(controller, definition),
+    );
     transition.scene = scene;
     syncLegacyTransitionState(controller, definition, transition);
     await scene.play();

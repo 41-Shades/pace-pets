@@ -106,7 +106,7 @@ If you rename effect asset files, update `EFFECT_ASSET_FILES` in
 - `behind`: ease up
 - `wellBehind`: slow down
 - `criticalBehind`: brake hard
-- `bigBang`: big bang
+- `bigBang`: Big Bang
 - `sync`: perfect sync
 - `perfectZero`: perfect zero
 - `splat`: splat

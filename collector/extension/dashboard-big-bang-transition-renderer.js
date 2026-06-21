@@ -13,9 +13,17 @@
   const REVEAL_CLASS = "is-big-bang-dashboard-reveal";
 
   class BigBangTransitionRenderer {
-    constructor({ motionDisabled = false } = {}) {
+    constructor({
+      motionDisabled = false,
+      onCanvasCoverEnd = null,
+      onCanvasCoverStart = null,
+    } = {}) {
+      this.backgroundCovered = false;
+      this.backgroundRestored = false;
       this.done = null;
       this.motionDisabled = motionDisabled;
+      this.onCanvasCoverEnd = onCanvasCoverEnd;
+      this.onCanvasCoverStart = onCanvasCoverStart;
       this.resolveDone = null;
       this.scene = null;
       this.stopped = false;
@@ -32,8 +40,11 @@
 
       document.body.classList.add(ACTIVE_CLASS, HIDDEN_CLASS);
       document.body.classList.remove(REVEAL_CLASS);
+      this.coverBackground();
       this.scene = BIG_BANG_SCENE.create({
         onSettled: () => this.startReveal(),
+        onSpaceBackgroundRevealStart: (details) =>
+          this.restoreBackground(details),
       });
       this.scene
         .play()
@@ -53,8 +64,31 @@
         return;
       }
 
+      this.restoreBackground();
       document.body.classList.remove(HIDDEN_CLASS);
       document.body.classList.add(REVEAL_CLASS);
+    }
+
+    coverBackground() {
+      this.backgroundCovered = true;
+      try {
+        this.onCanvasCoverStart?.();
+      } catch (error) {
+        console.warn("Pace Pets Big Bang background pause failed:", error);
+      }
+    }
+
+    restoreBackground(details = undefined) {
+      if (!this.backgroundCovered || this.backgroundRestored) {
+        return;
+      }
+
+      this.backgroundRestored = true;
+      try {
+        this.onCanvasCoverEnd?.(details);
+      } catch (error) {
+        console.warn("Pace Pets Big Bang background restore failed:", error);
+      }
     }
 
     stop() {
@@ -69,6 +103,7 @@
       this.stopped = true;
       this.scene?.stop();
       this.scene = null;
+      this.restoreBackground();
       document.body.classList.remove(ACTIVE_CLASS, HIDDEN_CLASS, REVEAL_CLASS);
       this.resolveDone?.(completed);
       this.resolveDone = null;

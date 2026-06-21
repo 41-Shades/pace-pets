@@ -2,15 +2,25 @@
   "use strict";
 
   const EJECTA_DRAW = root.PacePetsDashboardBigBangEjectaDraw;
+  const ORIGIN = root.PacePetsDashboardBigBangOrigin;
   const PARTICLE_DRAW = root.PacePetsDashboardBigBangParticleDraw;
   const PLUME_DRAW = root.PacePetsDashboardBigBangPlumeDraw;
   const RECEDE_DRAW = root.PacePetsDashboardBigBangRecedeDraw;
-  if (!EJECTA_DRAW || !PARTICLE_DRAW || !PLUME_DRAW || !RECEDE_DRAW) {
+  if (
+    !EJECTA_DRAW ||
+    !ORIGIN ||
+    !PARTICLE_DRAW ||
+    !PLUME_DRAW ||
+    !RECEDE_DRAW
+  ) {
     throw new Error("Big Bang draw helpers must load before scene draw.");
   }
 
   const TWO_PI = Math.PI * 2;
   const SEED_SPARKLE_MS = 720;
+  const DRAW_OPENING_EJECTA = false;
+  const DRAW_REALLY_BIG_BANG_EXPANSION = false;
+  const DRAW_LEGACY_AFTERGLOW = false;
 
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
@@ -56,12 +66,13 @@
     context.fillRect(0, 0, width, height);
 
     const bloom = unit((elapsedMs - 900) / 5200);
+    const center = ORIGIN.pointForSize(width, height);
     const gradient = context.createRadialGradient(
-      width * 0.5,
-      height * 0.48,
+      center.x,
+      center.y - height * 0.02,
       0,
-      width * 0.5,
-      height * 0.52,
+      center.x,
+      center.y + height * 0.02,
       Math.max(width, height) * 0.84,
     );
     gradient.addColorStop(0, `rgba(49, 46, 129, ${0.34 * bloom})`);
@@ -72,22 +83,25 @@
   }
 
   function drawStageOneExplosion(context, scene, elapsedMs) {
+    const openingVariant = scene.openingVariant || { seedTwinkleScale: 1 };
     const seed =
       elapsedMs < 0 ? unit((elapsedMs + SEED_SPARKLE_MS) / SEED_SPARKLE_MS) : 0;
     const attack = unit(elapsedMs / 520);
     const fade = 1 - unit((elapsedMs - 760) / 620);
     const seedTwinkle =
-      seed * (0.68 + 0.32 * Math.sin((elapsedMs + SEED_SPARKLE_MS) * 0.044));
-    const intensity = Math.max(
-      seedTwinkle,
-      easeOutCubic(attack) * Math.max(0, fade),
+      seed *
+      openingVariant.seedTwinkleScale *
+      (0.68 + 0.32 * Math.sin((elapsedMs + SEED_SPARKLE_MS) * 0.044));
+    const intensity = Math.min(
+      1,
+      Math.max(seedTwinkle, easeOutCubic(attack) * Math.max(0, fade)),
     );
     if (intensity <= 0) {
       return;
     }
 
     const { width, height } = scene;
-    const center = { x: width / 2, y: height / 2 };
+    const center = ORIGIN.pointForSize(width, height);
     const edge = Math.min(width, height);
     const contraction = easeInOutCubic(unit((elapsedMs - 560) / 620));
     const radius =
@@ -300,10 +314,27 @@
     context.restore();
   }
 
+  function drawReallyBigBangExpansion(context, scene, bangElapsedMs) {
+    if (!DRAW_REALLY_BIG_BANG_EXPANSION) {
+      return;
+    }
+
+    drawStageTwoCore(context, scene.width, scene.height, bangElapsedMs);
+    drawExpansionEnvelope(context, scene.width, scene.height, bangElapsedMs);
+    for (const ray of scene.energyRays) {
+      drawEnergyRay(context, ray, scene.width, scene.height, bangElapsedMs);
+    }
+    for (const arc of scene.shockArcs) {
+      drawShockArc(context, arc, scene.width, scene.height, bangElapsedMs);
+    }
+  }
+
   function drawFrame(context, scene, elapsedMs) {
     const bangElapsedMs = elapsedMs - SEED_SPARKLE_MS;
     drawBackground(context, scene.width, scene.height, bangElapsedMs);
-    EJECTA_DRAW.drawEjectaLayer(context, scene.ejecta, bangElapsedMs);
+    if (DRAW_OPENING_EJECTA) {
+      EJECTA_DRAW.drawEjectaLayer(context, scene.ejecta, bangElapsedMs);
+    }
     drawStageOneExplosion(context, scene, bangElapsedMs);
     PLUME_DRAW.drawIgnitionPlumes(
       context,
@@ -316,26 +347,21 @@
       PARTICLE_DRAW.drawParticle(context, spark, bangElapsedMs);
     }
     resetDrawState(context);
-    drawStageTwoCore(context, scene.width, scene.height, bangElapsedMs);
-    drawExpansionEnvelope(context, scene.width, scene.height, bangElapsedMs);
-    for (const ray of scene.energyRays) {
-      drawEnergyRay(context, ray, scene.width, scene.height, bangElapsedMs);
-    }
-    for (const arc of scene.shockArcs) {
-      drawShockArc(context, arc, scene.width, scene.height, bangElapsedMs);
-    }
-    RECEDE_DRAW.drawRecedingEnvelope(
-      context,
-      scene.width,
-      scene.height,
-      bangElapsedMs,
-      scene.recedeSeed,
-    );
-    for (const particle of scene.dust) {
-      PARTICLE_DRAW.drawParticle(context, particle, bangElapsedMs);
-    }
-    for (const star of scene.stars) {
-      PARTICLE_DRAW.drawParticle(context, star, bangElapsedMs);
+    drawReallyBigBangExpansion(context, scene, bangElapsedMs);
+    if (DRAW_LEGACY_AFTERGLOW) {
+      RECEDE_DRAW.drawRecedingEnvelope(
+        context,
+        scene.width,
+        scene.height,
+        bangElapsedMs,
+        scene.recedeSeed,
+      );
+      for (const particle of scene.dust) {
+        PARTICLE_DRAW.drawParticle(context, particle, bangElapsedMs);
+      }
+      for (const star of scene.stars) {
+        PARTICLE_DRAW.drawParticle(context, star, bangElapsedMs);
+      }
     }
     resetDrawState(context);
   }

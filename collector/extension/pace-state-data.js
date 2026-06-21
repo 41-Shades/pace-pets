@@ -196,10 +196,10 @@
     "wellAhead",
   ]);
   const PACE_PERFECT_STATE_KEYS = Object.freeze([
-    "bigBang",
     "sync",
     "perfectZero",
     "singularity",
+    "bigBang",
   ]);
   const PACE_IMPERFECT_STATE_KEYS = Object.freeze(["splat"]);
   const PACE_STATE_GROUPS = Object.freeze([
