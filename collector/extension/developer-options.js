@@ -3,6 +3,8 @@
 
   const STORAGE_KEY = "pacePetsDeveloperOptions";
   const FORCED_PACE_STATE_KEY = "forcedPaceState";
+  const CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY =
+    "checkerboardRevealWhiteTransparent";
   const CRITICAL_BADGE_WINDOW_KEY = "criticalBadgeWindow";
   const MANUAL_REFRESH_LEAD_WINDOW_KEY = "manualRefreshLeadWindow";
   const MAX_POOL_FILL_KEY = "maxPoolFill";
@@ -83,6 +85,15 @@
   );
   const FEATURE_PREVIEW_OPTIONS = Object.freeze([
     featurePreviewOption({
+      activeLabel: "Black squares transparent",
+      disableStatus:
+        "Checkerboard reveal returned to transparent black squares.",
+      enableStatus: "Checkerboard reveal uses transparent white squares.",
+      key: CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY,
+      label: "White squares transparent",
+      value: "checkerboard-reveal-white-transparent",
+    }),
+    featurePreviewOption({
       disableStatus: "Brake hard badge returned to live data.",
       enableStatus: "Brake hard badge forced.",
       key: CRITICAL_BADGE_WINDOW_KEY,
@@ -123,6 +134,14 @@
     over50: "over50",
     under50: "under50",
   });
+  const BOOLEAN_STORAGE_KEYS = Object.freeze([
+    CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY,
+    CRITICAL_BADGE_WINDOW_KEY,
+    MANUAL_REFRESH_LEAD_WINDOW_KEY,
+    MAX_POOL_FILL_KEY,
+    RAIL_HIDDEN_KEY,
+    RESET_EXHAUSTED_PREVIEW_KEY,
+  ]);
   const SPLAT_TIME_REMAINING_PREVIEW_OPTIONS = Object.freeze([
     splatTimeRemainingPreviewOption({
       label: "Splat >50%",
@@ -148,6 +167,10 @@
   }
 
   function normalizeCriticalBadgeWindow(value) {
+    return value === true;
+  }
+
+  function normalizeCheckerboardRevealWhiteTransparent(value) {
     return value === true;
   }
 
@@ -185,6 +208,10 @@
       source[SPLAT_TIME_REMAINING_PREVIEW_KEY],
     );
     return Object.freeze({
+      checkerboardRevealWhiteTransparent:
+        normalizeCheckerboardRevealWhiteTransparent(
+          source[CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY],
+        ),
       criticalBadgeWindow: normalizeCriticalBadgeWindow(
         source[CRITICAL_BADGE_WINDOW_KEY],
       ),
@@ -214,6 +241,8 @@
     }
 
     return {
+      [CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY]:
+        options.checkerboardRevealWhiteTransparent,
       [CRITICAL_BADGE_WINDOW_KEY]: options.criticalBadgeWindow,
       [FORCED_PACE_STATE_KEY]:
         options.forcedPaceStateKey ?? options[FORCED_PACE_STATE_KEY],
@@ -234,20 +263,10 @@
     if (normalized.forcedPaceStateKey) {
       value[FORCED_PACE_STATE_KEY] = normalized.forcedPaceStateKey;
     }
-    if (normalized.criticalBadgeWindow) {
-      value[CRITICAL_BADGE_WINDOW_KEY] = true;
-    }
-    if (normalized.manualRefreshLeadWindow) {
-      value[MANUAL_REFRESH_LEAD_WINDOW_KEY] = true;
-    }
-    if (normalized.maxPoolFill) {
-      value[MAX_POOL_FILL_KEY] = true;
-    }
-    if (normalized.railHidden) {
-      value[RAIL_HIDDEN_KEY] = true;
-    }
-    if (normalized.resetExhaustedPreview) {
-      value[RESET_EXHAUSTED_PREVIEW_KEY] = true;
+    for (const key of BOOLEAN_STORAGE_KEYS) {
+      if (normalized[key]) {
+        value[key] = true;
+      }
     }
     if (normalized.splatTimeRemainingPreview) {
       value[SPLAT_TIME_REMAINING_PREVIEW_KEY] =
@@ -281,6 +300,7 @@
   }
 
   root.PacePetsDeveloperOptions = Object.freeze({
+    CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY,
     CRITICAL_BADGE_WINDOW_KEY,
     FEATURE_PREVIEW_OPTIONS,
     FORCEABLE_PACE_STATE_GROUPS,
@@ -303,6 +323,7 @@
     hasDeveloperOptionsChange,
     hasStoredDeveloperOptionsValue,
     normalizeCriticalBadgeWindow,
+    normalizeCheckerboardRevealWhiteTransparent,
     normalizeDeveloperOptions,
     normalizeForcedPaceStateKey,
     normalizeManualRefreshLeadWindow,

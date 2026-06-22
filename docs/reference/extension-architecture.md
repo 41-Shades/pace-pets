@@ -79,8 +79,13 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
   advancing behind the still-collapsing chrome, keeps the horizon attached to
   the existing black-hole center, expands into the viewport, crosses into a
   cone/funnel descent, falls through the singularity point into whiteout, and
-  clears a checkerboard overlay to reveal the current dashboard state. The
-  transition does not request Chrome tab screenshots.
+  plays the shared dashboard checkerboard reveal over the current dashboard
+  state. The transition does not request Chrome tab screenshots.
+- `collector/extension/dashboard-checkerboard-reveal.js` and
+  `collector/extension/dashboard-checkerboard-reveal.css` own the reusable
+  full-page whiteout-to-dashboard checkerboard reveal. Singularity uses it for
+  terminal whiteout recovery, and unpacked dev controls can request the same
+  one-shot reveal over the live or forced dashboard state.
 - `collector/extension/vendor/chart.umd.min.js` is the optional vendored Chart.js runtime used by the dashboard chart; the rest of the dashboard still renders if the chart asset cannot load.
 
 ## Collection Flow
@@ -127,7 +132,8 @@ States. Choosing a state stores
 `criticalBadgeWindow`; enabling the refresh-link preview stores
 `manualRefreshLeadWindow`; enabling the max-pool-fill preview stores
 `maxPoolFill`; enabling the Exhausted man preview stores
-`resetExhaustedPreview`. Choosing a Splat timing preview stores
+`resetExhaustedPreview`; enabling the checkerboard polarity preview stores
+`checkerboardRevealWhiteTransparent`. Choosing a Splat timing preview stores
 `forcedPaceState` as `splat` plus `splatTimeRemainingPreview` as `over50` or
 `under50`. Choosing a Sprint faster intensity preview stores
 `forcedPaceState` as `wellAhead` plus `sprintIntensityPreview` as an exact
@@ -135,9 +141,10 @@ ratio string from `1.55` through `7.00`. Returning to live data removes those
 overrides. `collector/extension/dev-preview-action-registry.js` owns the
 one-shot dev action catalog, message types, button labels, requested-status
 copy, and fallback error copy for Brake hard max debris burst, Rare burst (5%),
-and monk escape previews. Those actions send runtime messages to dashboard
-pages and do not store developer option state; the individual preview control
-modules remain thin compatibility adapters around the shared registry.
+monk escape previews, and the shared checkerboard reveal replay. Those actions
+send runtime messages to dashboard pages and do not store developer option
+state; the individual preview control modules remain thin compatibility
+adapters around the shared registry.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, and toolbar badge match

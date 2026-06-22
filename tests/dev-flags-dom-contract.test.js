@@ -23,6 +23,7 @@ describe("PacePetsDevFlagsDom", () => {
     expect(dom.REQUIRED_DEV_FLAG_ELEMENT_IDS).toContain("reset-all");
     expect(dom.REQUIRED_DEV_FLAG_ELEMENT_IDS).toContain("status-message");
     expect(dom.REQUIRED_DEV_FLAG_ELEMENT_IDS).toContain("feature-preview-list");
+    expect(dom.REQUIRED_DEV_FLAG_ELEMENT_IDS).toContain("theme-mode-list");
     expect(new Set(dom.REQUIRED_DEV_FLAG_ELEMENT_IDS).size).toBe(
       dom.REQUIRED_DEV_FLAG_ELEMENT_IDS.length,
     );
@@ -59,5 +60,6 @@ describe("PacePetsDevFlagsDom", () => {
     });
     expect(queriedSelectors).toContain(".current-mode-panel");
     expect(queriedSelectors).toContain("#sprint-intensity-preview-list");
+    expect(queriedSelectors).toContain("#theme-mode-list");
   });
 });

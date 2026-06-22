@@ -5,6 +5,7 @@
     "product-metadata.js",
     "integration-config.js",
     "usage-windows.js",
+    "dashboard-preferences.js",
     "usage-values.js",
     "persisted-text.js",
     "refresh-status.js",
@@ -14,6 +15,7 @@
     "brake-extreme-preview-control.js",
     "push-sweat-preview-control.js",
     "sync-monk-escape-preview-control.js",
+    "checkerboard-reveal-preview-control.js",
     "storage-adapter.js",
     "usage-integration-adapters.js",
     "usage-providers.js",
@@ -46,7 +48,6 @@
     "./dashboard-chart-data.js",
     "./dashboard-chart.js",
     "./dashboard-time.js",
-    "./dashboard-preferences.js",
     "./dashboard-shell-controls.js",
     "./dashboard-info-template.js",
     "./dashboard-status-logic.js",
@@ -84,6 +85,7 @@
     "./dashboard-big-bang-scene-draw.js",
     "./dashboard-big-bang-scene.js",
     "./dashboard-big-bang-transition-renderer.js",
+    "./dashboard-checkerboard-reveal.js",
     "./dashboard-singularity-black-hole-v2-shaders.js",
     "./dashboard-singularity-black-hole-v2-scene.js",
     "./dashboard-singularity-chrome-collapse-fragments.js",
@@ -91,6 +93,7 @@
     "./dashboard-singularity-chrome-collapse-scene.js",
     "./dashboard-singularity-transition-renderer.js",
     "./dashboard-singularity-transition-methods.js",
+    "./dashboard-checkerboard-reveal-methods.js",
     "./dashboard-pace-wobble-methods.js",
     "./dashboard-ease-up-methods.js",
     "./dashboard-pace-icon-render-methods.js",
@@ -125,13 +128,12 @@
     "./dev-flags-rendering.js",
     "./dev-flags-dom-contract.js",
     "./dev-flags-current-mode.js",
+    "./dev-flags-theme-mode.js",
     "./dev-flags-preview-actions.js",
     "./dev-flags-feature-previews.js",
     "./dev-flags.js",
   ]);
-  function extensionPageSource(source) {
-    return `./${source}`;
-  }
+  const extensionPageSource = (source) => `./${source}`;
   const BACKGROUND_SCRIPT_SOURCES = Object.freeze([
     ...COMMON_SCRIPT_SOURCES,
     ...BACKGROUND_ONLY_SCRIPT_SOURCES,
@@ -147,24 +149,15 @@
     ...COMMON_SCRIPT_SOURCES.map(extensionPageSource),
     ...DEV_FLAGS_ONLY_SCRIPT_SOURCES,
   ]);
-  function dependencyEdge(before, after) {
-    return Object.freeze([before, after]);
-  }
-  function extensionPageDependencyEdge(edge) {
-    return dependencyEdge(
-      extensionPageSource(edge[0]),
-      extensionPageSource(edge[1]),
-    );
-  }
-  function dashboardFile(name) {
-    return name ? `./dashboard-${name}.js` : "./dashboard.js";
-  }
-  function dashboardFileEdge(before, after) {
-    return dependencyEdge(dashboardFile(before), dashboardFile(after));
-  }
-  function dashboardPreferenceDependencyEdge(after) {
-    return dependencyEdge("./dashboard-preferences.js", after);
-  }
+  const dependencyEdge = (before, after) => Object.freeze([before, after]);
+  const extensionPageDependencyEdge = ([before, after]) =>
+    dependencyEdge(extensionPageSource(before), extensionPageSource(after));
+  const dashboardFile = (name) =>
+    name ? `./dashboard-${name}.js` : "./dashboard.js";
+  const dashboardFileEdge = (before, after) =>
+    dependencyEdge(dashboardFile(before), dashboardFile(after));
+  const dashboardPreferenceDependencyEdge = (after) =>
+    dependencyEdge("./dashboard-preferences.js", after);
   const DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS = Object.freeze([
     "./dashboard-shell-controls.js",
     "./dashboard-app-core.js",
@@ -182,6 +175,7 @@
   ]);
   const COMMON_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("integration-config.js", "usage.js"),
+    dependencyEdge("usage-windows.js", "dashboard-preferences.js"),
     dependencyEdge("usage-windows.js", "usage.js"),
     dependencyEdge("usage-values.js", "usage.js"),
     dependencyEdge("usage-values.js", "history-store.js"),
@@ -193,6 +187,7 @@
       "brake-extreme-preview-control.js",
       "push-sweat-preview-control.js",
       "sync-monk-escape-preview-control.js",
+      "checkerboard-reveal-preview-control.js",
     ].map((source) => dependencyEdge("dev-preview-action-registry.js", source)),
     dependencyEdge("usage-values.js", "pace-logic.js"),
     dependencyEdge("storage-adapter.js", "usage.js"),
@@ -249,6 +244,10 @@
       "./push-sweat-preview-control.js",
       "./dashboard-push-stretch-methods.js",
     ),
+    dependencyEdge(
+      "./checkerboard-reveal-preview-control.js",
+      "./dashboard-checkerboard-reveal-methods.js",
+    ),
     dashboardFileEdge("push-tank-data", "push-tank-visitors"),
     dashboardFileEdge("push-tank-visitors", "push-tank-renderer"),
     dashboardFileEdge("push-tank-renderer", "push-water-renderer"),
@@ -266,6 +265,8 @@
     dashboardFileEdge("big-bang-webgl-renderer", "big-bang-scene"),
     dashboardFileEdge("big-bang-scene-draw", "big-bang-scene"),
     dashboardFileEdge("big-bang-scene", "big-bang-transition-renderer"),
+    dashboardFileEdge("checkerboard-reveal", "checkerboard-reveal-methods"),
+    dashboardFileEdge("checkerboard-reveal", "singularity-transition-renderer"),
     dashboardFileEdge(
       "big-bang-transition-renderer",
       "singularity-transition-methods",
@@ -298,6 +299,8 @@
       "singularity-transition-renderer",
       "singularity-transition-methods",
     ),
+    dashboardFileEdge("pace-core", "checkerboard-reveal-methods"),
+    dashboardFileEdge("checkerboard-reveal-methods", "pace-controller"),
     dashboardFileEdge("pace-core", "pace-icon-render-methods"),
     dashboardFileEdge("pace-icon-render-methods", "pace-icon-methods"),
     dashboardFileEdge("pace-icon-methods", "pace-rail-methods"),
@@ -341,6 +344,8 @@
     dependencyEdge("./dev-flags-dom-contract.js", "./dev-flags.js"),
     dependencyEdge("./dev-flags-rendering.js", "./dev-flags.js"),
     dependencyEdge("./dev-flags-current-mode.js", "./dev-flags.js"),
+    dependencyEdge("./dashboard-preferences.js", "./dev-flags-theme-mode.js"),
+    dependencyEdge("./dev-flags-theme-mode.js", "./dev-flags.js"),
     dependencyEdge("./developer-options.js", "./dev-flags.js"),
     dependencyEdge("./developer-options.js", "./dev-flags-feature-previews.js"),
     dependencyEdge("./pace-state-data.js", "./dev-flags.js"),

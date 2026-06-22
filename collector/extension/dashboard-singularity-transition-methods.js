@@ -114,6 +114,14 @@
 
   function transitionRendererOptions(controller, definition) {
     const options = { motionDisabled: !motionPreferenceEnabled() };
+    if (definition.key === TRANSITION_DEFINITIONS.singularity.key) {
+      return {
+        ...options,
+        checkerboardRevealWhiteTransparent:
+          controller.getCurrentCheckerboardRevealWhiteTransparent?.() === true,
+      };
+    }
+
     if (definition.key !== TRANSITION_DEFINITIONS.bigBang.key) {
       return options;
     }

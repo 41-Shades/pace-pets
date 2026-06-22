@@ -3,6 +3,7 @@
 
   const ACTION_KEYS = Object.freeze({
     brakeMaxBurst: "brakeMaxBurst",
+    checkerboardReveal: "checkerboardReveal",
     monkEscape: "monkEscape",
     rareSweat: "rareSweat",
   });
@@ -10,6 +11,7 @@
     ACTION_KEYS.brakeMaxBurst,
     ACTION_KEYS.rareSweat,
     ACTION_KEYS.monkEscape,
+    ACTION_KEYS.checkerboardReveal,
   ]);
 
   function previewAction(action) {
@@ -48,6 +50,17 @@
       messageType: "pacePets.syncMonkEscapePreview.launch",
       responseRequired: false,
       status: "Monk escape launch requested.",
+    }),
+    [ACTION_KEYS.checkerboardReveal]: previewAction({
+      controlMessageName: "playMessage",
+      controlPredicateName: "isPlayMessage",
+      fallbackErrorMessage:
+        "Open the dashboard before previewing Checkerboard reveal.",
+      key: ACTION_KEYS.checkerboardReveal,
+      label: "Checkerboard reveal",
+      messageType: "pacePets.checkerboardRevealPreview.play",
+      responseRequired: true,
+      status: "Checkerboard reveal requested.",
     }),
   });
 

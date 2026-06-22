@@ -68,6 +68,9 @@
           this.applyResolvedTheme({ refresh: true });
         }
       });
+      window.addEventListener("storage", (event) => {
+        this.handleThemeStorageChange(event);
+      });
       this.applyResolvedTheme();
       this.applyMotionPreference();
     }
@@ -112,6 +115,15 @@
     toggleTheme() {
       this.explicitTheme = this.oppositeTheme(this.resolvedTheme());
       storeThemePreference(this.explicitTheme);
+      this.applyResolvedTheme({ refresh: true });
+    }
+
+    handleThemeStorageChange(event) {
+      if (event.key !== DASHBOARD_PREFERENCES.THEME_STORAGE_KEY) {
+        return;
+      }
+
+      this.explicitTheme = DASHBOARD_PREFERENCES.normalizeTheme(event.newValue);
       this.applyResolvedTheme({ refresh: true });
     }
 

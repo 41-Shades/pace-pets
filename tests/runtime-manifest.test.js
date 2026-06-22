@@ -40,6 +40,10 @@ function expectCommonRuntimeDependencyEdges(runtime) {
     "usage.js",
   ]);
   expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "usage-windows.js",
+    "dashboard-preferences.js",
+  ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "refresh-status.js",
     "refresh-control.js",
   ]);
@@ -190,6 +194,14 @@ function expectDevFlagsRuntimeDependencyEdges(runtime) {
     "./dev-flags.js",
   ]);
   expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-preferences.js",
+    "./dev-flags-theme-mode.js",
+  ]);
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-flags-theme-mode.js",
+    "./dev-flags.js",
+  ]);
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dev-preview-action-registry.js",
     "./dev-flags-preview-actions.js",
   ]);
@@ -223,10 +235,16 @@ describe("CodexExtensionRuntime script sources", () => {
     const runtime = globalThis.CodexExtensionRuntime;
 
     expect(runtime.COMMON_SCRIPT_SOURCES).toContain("usage-providers.js");
+    expect(runtime.COMMON_SCRIPT_SOURCES).toContain("dashboard-preferences.js");
     expect(runtime.COMMON_SCRIPT_SOURCES).toContain("persisted-text.js");
     expect(runtime.COMMON_SCRIPT_SOURCES).toContain("refresh-schedule.js");
     expect(runtime.COMMON_SCRIPT_SOURCES).toContain(
       "dev-preview-action-registry.js",
+    );
+    expect(
+      runtime.COMMON_SCRIPT_SOURCES.indexOf("usage-windows.js"),
+    ).toBeLessThan(
+      runtime.COMMON_SCRIPT_SOURCES.indexOf("dashboard-preferences.js"),
     );
     expect(
       runtime.COMMON_SCRIPT_SOURCES.indexOf("refresh-schedule.js"),
@@ -306,6 +324,9 @@ describe("CodexExtensionRuntime script sources", () => {
     expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toContain(
       "./dev-flags-dom-contract.js",
     );
+    expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toContain(
+      "./dashboard-preferences.js",
+    );
   });
 });
 
@@ -326,6 +347,7 @@ describe("CodexExtensionRuntime target-only script sources", () => {
       "./dev-flags-rendering.js",
       "./dev-flags-dom-contract.js",
       "./dev-flags-current-mode.js",
+      "./dev-flags-theme-mode.js",
       "./dev-flags-preview-actions.js",
       "./dev-flags-feature-previews.js",
       "./dev-flags.js",

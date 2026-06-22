@@ -12,6 +12,7 @@
   function createController(options) {
     const controller = new Controller(options);
     controller.bindBrakeExtremePreviewRequests?.();
+    controller.bindCheckerboardRevealPreviewRequests?.();
     controller.bindSyncMonkEscapePreviewRequests?.();
     return Object.freeze({
       hasForcedPaceStateOverride:

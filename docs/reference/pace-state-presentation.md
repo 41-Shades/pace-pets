@@ -470,7 +470,7 @@ breakup. When the black-hole approach completes, the same WebGL scene keeps
 advancing behind the still-collapsing chrome, keeps the horizon attached to the
 existing black-hole center, expands into the viewport, descends through a
 cone/funnel visualization, falls through the singularity point into a full
-whiteout, then clears a checkerboard overlay to reveal the current dashboard
+whiteout, then plays the shared checkerboard reveal over the current dashboard
 state. Same-state refreshes do not replay the transition. If Singularity is
 selected from the separate developer controls while the dashboard tab is
 hidden, the transition is queued and plays when the dashboard becomes visible.

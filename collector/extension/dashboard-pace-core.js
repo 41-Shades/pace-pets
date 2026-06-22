@@ -28,6 +28,8 @@
       this.bigBangTransitionPending = false;
       this.bigBangTransitionRunId = 0;
       this.bigBangTransitionScene = null;
+      this.checkerboardRevealPreviewRequestsBound = false;
+      this.checkerboardRevealScene = null;
       this.perfectZeroEclipseIcon = null;
       this.perfectZeroPageBackgroundScene = null;
       this.specialTransitions = null;
