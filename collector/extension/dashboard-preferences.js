@@ -15,10 +15,11 @@
   const MOTION_VALUES = Object.freeze(["on", "off"]);
   const DEFAULT_MOTION = "on";
   const MOTION_CHANGE_EVENT = "pacepetsmotionpreferencechange";
+  const SESSION_STORAGE_SCOPE = "sessionStorage";
   const LOCAL_PREFERENCES = Object.freeze([
     Object.freeze({
       key: DASHBOARD_WINDOW_SESSION_KEY,
-      scope: "sessionStorage",
+      scope: SESSION_STORAGE_SCOPE,
       values: "supported usage-window keys",
     }),
     Object.freeze({
@@ -49,11 +50,15 @@
     return MOTION_VALUES.includes(value) ? value : null;
   }
 
+  function sessionStorageSurface() {
+    return globalThis[SESSION_STORAGE_SCOPE];
+  }
+
   function motionPreferenceEnabled(storage = globalThis.localStorage) {
     return (readMotionPreference(storage).value || DEFAULT_MOTION) === "on";
   }
 
-  function readDashboardWindowPreference(storage = sessionStorage) {
+  function readDashboardWindowPreference(storage = sessionStorageSurface()) {
     try {
       const windowKey = storage.getItem(DASHBOARD_WINDOW_SESSION_KEY);
       return readResult(
@@ -64,7 +69,10 @@
     }
   }
 
-  function storeDashboardWindowPreference(windowKey, storage = sessionStorage) {
+  function storeDashboardWindowPreference(
+    windowKey,
+    storage = sessionStorageSurface(),
+  ) {
     if (!USAGE_WINDOWS.isSupportedWindowKey(windowKey)) {
       return writeResult(false);
     }

@@ -8,6 +8,7 @@
   const PACE_STATE_DATA = globalThis.PacePetsPaceStateData;
   const RENDERING = globalThis.PacePetsDevFlagsRendering;
   const STORAGE = globalThis.CodexExtensionStorage;
+  const THEME_MODE = globalThis.PacePetsDevFlagsThemeMode;
   if (
     !CURRENT_MODE ||
     !DEV_FLAGS_DOM ||
@@ -15,7 +16,8 @@
     !FEATURE_PREVIEWS ||
     !PACE_STATE_DATA ||
     !RENDERING ||
-    !STORAGE
+    !STORAGE ||
+    !THEME_MODE
   ) {
     throw new Error("Dev controls dependencies did not load.");
   }
@@ -26,6 +28,7 @@
 
   const { stateGroupElements } = elements;
   let currentForcedPaceStateKey = null;
+  let currentCheckerboardRevealWhiteTransparent = false;
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
   let currentMaxPoolFill = false;
@@ -62,6 +65,8 @@
 
   function currentDeveloperOptions() {
     return {
+      checkerboardRevealWhiteTransparent:
+        currentCheckerboardRevealWhiteTransparent,
       criticalBadgeWindow: currentCriticalBadgeWindow,
       forcedPaceStateKey: currentForcedPaceStateKey,
       manualRefreshLeadWindow: currentManualRefreshLeadWindow,
@@ -83,6 +88,8 @@
   }
 
   function applyDeveloperOptions(options) {
+    currentCheckerboardRevealWhiteTransparent =
+      options.checkerboardRevealWhiteTransparent;
     currentCriticalBadgeWindow = options.criticalBadgeWindow;
     currentForcedPaceStateKey = options.forcedPaceStateKey;
     currentManualRefreshLeadWindow = options.manualRefreshLeadWindow;
@@ -175,6 +182,12 @@
       },
     });
   }
+
+  const themeModeControl = THEME_MODE.createThemeModeControl({
+    listElement: elements.themeModeList,
+    optionRow,
+    setStatus,
+  });
 
   function optionRowsForStateOptions(stateOptions) {
     return stateOptions.flatMap((option) => {
@@ -285,6 +298,7 @@
     renderStateOverrideColumns();
     renderSprintIntensityPreviews();
     renderFeaturePreviews();
+    themeModeControl.render();
     elements.resetAll.hidden = !hasActiveOverride();
     elements.resetAll.disabled = !hasActiveOverride();
   }

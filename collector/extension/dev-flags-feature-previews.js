@@ -69,6 +69,12 @@
       stateKey: PACE_STATES.splat.key,
     }),
     featurePreviewGroup({
+      actionKeys: [ACTION_KEYS.checkerboardReveal],
+      key: "global-previews",
+      optionKeys: [DEVELOPER_OPTIONS.CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY],
+      title: "Global Previews",
+    }),
+    featurePreviewGroup({
       key: "other-previews",
       optionKeys: [
         DEVELOPER_OPTIONS.CRITICAL_BADGE_WINDOW_KEY,

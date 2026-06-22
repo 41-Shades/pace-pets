@@ -284,6 +284,7 @@
       this.stopSyncSunburstPageBackground?.();
       this.stopSyncMonkEscape?.();
       this.stopSpecialTransitions?.();
+      this.stopCheckerboardRevealPreview?.();
     },
 
     pauseHiddenDocumentMotionEffects() {
@@ -292,6 +293,7 @@
       this.stopPerfectZeroPageBackgroundScene?.();
       this.stopSyncSunburstPageBackground?.();
       this.stopSyncMonkEscape?.();
+      this.stopCheckerboardRevealPreview?.();
     },
 
     renderPaceIcon(

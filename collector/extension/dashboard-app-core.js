@@ -22,6 +22,7 @@
       this.WINDOW_SPECS = this.USAGE_WINDOWS.WINDOW_SPECS;
       this.currentHistory = null;
       this.currentRefreshStatus = null;
+      this.currentCheckerboardRevealWhiteTransparent = false;
       this.currentForcedPaceStateKey = null;
       this.currentManualRefreshLeadWindow = false;
       this.currentMaxPoolFill = false;
@@ -80,6 +81,8 @@
       this.paceView = this.DASHBOARD_PACE.createController({
         defaultWindowKey: this.DEFAULT_WINDOW_KEY,
         elements: this.elements,
+        getCurrentCheckerboardRevealWhiteTransparent: () =>
+          this.currentCheckerboardRevealWhiteTransparent,
         getCurrentForcedPaceStateKey: () => this.currentForcedPaceStateKey,
         getCurrentHistory: () => this.currentHistory,
         getCurrentMaxPoolFill: () => this.currentMaxPoolFill,
@@ -220,6 +223,8 @@
       if (refreshWindowSelection) {
         this.selectedWindowKey = dashboardWindowKey;
       }
+      this.currentCheckerboardRevealWhiteTransparent =
+        developerOptions.checkerboardRevealWhiteTransparent;
       this.currentForcedPaceStateKey = developerOptions.forcedPaceStateKey;
       this.currentManualRefreshLeadWindow =
         developerOptions.manualRefreshLeadWindow;

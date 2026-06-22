@@ -106,9 +106,9 @@ instead of plateauing during chrome collapse. The horizon remains attached to
 the existing black-hole center until the viewport is mostly consumed, then
 recenters inside the cone. The collapse scene marks the live DOM pieces it
 owns until the terminal whiteout. The renderer then covers the screen with a
-white overlay, tears down the WebGL and DOM-collapse presentation state, and
-clears the overlay with a checkerboard decimation reveal to show the current
-dashboard state.
+shared checkerboard reveal overlay, tears down the WebGL and DOM-collapse
+presentation state, and clears the overlay with a checkerboard decimation
+reveal to show the current dashboard state.
 
 ## Versioning
 
@@ -122,6 +122,9 @@ The local developer controls can still force the Singularity state from any
 other displayed pace state. If the dashboard tab is hidden when developer
 controls set Singularity, the transition is queued until that dashboard tab
 becomes visible.
+Dev controls can also toggle whether the reveal's white or black squares are
+transparent before replaying the shared checkerboard reveal or entering
+Singularity.
 
 ## Development Preview Checklist
 
@@ -190,7 +193,7 @@ dashboard page
   -> black-hole shader continues past approach completion into horizon growth
   -> renderer compresses containers into the horizon without a shard explosion
   -> black-hole shader falls through the singularity point into a whiteout
-  -> renderer clears a checkerboard overlay over the restored dashboard state
+  -> renderer plays the shared checkerboard reveal over the restored dashboard state
 ```
 
 The manifest does not request `activeTab`, `<all_urls>`, `tabs`, `tabCapture`,
@@ -202,8 +205,12 @@ or `desktopCapture` for this effect.
   Singularity transition renderer. It fades into the normal Singularity
   page/backdrop over 2 seconds, fades dashboard chrome in over 6 seconds, and
   starts the black-hole approach scene, pre-collapse jitter ramp, chrome
-  collapse, continuous horizon/descent phase, terminal whiteout, and
+  collapse, continuous horizon/descent phase, terminal whiteout, and shared
   checkerboard dashboard reveal.
+- `collector/extension/dashboard-checkerboard-reveal.js`: shared dashboard
+  reveal scene that appends the full-page white overlay, waits for the CSS
+  checkerboard animation to complete, and tears the overlay down. Singularity
+  and unpacked dev preview actions use the same scene.
 - `collector/extension/dashboard-singularity-black-hole-v2-shaders.js`:
   WebGL vertex and fragment shader sources for the black-hole scene, including
   the progress-driven violence ramp for turbulence, flares, shock ripples,
@@ -228,10 +235,11 @@ or `desktopCapture` for this effect.
 - `collector/extension/dashboard-singularity-transition-methods.js`: pace
   controller integration, entry gating, hidden-tab queueing, and scene launch.
 - `collector/extension/dashboard-singularity-transition.css`: body shell
-  visibility styles, black-hole canvas layer, pressure ripple, live
-  chrome-collapse state, and checkerboard whiteout-to-dashboard reveal overlay. The
-  black-hole scene stays behind the dashboard chrome while real chrome
-  containers animate above it.
+  visibility styles, black-hole canvas layer, pressure ripple, and live
+  chrome-collapse state. The black-hole scene stays behind the dashboard chrome
+  while real chrome containers animate above it.
+- `collector/extension/dashboard-checkerboard-reveal.css`: shared
+  whiteout-to-dashboard checkerboard reveal overlay and keyframes.
 
 `collector/extension/runtime-manifest.js` owns the script order. The WebGL
 shaders must load before the black-hole scene, chrome-collapse container
@@ -252,11 +260,11 @@ owned inner fragments start an overlapping secondary breakup while the parent
 pieces are already falling. When the black-hole approach completes, the same
 black-hole scene keeps advancing behind those falling pieces, grows the
 horizon into the viewport, crosses into a cone/funnel visualization, and falls
-through the singularity point into a whiteout. During the terminal reveal, a
-fixed white overlay covers the screen while the renderer removes the temporary
-WebGL canvas and restores live dashboard chrome; the overlay then decimates
-from fine checkerboard cells to coarse cells before clearing to reveal the
-current dashboard state.
+through the singularity point into a whiteout. During the terminal reveal, the
+shared checkerboard reveal covers the screen while the renderer removes the
+temporary WebGL canvas and restores live dashboard chrome; the overlay then
+decimates from fine checkerboard cells to coarse cells before clearing to reveal
+the current dashboard state.
 
 Teardown removes temporary body classes, removes the temporary WebGL canvas,
 restores the live dashboard chrome, and cancels active animation frames or
@@ -279,6 +287,10 @@ The important functional checks are:
 - force a non-Singularity state, then force Singularity while the dashboard is
   visible;
 - force Singularity from `dev-flags.html`, then switch back to the dashboard;
+- request the global Checkerboard reveal dev preview over a live state and a
+  forced state;
+- repeat the Checkerboard reveal preview with white squares transparent and
+  black squares transparent;
 - confirm same-state refreshes do not replay the transition;
 - confirm leaving Singularity before playback starts cancels a queued transition;
 - confirm leaving Singularity during active playback does not cancel the

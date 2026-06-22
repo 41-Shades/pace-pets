@@ -8,6 +8,7 @@
     resetAll: "#reset-all",
     sprintIntensityPreviewList: "#sprint-intensity-preview-list",
     statusMessage: "#status-message",
+    themeModeList: "#theme-mode-list",
   });
 
   function idFromSelector(selector) {

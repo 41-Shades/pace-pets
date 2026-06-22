@@ -58,7 +58,12 @@
     return requestPreviewAction(REGISTRY.ACTION_KEYS.monkEscape);
   }
 
+  function requestCheckerboardRevealPreview() {
+    return requestPreviewAction(REGISTRY.ACTION_KEYS.checkerboardReveal);
+  }
+
   globalThis.PacePetsDevFlagsPreviewActions = Object.freeze({
+    requestCheckerboardRevealPreview,
     requestPreviewAction,
     requestBrakeMaxBurstPreview,
     requestRarePushSweatPreview,

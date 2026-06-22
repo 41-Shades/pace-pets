@@ -2,18 +2,18 @@
   "use strict";
 
   const BLACK_HOLE_SCENE = root.PacePetsDashboardSingularityBlackHoleV2Scene;
+  const CHECKERBOARD_REVEAL = root.PacePetsDashboardCheckerboardReveal;
   const CHROME_COLLAPSE_SCENE =
     root.PacePetsDashboardSingularityChromeCollapseScene;
-  if (!BLACK_HOLE_SCENE || !CHROME_COLLAPSE_SCENE) {
+  if (!BLACK_HOLE_SCENE || !CHECKERBOARD_REVEAL || !CHROME_COLLAPSE_SCENE) {
     throw new Error(
-      "Singularity scenes must load before dashboard-singularity-transition-renderer.js.",
+      "Singularity scenes and checkerboard reveal must load before dashboard-singularity-transition-renderer.js.",
     );
   }
 
   const HIDDEN_CLASS = "is-singularity-space-hidden";
   const REVEAL_CLASS = "is-singularity-space-reveal";
   const JITTER_CLASS = "is-singularity-chrome-jitter";
-  const FINAL_REVEAL_CLASS = "is-singularity-final-reveal";
   const SPACE_ENTER_CLASS = "is-singularity-space-enter";
   const SPACE_ENTER_VISIBLE_CLASS = "is-singularity-space-enter-visible";
   const JITTER_DURATION_PROPERTY = "--singularity-chrome-jitter-duration";
@@ -30,17 +30,22 @@
   const FINAL_REVEAL_DELAY_MS = Math.round(
     BLACK_HOLE_APPROACH_DURATION_MS * 3.98,
   );
-  const FINAL_REVEAL_DURATION_MS = 6000;
 
   class SingularityTransitionRenderer {
-    constructor({ motionDisabled = false } = {}) {
+    constructor({
+      checkerboardRevealWhiteTransparent = false,
+      motionDisabled = false,
+    } = {}) {
       this.blackHoleApproachCompleted = null;
       this.blackHoleScene = null;
+      this.checkerboardRevealWhiteTransparent =
+        checkerboardRevealWhiteTransparent === true;
       this.chromeCollapseCompleted = null;
       this.chromeCollapseScene = null;
       this.chromeCollapseTimer = null;
       this.done = null;
       this.finalRevealStarted = false;
+      this.finalRevealScene = null;
       this.finalRevealTimer = null;
       this.motionDisabled = motionDisabled;
       this.resolveDone = null;
@@ -170,17 +175,33 @@
       }
 
       this.finalRevealStarted = true;
-      document.body.classList.add(FINAL_REVEAL_CLASS);
       this.blackHoleScene?.stop();
       this.blackHoleScene = null;
       this.chromeCollapseScene?.stop();
       this.chromeCollapseScene = null;
       document.body.classList.remove(JITTER_CLASS, REVEAL_CLASS);
       document.body.style.removeProperty(JITTER_DURATION_PROPERTY);
-      this.finishTimer = root.setTimeout(() => {
-        this.finishTimer = null;
-        this.finish(true);
-      }, FINAL_REVEAL_DURATION_MS);
+      const scene = CHECKERBOARD_REVEAL.create({
+        motionDisabled: this.motionDisabled,
+        transparentSquares: this.checkerboardRevealWhiteTransparent
+          ? CHECKERBOARD_REVEAL.TRANSPARENT_SQUARE_VALUES.white
+          : CHECKERBOARD_REVEAL.TRANSPARENT_SQUARE_VALUES.black,
+      });
+      this.finalRevealScene = scene;
+      scene
+        .play()
+        .then((completed) => {
+          if (this.stopped || this.finalRevealScene !== scene) {
+            return;
+          }
+
+          this.finalRevealScene = null;
+          this.finish(completed);
+        })
+        .catch((error) => {
+          console.warn("Pace Pets Singularity final reveal failed:", error);
+          this.finish(false);
+        });
     }
 
     stop() {
@@ -208,9 +229,10 @@
       this.blackHoleScene = null;
       this.chromeCollapseScene?.stop();
       this.chromeCollapseScene = null;
+      this.finalRevealScene?.stop();
+      this.finalRevealScene = null;
       this.stopped = true;
       document.body.classList.remove(
-        FINAL_REVEAL_CLASS,
         HIDDEN_CLASS,
         JITTER_CLASS,
         REVEAL_CLASS,

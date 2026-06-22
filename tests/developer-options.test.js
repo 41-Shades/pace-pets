@@ -42,6 +42,9 @@ describe("PacePetsDeveloperOptions storage", () => {
     const options = globalThis.PacePetsDeveloperOptions;
 
     expect(options.STORAGE_KEY).toBe("pacePetsDeveloperOptions");
+    expect(options.CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY).toBe(
+      "checkerboardRevealWhiteTransparent",
+    );
     expect(options.CRITICAL_BADGE_WINDOW_KEY).toBe("criticalBadgeWindow");
     expect(options.MANUAL_REFRESH_LEAD_WINDOW_KEY).toBe(
       "manualRefreshLeadWindow",
@@ -66,8 +69,21 @@ describe("PacePetsDeveloperOptions storage", () => {
       "6.00",
       "7.00",
     ]);
+  });
+});
+
+describe("PacePetsDeveloperOptions normalization", () => {
+  it("normalizes local developer state overrides", () => {
+    const options = globalThis.PacePetsDeveloperOptions;
+
     expect(options.normalizeForcedPaceStateKey("sync")).toBe("sync");
     expect(options.normalizeForcedPaceStateKey("unsupported")).toBeNull();
+    expect(options.normalizeCheckerboardRevealWhiteTransparent(true)).toBe(
+      true,
+    );
+    expect(options.normalizeCheckerboardRevealWhiteTransparent("true")).toBe(
+      false,
+    );
     expect(options.normalizeCriticalBadgeWindow(true)).toBe(true);
     expect(options.normalizeCriticalBadgeWindow("true")).toBe(false);
     expect(options.normalizeManualRefreshLeadWindow(true)).toBe(true);
@@ -86,6 +102,7 @@ describe("PacePetsDeveloperOptions storage", () => {
     expect(options.normalizeSprintIntensityPreview("unsupported")).toBeNull();
     expect(
       options.normalizeDeveloperOptions({
+        checkerboardRevealWhiteTransparent: true,
         criticalBadgeWindow: true,
         forcedPaceState: "wellAhead",
         manualRefreshLeadWindow: true,
@@ -96,6 +113,7 @@ describe("PacePetsDeveloperOptions storage", () => {
         unsupported: false,
       }),
     ).toMatchObject({
+      checkerboardRevealWhiteTransparent: true,
       criticalBadgeWindow: true,
       forcedPaceStateKey: "wellAhead",
       manualRefreshLeadWindow: true,
@@ -125,6 +143,7 @@ describe("PacePetsDeveloperOptions storage", () => {
       splatTimeRemainingPreview: "under50",
     });
     expect(options.normalizeDeveloperOptions(null)).toMatchObject({
+      checkerboardRevealWhiteTransparent: false,
       criticalBadgeWindow: false,
       forcedPaceStateKey: null,
       manualRefreshLeadWindow: false,
@@ -143,6 +162,7 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
 
     expect(
       options.storedDeveloperOptionsValue({
+        checkerboardRevealWhiteTransparent: true,
         criticalBadgeWindow: true,
         forcedPaceStateKey: "wellAhead",
         manualRefreshLeadWindow: true,
@@ -152,6 +172,7 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
         sprintIntensityPreview: "7.00",
       }),
     ).toEqual({
+      checkerboardRevealWhiteTransparent: true,
       criticalBadgeWindow: true,
       forcedPaceState: "wellAhead",
       manualRefreshLeadWindow: true,

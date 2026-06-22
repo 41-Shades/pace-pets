@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --bg: #f5f7fb;
   --border: #d7dee8;
@@ -11,6 +11,21 @@
   --primary-border: #5bb7aa;
   --primary-soft: #e6f4f1;
   --text: #172033;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #111827;
+  --border: #344054;
+  --border-strong: #475467;
+  --muted: #a6b4c7;
+  --panel: #1f2937;
+  --panel-soft: #182230;
+  --primary: #5eead4;
+  --primary-border: #2dd4bf;
+  --primary-soft: #103b39;
+  --text: #eef2f7;
 }
 
 * {
@@ -252,7 +267,9 @@ input {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
     --bg: #111827;
     --border: #344054;
     --border-strong: #475467;
