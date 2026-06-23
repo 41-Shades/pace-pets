@@ -119,6 +119,9 @@
   justify-content: flex-start;
   margin: 4px 0 0 2px;
   max-width: 100%;
+}
+
+.reset-note-copy {
   opacity: 0.5;
 }
 
