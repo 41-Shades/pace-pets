@@ -199,6 +199,10 @@ describe("CodexUsageHistory.normalizeRefreshStatus", () => {
       authFailure: true,
       statusCode: 401,
       refreshedAt: "2026-05-25T11:59:00.000Z",
+      badgeWindowKey: null,
+      badgePaceRatio: null,
+      pacePresentationAt: null,
+      pacePresentationSampleId: null,
       sampleCount: 3,
       stored: false,
     });

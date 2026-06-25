@@ -3,7 +3,7 @@ importScripts(...CodexExtensionRuntime.BACKGROUND_SCRIPT_SOURCES);
 
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
-const DEVELOPER_OPTIONS_STORAGE_KEY = PacePetsDeveloperOptions.STORAGE_KEY;
+const BADGE_PRESENTATION = PacePetsBackgroundBadgePresentation;
 const HISTORY_STORAGE_KEY = CodexUsageHistory.HISTORY_STORAGE_KEY;
 const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
   PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY;
@@ -20,129 +20,54 @@ async function persistRefreshStatus(refreshState) {
   }
 }
 
-async function setBadge(
-  text,
-  color,
-  title = CodexProductMetadata.ACTION_DEFAULT_TITLE,
-) {
-  await chrome.action.setBadgeText({ text });
-  await chrome.action.setBadgeBackgroundColor({ color });
-  await chrome.action.setTitle({ title });
-}
-
-async function selectedBadgeWindowKey() {
-  try {
-    const items = await CodexExtensionStorage.getLocal(
-      BADGE_WINDOW_STORAGE_KEY,
-    );
-    return PacePetsBackgroundLogic.selectedBadgeWindowKeyFromItems(
-      items,
-      BADGE_WINDOW_STORAGE_KEY,
-    );
-  } catch (error) {
-    console.warn("Could not read badge window preference:", error);
-    return PacePetsBackgroundLogic.DEFAULT_BADGE_WINDOW_KEY;
-  }
-}
-
-async function readDeveloperOptions() {
-  try {
-    const items = await CodexExtensionStorage.getLocal(
-      DEVELOPER_OPTIONS_STORAGE_KEY,
-    );
-    return PacePetsDeveloperOptions.developerOptionsFromStorageItems(items);
-  } catch (error) {
-    console.warn("Could not read developer options:", error);
-    return PacePetsDeveloperOptions.normalizeDeveloperOptions(null);
-  }
-}
-
 async function createBadgeContextMenus() {
   await PacePetsBackgroundContextMenu.createBadgeContextMenus(
-    await selectedBadgeWindowKey(),
+    await BADGE_PRESENTATION.selectedBadgeWindowKey(),
   );
 }
 
 async function syncBadgeContextMenuSelection() {
   await PacePetsBackgroundContextMenu.syncBadgeContextMenuSelection(
-    await selectedBadgeWindowKey(),
+    await BADGE_PRESENTATION.selectedBadgeWindowKey(),
   );
 }
 
-async function updatePaceBadge(windows, history = null) {
-  const { criticalBadgeWindow, forcedPaceStateKey, sprintIntensityPreview } =
-    await readDeveloperOptions();
-  const preferredWindowKey = await selectedBadgeWindowKey();
-  const badgeDisplay = PacePetsBackgroundLogic.badgeDisplayForWindows({
-    atMs: Date.now(),
-    criticalBadgeWindow,
-    forcedBadgeState: PacePetsPreviewControl.forcedBadgeState(
-      forcedPaceStateKey,
-      {
-        sprintIntensityPreview,
-      },
-    ),
-    history,
-    preferredWindowKey,
-    windows,
-  });
-
-  await setBadge(
-    badgeDisplay.badgeText,
-    badgeDisplay.badgeColor,
-    badgeDisplay.title,
-  );
-  return {
-    badgePaceRatio: badgeDisplay.badgePaceRatio,
-    paceRatio: badgeDisplay.paceRatio,
-    windowKey: badgeDisplay.windowKey,
-  };
-}
-
-async function updatePaceBadgeFromHistory({ clearWhenEmpty = false } = {}) {
+async function updatePaceBadgeFromHistory({
+  clearWhenEmpty = false,
+  refreshStatus = null,
+} = {}) {
   const history = await CodexUsageHistory.readHistory();
   const sample = CodexUsageHistory.latestSample(history);
   if (!sample) {
-    const developerOptions = await readDeveloperOptions();
-    if (developerOptions.criticalBadgeWindow) {
-      await updatePaceBadge({});
-      return;
-    }
-    const forcedBadgeState = PacePetsPreviewControl.forcedBadgeState(
-      developerOptions.forcedPaceStateKey,
-      {
-        sprintIntensityPreview: developerOptions.sprintIntensityPreview,
-      },
-    );
-    if (forcedBadgeState) {
-      await setBadge(
-        forcedBadgeState.badgeText,
-        forcedBadgeState.badgeColor,
-        CodexProductMetadata.stateOverrideBadgeTitle({
-          badgeText: forcedBadgeState.badgeText,
-          title: forcedBadgeState.state.title,
-        }),
-      );
-      return;
-    }
-
-    if (clearWhenEmpty) {
-      await setBadge(
-        "",
-        PacePetsLogic.DEFAULT_BADGE_COLORS.muted,
-        CodexProductMetadata.ACTION_DEFAULT_TITLE,
-      );
-    }
+    await BADGE_PRESENTATION.updateEmptyBadge({ clearWhenEmpty });
     return;
   }
 
-  const badgeState = await updatePaceBadge(sample.windows, history);
+  const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
+    sample.windows,
+    history,
+  );
+  const presentationState = CodexRefreshStatus.statusWithPacePresentation(
+    refreshStatus || lastRefreshState,
+    {
+      badgePaceRatio: badgeState.badgePaceRatio,
+      badgeWindowKey: badgeState.windowKey,
+      pacePresentationAt: badgeState.pacePresentationAt,
+      pacePresentationSampleId: sample.id,
+      sampleCount: history.samples.length,
+    },
+  );
 
   lastRefreshState = {
-    ...lastRefreshState,
+    ...(presentationState || lastRefreshState),
     badgeWindowKey: badgeState.windowKey,
     badgePaceRatio: badgeState.badgePaceRatio,
+    pacePresentationAt: badgeState.pacePresentationAt,
+    pacePresentationSampleId: sample.id,
   };
+  if (presentationState) {
+    await persistRefreshStatus(lastRefreshState);
+  }
 }
 
 async function refreshUsage() {
@@ -155,10 +80,15 @@ async function refreshUsage() {
   );
   const { history, sample, stored, checkedAt } =
     await CodexUsageHistory.appendUsageSnapshot(payload);
-  const badgeState = await updatePaceBadge(sample.windows, history);
+  const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
+    sample.windows,
+    history,
+  );
   lastRefreshState = CodexRefreshStatus.successState({
     badgePaceRatio: badgeState.badgePaceRatio,
     badgeWindowKey: badgeState.windowKey,
+    pacePresentationAt: badgeState.pacePresentationAt,
+    pacePresentationSampleId: sample.id,
     refreshedAt: checkedAt,
     sampleCount: history.samples.length,
     stored,
@@ -171,7 +101,7 @@ async function refreshUsage() {
 async function recordRefreshFailure(error) {
   lastRefreshState = CodexRefreshStatus.failureState(error);
   await persistRefreshStatus(lastRefreshState);
-  await setBadge(
+  await BADGE_PRESENTATION.setBadge(
     "!",
     "#b42318",
     CodexProductMetadata.REFRESH_FAILED_TITLE,
@@ -196,19 +126,22 @@ function runScheduledRefresh() {
   return scheduledRefreshPromise;
 }
 
-function shouldSkipBadgePresentationRefresh() {
+function shouldSkipBadgePresentationRefresh(refreshStatus = lastRefreshState) {
   return (
     scheduledRefreshPromise !== null ||
-    (lastRefreshState.refreshedAt && lastRefreshState.ok === false)
+    (refreshStatus?.refreshedAt && refreshStatus.ok === false)
   );
 }
 
-function runBadgePresentationRefresh() {
-  if (shouldSkipBadgePresentationRefresh()) {
+async function runBadgePresentationRefresh() {
+  const refreshStatus = await CodexUsageHistory.readRefreshStatus().catch(
+    () => null,
+  );
+  if (shouldSkipBadgePresentationRefresh(refreshStatus || lastRefreshState)) {
     return Promise.resolve();
   }
 
-  return updatePaceBadgeFromHistory();
+  return updatePaceBadgeFromHistory({ refreshStatus });
 }
 
 async function readManualRefreshCooldownUntilMs() {

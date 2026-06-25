@@ -15,20 +15,30 @@
         : {};
     },
 
-    paceRatioForWindow(windowData) {
+    presentationTimeMsForSample(sample, refreshStatus) {
+      const presentationMs = PacePetsLogic.dateMs(
+        refreshStatus?.pacePresentationAt,
+      );
+      return presentationMs !== null &&
+        refreshStatus?.pacePresentationSampleId === sample?.id
+        ? presentationMs
+        : Date.now();
+    },
+
+    paceRatioForWindow(windowData, atMs = Date.now()) {
       return PacePetsLogic.paceRatioForValues(
         windowData?.remainingPercent,
-        this.DASHBOARD_TIME.timeRemainingPercent(windowData),
+        this.DASHBOARD_TIME.timeRemainingPercent(windowData, atMs),
       );
     },
 
-    alternatePaceRatioSummary(windows, activeKey) {
+    alternatePaceRatioSummary(windows, activeKey, atMs = Date.now()) {
       const comparisonKey = this.USAGE_WINDOWS.alternateWindowKey(activeKey);
       if (!comparisonKey || !windows[comparisonKey]) {
         return null;
       }
 
-      const paceRatio = this.paceRatioForWindow(windows[comparisonKey]);
+      const paceRatio = this.paceRatioForWindow(windows[comparisonKey], atMs);
       const label = `${this.WINDOW_SPECS[comparisonKey].badge}:`;
       if (paceRatio === null) {
         return { className: "", label, value: "--" };
@@ -92,6 +102,7 @@
       resetCountdownDisplaysZero,
       staleWindow,
       timePercent,
+      atMs,
       windowData,
       windowKey,
       windows,
@@ -100,7 +111,7 @@
         windowData,
         timePercent,
         staleWindow,
-        this.alternatePaceRatioSummary(windows, windowKey),
+        this.alternatePaceRatioSummary(windows, windowKey, atMs),
         {
           applySummary: applyPaceSummary,
           allowPerfectZero: PacePetsLogic.allowsPerfectZeroForWindow(
@@ -120,10 +131,9 @@
       windowData,
       windows = {},
       history,
-      { applyPaceSummary = true } = {},
+      { applyPaceSummary = true, atMs = Date.now() } = {},
     ) {
       const spec = this.WINDOW_SPECS[windowKey];
-      const atMs = Date.now();
       const resetMs = this.DASHBOARD_TIME.dateMs(windowData?.resetsAt);
       const timePercent = this.DASHBOARD_TIME.timeRemainingPercent(
         windowData,
@@ -168,6 +178,7 @@
         resetCountdownDisplaysZero,
         staleWindow,
         timePercent,
+        atMs,
         windowData,
         windowKey,
         windows,
@@ -286,6 +297,7 @@
       const windows = this.windowsForSample(latest);
       const summaryWindowKey = this.selectedSupportedWindowKey();
       const summaryWindow = windows[summaryWindowKey];
+      const atMs = this.presentationTimeMsForSample(latest, refreshStatus);
       this.renderWindowControls(summaryWindowKey);
       const forcedPaceStateOverrideActive =
         this.paceView.hasForcedPaceStateOverride();
@@ -294,7 +306,7 @@
         summaryWindow,
         windows,
         history,
-        { applyPaceSummary: !forcedPaceStateOverrideActive },
+        { applyPaceSummary: !forcedPaceStateOverrideActive, atMs },
       );
       this.applyHistoryStatus(
         this.DASHBOARD_STATUS.historyCollectionStatusState({
