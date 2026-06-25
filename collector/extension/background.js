@@ -34,6 +34,7 @@ async function syncBadgeContextMenuSelection() {
 
 async function updatePaceBadgeFromHistory({
   clearWhenEmpty = false,
+  persistPresentation = true,
   refreshStatus = null,
 } = {}) {
   const history = await CodexUsageHistory.readHistory();
@@ -58,16 +59,18 @@ async function updatePaceBadgeFromHistory({
     },
   );
 
+  if (!persistPresentation || !presentationState) {
+    return;
+  }
+
   lastRefreshState = {
-    ...(presentationState || lastRefreshState),
+    ...presentationState,
     badgeWindowKey: badgeState.windowKey,
     badgePaceRatio: badgeState.badgePaceRatio,
     pacePresentationAt: badgeState.pacePresentationAt,
     pacePresentationSampleId: sample.id,
   };
-  if (presentationState) {
-    await persistRefreshStatus(lastRefreshState);
-  }
+  await persistRefreshStatus(lastRefreshState);
 }
 
 async function refreshUsage() {
@@ -311,6 +314,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 
   updatePaceBadgeFromHistory({
     clearWhenEmpty: historyChanged || developerOptionsChanged,
+    persistPresentation: scheduledRefreshPromise === null,
   }).catch((error) => {
     console.warn("Codex usage badge update failed:", error);
   });
