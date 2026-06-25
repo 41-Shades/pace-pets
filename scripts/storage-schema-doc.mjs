@@ -115,14 +115,23 @@ function historyExample({
 }
 
 function refreshStatusExample({ historyStore, usageSample }) {
+  const refreshedAt = new Date(
+    Date.parse(usageSample.updatedAt) + 5 * 60 * 1000,
+  ).toISOString();
+  const pacePresentationAt = new Date(
+    Date.parse(refreshedAt) + 60 * 1000,
+  ).toISOString();
+
   return historyStore.normalizeRefreshStatus({
     ok: true,
     message: "Usage unchanged; history already current.",
     authFailure: false,
     statusCode: null,
-    refreshedAt: new Date(
-      Date.parse(usageSample.updatedAt) + 5 * 60 * 1000,
-    ).toISOString(),
+    refreshedAt,
+    badgeWindowKey: "weekly",
+    badgePaceRatio: 1.06,
+    pacePresentationAt,
+    pacePresentationSampleId: usageSample.updatedAt,
     sampleCount: 1,
     stored: false,
   });

@@ -32,6 +32,7 @@
   ]);
   const BACKGROUND_ONLY_SCRIPT_SOURCES = Object.freeze([
     "background-logic.js",
+    "background-badge-presentation.js",
     "background-usage-source.js",
     "background-context-menu.js",
   ]);
@@ -211,6 +212,7 @@
   const BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("product-metadata.js", "background-logic.js"),
     dependencyEdge("developer-options.js", "background-logic.js"),
+    dependencyEdge("background-logic.js", "background-badge-presentation.js"),
     dependencyEdge("usage-providers.js", "background-usage-source.js"),
   ]);
   const DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([

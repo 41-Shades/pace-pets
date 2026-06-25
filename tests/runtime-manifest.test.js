@@ -336,6 +336,7 @@ describe("CodexExtensionRuntime target-only script sources", () => {
 
     expect(runtime.BACKGROUND_ONLY_SCRIPT_SOURCES).toEqual([
       "background-logic.js",
+      "background-badge-presentation.js",
       "background-usage-source.js",
       "background-context-menu.js",
     ]);

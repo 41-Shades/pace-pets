@@ -500,9 +500,11 @@ the stored badge window.
 
 The toolbar badge recomputes its presentation from stored history at the
 `refresh-schedule.js` presentation interval, separately from the
-`refresh-schedule.js` usage collection alarm. That keeps time-derived pace
-ratios aligned with the dashboard's cached history refresh without making extra
-usage endpoint requests.
+`refresh-schedule.js` usage collection alarm. Each successful badge
+presentation stores its `pacePresentationAt` timestamp and latest sample id in
+the refresh status record. The dashboard uses that timestamp when rendering the
+same latest sample, so toolbar and dashboard pace values share one time basis
+without making extra usage endpoint requests.
 
 The chart clamps plotted pace values to `0..50` through
 `PacePetsLogic.chartPaceRatio()`. `dashboard.js` narrows the visible y-axis for

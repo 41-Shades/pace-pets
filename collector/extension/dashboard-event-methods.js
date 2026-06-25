@@ -176,6 +176,10 @@
           return;
         }
 
+        if (this.renderRefreshStatusChange(changes)) {
+          return;
+        }
+
         this.loadDashboard().catch(() => {
           this.renderChangedHistoryFallback(changes);
         });
@@ -191,6 +195,30 @@
           this.DEVELOPER_OPTIONS_STORAGE_KEY,
         ])
       );
+    },
+
+    renderRefreshStatusChange(changes) {
+      const refreshStatusChange =
+        changes[CodexUsageHistory.REFRESH_STATUS_STORAGE_KEY];
+      if (
+        !refreshStatusChange ||
+        changes[CodexUsageHistory.HISTORY_STORAGE_KEY] ||
+        changes[this.DEVELOPER_OPTIONS_STORAGE_KEY]
+      ) {
+        return false;
+      }
+
+      this.currentRefreshStatus = CodexUsageHistory.normalizeRefreshStatus(
+        refreshStatusChange.newValue,
+      );
+      if (!this.currentHistory) {
+        return false;
+      }
+
+      this.renderHistory(this.currentHistory, this.currentRefreshStatus, {
+        refreshChart: false,
+      });
+      return true;
     },
 
     renderChangedHistoryFallback(changes) {

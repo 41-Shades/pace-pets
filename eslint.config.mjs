@@ -91,6 +91,7 @@ export default [
         CodexUsageWindows: "readonly",
         GM_xmlhttpRequest: "readonly",
         importScripts: "readonly",
+        PacePetsBackgroundBadgePresentation: "readonly",
         PacePetsBackgroundBadgePreviewSchedule: "readonly",
         PacePetsBackgroundContextMenu: "readonly",
         PacePetsBackgroundLogic: "readonly",
