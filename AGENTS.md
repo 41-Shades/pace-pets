@@ -27,6 +27,9 @@ Scope: whole repo.
 - Do not bump extension version for docs, ignore rules, release guardrails, or
   ignored local files. Align `package.json`, `package-lock.json`, and
   `collector/extension/manifest.json` when the packaged extension changes.
+- Keep version tags and GitHub Releases in sync. Every pushed `v<version>` tag
+  for a packaged release must have a matching GitHub Release, and the newest
+  shipped version must be marked Latest.
 - Follow `docs/guides/testing.md`. Use `npm run shape` for targeted source
   shape validation while developing; run broad checks/preflight only when
   explicitly requested in the current thread.

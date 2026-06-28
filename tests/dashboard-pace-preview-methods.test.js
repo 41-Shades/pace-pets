@@ -18,12 +18,18 @@ installExtensionRuntimeHooks();
 
 beforeAll(async () => {
   await importExtensionScript("collector/extension/usage-windows.js");
+  await importExtensionScript(
+    "collector/extension/dev-preview-action-registry.js",
+  );
   await importExtensionScript("collector/extension/dashboard-time.js");
   await importExtensionScript("collector/extension/dashboard-preferences.js");
   await importExtensionScript("collector/extension/dashboard-pace-data.js");
   await importExtensionScript("collector/extension/dashboard-pace-core.js");
   await importExtensionScript(
     "collector/extension/dashboard-pace-icon-methods.js",
+  );
+  await importExtensionScript(
+    "collector/extension/dashboard-pace-transition-methods.js",
   );
   await importExtensionScript(
     "collector/extension/dashboard-pace-summary-methods.js",

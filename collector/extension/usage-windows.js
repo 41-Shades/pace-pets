@@ -2,6 +2,9 @@
   "use strict";
 
   const BADGE_WINDOW_STORAGE_KEY = "codex-usage-window";
+  const DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY =
+    "pacePetsSyncDashboardBadgeWindow";
+  const DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED = true;
   const DEFAULT_WINDOW_KEY = "weekly";
   const WEEK_MINUTES = 7 * 24 * 60;
   const FIVE_HOUR_MINUTES = 5 * 60;
@@ -51,6 +54,12 @@
     return WINDOW_SPECS[normalizeWindowKey(value)];
   }
 
+  function dashboardBadgeWindowSyncEnabled(value) {
+    return value === undefined || value === null
+      ? DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED
+      : value !== false;
+  }
+
   function alternateWindowKey(activeKey) {
     const normalizedKey = normalizeWindowKey(activeKey);
     return WINDOW_KEYS.find((windowKey) => windowKey !== normalizedKey) || null;
@@ -71,12 +80,15 @@
   root.CodexUsageWindows = Object.freeze({
     DEFAULT_WINDOW_KEY,
     BADGE_WINDOW_STORAGE_KEY,
+    DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY,
+    DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED,
     FIVE_HOUR_MINUTES,
     WEEK_MINUTES,
     WINDOW_BADGE_LABELS,
     WINDOW_KEYS,
     WINDOW_SPECS,
     alternateWindowKey,
+    dashboardBadgeWindowSyncEnabled,
     firstAvailableWindowKey,
     isSupportedWindowKey,
     normalizeWindowKey,

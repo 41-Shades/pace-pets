@@ -279,6 +279,9 @@
 
     stopMotionEffects() {
       this.clearPaceIconEffects(this.elements.paceIcon);
+      this.clearPaceStateCardTransition();
+      this.clearPaceChangePulse();
+      this.clearPaceStateTransitionPreview?.();
       clearSplatMaxPreview(this);
       this.stopPerfectZeroPageBackgroundScene?.();
       this.stopSyncSunburstPageBackground?.();
@@ -289,6 +292,9 @@
 
     pauseHiddenDocumentMotionEffects() {
       this.clearPaceIconEffects(this.elements.paceIcon);
+      this.clearPaceStateCardTransition();
+      this.clearPaceChangePulse();
+      this.clearPaceStateTransitionPreview?.();
       clearSplatMaxPreview(this);
       this.stopPerfectZeroPageBackgroundScene?.();
       this.stopSyncSunburstPageBackground?.();

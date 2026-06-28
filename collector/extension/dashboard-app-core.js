@@ -11,6 +11,8 @@
       this.DEFAULT_WINDOW_KEY = this.USAGE_WINDOWS.DEFAULT_WINDOW_KEY;
       this.BADGE_WINDOW_STORAGE_KEY =
         this.USAGE_WINDOWS.BADGE_WINDOW_STORAGE_KEY;
+      this.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY =
+        this.USAGE_WINDOWS.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY;
       this.DASHBOARD_WINDOW_SESSION_KEY =
         this.DASHBOARD_PREFERENCES.DASHBOARD_WINDOW_SESSION_KEY;
       this.DEVELOPER_OPTIONS_STORAGE_KEY = this.DEVELOPER_OPTIONS.STORAGE_KEY;
@@ -154,13 +156,41 @@
       }
     }
 
+    async readDashboardBadgeWindowSyncEnabled() {
+      try {
+        const items = await this.EXTENSION_STORAGE.getLocal(
+          this.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY,
+        );
+        return this.USAGE_WINDOWS.dashboardBadgeWindowSyncEnabled(
+          items[this.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY],
+        );
+      } catch (error) {
+        console.warn(
+          "Could not read dashboard badge sync preference:",
+          error.message,
+        );
+        return this.USAGE_WINDOWS.DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED;
+      }
+    }
+
+    async storeBadgeWindowKey(windowKey) {
+      await this.EXTENSION_STORAGE.setLocal({
+        [this.BADGE_WINDOW_STORAGE_KEY]: windowKey,
+      });
+    }
+
     async readDashboardWindowKey() {
-      const sessionWindowKey = this.readSessionWindowKey();
-      if (sessionWindowKey) {
-        return sessionWindowKey;
+      const [syncEnabled, badgeWindowKey] = await Promise.all([
+        this.readDashboardBadgeWindowSyncEnabled(),
+        this.readBadgeWindowKey(),
+      ]);
+      if (!syncEnabled) {
+        const sessionWindowKey = this.readSessionWindowKey();
+        if (sessionWindowKey) {
+          return sessionWindowKey;
+        }
       }
 
-      const badgeWindowKey = await this.readBadgeWindowKey();
       this.storeSessionWindowKey(badgeWindowKey);
       return badgeWindowKey;
     }
@@ -283,10 +313,21 @@
 
       this.selectedWindowKey = windowKey;
       this.storeSessionWindowKey(windowKey);
+      this.syncBadgeWindowFromDashboard(windowKey).catch((error) => {
+        console.warn("Could not sync badge window from dashboard:", error);
+      });
       this.loadDashboard({ refreshWindowSelection: false }).catch((error) =>
         this.renderHistoryLoadFailure(error),
       );
       return true;
+    }
+
+    async syncBadgeWindowFromDashboard(windowKey) {
+      if (!(await this.readDashboardBadgeWindowSyncEnabled())) {
+        return;
+      }
+
+      await this.storeBadgeWindowKey(windowKey);
     }
 
     async clearLocalUsageData() {

@@ -1,0 +1,40 @@
+.panel-controls {
+  position: relative;
+}
+
+.pace-change-pulse {
+  --pace-change-dot: var(--subhead);
+
+  background: var(--pace-change-dot);
+  border-radius: 999px;
+  height: 7px;
+  left: -15px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: opacity 180ms ease;
+  width: 7px;
+}
+
+.pace-change-pulse.is-active {
+  animation: pace-change-dot-pulse 920ms ease-out 3;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+html[data-motion="off"] .pace-change-pulse.is-active {
+  animation: none;
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--pace-change-dot) 18%, transparent);
+}
+
+.pace-card.is-pace-state-fading-out {
+  opacity: 0.42;
+  transition: opacity 150ms ease-in;
+}
+
+.pace-card.is-pace-state-fading-in {
+  animation: pace-card-state-fade-in 260ms ease-out both;
+}

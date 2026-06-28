@@ -79,6 +79,21 @@ The release metadata records:
 The package script warns when the working tree has uncommitted changes or when
 `HEAD` is not tagged as `v<manifest version>`.
 
+## GitHub Tags And Releases
+
+Keep version tags and GitHub Releases in sync. Every pushed `v<version>` tag for
+a packaged release must have a matching GitHub Release created from that exact
+tag, and the newest shipped version must be marked Latest.
+
+When publishing a release:
+
+1. Push the `v<version>` tag to GitHub.
+2. Create the matching GitHub Release from that existing tag.
+3. Use generated release notes with the previous release tag as the start tag.
+4. Attach package artifacts to the GitHub Release when the release includes a
+   distributable zip.
+5. Confirm GitHub shows the intended newest shipped version as Latest.
+
 ## Public Source Guardrails
 
 `scripts/release-artifact-check.mjs` validates the public source before a

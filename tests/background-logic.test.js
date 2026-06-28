@@ -98,6 +98,19 @@ describe("PacePetsBackgroundLogic auth", () => {
 });
 
 describe("PacePetsBackgroundLogic badge selection", () => {
+  it("defaults dashboard and badge window sync on", () => {
+    const usageWindows = globalThis.CodexUsageWindows;
+
+    expect(usageWindows.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY).toBe(
+      "pacePetsSyncDashboardBadgeWindow",
+    );
+    expect(usageWindows.DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED).toBe(true);
+    expect(usageWindows.dashboardBadgeWindowSyncEnabled(undefined)).toBe(true);
+    expect(usageWindows.dashboardBadgeWindowSyncEnabled(null)).toBe(true);
+    expect(usageWindows.dashboardBadgeWindowSyncEnabled(true)).toBe(true);
+    expect(usageWindows.dashboardBadgeWindowSyncEnabled(false)).toBe(false);
+  });
+
   it("selects badge windows from valid stored preferences and available data", () => {
     const logic = globalThis.PacePetsBackgroundLogic;
     const storageKey = globalThis.CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;

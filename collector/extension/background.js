@@ -3,6 +3,8 @@ importScripts(...CodexExtensionRuntime.BACKGROUND_SCRIPT_SOURCES);
 
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
+const DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY =
+  CodexUsageWindows.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY;
 const BADGE_PRESENTATION = PacePetsBackgroundBadgePresentation;
 const HISTORY_STORAGE_KEY = CodexUsageHistory.HISTORY_STORAGE_KEY;
 const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
@@ -21,14 +23,39 @@ async function persistRefreshStatus(refreshState) {
 }
 
 async function createBadgeContextMenus() {
-  await PacePetsBackgroundContextMenu.createBadgeContextMenus(
-    await BADGE_PRESENTATION.selectedBadgeWindowKey(),
-  );
+  const [selectedWindowKey, syncDashboardBadgeWindow] = await Promise.all([
+    BADGE_PRESENTATION.selectedBadgeWindowKey(),
+    readDashboardBadgeWindowSyncEnabled(),
+  ]);
+  await PacePetsBackgroundContextMenu.createBadgeContextMenus({
+    selectedWindowKey,
+    syncDashboardBadgeWindow,
+  });
 }
 
 async function syncBadgeContextMenuSelection() {
   await PacePetsBackgroundContextMenu.syncBadgeContextMenuSelection(
     await BADGE_PRESENTATION.selectedBadgeWindowKey(),
+  );
+}
+
+async function readDashboardBadgeWindowSyncEnabled() {
+  try {
+    const items = await CodexExtensionStorage.getLocal(
+      DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY,
+    );
+    return CodexUsageWindows.dashboardBadgeWindowSyncEnabled(
+      items[DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY],
+    );
+  } catch (error) {
+    console.warn("Could not read dashboard badge sync preference:", error);
+    return CodexUsageWindows.DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED;
+  }
+}
+
+async function syncDashboardBadgeWindowContextMenu() {
+  await PacePetsBackgroundContextMenu.syncDashboardBadgeWindowContextMenu(
+    await readDashboardBadgeWindowSyncEnabled(),
   );
 }
 
@@ -224,6 +251,69 @@ function scheduleRefresh() {
   });
 }
 
+function storageChangeFlags(changes) {
+  return Object.freeze({
+    badgeWindowChanged: CodexExtensionStorage.hasChange(
+      changes,
+      BADGE_WINDOW_STORAGE_KEY,
+    ),
+    developerOptionsChanged:
+      PacePetsDeveloperOptions.hasDeveloperOptionsChange(changes),
+    historyChanged: CodexExtensionStorage.hasChange(
+      changes,
+      HISTORY_STORAGE_KEY,
+    ),
+    syncPreferenceChanged: CodexExtensionStorage.hasChange(
+      changes,
+      DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY,
+    ),
+  });
+}
+
+function handleBadgeStorageChange({
+  badgeWindowChanged,
+  developerOptionsChanged,
+  historyChanged,
+}) {
+  if (!badgeWindowChanged && !historyChanged && !developerOptionsChanged) {
+    return;
+  }
+  updatePaceBadgeFromHistory({
+    clearWhenEmpty: historyChanged || developerOptionsChanged,
+    persistPresentation: scheduledRefreshPromise === null,
+  }).catch((error) => {
+    console.warn("Codex usage badge update failed:", error);
+  });
+}
+
+function syncContextMenusForStorageChange({
+  badgeWindowChanged,
+  syncPreferenceChanged,
+}) {
+  if (badgeWindowChanged) {
+    syncBadgeContextMenuSelection().catch((error) => {
+      console.warn("Codex usage badge menu sync failed:", error);
+    });
+  }
+  if (syncPreferenceChanged) {
+    syncDashboardBadgeWindowContextMenu().catch((error) => {
+      console.warn("Codex usage badge sync menu update failed:", error);
+    });
+  }
+}
+
+function handleStorageChange(changes, areaName) {
+  if (!CodexExtensionStorage.isLocalArea(areaName)) {
+    return;
+  }
+  const flags = storageChangeFlags(changes);
+  if (!Object.values(flags).some(Boolean)) {
+    return;
+  }
+  handleBadgeStorageChange(flags);
+  syncContextMenusForStorageChange(flags);
+}
+
 function initializeExtension() {
   scheduleRefresh();
   createBadgeContextMenus().catch((error) => {
@@ -266,6 +356,19 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
     return;
   }
 
+  if (
+    PacePetsBackgroundContextMenu.isSyncDashboardBadgeWindowMenuItem(
+      info.menuItemId,
+    )
+  ) {
+    CodexExtensionStorage.setLocal({
+      [DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY]: info.checked !== false,
+    }).catch((error) => {
+      console.warn("Codex usage badge sync update failed:", error);
+    });
+    return;
+  }
+
   const windowKey =
     PacePetsBackgroundContextMenu.badgeWindowKeyFromContextMenuId(
       info.menuItemId,
@@ -293,34 +396,4 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 
-chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (!CodexExtensionStorage.isLocalArea(areaName)) {
-    return;
-  }
-
-  const badgeWindowChanged = CodexExtensionStorage.hasChange(
-    changes,
-    BADGE_WINDOW_STORAGE_KEY,
-  );
-  const historyChanged = CodexExtensionStorage.hasChange(
-    changes,
-    HISTORY_STORAGE_KEY,
-  );
-  const developerOptionsChanged =
-    PacePetsDeveloperOptions.hasDeveloperOptionsChange(changes);
-  if (!badgeWindowChanged && !historyChanged && !developerOptionsChanged) {
-    return;
-  }
-
-  updatePaceBadgeFromHistory({
-    clearWhenEmpty: historyChanged || developerOptionsChanged,
-    persistPresentation: scheduledRefreshPromise === null,
-  }).catch((error) => {
-    console.warn("Codex usage badge update failed:", error);
-  });
-  if (badgeWindowChanged) {
-    syncBadgeContextMenuSelection().catch((error) => {
-      console.warn("Codex usage badge menu sync failed:", error);
-    });
-  }
-});
+chrome.storage.onChanged.addListener(handleStorageChange);

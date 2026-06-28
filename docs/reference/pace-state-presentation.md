@@ -227,6 +227,18 @@ larger teeter aligned to the slam-back moment.
 Pace icon motion is status-card-only. The active dashboard status icon may render
 state-specific effects.
 
+Regular pace levels and Perfect Sync use a shared dashboard-card transition when
+the displayed pace state changes from another regular level or Perfect Sync.
+The card fades down briefly, swaps to the new state, then fades back in. A small
+finite pulse appears beside the usage-window control in the new state's
+dashboard color as a short state-change afterglow. Big Bang, Perfect Zero,
+Singularity, Splat, muted/waiting states, and transitions to or from those
+states do not use this shared pulse/fade because their presentation is either
+static/waiting or already handled by a state-specific transition. Local
+developer controls include a one-shot Pace transition action that stages Keep
+pace, then previews the shared transition into Brake hard without storing
+developer option state.
+
 The `wellAhead` / Sprint faster state uses the dashboard-only smoke and scooter
 motion effect in `collector/extension/dashboard-sprint-smoke-methods.js` and
 `collector/extension/dashboard-pace-card.css`. Sprint faster remains one pace
