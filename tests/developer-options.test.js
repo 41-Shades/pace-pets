@@ -55,11 +55,21 @@ describe("PacePetsDeveloperOptions storage", () => {
     expect(options.SPLAT_TIME_REMAINING_PREVIEW_KEY).toBe(
       "splatTimeRemainingPreview",
     );
+    expect(options.BRAKE_INTENSITY_PREVIEW_KEY).toBe("brakeIntensityPreview");
     expect(options.SPRINT_INTENSITY_PREVIEW_KEY).toBe("sprintIntensityPreview");
     expect(options.SPLAT_TIME_REMAINING_PREVIEW_VALUES).toEqual({
       over50: "over50",
       under50: "under50",
     });
+    expect(options.BRAKE_INTENSITY_PREVIEW_VALUES).toEqual([
+      "0.55",
+      "0.45",
+      "0.35",
+      "0.25",
+      "0.15",
+      "0.05",
+      "0.00",
+    ]);
     expect(options.SPRINT_INTENSITY_PREVIEW_VALUES).toEqual([
       "1.55",
       "2.00",
@@ -98,6 +108,8 @@ describe("PacePetsDeveloperOptions normalization", () => {
     expect(
       options.normalizeSplatTimeRemainingPreview("unsupported"),
     ).toBeNull();
+    expect(options.normalizeBrakeIntensityPreview("0.25")).toBe("0.25");
+    expect(options.normalizeBrakeIntensityPreview("unsupported")).toBeNull();
     expect(options.normalizeSprintIntensityPreview("4.00")).toBe("4.00");
     expect(options.normalizeSprintIntensityPreview("unsupported")).toBeNull();
     expect(
@@ -105,6 +117,7 @@ describe("PacePetsDeveloperOptions normalization", () => {
         checkerboardRevealWhiteTransparent: true,
         criticalBadgeWindow: true,
         forcedPaceState: "wellAhead",
+        brakeIntensityPreview: "0.05",
         manualRefreshLeadWindow: true,
         maxPoolFill: true,
         railHidden: true,
@@ -120,16 +133,30 @@ describe("PacePetsDeveloperOptions normalization", () => {
       maxPoolFill: true,
       railHidden: true,
       resetExhaustedPreview: true,
+      brakeIntensityPreview: null,
       sprintIntensityPreview: "4.00",
     });
     expect(
       options.normalizeDeveloperOptions({
+        forcedPaceState: "criticalBehind",
+        brakeIntensityPreview: "0.05",
+        sprintIntensityPreview: "7.00",
+      }),
+    ).toMatchObject({
+      forcedPaceStateKey: "criticalBehind",
+      brakeIntensityPreview: "0.05",
+      sprintIntensityPreview: null,
+    });
+    expect(
+      options.normalizeDeveloperOptions({
         forcedPaceState: "perfectZero",
+        brakeIntensityPreview: "0.05",
         splatTimeRemainingPreview: "over50",
         sprintIntensityPreview: "7.00",
       }),
     ).toMatchObject({
       forcedPaceStateKey: "perfectZero",
+      brakeIntensityPreview: null,
       splatTimeRemainingPreview: null,
       sprintIntensityPreview: null,
     });
@@ -150,6 +177,7 @@ describe("PacePetsDeveloperOptions normalization", () => {
       maxPoolFill: false,
       railHidden: false,
       resetExhaustedPreview: false,
+      brakeIntensityPreview: null,
       splatTimeRemainingPreview: null,
       sprintIntensityPreview: null,
     });
@@ -165,6 +193,7 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
         checkerboardRevealWhiteTransparent: true,
         criticalBadgeWindow: true,
         forcedPaceStateKey: "wellAhead",
+        brakeIntensityPreview: "0.00",
         manualRefreshLeadWindow: true,
         maxPoolFill: true,
         railHidden: true,
@@ -183,7 +212,18 @@ describe("PacePetsDeveloperOptions stored value shape", () => {
     });
     expect(
       options.storedDeveloperOptionsValue({
+        forcedPaceStateKey: "criticalBehind",
+        brakeIntensityPreview: "0.00",
+        sprintIntensityPreview: "7.00",
+      }),
+    ).toEqual({
+      forcedPaceState: "criticalBehind",
+      brakeIntensityPreview: "0.00",
+    });
+    expect(
+      options.storedDeveloperOptionsValue({
         forcedPaceStateKey: "perfectZero",
+        brakeIntensityPreview: "0.00",
         splatTimeRemainingPreview: "over50",
         sprintIntensityPreview: "7.00",
       }),

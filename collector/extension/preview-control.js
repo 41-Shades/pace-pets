@@ -25,6 +25,12 @@
       "Pace Pets developer options must load before preview-control.js.",
     );
   }
+  const BRAKE_INTENSITY = root.PacePetsBrakeIntensity;
+  if (!BRAKE_INTENSITY) {
+    throw new Error(
+      "Brake hard intensity controls must load before preview-control.js.",
+    );
+  }
   const SPRINT_INTENSITY = root.PacePetsSprintIntensity;
   if (!SPRINT_INTENSITY) {
     throw new Error(
@@ -107,6 +113,13 @@
         });
   }
 
+  function brakeIntensityPercentPair(brakeIntensityPreview) {
+    const brakeRatio = BRAKE_INTENSITY.previewRatioForValue(
+      brakeIntensityPreview,
+    );
+    return brakeRatio === null ? null : pacePreviewPercentPair(brakeRatio);
+  }
+
   function splatTimeRemainingPercentPair(splatTimeRemainingPreview) {
     return (
       SPLAT_TIME_REMAINING_PREVIEW_PERCENT_PAIRS[splatTimeRemainingPreview] ||
@@ -116,8 +129,15 @@
 
   function forcedPercentPairOverrideForState(
     stateKey,
-    { splatTimeRemainingPreview = null, sprintIntensityPreview = null } = {},
+    {
+      brakeIntensityPreview = null,
+      splatTimeRemainingPreview = null,
+      sprintIntensityPreview = null,
+    } = {},
   ) {
+    if (stateKey === PACE_STATES.criticalBehind.key) {
+      return brakeIntensityPercentPair(brakeIntensityPreview);
+    }
     if (stateKey === PACE_STATES.wellAhead.key) {
       return sprintIntensityPercentPair(sprintIntensityPreview);
     }
@@ -163,31 +183,44 @@
       : null;
   }
 
+  function forcedPercentPairSource(normalizedStateKey, options) {
+    const overridePercentPair = forcedPercentPairOverrideForState(
+      normalizedStateKey,
+      options,
+    );
+    return Object.freeze({
+      isOverride: overridePercentPair !== null,
+      percentPair:
+        overridePercentPair ??
+        FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey] ??
+        null,
+    });
+  }
+
   function forcedPercentPairForState(
     stateKey,
     {
       atMs = Date.now(),
+      brakeIntensityPreview = null,
       splatTimeRemainingPreview = null,
       sprintIntensityPreview = null,
       windowData = null,
     } = {},
   ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
-    const overridePercentPair = forcedPercentPairOverrideForState(
+    const { isOverride, percentPair } = forcedPercentPairSource(
       normalizedStateKey,
       {
+        brakeIntensityPreview,
         splatTimeRemainingPreview,
         sprintIntensityPreview,
       },
     );
-    const percentPair =
-      overridePercentPair ||
-      FORCED_PACE_STATE_PERCENT_PAIRS[normalizedStateKey];
     if (!percentPair) {
       return null;
     }
 
-    const liveTimePercent = overridePercentPair
+    const liveTimePercent = isOverride
       ? null
       : livePreviewTimePercent(normalizedStateKey, windowData, atMs);
     return liveTimePercent === null
@@ -233,6 +266,7 @@
     stateKey,
     {
       atMs = Date.now(),
+      brakeIntensityPreview = null,
       durationMinutes = null,
       splatTimeRemainingPreview = null,
       sprintIntensityPreview = null,
@@ -243,12 +277,14 @@
     const overridePercentPair = forcedPercentPairOverrideForState(
       normalizedStateKey,
       {
+        brakeIntensityPreview,
         splatTimeRemainingPreview,
         sprintIntensityPreview,
       },
     );
     const percentPair = forcedPercentPairForState(normalizedStateKey, {
       atMs,
+      brakeIntensityPreview,
       splatTimeRemainingPreview,
       sprintIntensityPreview,
       windowData,
@@ -274,10 +310,15 @@
 
   function forcedPaceRatioForState(
     stateKey,
-    { splatTimeRemainingPreview = null, sprintIntensityPreview = null } = {},
+    {
+      brakeIntensityPreview = null,
+      splatTimeRemainingPreview = null,
+      sprintIntensityPreview = null,
+    } = {},
   ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
     const percentPair = forcedPercentPairForState(normalizedStateKey, {
+      brakeIntensityPreview,
       splatTimeRemainingPreview,
       sprintIntensityPreview,
     });
@@ -298,7 +339,10 @@
     );
   }
 
-  function forcedBadgeState(stateKey, { sprintIntensityPreview = null } = {}) {
+  function forcedBadgeState(
+    stateKey,
+    { brakeIntensityPreview = null, sprintIntensityPreview = null } = {},
+  ) {
     const normalizedStateKey = normalizePreviewStateKey(stateKey);
     const state = PACE_STATES[normalizedStateKey];
     if (!state) {
@@ -306,6 +350,7 @@
     }
 
     const paceRatio = forcedPaceRatioForState(normalizedStateKey, {
+      brakeIntensityPreview,
       sprintIntensityPreview,
     });
     if (paceRatio === null) {

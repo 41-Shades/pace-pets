@@ -13,6 +13,12 @@
       "Pace Pets refresh controls must load before dashboard-status-controller.js.",
     );
   }
+  const USAGE_PERMISSIONS = globalThis.PacePetsUsagePermissions;
+  if (!USAGE_PERMISSIONS) {
+    throw new Error(
+      "Pace Pets usage permissions must load before dashboard-status-controller.js.",
+    );
+  }
   const STATUS_LOGIC = globalThis.PacePetsDashboardStatusLogic;
   if (!STATUS_LOGIC) {
     throw new Error(
@@ -244,7 +250,9 @@
     manualRefreshFailureDetail(refreshStatus, error = null) {
       return refreshStatus
         ? this.refreshFailureDetail(refreshStatus, this.latestCurrentSample())
-        : error?.message || "Could not request a usage check.";
+        : error?.message ||
+            STATUS_LOGIC.refreshResponseMessage(error) ||
+            "Could not request a usage check.";
     }
 
     showManualRefreshFailure(refreshStatus, error = null) {
@@ -306,7 +314,7 @@
       await this.loadDashboard({ refreshWindowSelection: false });
 
       if (refreshFailed) {
-        this.showManualRefreshFailure(response?.refreshStatus);
+        this.showManualRefreshFailure(response?.refreshStatus, response);
         return;
       }
 
@@ -326,6 +334,13 @@
 
     async runManualRefresh() {
       if (!this.canRunManualRefresh()) {
+        return;
+      }
+
+      try {
+        await USAGE_PERMISSIONS.ensureChatGptHostPermission();
+      } catch (error) {
+        this.handleManualRefreshError(error);
         return;
       }
 

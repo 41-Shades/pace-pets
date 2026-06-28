@@ -32,24 +32,55 @@ function weeklyWindow(overrides = {}) {
 }
 
 describe("PacePetsBackgroundTransitionRefresh watch windows", () => {
-  it("watches valid windows at or below the transition usage threshold", () => {
+  it("watches valid windows at usage, time, and stale reset thresholds", () => {
     const transition = globalThis.PacePetsBackgroundTransitionRefresh;
+    const atMs = Date.parse("2026-05-25T12:00:00.000Z");
 
-    expect(transition.isTransitionWatchWindow(weeklyWindow())).toBe(true);
+    expect(transition.isTransitionWatchWindow(weeklyWindow(), atMs)).toBe(true);
     expect(
       transition.isTransitionWatchWindow(
-        weeklyWindow({ remainingPercent: 2.1 }),
+        weeklyWindow({
+          remainingPercent: 2.1,
+          resetsAt: "2026-05-25T14:00:00.000Z",
+          windowMinutes: 300,
+        }),
+        atMs,
       ),
     ).toBe(false);
     expect(
       transition.isTransitionWatchWindow(
         weeklyWindow({ remainingPercent: 0, resetsAt: "not-a-date" }),
+        atMs,
       ),
     ).toBe(false);
     expect(
+      transition.isTransitionWatchWindow(
+        weeklyWindow({
+          remainingPercent: 42,
+          resetsAt: "2026-05-25T12:01:00.000Z",
+          windowMinutes: 300,
+        }),
+        atMs,
+      ),
+    ).toBe(true);
+    expect(
+      transition.isTransitionWatchWindow(
+        weeklyWindow({
+          remainingPercent: 42,
+          resetsAt: "2026-05-25T11:59:00.000Z",
+          windowMinutes: 300,
+        }),
+        atMs,
+      ),
+    ).toBe(true);
+    expect(
       transition.transitionWatchWindowKeys({
         fiveHour: weeklyWindow({ remainingPercent: 1 }),
-        weekly: weeklyWindow({ remainingPercent: 42 }),
+        weekly: weeklyWindow({
+          remainingPercent: 42,
+          resetsAt: "2026-05-25T14:00:00.000Z",
+          windowMinutes: 300,
+        }),
       }),
     ).toEqual(["fiveHour"]);
   });
@@ -130,7 +161,15 @@ describe("PacePetsBackgroundTransitionRefresh runner", () => {
         lastRefreshState: null,
         readHistory: async () => ({
           samples: [
-            { windows: { weekly: weeklyWindow({ remainingPercent: 42 }) } },
+            {
+              windows: {
+                weekly: weeklyWindow({
+                  remainingPercent: 42,
+                  resetsAt: "2026-05-25T14:00:00.000Z",
+                  windowMinutes: 300,
+                }),
+              },
+            },
           ],
         }),
         readRefreshStatus: async () => refreshStatus,

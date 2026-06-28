@@ -87,6 +87,7 @@
     return PREVIEW_CONTROL.forcedBadgeState(
       developerOptions.forcedPaceStateKey,
       {
+        brakeIntensityPreview: developerOptions.brakeIntensityPreview,
         sprintIntensityPreview: developerOptions.sprintIntensityPreview,
       },
     );

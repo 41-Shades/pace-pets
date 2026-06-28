@@ -111,6 +111,7 @@
     }) {
       this.currentPaceSummaryTimePercent = timePercent;
       this.setPaceLevel(level);
+      this.updateBrakeWobbleIntensity?.(paceRatio);
       this.updateSprintSmokeIntensity?.(paceRatio);
       this.elements.paceTitle.textContent = title;
       this.elements.paceCopy.textContent = copy;

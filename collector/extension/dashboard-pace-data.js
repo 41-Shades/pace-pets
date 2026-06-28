@@ -5,10 +5,11 @@
   const PACE_CLASSES = PacePetsLogic.PACE_CLASS_NAMES;
   const PACE_STATE_GROUPS = PacePetsLogic.PACE_STATE_GROUPS_BY_KEY;
   const THEME_ASSETS = globalThis.CodexThemeAssets;
+  const BRAKE_INTENSITY = globalThis.PacePetsBrakeIntensity;
   const SPRINT_INTENSITY = globalThis.PacePetsSprintIntensity;
-  if (!SPRINT_INTENSITY || !THEME_ASSETS) {
+  if (!BRAKE_INTENSITY || !SPRINT_INTENSITY || !THEME_ASSETS) {
     throw new Error(
-      "Sprint intensity and theme assets must load before dashboard-pace-data.js.",
+      "Intensity controls and theme assets must load before dashboard-pace-data.js.",
     );
   }
 
@@ -28,6 +29,17 @@
       Object.freeze({ rangeKey: "escape", chancePercent: 12 }),
       Object.freeze({ rangeKey: "extreme", chancePercent: 3 }),
     ]),
+    BRAKE_INTENSITY: Object.freeze({
+      BURST_CHANCE_RANGES_PERCENT: Object.freeze({
+        normal: Object.freeze([60, 35]),
+        wide: Object.freeze([25, 25]),
+        escape: Object.freeze([12, 15]),
+        extreme: Object.freeze([3, 25]),
+      }),
+      EXTREME_PARTICLE_COUNT_RANGE: Object.freeze([8000, 14000]),
+      RATIO_RANGE: BRAKE_INTENSITY.RATIO_RANGE,
+      REPEAT_DELAY_RANGE_MS: Object.freeze([1200, 2600]),
+    }),
     BRAKE_EXTREME_CANVAS_BURST_PROFILE: Object.freeze({
       ANGLE_RANGE_DEG: Object.freeze([145, 395]),
       COUNT_RANGE: Object.freeze([5000, 10000]),

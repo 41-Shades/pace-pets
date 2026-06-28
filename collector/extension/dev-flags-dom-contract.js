@@ -2,6 +2,7 @@
   "use strict";
 
   const DEV_FLAG_ELEMENT_SELECTORS = Object.freeze({
+    brakeIntensityPreviewList: "#brake-intensity-preview-list",
     currentModePanel: ".current-mode-panel",
     currentModeSummary: "#current-mode-summary",
     featurePreviewList: "#feature-preview-list",

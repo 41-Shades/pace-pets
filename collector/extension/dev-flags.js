@@ -5,6 +5,7 @@
   const CURRENT_MODE = globalThis.PacePetsDevFlagsCurrentMode;
   const DEV_FLAGS_DOM = globalThis.PacePetsDevFlagsDom;
   const FEATURE_PREVIEWS = globalThis.PacePetsDevFlagsFeaturePreviews;
+  const PACE_SCALE_PREVIEWS = globalThis.PacePetsDevFlagsPaceScalePreviews;
   const PACE_STATE_DATA = globalThis.PacePetsPaceStateData;
   const RENDERING = globalThis.PacePetsDevFlagsRendering;
   const STORAGE = globalThis.CodexExtensionStorage;
@@ -14,6 +15,7 @@
     !DEV_FLAGS_DOM ||
     !DEVELOPER_OPTIONS ||
     !FEATURE_PREVIEWS ||
+    !PACE_SCALE_PREVIEWS ||
     !PACE_STATE_DATA ||
     !RENDERING ||
     !STORAGE ||
@@ -23,12 +25,10 @@
   }
 
   const { optionButton } = RENDERING;
-
   const elements = DEV_FLAGS_DOM.collectElements(document, DEVELOPER_OPTIONS);
-
-  const { stateGroupElements } = elements;
   let currentForcedPaceStateKey = null;
   let currentBadgeHidden = false;
+  let currentBrakeIntensityPreview = null;
   let currentCheckerboardRevealWhiteTransparent = false;
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
@@ -67,6 +67,7 @@
   function currentDeveloperOptions() {
     return {
       badgeHidden: currentBadgeHidden,
+      brakeIntensityPreview: currentBrakeIntensityPreview,
       checkerboardRevealWhiteTransparent:
         currentCheckerboardRevealWhiteTransparent,
       criticalBadgeWindow: currentCriticalBadgeWindow,
@@ -91,6 +92,7 @@
 
   function applyDeveloperOptions(options) {
     currentBadgeHidden = options.badgeHidden;
+    currentBrakeIntensityPreview = options.brakeIntensityPreview;
     currentCheckerboardRevealWhiteTransparent =
       options.checkerboardRevealWhiteTransparent;
     currentCriticalBadgeWindow = options.criticalBadgeWindow;
@@ -126,6 +128,14 @@
     );
   }
 
+  function activeBrakeIntensityPreviewOption() {
+    return (
+      DEVELOPER_OPTIONS.BRAKE_INTENSITY_PREVIEW_OPTIONS.find(
+        (option) => option.value === currentBrakeIntensityPreview,
+      ) || null
+    );
+  }
+
   function activeSplatTimeRemainingPreviewOption() {
     if (
       currentForcedPaceStateKey !== PACE_STATE_DATA.PACE_STATES.splat.key ||
@@ -149,6 +159,10 @@
           stateLabelForKey(currentForcedPaceStateKey),
       );
     }
+    const brakeIntensityPreview = activeBrakeIntensityPreviewOption();
+    if (brakeIntensityPreview) {
+      labels.push(brakeIntensityPreview.label);
+    }
     const sprintIntensityPreview = activeSprintIntensityPreviewOption();
     if (sprintIntensityPreview) {
       labels.push(sprintIntensityPreview.label);
@@ -160,6 +174,7 @@
   function currentModeDetail() {
     const activeCount =
       Number(Boolean(currentForcedPaceStateKey)) +
+      Number(Boolean(activeBrakeIntensityPreviewOption())) +
       Number(Boolean(activeSprintIntensityPreviewOption())) +
       activeFeaturePreviewOptions().length;
     if (activeCount === 0) {
@@ -171,6 +186,7 @@
   function hasActiveOverride() {
     return (
       Boolean(currentForcedPaceStateKey) ||
+      Boolean(activeBrakeIntensityPreviewOption()) ||
       Boolean(activeSprintIntensityPreviewOption()) ||
       activeFeaturePreviewOptions().length > 0
     );
@@ -206,6 +222,7 @@
                 const forcedPaceStateKey = pressed ? null : option.key;
                 await persistDeveloperOptions({
                   forcedPaceStateKey,
+                  brakeIntensityPreview: null,
                   splatTimeRemainingPreview: pressed ? null : preview.value,
                   sprintIntensityPreview: null,
                 });
@@ -227,6 +244,7 @@
           const forcedPaceStateKey = pressed ? null : option.key;
           await persistDeveloperOptions({
             forcedPaceStateKey,
+            brakeIntensityPreview: null,
             splatTimeRemainingPreview: null,
             sprintIntensityPreview: null,
           });
@@ -255,59 +273,50 @@
 
   function renderStateOverrideColumns() {
     DEVELOPER_OPTIONS.FORCEABLE_PACE_STATE_GROUPS.forEach((group) => {
-      stateGroupElements[group.key].replaceChildren(
+      elements.stateGroupElements[group.key].replaceChildren(
         ...optionRowsForStateOptions(group.options),
       );
     });
   }
 
-  function sprintScaleLabel(preview) {
-    return Number.isInteger(preview.ratio)
-      ? String(preview.ratio)
-      : preview.value;
-  }
-
-  function sprintScaleButton(preview, sprintStateKey) {
-    const active = currentSprintIntensityPreview === preview.value;
-    const button = document.createElement("button");
-    button.className = "sprint-scale-option";
-    button.classList.toggle("is-active", active);
-    button.type = "button";
-    button.textContent = sprintScaleLabel(preview);
-    button.setAttribute("aria-label", preview.label);
-    button.setAttribute("aria-pressed", String(active));
-    button.addEventListener("click", () => {
-      if (active) {
-        return;
-      }
-
-      persistDeveloperOptions({
-        forcedPaceStateKey: sprintStateKey,
-        splatTimeRemainingPreview: null,
-        sprintIntensityPreview: preview.value,
+  function selectIntensityPreview({ preview, previewKey, stateKey }) {
+    persistDeveloperOptions({
+      forcedPaceStateKey: stateKey,
+      brakeIntensityPreview:
+        previewKey === "brakeIntensityPreview" ? preview.value : null,
+      splatTimeRemainingPreview: null,
+      sprintIntensityPreview:
+        previewKey === "sprintIntensityPreview" ? preview.value : null,
+    })
+      .then(() => {
+        setStatus(preview.status);
       })
-        .then(() => {
-          setStatus(preview.status);
-        })
-        .catch((error) => {
-          setStatus(error.message || "Could not update.");
-          render();
-        });
-    });
-    return button;
+      .catch((error) => {
+        setStatus(error.message || "Could not update.");
+        render();
+      });
   }
 
   function renderSprintIntensityPreviews() {
-    const sprintStateKey = PACE_STATE_DATA.PACE_STATES.wellAhead.key;
-    const caption = document.createElement("span");
-    caption.className = "sprint-scale-caption";
-    caption.textContent = "Pace";
-    elements.sprintIntensityPreviewList.replaceChildren(
-      caption,
-      ...DEVELOPER_OPTIONS.SPRINT_INTENSITY_PREVIEW_OPTIONS.map((preview) =>
-        sprintScaleButton(preview, sprintStateKey),
-      ),
-    );
+    PACE_SCALE_PREVIEWS.renderIntensityScale({
+      currentPreviewValue: currentSprintIntensityPreview,
+      listElement: elements.sprintIntensityPreviewList,
+      onSelect: selectIntensityPreview,
+      options: DEVELOPER_OPTIONS.SPRINT_INTENSITY_PREVIEW_OPTIONS,
+      previewKey: "sprintIntensityPreview",
+      stateKey: PACE_STATE_DATA.PACE_STATES.wellAhead.key,
+    });
+  }
+
+  function renderBrakeIntensityPreviews() {
+    PACE_SCALE_PREVIEWS.renderIntensityScale({
+      currentPreviewValue: currentBrakeIntensityPreview,
+      listElement: elements.brakeIntensityPreviewList,
+      onSelect: selectIntensityPreview,
+      options: DEVELOPER_OPTIONS.BRAKE_INTENSITY_PREVIEW_OPTIONS,
+      previewKey: "brakeIntensityPreview",
+      stateKey: PACE_STATE_DATA.PACE_STATES.criticalBehind.key,
+    });
   }
 
   function renderFeaturePreviews() {
@@ -324,6 +333,7 @@
   function render() {
     renderCurrentMode();
     renderStateOverrideColumns();
+    renderBrakeIntensityPreviews();
     renderSprintIntensityPreviews();
     renderFeaturePreviews();
     themeModeControl.render();
@@ -339,6 +349,7 @@
           false,
         ]),
       ),
+      brakeIntensityPreview: null,
       forcedPaceStateKey: null,
       splatTimeRemainingPreview: null,
       sprintIntensityPreview: null,

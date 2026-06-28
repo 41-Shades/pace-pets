@@ -12,8 +12,9 @@
         <h1>Extension Setup</h1>
         <p class="summary">
           The Chrome extension reads the ChatGPT/Codex usage endpoint with your
-          existing signed-in browser session, stores bounded safe history in
-          extension-local storage, and renders the Pace Pets dashboard.
+          existing signed-in browser session after you grant optional ChatGPT
+          site access, stores bounded safe history in extension-local storage,
+          and renders the Pace Pets dashboard.
         </p>
         <nav aria-label="Extension sections">
           <a href="./index.html">Docs Home</a>
@@ -38,6 +39,10 @@
           </li>
           <li>Add Pace Pets to Chrome.</li>
           <li>Click the Pace Pets toolbar icon to open the dashboard.</li>
+          <li>
+            Use the dashboard refresh control to grant ChatGPT site access and
+            run the first usage check.
+          </li>
         </ol>
 
         <h3>Unpacked Source</h3>
@@ -50,13 +55,20 @@
             project.
           </li>
           <li>Click the Pace Pets toolbar icon to open the dashboard.</li>
+          <li>
+            Use the dashboard refresh control to grant ChatGPT site access and
+            run the first usage check.
+          </li>
         </ol>
       </section>
 
       <section id="refresh">
         <h2>Refresh Behavior</h2>
         <ul>
-          <li>Refreshes every five minutes from the background worker.</li>
+          <li>
+            Refreshes every five minutes from the background worker after
+            ChatGPT site access is granted.
+          </li>
           <li>
             The first scheduled refresh runs shortly after install/startup.
           </li>
@@ -96,6 +108,11 @@
           <li>
             The extension may read a ChatGPT session token in memory during
             refresh, but it does not persist or log it.
+          </li>
+          <li>
+            Chrome may describe optional ChatGPT site access as permission to
+            read and change site data; Pace Pets uses it only for background
+            session and usage endpoint requests.
           </li>
           <li>
             No cookies, tokens, raw responses, account IDs, raw page text, or

@@ -6,8 +6,9 @@ https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbc
 
 Source installs can load this folder as an unpacked extension. The extension
 reads the ChatGPT/Codex web usage endpoint with your existing signed-in browser
-session, normalizes supported usage windows, and stores only safe usage history
-in `chrome.storage.local`.
+session after you grant optional ChatGPT site access from the dashboard,
+normalizes supported usage windows, and stores only safe usage history in
+`chrome.storage.local`.
 
 Stored samples contain only normalized local fields. See
 `../../docs/reference/storage-schema.md` for the generated storage shape,
@@ -20,12 +21,14 @@ runtime constants, supported usage windows, and forbidden data list.
 3. Click Load unpacked.
 4. Select this folder: `collector/extension`.
 
-The extension refreshes every five minutes, and every minute while a supported
-window is at `2%` usage remaining or less so end-of-window transitions land
-promptly. Click the extension toolbar icon to open the Pace Pets page.
-Right-click the toolbar icon to choose whether the badge normally shows the 7d
-or 5h view. A `Brake hard!` window temporarily takes over the badge with its
-`7d` or `5h` label until the critical pace clears.
+Click the extension toolbar icon to open the Pace Pets page, then use the first
+manual check to grant ChatGPT site access. After access is granted, the
+extension refreshes every five minutes, and every minute while a supported
+window is at `2%` usage remaining or less, displays `0%` time remaining, or has
+just ended so end-of-window transitions land promptly. Right-click the toolbar
+icon to choose whether the badge normally shows the 7d or 5h view. A
+`Brake hard!` window temporarily takes over the badge with its `7d` or `5h`
+label until the critical pace clears.
 
 If the toolbar badge shows `!`, confirm that Chrome is signed in to ChatGPT.
 When the dashboard shows a missing sign-in, failed check, stale check,
@@ -56,6 +59,9 @@ npm run vendor:chart
 - The session token is not persisted, logged, or stored in local history.
 - No extension code is injected into ChatGPT pages; refreshes happen from the
   extension background worker.
+- Chrome may describe the optional ChatGPT site access as permission to read and
+  change site data; Pace Pets uses it only for background session and usage
+  endpoint requests.
 - The rare Singularity dashboard transition uses generated in-memory canvas
   fragments and does not capture, persist, log, or upload screenshots.
 - This uses an undocumented ChatGPT web endpoint, so the collector may need

@@ -6,11 +6,12 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 
 ## Runtime Pieces
 
-- `collector/extension/manifest.json` declares the extension, the background service worker, toolbar action, storage permission, alarms permission, context-menu permission, and current upstream host permission.
+- `collector/extension/manifest.json` declares the extension, the background service worker, toolbar action, storage permission, alarms permission, context-menu permission, and current optional upstream host permission.
 - `collector/extension/runtime-manifest.js` owns the shared runtime script prefix, background-only, dashboard-only, and dev-controls-only script tails, and dependency-edge assertions, deriving target script orders and target load-order checks from one script-loading contract.
 - `collector/extension/dashboard-loader.js` loads the dashboard runtime scripts from `runtime-manifest.js` in dependency order and continues past optional dashboard asset failures declared by the runtime manifest.
 - `collector/extension/product-metadata.js` owns shared runtime product labels, dashboard path, dashboard description, context-menu titles, and badge titles.
-- `collector/extension/integration-config.js` owns the current ChatGPT origin, usage endpoint, auth-session endpoints, required host permission, and source markers shared by runtime code and static checks.
+- `collector/extension/integration-config.js` owns the current ChatGPT origin, usage endpoint, auth-session endpoints, optional host permission, and source markers shared by runtime code and static checks.
+- `collector/extension/usage-permissions.js` owns the optional ChatGPT host-permission request and presence checks shared by the dashboard and background worker.
 - `collector/extension/usage-integration-adapters.js` owns upstream usage adapter metadata, including ChatGPT WHAM raw window paths, path-matched candidate patterns, and supported field aliases.
 - `collector/extension/usage-providers.js` owns the usage provider registry that ties the current ChatGPT WHAM provider to its host permission, auth-session probes, usage endpoint, parser adapter, source markers, request headers, and retry/auth-failure status policy.
 - `collector/extension/background.js` bootstraps the background runtime from
@@ -36,7 +37,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/refresh-status.js` owns refresh-status construction, normalization, storage key, and safe observable failure messages.
 - `collector/extension/refresh-control.js` owns the dashboard-to-background manual refresh message contract, response builders, cooldown math, and failure predicates.
 - `collector/extension/dashboard-preferences.js` owns dashboard-local preference keys, scopes, supported values, and read/write helpers for tab-scoped usage-window selection, extension-page theme selection, and extension-page motion selection.
-- `collector/extension/preview-control.js` owns synthetic pace-state ratios and preview timing used by local developer state overrides.
+- `collector/extension/preview-control.js` owns synthetic pace-state ratios and preview timing used by local developer state overrides; `collector/extension/brake-intensity.js` and `collector/extension/sprint-intensity.js` own exact Brake hard and Sprint faster intensity preview ladders.
 - `collector/extension/storage-adapter.js` owns Promise-based `chrome.storage.local` reads/writes, shared Chrome `lastError` callback wrapping, and local-storage change helpers shared by history, background, and dashboard code.
 - `collector/extension/usage.js` owns raw-to-safe usage normalization through the default WHAM adapter into supported usage windows.
 - `collector/extension/history-store.js` owns sample normalization, dedupe, retention, and sample caps.
@@ -97,24 +98,29 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 
 1. Chrome starts or installs the extension.
 2. `background.js` bootstraps shared scripts from `runtime-manifest.js` and schedules the usage-refresh alarm plus the presentation-only badge-refresh alarm from `refresh-schedule.js`.
-3. On each usage collection alarm, `background.js` skips duplicate same-worker refresh work if a prior refresh is still in flight, then probes the configured ChatGPT auth-session endpoints with browser credentials to read a session token in memory from the signed-in browser session.
-4. `background.js` calls the default `usage-providers.js` provider through the provider-aware `background-usage-source.js` fetch path. The provider owns the usage endpoint, auth-session endpoints, display name, source markers, retry policy, and parser adapter. Requests use browser credentials, JSON accept headers, the current Chrome UI language as `oai-language`, and a bearer authorization header only when a session token was found. Provider-declared auth-failure responses are retried once only when the first usage request used a token.
-5. `usage.js` normalizes the response through the selected provider's adapter from `usage-integration-adapters.js`, mapping adapter-declared weekly and five-hour paths first, then bounded path-matched candidates when the live usage shape is nested under adapter-recognized usage containers. It does not accept unrelated exact-duration quota-shaped objects as supported windows.
-6. `history-store.js` appends a safe normalized sample to `chrome.storage.local`.
-7. `background.js` updates the selected toolbar badge view, applies the critical-window badge attention override when needed, and writes refresh status through `refresh-status.js`.
-8. Between normal usage polls, `background.js` refreshes only the toolbar badge presentation from stored history at the presentation interval defined by `refresh-schedule.js` so time-derived pace ratios stay current without calling the usage endpoint. When stored history shows any supported window at `2%` usage remaining or less, `background-transition-refresh.js` can promote that minute wakeup into a guarded usage fetch. It skips presentation refresh while a network refresh is in flight or after a same-worker refresh failure so the failure badge remains visible.
-9. `dashboard.js` renders summaries, reset timing, and pace state from extension-local storage plus the dashboard window selection, delegates chart rendering to the dashboard chart helper, then reuses cached state for minute-by-minute countdown and pace updates until storage changes or the page window selection changes. When the dashboard/badge window sync preference is unset or enabled, dashboard window selection follows the stored badge window and dashboard window toggles update that badge preference; disabling sync keeps dashboard toggles page-local.
+3. On each usage collection alarm, `background.js` skips duplicate same-worker refresh work if a prior refresh is still in flight, then skips the network fetch until optional ChatGPT host access has been granted.
+4. Once host access exists, `background.js` probes the configured ChatGPT auth-session endpoints with browser credentials to read a session token in memory from the signed-in browser session.
+5. `background.js` calls the default `usage-providers.js` provider through the provider-aware `background-usage-source.js` fetch path. The provider owns the usage endpoint, auth-session endpoints, display name, source markers, retry policy, and parser adapter. Requests use browser credentials, JSON accept headers, the current Chrome UI language as `oai-language`, and a bearer authorization header only when a session token was found. Provider-declared auth-failure responses are retried once only when the first usage request used a token.
+6. `usage.js` normalizes the response through the selected provider's adapter from `usage-integration-adapters.js`, mapping adapter-declared weekly and five-hour paths first, then bounded path-matched candidates when the live usage shape is nested under adapter-recognized usage containers. It does not accept unrelated exact-duration quota-shaped objects as supported windows.
+7. `history-store.js` appends a safe normalized sample to `chrome.storage.local`.
+8. `background.js` updates the selected toolbar badge view, applies the critical-window badge attention override when needed, and writes refresh status through `refresh-status.js`.
+9. Between normal usage polls, `background.js` refreshes only the toolbar badge presentation from stored history at the presentation interval defined by `refresh-schedule.js` so time-derived pace ratios stay current without calling the usage endpoint. When stored history shows any supported window at `2%` usage remaining or less, displayed `0%` time remaining, or an already-ended reset window, `background-transition-refresh.js` can promote that minute wakeup into a guarded usage fetch. It skips presentation refresh while a network refresh is in flight or after a same-worker refresh failure so the failure badge remains visible.
+10. `dashboard.js` renders summaries, reset timing, and pace state from extension-local storage plus the dashboard window selection, delegates chart rendering to the dashboard chart helper, then reuses cached state for minute-by-minute countdown and pace updates until storage changes or the page window selection changes. When the dashboard/badge window sync preference is unset or enabled, dashboard window selection follows the stored badge window and dashboard window toggles update that badge preference; disabling sync keeps dashboard toggles page-local.
 
 `refresh-schedule.js` is the single owner for alarm names, initial delays,
 periods, transition-refresh thresholds, and dashboard automatic-check copy.
-Normal usage collection runs every five minutes; transition watch can check
-every minute while stored data is at `2%` usage remaining or less and the last
-refresh status is healthy. The dashboard can also request a user-initiated
-refresh when the visible status is actionable, such as a missing ChatGPT
-sign-in, failed check, stale refresh, or first-run waiting state, and near the
-end of a supported reset window. The toolbar action context menu exposes the
-same background refresh as an always-available `Check usage now` action outside
-the dashboard surface. Manual requests use the shared `refresh-control.js`
+After optional ChatGPT access is granted, normal usage collection runs every
+five minutes; transition watch can check every minute while stored data is at
+`2%` usage remaining or less, displayed `0%` time remaining, or an already-ended
+reset window, and the last refresh status is healthy. The dashboard can also
+request a user-initiated refresh when the visible status is actionable, such as
+a missing ChatGPT sign-in, failed check, stale refresh, or
+first-run waiting state, and near the end of a supported reset window. The
+dashboard requests optional ChatGPT host access before sending the
+manual-refresh message to the background worker. The toolbar action context
+menu exposes the same permission-gated background refresh as a `Check usage now`
+action outside the dashboard surface and opens the dashboard when ChatGPT access
+has not been granted. Manual requests use the shared `refresh-control.js`
 message/response contract where a caller needs a response, then the same
 guarded background refresh path as the alarm. The background worker stores only
 the manual-refresh cooldown-until timestamp in `chrome.storage.local`, so the
@@ -143,9 +149,11 @@ States. Choosing a state stores
 `resetExhaustedPreview`; enabling the checkerboard polarity preview stores
 `checkerboardRevealWhiteTransparent`. Choosing a Splat timing preview stores
 `forcedPaceState` as `splat` plus `splatTimeRemainingPreview` as `over50` or
-`under50`. Choosing a Sprint faster intensity preview stores
-`forcedPaceState` as `wellAhead` plus `sprintIntensityPreview` as an exact
-ratio string from `1.55` through `7.00`. Returning to live data removes those
+`under50`. Choosing a Brake hard intensity preview stores `forcedPaceState` as
+`criticalBehind` plus `brakeIntensityPreview` as an exact ratio string from
+`0.55` through `0.00`. Choosing a Sprint faster intensity preview stores
+`forcedPaceState` as `wellAhead` plus `sprintIntensityPreview` as an exact ratio
+string from `1.55` through `7.00`. Returning to live data removes those
 overrides. `collector/extension/dev-preview-action-registry.js` owns the
 one-shot dev action catalog, message types, button labels, requested-status
 copy, and fallback error copy for Brake hard max debris burst, Rare burst (5%),
@@ -165,13 +173,14 @@ packages.
 - No extension code is injected into ChatGPT pages.
 - No chat content, arbitrary page content, or screenshot collection path exists.
 - The manifest does not request `activeTab`, `tabs`, `scripting`, `tabCapture`, or `desktopCapture`.
+- The manifest does not request install-time host permissions; the optional `chatgpt.com` host permission is used only for background session and usage endpoint requests.
 - No cookies, auth headers, access tokens, raw upstream responses, raw HTML, raw page text, screenshots, or account identifiers are persisted.
 - Runtime host permissions should only include origins the extension actually fetches.
 - Durable product behavior should use code constants, not environment-variable overrides.
 
 ## Static Validation
 
-- `scripts/extension-check.mjs` verifies the manifest shape, derives required extension assets from the manifest, runtime script manifest, dashboard HTML, and theme asset manifest, verifies theme pace-icon eligibility against the pace-state catalog, verifies the runtime manifest's dependency-edge contract, verifies the current host permission set, and checks the absence of obsolete localhost/content-script/popup assumptions.
+- `scripts/extension-check.mjs` verifies the manifest shape, derives required extension assets from the manifest, runtime script manifest, dashboard HTML, and theme asset manifest, verifies theme pace-icon eligibility against the pace-state catalog, verifies the runtime manifest's dependency-edge contract, verifies the current optional host permission set, and checks the absence of obsolete localhost/content-script/popup assumptions.
 - `scripts/vendor-asset-check.mjs` verifies vendored Chart.js output and default theme icon assets.
 - `scripts/release-artifact-check.mjs` verifies version alignment, tracked-text release-safety patterns, release-facing source/documentation boundaries, and the public artifact export-ignore policy for internal-only paths.
 - `scripts/smoke-check.mjs` verifies static dashboard/sample-data expectations.

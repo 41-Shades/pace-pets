@@ -12,12 +12,14 @@
   const RAIL_HIDDEN_KEY = "railHidden";
   const RESET_EXHAUSTED_PREVIEW_KEY = "resetExhaustedPreview";
   const SPLAT_TIME_REMAINING_PREVIEW_KEY = "splatTimeRemainingPreview";
+  const BRAKE_INTENSITY_PREVIEW_KEY = "brakeIntensityPreview";
   const SPRINT_INTENSITY_PREVIEW_KEY = "sprintIntensityPreview";
   const PACE_STATE_DATA = root.PacePetsPaceStateData;
+  const BRAKE_INTENSITY = root.PacePetsBrakeIntensity;
   const SPRINT_INTENSITY = root.PacePetsSprintIntensity;
-  if (!PACE_STATE_DATA || !SPRINT_INTENSITY) {
+  if (!PACE_STATE_DATA || !BRAKE_INTENSITY || !SPRINT_INTENSITY) {
     throw new Error(
-      "Pace state data and sprint intensity must load before developer-options.js.",
+      "Pace state data and intensity controls must load before developer-options.js.",
     );
   }
   const FORCEABLE_PACE_STATE_GROUP_LIST_ELEMENT_IDS = Object.freeze({
@@ -204,6 +206,10 @@
     return SPRINT_INTENSITY.normalizePreviewValue(value);
   }
 
+  function normalizeBrakeIntensityPreview(value) {
+    return BRAKE_INTENSITY.normalizePreviewValue(value);
+  }
+
   function normalizeSplatTimeRemainingPreview(value) {
     return Object.values(SPLAT_TIME_REMAINING_PREVIEW_VALUES).includes(value)
       ? value
@@ -214,6 +220,9 @@
     const source = isPlainObject(value) ? value : {};
     const forcedPaceStateKey = normalizeForcedPaceStateKey(
       source[FORCED_PACE_STATE_KEY],
+    );
+    const brakeIntensityPreview = normalizeBrakeIntensityPreview(
+      source[BRAKE_INTENSITY_PREVIEW_KEY],
     );
     const sprintIntensityPreview = normalizeSprintIntensityPreview(
       source[SPRINT_INTENSITY_PREVIEW_KEY],
@@ -239,6 +248,10 @@
       resetExhaustedPreview: normalizeResetExhaustedPreview(
         source[RESET_EXHAUSTED_PREVIEW_KEY],
       ),
+      brakeIntensityPreview:
+        forcedPaceStateKey === PACE_STATE_DATA.PACE_STATES.criticalBehind.key
+          ? brakeIntensityPreview
+          : null,
       splatTimeRemainingPreview:
         forcedPaceStateKey === PACE_STATE_DATA.PACE_STATES.splat.key
           ? splatTimeRemainingPreview
@@ -266,6 +279,7 @@
       [MAX_POOL_FILL_KEY]: options.maxPoolFill,
       [RAIL_HIDDEN_KEY]: options.railHidden,
       [RESET_EXHAUSTED_PREVIEW_KEY]: options.resetExhaustedPreview,
+      [BRAKE_INTENSITY_PREVIEW_KEY]: options.brakeIntensityPreview,
       [SPLAT_TIME_REMAINING_PREVIEW_KEY]: options.splatTimeRemainingPreview,
       [SPRINT_INTENSITY_PREVIEW_KEY]: options.sprintIntensityPreview,
     };
@@ -287,6 +301,9 @@
     if (normalized.splatTimeRemainingPreview) {
       value[SPLAT_TIME_REMAINING_PREVIEW_KEY] =
         normalized.splatTimeRemainingPreview;
+    }
+    if (normalized.brakeIntensityPreview) {
+      value[BRAKE_INTENSITY_PREVIEW_KEY] = normalized.brakeIntensityPreview;
     }
     if (normalized.sprintIntensityPreview) {
       value[SPRINT_INTENSITY_PREVIEW_KEY] = normalized.sprintIntensityPreview;
@@ -317,6 +334,9 @@
 
   root.PacePetsDeveloperOptions = Object.freeze({
     BADGE_HIDDEN_KEY,
+    BRAKE_INTENSITY_PREVIEW_KEY,
+    BRAKE_INTENSITY_PREVIEW_OPTIONS: BRAKE_INTENSITY.PREVIEW_OPTIONS,
+    BRAKE_INTENSITY_PREVIEW_VALUES: BRAKE_INTENSITY.PREVIEW_VALUES,
     CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY,
     CRITICAL_BADGE_WINDOW_KEY,
     FEATURE_PREVIEW_OPTIONS,
@@ -340,6 +360,7 @@
     hasDeveloperOptionsChange,
     hasStoredDeveloperOptionsValue,
     normalizeBadgeHidden,
+    normalizeBrakeIntensityPreview,
     normalizeCriticalBadgeWindow,
     normalizeCheckerboardRevealWhiteTransparent,
     normalizeDeveloperOptions,

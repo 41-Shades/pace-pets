@@ -35,4 +35,19 @@ describe("PacePetsDashboardPaceData", () => {
       groupsByKey.imperfectStates.displayStateKeys,
     );
   });
+
+  it("keeps brake intensity tuning ranges explicit", () => {
+    const data = globalThis.PacePetsDashboardPaceData;
+
+    expect(data.BRAKE_INTENSITY.RATIO_RANGE).toEqual([0.55, 0]);
+    expect(data.BRAKE_INTENSITY.BURST_CHANCE_RANGES_PERCENT).toMatchObject({
+      normal: [60, 35],
+      wide: [25, 25],
+      escape: [12, 15],
+      extreme: [3, 25],
+    });
+    expect(data.BRAKE_INTENSITY.EXTREME_PARTICLE_COUNT_RANGE).toEqual([
+      8000, 14000,
+    ]);
+  });
 });

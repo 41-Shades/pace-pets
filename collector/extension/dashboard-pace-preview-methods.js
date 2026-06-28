@@ -49,6 +49,13 @@
 
     forcedPaceRatioLabel(state, forcedPaceRatio) {
       if (
+        state.key === DATA.PACE_STATES.criticalBehind.key &&
+        this.getCurrentBrakeIntensityPreview?.()
+      ) {
+        return `Pace ${PacePetsLogic.formatPaceRatioValue(forcedPaceRatio)}`;
+      }
+
+      if (
         state.key === DATA.PACE_STATES.wellAhead.key &&
         this.getCurrentSprintIntensityPreview?.()
       ) {
@@ -118,6 +125,7 @@
           playSplatFallOnEntry,
           replaySplatFall,
         });
+        this.updateBrakeWobbleIntensity?.(forcedPaceRatio);
         this.updateSprintSmokeIntensity?.(forcedPaceRatio);
         this.elements.paceTitle.textContent = state.title;
         this.elements.paceCopy.textContent = state.copy;

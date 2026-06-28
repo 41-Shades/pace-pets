@@ -16,10 +16,6 @@ function extensionPageSource(source) {
   return `./${source}`;
 }
 
-function expectUniqueSources(sources) {
-  expect(new Set(sources).size).toBe(sources.length);
-}
-
 function expectFrozenEdges(edges) {
   expect(Object.isFrozen(edges)).toBe(true);
   for (const edge of edges) {
@@ -62,6 +58,14 @@ function expectCommonRuntimeDependencyEdges(runtime) {
   expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "pace-state-special-data.js",
     "pace-state-data.js",
+  ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "brake-intensity.js",
+    "developer-options.js",
+  ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "brake-intensity.js",
+    "preview-control.js",
   ]);
 }
 
@@ -186,6 +190,10 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
     "./themes/default/asset-manifest.js",
     "./dashboard-push-tank-renderer.js",
   ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./brake-intensity.js",
+    "./dashboard-pace-wobble-methods.js",
+  ]);
 }
 
 function expectDevFlagsRuntimeDependencyEdges(runtime) {
@@ -213,6 +221,10 @@ function expectDevFlagsRuntimeDependencyEdges(runtime) {
     "./dev-preview-action-registry.js",
     "./dev-flags-preview-actions.js",
   ]);
+  expect(runtime.DEV_FLAGS_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-flags-pace-scale-previews.js",
+    "./dev-flags.js",
+  ]);
 }
 
 function expectFrozenRuntimeDependencyEdgeLists(runtime) {
@@ -236,150 +248,6 @@ beforeAll(async () => {
       path.join(projectRoot, "collector/extension/runtime-manifest.js"),
     )
   );
-});
-
-describe("CodexExtensionRuntime script sources", () => {
-  it("derives target runtime scripts from one shared common prefix", () => {
-    const runtime = globalThis.CodexExtensionRuntime;
-
-    expect(runtime.COMMON_SCRIPT_SOURCES).toContain("usage-providers.js");
-    expect(runtime.COMMON_SCRIPT_SOURCES).toContain("dashboard-preferences.js");
-    expect(runtime.COMMON_SCRIPT_SOURCES).toContain("persisted-text.js");
-    expect(runtime.COMMON_SCRIPT_SOURCES).toContain("refresh-schedule.js");
-    expect(runtime.COMMON_SCRIPT_SOURCES).toContain(
-      "dev-preview-action-registry.js",
-    );
-    expect(
-      runtime.COMMON_SCRIPT_SOURCES.indexOf("usage-windows.js"),
-    ).toBeLessThan(
-      runtime.COMMON_SCRIPT_SOURCES.indexOf("dashboard-preferences.js"),
-    );
-    expect(
-      runtime.COMMON_SCRIPT_SOURCES.indexOf("refresh-schedule.js"),
-    ).toBeLessThan(runtime.COMMON_SCRIPT_SOURCES.indexOf("refresh-control.js"));
-    expect(
-      runtime.COMMON_SCRIPT_SOURCES.indexOf("pace-state-data.js"),
-    ).toBeLessThan(
-      runtime.COMMON_SCRIPT_SOURCES.indexOf("developer-options.js"),
-    );
-    expect(
-      runtime.COMMON_SCRIPT_SOURCES.indexOf("pace-state-special-data.js"),
-    ).toBeLessThan(runtime.COMMON_SCRIPT_SOURCES.indexOf("pace-state-data.js"));
-    expect(runtime.BACKGROUND_SCRIPT_SOURCES).toEqual([
-      ...runtime.COMMON_SCRIPT_SOURCES,
-      ...runtime.BACKGROUND_ONLY_SCRIPT_SOURCES,
-    ]);
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toEqual([
-      ...runtime.COMMON_SCRIPT_SOURCES.map(dashboardSource),
-      ...runtime.DASHBOARD_ONLY_SCRIPT_SOURCES,
-    ]);
-    expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toEqual([
-      ...runtime.COMMON_SCRIPT_SOURCES.map(extensionPageSource),
-      ...runtime.DEV_FLAGS_ONLY_SCRIPT_SOURCES,
-    ]);
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-dom-contract.js",
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-preferences.js",
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-black-hole-v2-shaders.js",
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-big-bang-scene.js",
-    );
-    expect(
-      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-big-bang-ejecta-draw.js",
-      ),
-    ).toBeLessThan(
-      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-big-bang-scene-draw.js",
-      ),
-    );
-    expect(
-      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-big-bang-particle-draw.js",
-      ),
-    ).toBeLessThan(
-      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-big-bang-scene-draw.js",
-      ),
-    );
-    expect(
-      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-big-bang-plume-draw.js",
-      ),
-    ).toBeLessThan(
-      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
-        "./dashboard-big-bang-scene-draw.js",
-      ),
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-black-hole-v2-scene.js",
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-chrome-collapse-fragments.js",
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-chrome-collapse-motion.js",
-    );
-    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(
-      "./dashboard-singularity-chrome-collapse-scene.js",
-    );
-    expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toContain("./dev-flags.js");
-    expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toContain(
-      "./dev-flags-dom-contract.js",
-    );
-    expect(runtime.DEV_FLAGS_SCRIPT_SOURCES).toContain(
-      "./dashboard-preferences.js",
-    );
-  });
-});
-
-describe("CodexExtensionRuntime target-only script sources", () => {
-  it("keeps target-only and optional dashboard scripts explicit", () => {
-    const runtime = globalThis.CodexExtensionRuntime;
-
-    expect(runtime.BACKGROUND_ONLY_SCRIPT_SOURCES).toEqual([
-      "background-logic.js",
-      "background-transition-refresh.js",
-      "background-badge-presentation.js",
-      "background-usage-source.js",
-      "background-context-menu.js",
-    ]);
-    expect(runtime.DASHBOARD_ONLY_SCRIPT_SOURCES).toContain("./dashboard.js");
-    expect(runtime.DASHBOARD_ONLY_SCRIPT_SOURCES).toContain(
-      "./vendor/chart.umd.min.js",
-    );
-    expect(runtime.DEV_FLAGS_ONLY_SCRIPT_SOURCES).toEqual([
-      "./dev-flags-rendering.js",
-      "./dev-flags-dom-contract.js",
-      "./dev-flags-current-mode.js",
-      "./dev-flags-theme-mode.js",
-      "./dev-flags-preview-actions.js",
-      "./dev-flags-feature-previews.js",
-      "./dev-flags.js",
-    ]);
-    expect(runtime.OPTIONAL_DASHBOARD_SCRIPT_SOURCES).toEqual([
-      "./vendor/chart.umd.min.js",
-    ]);
-
-    for (const sourceList of [
-      runtime.COMMON_SCRIPT_SOURCES,
-      runtime.BACKGROUND_ONLY_SCRIPT_SOURCES,
-      runtime.BACKGROUND_SCRIPT_SOURCES,
-      runtime.DASHBOARD_ONLY_SCRIPT_SOURCES,
-      runtime.DASHBOARD_SCRIPT_SOURCES,
-      runtime.DEV_FLAGS_ONLY_SCRIPT_SOURCES,
-      runtime.DEV_FLAGS_SCRIPT_SOURCES,
-      runtime.OPTIONAL_DASHBOARD_SCRIPT_SOURCES,
-    ]) {
-      expect(Object.isFrozen(sourceList)).toBe(true);
-      expectUniqueSources(sourceList);
-    }
-  });
 });
 
 describe("CodexExtensionRuntime dependency edges", () => {

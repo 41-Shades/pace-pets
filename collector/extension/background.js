@@ -7,20 +7,7 @@ const DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY =
   CodexUsageWindows.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY;
 const BADGE_PRESENTATION = PacePetsBackgroundBadgePresentation;
 const HISTORY_STORAGE_KEY = CodexUsageHistory.HISTORY_STORAGE_KEY;
-const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
-  PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY;
-const USAGE_PROVIDER = CodexWeeklyUsage.DEFAULT_USAGE_PROVIDER;
-let lastRefreshState = CodexRefreshStatus.initialState();
-let scheduledRefreshPromise = null;
-let manualRefreshCooldownUntilMs = 0;
-
-async function persistRefreshStatus(refreshState) {
-  try {
-    await CodexUsageHistory.writeRefreshStatus(refreshState);
-  } catch (error) {
-    console.warn("Could not store Codex usage refresh status:", error);
-  }
-}
+const REFRESH_RUNNER = PacePetsBackgroundRefreshRunner;
 
 async function createBadgeContextMenus() {
   const [selectedWindowKey, syncDashboardBadgeWindow] = await Promise.all([
@@ -59,174 +46,25 @@ async function syncDashboardBadgeWindowContextMenu() {
   );
 }
 
-async function updatePaceBadgeFromHistory({
-  clearWhenEmpty = false,
-  persistPresentation = true,
-  refreshStatus = null,
-} = {}) {
-  const history = await CodexUsageHistory.readHistory();
-  const sample = CodexUsageHistory.latestSample(history);
-  if (!sample) {
-    await BADGE_PRESENTATION.updateEmptyBadge({ clearWhenEmpty });
-    return;
-  }
-
-  const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
-    sample.windows,
-    history,
-  );
-  const presentationState = CodexRefreshStatus.statusWithPacePresentation(
-    refreshStatus || lastRefreshState,
-    {
-      badgePaceRatio: badgeState.badgePaceRatio,
-      badgeWindowKey: badgeState.windowKey,
-      pacePresentationAt: badgeState.pacePresentationAt,
-      pacePresentationSampleId: sample.id,
-      sampleCount: history.samples.length,
-    },
-  );
-
-  if (!persistPresentation || !presentationState) {
-    return;
-  }
-
-  lastRefreshState = {
-    ...presentationState,
-    badgeWindowKey: badgeState.windowKey,
-    badgePaceRatio: badgeState.badgePaceRatio,
-    pacePresentationAt: badgeState.pacePresentationAt,
-    pacePresentationSampleId: sample.id,
-  };
-  await persistRefreshStatus(lastRefreshState);
-}
-
-async function refreshUsage() {
-  const rawUsage =
-    await PacePetsBackgroundUsageSource.fetchUsageWithProvider(USAGE_PROVIDER);
-  const payload = CodexWeeklyUsage.normalizeUsageWithProvider(
-    rawUsage,
-    USAGE_PROVIDER,
-    { sourceMarkerKey: "background" },
-  );
-  const { history, sample, stored, checkedAt } =
-    await CodexUsageHistory.appendUsageSnapshot(payload);
-  const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
-    sample.windows,
-    history,
-  );
-  lastRefreshState = CodexRefreshStatus.successState({
-    badgePaceRatio: badgeState.badgePaceRatio,
-    badgeWindowKey: badgeState.windowKey,
-    pacePresentationAt: badgeState.pacePresentationAt,
-    pacePresentationSampleId: sample.id,
-    refreshedAt: checkedAt,
-    sampleCount: history.samples.length,
-    stored,
-    windows: sample.windows,
-  });
-  await persistRefreshStatus(lastRefreshState);
-  return lastRefreshState;
-}
-
-async function recordRefreshFailure(error) {
-  lastRefreshState = CodexRefreshStatus.failureState(error);
-  await persistRefreshStatus(lastRefreshState);
-  await BADGE_PRESENTATION.setBadge(
-    "!",
-    "#b42318",
-    CodexProductMetadata.REFRESH_FAILED_TITLE,
-  ).catch(() => {});
-  return lastRefreshState;
-}
-
-function runScheduledRefresh() {
-  if (scheduledRefreshPromise) {
-    return scheduledRefreshPromise;
-  }
-
-  scheduledRefreshPromise = refreshUsage()
-    .catch((error) => {
-      console.warn("Codex usage refresh failed:", error);
-      return recordRefreshFailure(error).catch(() => {});
-    })
-    .finally(() => {
-      scheduledRefreshPromise = null;
-    });
-
-  return scheduledRefreshPromise;
-}
-
 async function runBadgePresentationRefresh() {
   return PacePetsBackgroundTransitionRefresh.run({
-    lastRefreshState,
+    lastRefreshState: REFRESH_RUNNER.currentRefreshState(),
     readHistory: CodexUsageHistory.readHistory,
     readRefreshStatus: CodexUsageHistory.readRefreshStatus,
-    runScheduledRefresh,
-    scheduledRefreshActive: () => scheduledRefreshPromise !== null,
-    updatePaceBadgeFromHistory,
+    runScheduledRefresh: REFRESH_RUNNER.runScheduledRefresh,
+    scheduledRefreshActive: REFRESH_RUNNER.scheduledRefreshActive,
+    updatePaceBadgeFromHistory: REFRESH_RUNNER.updatePaceBadgeFromHistory,
   });
 }
 
-async function readManualRefreshCooldownUntilMs() {
-  try {
-    const items = await CodexExtensionStorage.getLocal(
-      MANUAL_REFRESH_COOLDOWN_STORAGE_KEY,
-    );
-    return PacePetsRefreshControl.manualRefreshCooldownUntilMs(
-      items[MANUAL_REFRESH_COOLDOWN_STORAGE_KEY],
-    );
-  } catch (error) {
-    console.warn("Could not read Codex usage manual refresh cooldown:", error);
-    return manualRefreshCooldownUntilMs;
+async function runContextMenuRefresh() {
+  const response = await REFRESH_RUNNER.runManualRefresh();
+  if (
+    response?.message ===
+    PacePetsUsagePermissions.CHATGPT_ACCESS_REQUIRED_MESSAGE
+  ) {
+    openDashboard();
   }
-}
-
-async function persistManualRefreshCooldownUntilMs(cooldownUntilMs) {
-  manualRefreshCooldownUntilMs =
-    PacePetsRefreshControl.manualRefreshCooldownUntilMs(cooldownUntilMs);
-  const storedValue = PacePetsRefreshControl.manualRefreshCooldownStorageValue(
-    manualRefreshCooldownUntilMs,
-  );
-
-  try {
-    if (storedValue) {
-      await CodexExtensionStorage.setLocal({
-        [MANUAL_REFRESH_COOLDOWN_STORAGE_KEY]: storedValue,
-      });
-      return;
-    }
-
-    await CodexExtensionStorage.removeLocal(
-      MANUAL_REFRESH_COOLDOWN_STORAGE_KEY,
-    );
-  } catch (error) {
-    console.warn("Could not store Codex usage manual refresh cooldown:", error);
-  }
-}
-
-async function manualRefreshCooldownRemainingMs() {
-  manualRefreshCooldownUntilMs = Math.max(
-    manualRefreshCooldownUntilMs,
-    await readManualRefreshCooldownUntilMs(),
-  );
-  return PacePetsRefreshControl.cooldownRemainingMs(
-    manualRefreshCooldownUntilMs,
-  );
-}
-
-async function runManualRefresh() {
-  const remainingMs = await manualRefreshCooldownRemainingMs();
-  if (remainingMs > 0) {
-    return PacePetsRefreshControl.manualRefreshCooldownResponse(
-      lastRefreshState,
-      remainingMs,
-    );
-  }
-
-  await persistManualRefreshCooldownUntilMs(
-    Date.now() + PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS,
-  );
-  return runScheduledRefresh().then(PacePetsRefreshControl.refreshNowResponse);
 }
 
 function scheduleRefresh() {
@@ -271,9 +109,9 @@ function handleBadgeStorageChange({
   if (!badgeWindowChanged && !historyChanged && !developerOptionsChanged) {
     return;
   }
-  updatePaceBadgeFromHistory({
+  REFRESH_RUNNER.updatePaceBadgeFromHistory({
     clearWhenEmpty: historyChanged || developerOptionsChanged,
-    persistPresentation: scheduledRefreshPromise === null,
+    persistPresentation: !REFRESH_RUNNER.scheduledRefreshActive(),
   }).catch((error) => {
     console.warn("Codex usage badge update failed:", error);
   });
@@ -323,7 +161,7 @@ chrome.runtime.onStartup.addListener(initializeExtension);
 chrome.action.onClicked.addListener(openDashboard);
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (PacePetsRefreshControl.isRefreshNowMessage(message)) {
-    runManualRefresh()
+    REFRESH_RUNNER.runManualRefresh()
       .then((response) => {
         sendResponse(response);
       })
@@ -343,7 +181,7 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
   }
 
   if (PacePetsBackgroundContextMenu.isCheckUsageNowMenuItem(info.menuItemId)) {
-    runManualRefresh().catch((error) => {
+    runContextMenuRefresh().catch((error) => {
       console.warn("Codex usage context-menu refresh failed:", error);
     });
     return;
@@ -378,7 +216,7 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
 });
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === PacePetsRefreshSchedule.USAGE_REFRESH_ALARM_NAME) {
-    runScheduledRefresh();
+    REFRESH_RUNNER.runScheduledRefresh();
     return;
   }
 

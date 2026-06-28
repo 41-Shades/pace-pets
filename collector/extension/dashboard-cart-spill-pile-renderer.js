@@ -4,6 +4,11 @@
   const RADIANS_PER_DEGREE = Math.PI / 180;
 
   function pileLayer(state) {
+    const host = state.cartSpillHost;
+    if (!host?.isConnected) {
+      return null;
+    }
+
     if (!state.cartSpillPileLayer) {
       const layer = document.createElement("canvas");
       const pixelRatio = window.devicePixelRatio || 1;
@@ -12,7 +17,7 @@
       layer.dataset.cartSpillPixelRatio = String(pixelRatio);
       layer.width = Math.max(1, Math.ceil(window.innerWidth * pixelRatio));
       layer.height = Math.max(1, Math.ceil(window.innerHeight * pixelRatio));
-      document.body.append(layer);
+      host.append(layer);
       state.cartSpillPileLayer = layer;
     }
 
@@ -21,6 +26,10 @@
 
   function pileContext(state) {
     const layer = pileLayer(state);
+    if (!layer) {
+      return null;
+    }
+
     const context = layer.getContext("2d");
     if (!context) {
       return null;
@@ -57,7 +66,7 @@
   }
 
   function settleCartSpillItem(state, item) {
-    if (!state.isActive || !document.body) {
+    if (!state.isActive || !state.cartSpillHost?.isConnected) {
       return;
     }
 
@@ -79,6 +88,7 @@
       layer.remove();
     }
     state.cartSpillPileLayer = null;
+    state.cartSpillHost = null;
     state.cartSpillPileColumns?.clear();
   }
 

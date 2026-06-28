@@ -228,6 +228,7 @@
       );
       container.removeAttribute("data-brake-wobble-shakes");
       container.removeAttribute("data-brake-wobble-range");
+      container.style.removeProperty("--brake-ratio-intensity");
     },
 
     clearSlowWobbleEffectClasses(container) {
