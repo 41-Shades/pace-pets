@@ -205,9 +205,10 @@
 
   async function runManualRefresh() {
     if (!(await USAGE_PERMISSIONS.hasChatGptHostPermission())) {
-      return REFRESH_CONTROL.refreshErrorResponse(
+      const refreshState = await recordRefreshFailure(
         USAGE_PERMISSIONS.chatGptAccessRequiredError(),
       );
+      return REFRESH_CONTROL.refreshNowResponse(refreshState);
     }
 
     const remainingMs = await manualRefreshCooldownRemainingMs();

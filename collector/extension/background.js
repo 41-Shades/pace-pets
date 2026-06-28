@@ -59,9 +59,9 @@ async function runBadgePresentationRefresh() {
 
 async function runContextMenuRefresh() {
   const response = await REFRESH_RUNNER.runManualRefresh();
+  const responseMessage = response?.message || response?.refreshStatus?.message;
   if (
-    response?.message ===
-    PacePetsUsagePermissions.CHATGPT_ACCESS_REQUIRED_MESSAGE
+    responseMessage === PacePetsUsagePermissions.CHATGPT_ACCESS_REQUIRED_MESSAGE
   ) {
     openDashboard();
   }
