@@ -105,10 +105,10 @@ assert(
   "Extension storage is not wired.",
 );
 assert(
-  manifest.host_permissions?.includes(
+  manifest.optional_host_permissions?.includes(
     usageProviders.DEFAULT_USAGE_PROVIDER.hostPermission,
   ),
-  "Extension host permission is not aligned with the usage provider.",
+  "Extension optional host permission is not aligned with the usage provider.",
 );
 assert(
   !manifest.action?.default_popup,
@@ -149,6 +149,7 @@ const backgroundJs = [
   "background.js",
   "background-context-menu.js",
   "background-usage-source.js",
+  "background-refresh-runner.js",
 ]
   .map((file) => readText(`collector/extension/${file}`))
   .join("\n");
@@ -233,7 +234,7 @@ assert(
     ) &&
     dashboardStatusControllerJs.includes("manualRefreshFeedback") &&
     dashboardStatusControllerJs.includes(
-      "showManualRefreshFailure(response?.refreshStatus)",
+      "showManualRefreshFailure(response?.refreshStatus, response)",
     ) &&
     dashboardStatusControllerJs.includes(
       "const disabled = this.manualRefreshInFlight || remainingMs > 0;",
@@ -241,13 +242,9 @@ assert(
     dashboardStatusControllerJs.includes(
       'button.setAttribute("aria-disabled", String(disabled));',
     ) &&
-    backgroundJs.includes(
-      "PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_MS",
-    ) &&
-    backgroundJs.includes(
-      "PacePetsRefreshControl.manualRefreshCooldownResponse",
-    ) &&
-    backgroundJs.includes("PacePetsRefreshControl.refreshNowResponse") &&
+    backgroundJs.includes("REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS") &&
+    backgroundJs.includes("REFRESH_CONTROL.manualRefreshCooldownResponse") &&
+    backgroundJs.includes("REFRESH_CONTROL.refreshNowResponse") &&
     backgroundJs.includes("PacePetsRefreshControl.refreshErrorResponse") &&
     backgroundJs.includes("runScheduledRefresh()") &&
     backgroundJs.includes("runManualRefresh"),

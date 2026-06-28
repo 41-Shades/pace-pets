@@ -25,6 +25,7 @@
       this.currentHistory = null;
       this.currentRefreshStatus = null;
       this.currentCheckerboardRevealWhiteTransparent = false;
+      this.currentBrakeIntensityPreview = null;
       this.currentForcedPaceStateKey = null;
       this.currentManualRefreshLeadWindow = false;
       this.currentMaxPoolFill = false;
@@ -85,6 +86,8 @@
         elements: this.elements,
         getCurrentCheckerboardRevealWhiteTransparent: () =>
           this.currentCheckerboardRevealWhiteTransparent,
+        getCurrentBrakeIntensityPreview: () =>
+          this.currentBrakeIntensityPreview,
         getCurrentForcedPaceStateKey: () => this.currentForcedPaceStateKey,
         getCurrentHistory: () => this.currentHistory,
         getCurrentMaxPoolFill: () => this.currentMaxPoolFill,
@@ -255,6 +258,8 @@
       }
       this.currentCheckerboardRevealWhiteTransparent =
         developerOptions.checkerboardRevealWhiteTransparent;
+      this.currentBrakeIntensityPreview =
+        developerOptions.brakeIntensityPreview;
       this.currentForcedPaceStateKey = developerOptions.forcedPaceStateKey;
       this.currentManualRefreshLeadWindow =
         developerOptions.manualRefreshLeadWindow;

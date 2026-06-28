@@ -95,6 +95,7 @@ export default [
         PacePetsBackgroundBadgePreviewSchedule: "readonly",
         PacePetsBackgroundContextMenu: "readonly",
         PacePetsBackgroundLogic: "readonly",
+        PacePetsBackgroundRefreshRunner: "readonly",
         PacePetsBackgroundTransitionRefresh: "readonly",
         PacePetsBackgroundUsageSource: "readonly",
         PacePetsDashboardDom: "readonly",
@@ -104,6 +105,7 @@ export default [
         PacePetsPreviewControl: "readonly",
         PacePetsRefreshControl: "readonly",
         PacePetsRefreshSchedule: "readonly",
+        PacePetsUsagePermissions: "readonly",
       },
     },
     rules: {

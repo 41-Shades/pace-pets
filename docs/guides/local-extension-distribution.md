@@ -14,8 +14,9 @@ Chrome Web Store install:
 
 1. User installs Pace Pets from the Chrome Web Store listing.
 2. User signs into ChatGPT/Codex in the same Chrome profile.
-3. The extension background worker refreshes usage from the browser-visible ChatGPT usage endpoint.
-4. The extension dashboard reads the user's local extension storage and renders pace, reset timing, and history.
+3. User opens the Pace Pets dashboard and grants optional ChatGPT site access from the first manual usage check.
+4. The extension background worker refreshes usage from the browser-visible ChatGPT usage endpoint.
+5. The extension dashboard reads the user's local extension storage and renders pace, reset timing, and history.
 
 Unpacked source install:
 
@@ -23,8 +24,9 @@ Unpacked source install:
 2. User opens Chrome's Extensions page and enables Developer Mode.
 3. User loads `collector/extension/` as an unpacked extension.
 4. User signs into ChatGPT/Codex in the same Chrome profile.
-5. The extension background worker refreshes usage from the browser-visible ChatGPT usage endpoint.
-6. The extension dashboard reads the user's local extension storage and renders pace, reset timing, and history.
+5. User opens the Pace Pets dashboard and grants optional ChatGPT site access from the first manual usage check.
+6. The extension background worker refreshes usage from the browser-visible ChatGPT usage endpoint.
+7. The extension dashboard reads the user's local extension storage and renders pace, reset timing, and history.
 
 ## Data Boundaries
 
@@ -32,6 +34,7 @@ Unpacked source install:
 - The extension may read a ChatGPT session token in memory only to call the upstream usage endpoint as the signed-in user.
 - The extension must not persist cookies, auth headers, access tokens, raw upstream responses, raw HTML, raw page text, screenshots, or account identifiers.
 - The extension does not inject code into ChatGPT pages or read ChatGPT chats or page contents.
+- Chrome may describe optional ChatGPT site access as permission to read and change site data; Pace Pets uses it only for background session and usage endpoint requests.
 - The Singularity visual transition uses generated WebGL/canvas layers plus
   live dashboard DOM geometry and does not capture screenshots.
 - The extension does not request `activeTab`, `tabs`, `scripting`, `tabCapture`, or `desktopCapture`.

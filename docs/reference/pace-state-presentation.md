@@ -351,11 +351,18 @@ effect in `collector/extension/dashboard-pace-wobble-methods.js`,
 `collector/extension/dashboard-brake-debris-methods.js`,
 `collector/extension/dashboard-brake-extreme-canvas-methods.js`, and
 `collector/extension/dashboard-brake-debris.css`. The first burst is normal.
-Later bursts choose normal, wide, escape, or extreme ranges at
-60% / 25% / 12% / 3% odds. Wide and escape bursts emit SVG debris from the
-status icon; extreme bursts use a high-DPI canvas particle layer for many tiny
-fragments, sparks, and smoke. Same-state refreshes preserve the running wobble;
-reduced-motion settings skip debris launches.
+Later bursts choose normal, wide, escape, or extreme ranges. Brake hard remains
+one pace state for all ratios below `0.55`; within that state, the actual ratio
+continuously increases a capped animation intensity as it approaches `0.00`.
+Higher Brake hard intensity shifts later burst odds from
+60% / 25% / 12% / 3% toward 35% / 25% / 15% / 25%, shortens repeat delay from
+`1600-3400ms` toward `1200-2600ms`, and increases extreme canvas debris from
+`5000-10000` particles toward `8000-14000`. Wide and escape bursts emit SVG
+debris from the status icon; extreme bursts use a high-DPI canvas particle
+layer for many tiny fragments, sparks, and smoke. Same-state refreshes preserve
+the running wobble while updating intensity; reduced-motion settings skip debris
+launches. Local dev controls can force Brake hard at exact preview ratios
+`0.55`, `0.45`, `0.35`, `0.25`, `0.15`, `0.05`, and `0.00`.
 
 The `sync` / Perfect Sync state keeps its existing gentle status-icon float and
 adds a dashboard-only yellow sunburst on the page background layer behind the

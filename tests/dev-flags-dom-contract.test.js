@@ -59,6 +59,7 @@ describe("PacePetsDevFlagsDom", () => {
       selector: "#perfect-state-list",
     });
     expect(queriedSelectors).toContain(".current-mode-panel");
+    expect(queriedSelectors).toContain("#brake-intensity-preview-list");
     expect(queriedSelectors).toContain("#sprint-intensity-preview-list");
     expect(queriedSelectors).toContain("#theme-mode-list");
   });

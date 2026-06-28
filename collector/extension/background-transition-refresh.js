@@ -14,6 +14,8 @@
     REFRESH_SCHEDULE.TRANSITION_USAGE_REFRESH_PERIOD_MINUTES * MS_PER_MINUTE;
   const TRANSITION_USAGE_REMAINING_PERCENT =
     REFRESH_SCHEDULE.TRANSITION_USAGE_REMAINING_PERCENT;
+  const TRANSITION_TIME_REMAINING_DISPLAY_PERCENT =
+    REFRESH_SCHEDULE.TRANSITION_TIME_REMAINING_DISPLAY_PERCENT;
 
   function hasResetTiming(windowData) {
     return (
@@ -22,20 +24,38 @@
     );
   }
 
-  function isTransitionWatchWindow(windowData) {
+  function usageRemainingIsInTransitionBand(windowData) {
     const remainingPercent = PACE_LOGIC.boundedPercent(
       windowData?.remainingPercent,
     );
     return (
-      hasResetTiming(windowData) &&
       remainingPercent !== null &&
       remainingPercent <= TRANSITION_USAGE_REMAINING_PERCENT
     );
   }
 
-  function transitionWatchWindowKeys(windows) {
+  function timeRemainingIsInTransitionBand(windowData, atMs) {
+    const timeDisplayPercent = PACE_LOGIC.roundedDisplayPercent(
+      PACE_LOGIC.timeRemainingPercentAt(windowData, atMs),
+    );
+    return (
+      timeDisplayPercent !== null &&
+      timeDisplayPercent <= TRANSITION_TIME_REMAINING_DISPLAY_PERCENT
+    );
+  }
+
+  function isTransitionWatchWindow(windowData, atMs = Date.now()) {
+    return (
+      hasResetTiming(windowData) &&
+      (usageRemainingIsInTransitionBand(windowData) ||
+        timeRemainingIsInTransitionBand(windowData, atMs) ||
+        PACE_LOGIC.isResetWindowStale(windowData, atMs))
+    );
+  }
+
+  function transitionWatchWindowKeys(windows, atMs = Date.now()) {
     return Object.entries(windows || {})
-      .filter((entry) => isTransitionWatchWindow(entry[1]))
+      .filter((entry) => isTransitionWatchWindow(entry[1], atMs))
       .map((entry) => entry[0]);
   }
 
@@ -58,7 +78,7 @@
   } = {}) {
     return (
       transitionRefreshDue(refreshStatus, atMs) &&
-      transitionWatchWindowKeys(windows).length > 0
+      transitionWatchWindowKeys(windows, atMs).length > 0
     );
   }
 

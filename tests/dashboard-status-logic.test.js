@@ -154,7 +154,7 @@ describe("PacePetsDashboardStatus populated history", () => {
       }),
     ).toEqual({
       detail: "",
-      manualRefresh: false,
+      manualRefresh: true,
       mode: "live",
       text: "Waiting for reading",
     });

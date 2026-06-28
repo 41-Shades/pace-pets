@@ -268,6 +268,10 @@
     };
   }
 
+  function cartSpillHost(container) {
+    return container.closest(".usage-panel");
+  }
+
   function removeCartSpillLayer(state, layer, timer) {
     state.cartSpillLayers.delete(layer);
     if (timer) {
@@ -303,14 +307,16 @@
 
       const mode = isExtreme ? "extreme" : "normal";
       const profile = SPILL_PROFILES[mode];
-      if (!profile || !document.body) {
+      const host = cartSpillHost(container);
+      if (!profile || !host) {
         return;
       }
 
+      state.cartSpillHost = host;
       const launchDelayMs = this.randomIntegerInRange(profile.delayRangeMs);
       const launchTimer = window.setTimeout(() => {
         state.cartSpillTimers.delete(launchTimer);
-        if (!state.isActive) {
+        if (!state.isActive || !host.isConnected) {
           return;
         }
 
@@ -342,7 +348,7 @@
           state.cartSpillTimers.add(settleTimer);
         }
 
-        document.body.append(layer);
+        host.append(layer);
         state.cartSpillLayers.add(layer);
         const cleanupTimer = window.setTimeout(() => {
           removeCartSpillLayer(state, layer, cleanupTimer);

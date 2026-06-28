@@ -9,7 +9,7 @@ Chrome Web Store listing:
 
 ## How It Works
 
-Pace Pets can be installed from the Chrome Web Store or loaded as an unpacked Chrome extension from this source tree. Each user runs their own local copy in their own Chrome profile, and the background worker uses that user's existing signed-in ChatGPT browser session to refresh usage every five minutes.
+Pace Pets can be installed from the Chrome Web Store or loaded as an unpacked Chrome extension from this source tree. Each user runs their own local copy in their own Chrome profile. After the user grants ChatGPT site access from the dashboard, the background worker uses that user's existing signed-in ChatGPT browser session to refresh usage every five minutes.
 
 There is no shared backend, central database, hosted account connection, or cross-user data path. See [Local Extension Runtime And Distribution Model](docs/guides/local-extension-distribution.md) and [Extension Architecture](docs/reference/extension-architecture.md).
 
@@ -23,6 +23,7 @@ Chrome Web Store install:
 1. Open the [Pace Pets Chrome Web Store listing](https://chromewebstore.google.com/detail/pace-pets/dgemeohjkjclceamjacmfneodafbcbdk).
 2. Add Pace Pets to Chrome.
 3. Click the Pace Pets toolbar icon to open the dashboard.
+4. Use the dashboard refresh control to grant ChatGPT site access and run the first usage check.
 
 Source install:
 
@@ -30,7 +31,8 @@ Source install:
 2. Enable Developer Mode.
 3. Click Load unpacked.
 4. Select `collector/extension`.
-5. Click the Pace Pets toolbar icon to open the dashboard. Right-click the toolbar icon to choose whether the badge shows the 7d or 5h view.
+5. Click the Pace Pets toolbar icon to open the dashboard.
+6. Use the dashboard refresh control to grant ChatGPT site access and run the first usage check. Right-click the toolbar icon to choose whether the badge shows the 7d or 5h view.
 
 To update a source install after pulling or downloading new repo contents, reload the unpacked extension from `chrome://extensions`.
 
@@ -40,7 +42,7 @@ Usage history is stored only in `chrome.storage.local` for the user's local exte
 
 Stored samples contain only normalized safe usage fields: collection timestamps, source/version markers, supported window keys, remaining/used percentages, reset timestamps, and window duration. See [Storage Schema](docs/reference/storage-schema.md).
 
-Pace Pets does not inject code into ChatGPT pages or read ChatGPT chats or page contents. The rare Singularity dashboard transition uses generated WebGL/canvas layers plus live dashboard DOM geometry and does not capture, store, or upload screenshots. The extension does not request browser tab or screen capture permissions.
+Pace Pets does not inject code into ChatGPT pages or read ChatGPT chats or page contents. Chrome may describe the optional ChatGPT site access as permission to read and change site data, but Pace Pets uses that access only for background requests to ChatGPT session and usage endpoints. The rare Singularity dashboard transition uses generated WebGL/canvas layers plus live dashboard DOM geometry and does not capture, store, or upload screenshots. The extension does not request browser tab or screen capture permissions.
 
 The selected badge window is stored locally, and the extension menu's `Sync dashboard and badge` setting defaults on so dashboard window changes and badge-view menu changes stay in sync. Turning that setting off leaves dashboard window changes page-local. Dashboard theme and motion preferences stay in extension-page `localStorage`.
 
@@ -52,7 +54,7 @@ See [Privacy](PRIVACY.md) for the full local-data boundary and [Security](SECURI
 
 The collector uses an undocumented ChatGPT web usage endpoint. If that endpoint or response shape changes, the extension may need a repo update.
 
-Keep the current `chatgpt.com` host permission aligned with real runtime fetches. Do not add legacy or fallback host permissions unless the fallback is actually implemented.
+Keep the optional `chatgpt.com` host permission aligned with real runtime fetches. Do not add legacy or fallback host permissions unless the fallback is actually implemented.
 
 ## Maintenance
 
@@ -103,4 +105,5 @@ MIT. See [LICENSE](LICENSE).
 - [Pace State Presentation](docs/reference/pace-state-presentation.md)
 - [Singularity Transition](docs/reference/singularity-transition.md)
 - [Storage Schema](docs/reference/storage-schema.md)
+- [Chrome Web Store Listing Copy](docs/operations/chrome-web-store-listing.md)
 - [Release Packaging](docs/operations/release-packaging.md)

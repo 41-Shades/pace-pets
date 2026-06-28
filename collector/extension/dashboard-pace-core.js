@@ -105,6 +105,7 @@
     previewWindowForState(stateKey) {
       const windowKey = this.selectedSupportedWindowKey();
       return PREVIEW_CONTROL.forcedPreviewWindowForState(stateKey, {
+        brakeIntensityPreview: this.getCurrentBrakeIntensityPreview?.(),
         durationMinutes: this.windowSpecs[windowKey]?.durationMinutes,
         splatTimeRemainingPreview: this.getCurrentSplatTimeRemainingPreview?.(),
         sprintIntensityPreview: this.getCurrentSprintIntensityPreview?.(),
@@ -134,6 +135,7 @@
 
     forcedPaceRatioForState(stateKey) {
       return PREVIEW_CONTROL.forcedPaceRatioForState(stateKey, {
+        brakeIntensityPreview: this.getCurrentBrakeIntensityPreview?.(),
         splatTimeRemainingPreview: this.getCurrentSplatTimeRemainingPreview?.(),
         sprintIntensityPreview: this.getCurrentSprintIntensityPreview?.(),
       });

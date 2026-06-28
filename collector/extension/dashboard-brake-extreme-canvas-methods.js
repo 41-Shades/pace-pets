@@ -47,8 +47,8 @@
     return { canvas, context, height, width };
   }
 
-  function extremeParticleCountRange(profile) {
-    return profile.COUNT_RANGE;
+  function extremeParticleCountRange(profile, state) {
+    return state.extremeParticleCountRange || profile.COUNT_RANGE;
   }
 
   function createExtremeParticle(controller, profile, origin) {
@@ -195,7 +195,7 @@
         y: rect.top + rect.height * 0.58,
       };
       const particleCount = this.randomIntegerInRange(
-        extremeParticleCountRange(profile),
+        extremeParticleCountRange(profile, state),
       );
       const particles = Array.from({ length: particleCount }, () =>
         createExtremeParticle(this, profile, origin),

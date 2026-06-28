@@ -142,20 +142,20 @@ assertExactStringSet(
   "Permissions",
 );
 assertExactStringSet(
-  manifest.host_permissions,
+  manifest.optional_host_permissions,
   [usageProviders.DEFAULT_USAGE_PROVIDER.hostPermission],
-  "Host permissions",
+  "Optional host permissions",
 );
 assert(
   !manifest.optional_permissions?.length,
   "Extension must not request optional permissions.",
 );
 assert(
-  !manifest.optional_host_permissions?.length,
-  "Extension must not request optional host permissions.",
+  !manifest.host_permissions?.length,
+  "Extension must not request install-time host permissions.",
 );
 assert(
-  !manifest.host_permissions?.some((permission) =>
+  !manifest.optional_host_permissions?.some((permission) =>
     permission.includes("127.0.0.1"),
   ),
   "Extension must not request localhost host permissions.",

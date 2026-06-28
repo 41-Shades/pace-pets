@@ -35,6 +35,24 @@ describe("PacePetsPreviewControl", () => {
     });
   });
 
+  it("applies brake intensity percent previews", () => {
+    const preview = globalThis.PacePetsPreviewControl;
+
+    expect(
+      preview.forcedPaceRatioForState("criticalBehind", {
+        brakeIntensityPreview: "0.25",
+      }),
+    ).toBe(0.25);
+    expect(
+      preview.forcedPercentPairForState("criticalBehind", {
+        brakeIntensityPreview: "0.00",
+      }),
+    ).toEqual({
+      remainingPercent: 0,
+      timePercent: 50,
+    });
+  });
+
   it("applies splat percent previews", () => {
     const preview = globalThis.PacePetsPreviewControl;
 

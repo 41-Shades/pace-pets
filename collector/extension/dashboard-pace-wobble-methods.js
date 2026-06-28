@@ -2,11 +2,12 @@
   "use strict";
 
   const DATA = globalThis.PacePetsDashboardPaceData;
+  const BRAKE_INTENSITY = globalThis.PacePetsBrakeIntensity;
   const BRAKE_EXTREME_PREVIEW = globalThis.PacePetsBrakeExtremePreviewControl;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !BRAKE_EXTREME_PREVIEW || !Controller) {
+  if (!DATA || !BRAKE_INTENSITY || !BRAKE_EXTREME_PREVIEW || !Controller) {
     throw new Error(
-      "Pace data, preview controls, and core must load before dashboard-pace-wobble-methods.js.",
+      "Pace data, intensity controls, preview controls, and core must load before dashboard-pace-wobble-methods.js.",
     );
   }
 
@@ -17,10 +18,10 @@
       : 0;
   }
 
-  function brakeWobbleRangeKeyForRoll(controller) {
+  function brakeWobbleRangeKeyForRoll(controller, state) {
     const roll = controller.randomIntegerInRange([1, 100]);
     let cumulativeChance = 0;
-    for (const entry of DATA.BRAKE_WOBBLE_BURST_CHANCES_PERCENT) {
+    for (const entry of state.brakeWobbleBurstChancesPercent) {
       cumulativeChance += burstChancePercentValue(entry.chancePercent);
       if (roll <= cumulativeChance) {
         return entry.rangeKey;
@@ -37,14 +38,46 @@
     return controller.randomIntegerInRange(shakeRange);
   }
 
+  function interpolate(range, progress) {
+    return range[0] + (range[1] - range[0]) * progress;
+  }
+
+  function interpolateIntegerRange(baseRange, targetRange, progress) {
+    return baseRange.map((value, index) =>
+      Math.round(value + (targetRange[index] - value) * progress),
+    );
+  }
+
+  function brakeWobbleBurstChancesForIntensity(intensity) {
+    const brake = DATA.BRAKE_INTENSITY;
+    return Object.freeze(
+      DATA.BRAKE_WOBBLE_BURST_CHANCES_PERCENT.map((entry) => {
+        const range = brake.BURST_CHANCE_RANGES_PERCENT[entry.rangeKey] || [
+          entry.chancePercent,
+          entry.chancePercent,
+        ];
+        return Object.freeze({
+          rangeKey: entry.rangeKey,
+          chancePercent: interpolate(range, intensity),
+        });
+      }),
+    );
+  }
+
   function brakeDebrisState({ isActive = true, isFirstBurst = true } = {}) {
     return {
+      brakeIntensity: 0,
+      brakeWobbleBurstChancesPercent: DATA.BRAKE_WOBBLE_BURST_CHANCES_PERCENT,
       debrisAnimationCleanups: new Set(),
       debrisLayers: new Set(),
       debrisTimers: new Set(),
       delayTimer: null,
+      extremeParticleCountRange:
+        DATA.BRAKE_EXTREME_CANVAS_BURST_PROFILE.COUNT_RANGE,
       isFirstBurst,
       isActive,
+      paceRatio: null,
+      repeatDelayRangeMs: DATA.BRAKE_WOBBLE_REPEAT_DELAY_RANGE_MS,
       settleTimer: null,
     };
   }
@@ -66,7 +99,7 @@
     brakeWobbleBurstState(state) {
       const rangeKey = state.isFirstBurst
         ? "normal"
-        : brakeWobbleRangeKeyForRoll(this);
+        : brakeWobbleRangeKeyForRoll(this, state);
       state.isFirstBurst = false;
       const shakeCount = brakeWobbleShakeCountForRange(this, rangeKey);
       return { rangeKey, shakeCount };
@@ -95,7 +128,7 @@
           this.scheduleBrakeWobbleBurst(
             container,
             state,
-            DATA.BRAKE_WOBBLE_REPEAT_DELAY_RANGE_MS,
+            state.repeatDelayRangeMs,
           );
         }
       }, durationMs);
@@ -124,6 +157,12 @@
       const durationMs =
         DATA.BRAKE_WOBBLE_DURATION_MS_BY_SHAKE_COUNT[burst.shakeCount];
       const state = brakeDebrisState({ isFirstBurst: false });
+      state.brakeIntensity = 1;
+      state.brakeWobbleBurstChancesPercent =
+        brakeWobbleBurstChancesForIntensity(1);
+      state.extremeParticleCountRange =
+        DATA.BRAKE_INTENSITY.EXTREME_PARTICLE_COUNT_RANGE;
+      state.repeatDelayRangeMs = DATA.BRAKE_INTENSITY.REPEAT_DELAY_RANGE_MS;
       container.dataset.brakeWobbleRange = burst.rangeKey;
       container.dataset.brakeWobbleShakes = String(burst.shakeCount);
       container.classList.add("is-brake-wobbling");
@@ -156,11 +195,47 @@
       );
     },
 
+    applyBrakeWobbleIntensity(container, state, paceRatio) {
+      const intensity = BRAKE_INTENSITY.intensityForRatio(paceRatio);
+      const brake = DATA.BRAKE_INTENSITY;
+      state.paceRatio = Number.isFinite(Number(paceRatio))
+        ? Number(paceRatio)
+        : null;
+      state.brakeIntensity = intensity;
+      state.brakeWobbleBurstChancesPercent =
+        brakeWobbleBurstChancesForIntensity(intensity);
+      state.extremeParticleCountRange = interpolateIntegerRange(
+        DATA.BRAKE_EXTREME_CANVAS_BURST_PROFILE.COUNT_RANGE,
+        brake.EXTREME_PARTICLE_COUNT_RANGE,
+        intensity,
+      );
+      state.repeatDelayRangeMs = interpolateIntegerRange(
+        DATA.BRAKE_WOBBLE_REPEAT_DELAY_RANGE_MS,
+        brake.REPEAT_DELAY_RANGE_MS,
+        intensity,
+      );
+      container.style.setProperty(
+        "--brake-ratio-intensity",
+        String(Math.round(intensity * 100) / 100),
+      );
+    },
+
+    updateBrakeWobbleIntensity(paceRatio) {
+      const container = this.elements.paceIcon;
+      const state = this.brakeWobbleEffectStates?.get(container);
+      if (state) {
+        this.applyBrakeWobbleIntensity(container, state, paceRatio);
+      }
+    },
+
     startBrakeWobbleEffect(container) {
       const state = brakeDebrisState();
 
       this.clearBrakeWobbleEffectClasses(container);
       container.classList.add("has-pace-icon-effect-brake-wobble");
+      this.brakeWobbleEffectStates ??= new WeakMap();
+      this.brakeWobbleEffectStates.set(container, state);
+      this.applyBrakeWobbleIntensity(container, state, null);
       this.scheduleBrakeWobbleBurst(
         container,
         state,
@@ -173,11 +248,13 @@
         window.clearTimeout(state.settleTimer);
         this.clearBrakeDebrisLayers(state);
         this.clearBrakeWobbleEffectClasses(container);
+        this.brakeWobbleEffectStates?.delete(container);
       });
     },
 
     startSlowWobbleEffect(container) {
       const state = {
+        cartSpillHost: null,
         cartSpillLayers: new Set(),
         cartSpillPileColumns: new Map(),
         cartSpillPileLayer: null,

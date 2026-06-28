@@ -103,6 +103,10 @@
       .join("; ");
   }
 
+  function refreshResponseMessage(response) {
+    return String(response?.message || "").trim();
+  }
+
   function collectionStatusState({
     detail = "",
     manualRefresh = false,
@@ -220,6 +224,7 @@
 
     return refreshStatus?.ok === true && isRecentRefreshStatus(refreshStatus)
       ? collectionStatusState({
+          manualRefresh: true,
           mode: "live",
           text: STATUS_TEXT.waitingForReading,
         })
@@ -281,6 +286,7 @@
     isRecentRefreshStatus,
     isSignInNotFoundStatus,
     refreshFailureDetail,
+    refreshResponseMessage,
     statusSummaryText,
   });
 })();
