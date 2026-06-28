@@ -20,6 +20,10 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/background-logic.js` owns background-safe helper logic
   for badge-window selection, attention-badge prioritization, session-token
   extraction, usage headers, and usage auth-failure retry predicates.
+- `collector/extension/background-transition-refresh.js` owns the adaptive
+  transition-refresh decision that promotes the presentation-only minute alarm
+  into a usage fetch while a supported window is at `2%` usage remaining or
+  less.
 - `collector/extension/background-usage-source.js` owns the credentials-included
   auth-session probes and WHAM usage fetch for the current provider.
 - `collector/extension/background-context-menu.js` owns the toolbar action
@@ -39,7 +43,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/themes/default/asset-manifest.js` owns the packaged theme asset manifest for app icons, pace icons, icon variants, effect assets, cart-spill grocery icons, push-tank ocean icons, and the pace-state exceptions that intentionally do not ship themed PNG art.
 - `collector/extension/themes/default/` contains the default replaceable extension artwork.
 - `collector/extension/developer-options.js` owns local developer state-override normalization and projects forceable state groups from the pace-state catalog. `collector/extension/dev-flags.html` and `collector/extension/dev-flags-loader.js` are unpacked-extension tooling only, load shared scripts through the runtime manifest's dev-controls target, and are excluded from Chrome Web Store release packages.
-- `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, pace-state group metadata, inline icon geometry, legend metadata, controlled Big Bang/Perfect Sync/Perfect Zero/Singularity presentation, reset-countdown display-zero checks, and stale-reset guards. Dashboard pace helpers own dashboard-only special transitions for Big Bang and Singularity.
+- `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, pace-state group metadata, inline icon geometry, legend metadata, controlled Big Bang/Perfect Sync/Perfect Zero/Singularity presentation, reset-countdown display-zero checks, and stale-reset guards. `collector/extension/pace-window-history.js` extends that shared model with reset-window sample bounds and perfect-zero eligibility history. Dashboard pace helpers own dashboard-only special transitions for Big Bang and Singularity.
 - `collector/extension/perfect-zero-space-scene.js` owns the `PERFECT ZERO` canvas scene, including icon and full-bleed profiles, reduced-motion handling, page-visibility pause/resume behavior, and scene teardown. `collector/extension/dashboard-eclipse-icon.js` owns the smaller Perfect Zero theme-control canvas, which uses canvas for organic corona plumes, wispy shimmer, and sparse rim glints where CSS gradients proved too uniform.
 - `collector/extension/dashboard.html`, ordered `dashboard*.css` stylesheets, dashboard helper scripts, and `dashboard.js` own the extension dashboard UI. `collector/extension/dashboard-dom-contract.js` owns the dashboard selector map, required element IDs, and element collection helper shared by dashboard bootstrap and static smoke checks. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and the tab-scoped dashboard window selection, while the 60-second status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Because that tick reapplies the current pace summary, `collector/extension/dashboard-pace-icon-methods.js` preserves same-state long-running icon effects that own live canvas state instead of tearing them down and recreating them. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture; Big Bang and Singularity reuse the full-page space backdrop without that icon-anchored planet.
 - `collector/extension/dashboard-big-bang-origin.js`,
@@ -98,21 +102,24 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 5. `usage.js` normalizes the response through the selected provider's adapter from `usage-integration-adapters.js`, mapping adapter-declared weekly and five-hour paths first, then bounded path-matched candidates when the live usage shape is nested under adapter-recognized usage containers. It does not accept unrelated exact-duration quota-shaped objects as supported windows.
 6. `history-store.js` appends a safe normalized sample to `chrome.storage.local`.
 7. `background.js` updates the selected toolbar badge view, applies the critical-window badge attention override when needed, and writes refresh status through `refresh-status.js`.
-8. Between usage polls, `background.js` refreshes only the toolbar badge presentation from stored history at the presentation interval defined by `refresh-schedule.js` so time-derived pace ratios stay current without calling the usage endpoint. It skips that presentation refresh while a network refresh is in flight or after a same-worker refresh failure so the failure badge remains visible.
+8. Between normal usage polls, `background.js` refreshes only the toolbar badge presentation from stored history at the presentation interval defined by `refresh-schedule.js` so time-derived pace ratios stay current without calling the usage endpoint. When stored history shows any supported window at `2%` usage remaining or less, `background-transition-refresh.js` can promote that minute wakeup into a guarded usage fetch. It skips presentation refresh while a network refresh is in flight or after a same-worker refresh failure so the failure badge remains visible.
 9. `dashboard.js` renders summaries, reset timing, and pace state from extension-local storage plus the dashboard window selection, delegates chart rendering to the dashboard chart helper, then reuses cached state for minute-by-minute countdown and pace updates until storage changes or the page window selection changes. When the dashboard/badge window sync preference is unset or enabled, dashboard window selection follows the stored badge window and dashboard window toggles update that badge preference; disabling sync keeps dashboard toggles page-local.
 
 `refresh-schedule.js` is the single owner for alarm names, initial delays,
-periods, and dashboard automatic-check copy. The dashboard can also request a
-user-initiated refresh when the visible status is actionable, such as a missing
-ChatGPT sign-in, failed check, stale refresh, or first-run waiting state, and
-near the end of a supported reset window. The toolbar action context menu
-exposes the same background refresh as an always-available `Check usage now`
-action outside the dashboard surface. Manual requests use the shared
-`refresh-control.js` message/response contract where a caller needs a response,
-then the same guarded background refresh path as the alarm. The background
-worker stores only the manual-refresh cooldown-until timestamp in
-`chrome.storage.local`, so the dashboard and toolbar entry point remain
-cooldown-limited across Manifest V3 worker restarts.
+periods, transition-refresh thresholds, and dashboard automatic-check copy.
+Normal usage collection runs every five minutes; transition watch can check
+every minute while stored data is at `2%` usage remaining or less and the last
+refresh status is healthy. The dashboard can also request a user-initiated
+refresh when the visible status is actionable, such as a missing ChatGPT
+sign-in, failed check, stale refresh, or first-run waiting state, and near the
+end of a supported reset window. The toolbar action context menu exposes the
+same background refresh as an always-available `Check usage now` action outside
+the dashboard surface. Manual requests use the shared `refresh-control.js`
+message/response contract where a caller needs a response, then the same
+guarded background refresh path as the alarm. The background worker stores only
+the manual-refresh cooldown-until timestamp in `chrome.storage.local`, so the
+dashboard and toolbar entry point remain cooldown-limited across Manifest V3
+worker restarts.
 
 ## Developer Controls
 

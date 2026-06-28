@@ -50,6 +50,12 @@ App icons must keep their exact pixel sizes:
 - `icon48.png`: 48x48
 - `icon128.png`: 128x128
 
+The default app icon set is generated from
+`scripts/assets/app-icon-mascot-source.png` by running `npm run icons:app`.
+The toolbar icon is the first post-install impression, so replacement app icons
+should crop around the essential mascot shape and stay readable at 16x16
+without depending on decorative marks or excess transparent padding.
+
 Pace icons must be PNGs with a transparent background. The dashboard reads their
 state mapping from
 `collector/extension/themes/default/asset-manifest.js`.

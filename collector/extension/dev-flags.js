@@ -28,6 +28,7 @@
 
   const { stateGroupElements } = elements;
   let currentForcedPaceStateKey = null;
+  let currentBadgeHidden = false;
   let currentCheckerboardRevealWhiteTransparent = false;
   let currentCriticalBadgeWindow = false;
   let currentManualRefreshLeadWindow = false;
@@ -65,6 +66,7 @@
 
   function currentDeveloperOptions() {
     return {
+      badgeHidden: currentBadgeHidden,
       checkerboardRevealWhiteTransparent:
         currentCheckerboardRevealWhiteTransparent,
       criticalBadgeWindow: currentCriticalBadgeWindow,
@@ -88,6 +90,7 @@
   }
 
   function applyDeveloperOptions(options) {
+    currentBadgeHidden = options.badgeHidden;
     currentCheckerboardRevealWhiteTransparent =
       options.checkerboardRevealWhiteTransparent;
     currentCriticalBadgeWindow = options.criticalBadgeWindow;
@@ -258,27 +261,51 @@
     });
   }
 
+  function sprintScaleLabel(preview) {
+    return Number.isInteger(preview.ratio)
+      ? String(preview.ratio)
+      : preview.value;
+  }
+
+  function sprintScaleButton(preview, sprintStateKey) {
+    const active = currentSprintIntensityPreview === preview.value;
+    const button = document.createElement("button");
+    button.className = "sprint-scale-option";
+    button.classList.toggle("is-active", active);
+    button.type = "button";
+    button.textContent = sprintScaleLabel(preview);
+    button.setAttribute("aria-label", preview.label);
+    button.setAttribute("aria-pressed", String(active));
+    button.addEventListener("click", () => {
+      if (active) {
+        return;
+      }
+
+      persistDeveloperOptions({
+        forcedPaceStateKey: sprintStateKey,
+        splatTimeRemainingPreview: null,
+        sprintIntensityPreview: preview.value,
+      })
+        .then(() => {
+          setStatus(preview.status);
+        })
+        .catch((error) => {
+          setStatus(error.message || "Could not update.");
+          render();
+        });
+    });
+    return button;
+  }
+
   function renderSprintIntensityPreviews() {
     const sprintStateKey = PACE_STATE_DATA.PACE_STATES.wellAhead.key;
+    const caption = document.createElement("span");
+    caption.className = "sprint-scale-caption";
+    caption.textContent = "Pace";
     elements.sprintIntensityPreviewList.replaceChildren(
+      caption,
       ...DEVELOPER_OPTIONS.SPRINT_INTENSITY_PREVIEW_OPTIONS.map((preview) =>
-        optionRow({
-          indicator: false,
-          labelText: preview.label,
-          pressed: currentSprintIntensityPreview === preview.value,
-          onClick: async ({ pressed }) => {
-            if (pressed) {
-              return;
-            }
-
-            await persistDeveloperOptions({
-              forcedPaceStateKey: sprintStateKey,
-              splatTimeRemainingPreview: null,
-              sprintIntensityPreview: preview.value,
-            });
-            setStatus(preview.status);
-          },
-        }),
+        sprintScaleButton(preview, sprintStateKey),
       ),
     );
   }
@@ -289,6 +316,7 @@
       currentOptions: currentDeveloperOptions(),
       optionRow,
       persistDeveloperOptions,
+      scenarioContainer: elements.scenarioPreviewList,
       setStatus,
     });
   }

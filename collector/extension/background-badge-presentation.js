@@ -25,7 +25,7 @@
   const BADGE_WINDOW_STORAGE_KEY = USAGE_WINDOWS.BADGE_WINDOW_STORAGE_KEY;
   const DEVELOPER_OPTIONS_STORAGE_KEY = DEVELOPER_OPTIONS.STORAGE_KEY;
 
-  async function setBadge(
+  async function presentBadge(
     text,
     color,
     title = PRODUCT_METADATA.ACTION_DEFAULT_TITLE,
@@ -33,6 +33,29 @@
     await chrome.action.setBadgeText({ text });
     await chrome.action.setBadgeBackgroundColor({ color });
     await chrome.action.setTitle({ title });
+  }
+
+  async function clearBadge() {
+    await presentBadge(
+      "",
+      PACE_LOGIC.DEFAULT_BADGE_COLORS.muted,
+      PRODUCT_METADATA.ACTION_DEFAULT_TITLE,
+    );
+  }
+
+  async function setBadge(
+    text,
+    color,
+    title = PRODUCT_METADATA.ACTION_DEFAULT_TITLE,
+    { developerOptions = null } = {},
+  ) {
+    const options = developerOptions || (await readDeveloperOptions());
+    if (options.badgeHidden) {
+      await clearBadge();
+      return;
+    }
+
+    await presentBadge(text, color, title);
   }
 
   async function selectedBadgeWindowKey() {
@@ -85,6 +108,7 @@
       badgeDisplay.badgeText,
       badgeDisplay.badgeColor,
       badgeDisplay.title,
+      { developerOptions },
     );
     return {
       badgePaceRatio: badgeDisplay.badgePaceRatio,
@@ -110,16 +134,13 @@
           badgeText: forcedState.badgeText,
           title: forcedState.state.title,
         }),
+        { developerOptions },
       );
       return;
     }
 
-    if (clearWhenEmpty) {
-      await setBadge(
-        "",
-        PACE_LOGIC.DEFAULT_BADGE_COLORS.muted,
-        PRODUCT_METADATA.ACTION_DEFAULT_TITLE,
-      );
+    if (developerOptions.badgeHidden || clearWhenEmpty) {
+      await clearBadge();
     }
   }
 

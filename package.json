@@ -20,6 +20,7 @@
     "docs:storage": "node scripts/storage-schema-doc.mjs --write",
     "docs:storage:check": "node scripts/storage-schema-doc.mjs --check",
     "package:extension": "node scripts/package-extension.mjs",
+    "icons:app": "node scripts/render-app-icons.mjs",
     "icons:optimize": "node scripts/optimize-pace-icons.mjs",
     "icons:transparent": "node scripts/transparent-pace-icons.mjs",
     "vendor:chart": "node scripts/vendor-chart.mjs",

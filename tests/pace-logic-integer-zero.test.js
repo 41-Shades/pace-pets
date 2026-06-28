@@ -52,12 +52,23 @@ describe("PacePetsLogic integer-provider zero history", () => {
         earlyWindow,
       ),
     ).toBe(false);
-    expect(
+    const blockedFinalPresentation =
       globalThis.PacePetsLogic.controlledPacePresentationForWindow(
         earlyWindow,
         {
           allowPerfectZero: false,
           atMs: finalAtMs,
+        },
+      );
+    expect(blockedFinalPresentation.state.key).toBe("splat");
+    expect(blockedFinalPresentation.displayRatio).toBe(0);
+
+    expect(
+      globalThis.PacePetsLogic.controlledPacePresentationForWindow(
+        earlyWindow,
+        {
+          allowPerfectZero: false,
+          atMs: Date.parse("2026-05-25T12:02:00.000Z"),
         },
       ),
     ).toBeNull();

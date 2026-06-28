@@ -139,6 +139,7 @@ function refreshStatusExample({ historyStore, usageSample }) {
 
 function developerOptionsExample({ developerOptions }) {
   return developerOptions.storedDeveloperOptionsValue({
+    badgeHidden: true,
     checkerboardRevealWhiteTransparent: true,
     criticalBadgeWindow: true,
     forcedPaceStateKey: "wellAhead",

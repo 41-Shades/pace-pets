@@ -40,6 +40,16 @@
     );
   }
 
+  const ZERO_STATE_KEYS = Object.freeze([
+    DATA.PACE_STATES.perfectZero.key,
+    DATA.PACE_STATES.singularity.key,
+    DATA.PACE_STATES.splat.key,
+  ]);
+
+  function isZeroStatePresentation(controlledPresentation) {
+    return ZERO_STATE_KEYS.includes(controlledPresentation?.state.key);
+  }
+
   Object.assign(Controller.prototype, {
     updateTabTitle(title, paceRatio) {
       const selectedWindowKey = this.getSelectedWindowKey();
@@ -211,6 +221,24 @@
       };
     },
 
+    heldZeroPaceSummary(
+      context,
+      controlledPresentation,
+      resetCountdownDisplaysZero,
+    ) {
+      if (!isZeroStatePresentation(controlledPresentation)) {
+        return null;
+      }
+
+      const summary = shouldShowSingularity(
+        controlledPresentation,
+        resetCountdownDisplaysZero,
+      )
+        ? this.singularityPaceSummary(context)
+        : this.controlledPaceSummary(context, controlledPresentation);
+      return { ...summary, heldZeroState: true };
+    },
+
     resetTimeMissingSummary(context) {
       return {
         ...context,
@@ -255,9 +283,16 @@
           { allowPerfectZero },
         );
       if (staleWindow) {
-        return this.stalePaceSummary({ ...context, waitingForReadingText });
+        return (
+          this.heldZeroPaceSummary(
+            context,
+            controlledPresentation,
+            resetCountdownDisplaysZero,
+          ) || this.stalePaceSummary({ ...context, waitingForReadingText })
+        );
       }
       if (
+        !controlledPresentation &&
         shouldBlockPerfectZero({
           allowPerfectZero,
           remainingPercent,

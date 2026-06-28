@@ -102,3 +102,67 @@ describe("PacePetsDashboardApp history presentation time", () => {
     expect(renderPaceSummary.mock.calls[0][1]).toBe(40);
   });
 });
+
+describe("PacePetsDashboardApp stale zero history status", () => {
+  it("does not project held zero summaries as stale waiting status", () => {
+    const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
+    const history = {
+      samples: [
+        {
+          id: "sample-1",
+          collectedAt: "2026-05-25T12:00:00.000Z",
+          windows: {
+            weekly: {
+              remainingPercent: 0,
+              resetsAt: "2026-05-25T12:01:00.000Z",
+              windowMinutes: 10080,
+            },
+          },
+        },
+      ],
+    };
+    const statusState = { detail: "", manualRefresh: false, mode: "live" };
+    const historyCollectionStatusState = vi.fn(() => statusState);
+
+    app.DASHBOARD_TIME = {
+      formatClockTime: vi.fn(),
+    };
+    app.DASHBOARD_STATUS = {
+      historyCollectionStatusState,
+    };
+    app.USAGE_WINDOWS = {
+      WINDOW_KEYS: ["weekly"],
+    };
+    app.selectedSupportedWindowKey = () => "weekly";
+    app.pacePresentationTimeMsForSample = vi.fn(() =>
+      Date.parse("2026-05-25T12:00:30.000Z"),
+    );
+    app.renderWindowControls = vi.fn();
+    app.paceView = {
+      hasForcedPaceStateOverride: vi.fn(() => false),
+      refreshForcedPaceStateOverride: vi.fn(),
+    };
+    app.renderSummaryWindow = vi.fn(() => ({
+      hasResetTiming: true,
+      heldZeroState: true,
+      staleWindow: true,
+    }));
+    app.isManualRefreshLeadWindow = vi.fn(() => false);
+    app.applyHistoryStatus = vi.fn();
+    app.usageChartView = {
+      renderHistory: vi.fn(),
+    };
+    app.setLatestMetadata = vi.fn();
+
+    app.renderHistory(history, {
+      ok: true,
+      refreshedAt: history.samples[0].collectedAt,
+    });
+
+    expect(historyCollectionStatusState.mock.calls[0][0]).toMatchObject({
+      hasResetTiming: true,
+      staleWindow: false,
+    });
+    expect(app.applyHistoryStatus).toHaveBeenCalledWith(statusState);
+  });
+});

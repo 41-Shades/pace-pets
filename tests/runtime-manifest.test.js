@@ -91,6 +91,14 @@ function expectBackgroundRuntimeDependencyEdges(runtime) {
     "usage-providers.js",
     "background-usage-source.js",
   ]);
+  expect(runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "refresh-schedule.js",
+    "background-transition-refresh.js",
+  ]);
+  expect(runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "pace-logic.js",
+    "background-transition-refresh.js",
+  ]);
 }
 
 function expectDashboardRuntimeDependencyEdges(runtime) {
@@ -336,6 +344,7 @@ describe("CodexExtensionRuntime target-only script sources", () => {
 
     expect(runtime.BACKGROUND_ONLY_SCRIPT_SOURCES).toEqual([
       "background-logic.js",
+      "background-transition-refresh.js",
       "background-badge-presentation.js",
       "background-usage-source.js",
       "background-context-menu.js",

@@ -22,7 +22,13 @@ describe("PacePetsRefreshSchedule", () => {
       delayInMinutes: 1,
       periodInMinutes: 5,
     });
-    expect(schedule.AUTO_CHECKS_STATUS_TOOLTIP).toBe("Auto-checks every 5m");
-    expect(schedule.CHECKS_EVERY_ARIA).toBe("Checks every 5 minutes.");
+    expect(schedule.TRANSITION_USAGE_REFRESH_PERIOD_MINUTES).toBe(1);
+    expect(schedule.TRANSITION_USAGE_REMAINING_PERCENT).toBe(2);
+    expect(schedule.AUTO_CHECKS_STATUS_TOOLTIP).toBe(
+      "Auto-checks every 5m; 1m near transitions",
+    );
+    expect(schedule.CHECKS_EVERY_ARIA).toBe(
+      "Checks every 5 minutes, or every 1 minute near usage transitions.",
+    );
   });
 });

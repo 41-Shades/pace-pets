@@ -45,6 +45,7 @@
       listElement.replaceChildren(
         ...THEME_OPTIONS.map((theme) =>
           optionRow({
+            indicator: false,
             labelText: theme.label,
             pressed: currentThemeMode() === theme.value,
             onClick: async ({ pressed }) => {

@@ -6,6 +6,7 @@
     currentModeSummary: "#current-mode-summary",
     featurePreviewList: "#feature-preview-list",
     resetAll: "#reset-all",
+    scenarioPreviewList: "#scenario-preview-list",
     sprintIntensityPreviewList: "#sprint-intensity-preview-list",
     statusMessage: "#status-message",
     themeModeList: "#theme-mode-list",

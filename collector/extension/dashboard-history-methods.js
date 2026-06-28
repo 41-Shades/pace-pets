@@ -85,6 +85,48 @@
       this.elements.resetBudgetRate.hidden = true;
     },
 
+    summaryWindowHasResetTiming(windowData, resetMs) {
+      return (
+        resetMs !== null &&
+        this.DASHBOARD_TIME.windowStartMs(windowData) !== null
+      );
+    },
+
+    summaryWindowResetCountdownDisplaysZero(windowData, atMs, paceAtMs) {
+      const liveResetCountdownDisplaysZero =
+        this.DASHBOARD_TIME.resetCountdownDisplaysZero(
+          windowData?.resetsAt,
+          atMs,
+        );
+      if (!this.DASHBOARD_TIME.isResetWindowStale(windowData, atMs)) {
+        return liveResetCountdownDisplaysZero;
+      }
+
+      return this.DASHBOARD_TIME.resetCountdownDisplaysZero(
+        windowData?.resetsAt,
+        paceAtMs,
+      );
+    },
+
+    summaryWindowTiming(windowData, atMs, paceAtMs) {
+      const resetMs = this.DASHBOARD_TIME.dateMs(windowData?.resetsAt);
+      return {
+        hasResetTiming: this.summaryWindowHasResetTiming(windowData, resetMs),
+        paceTimePercent: this.DASHBOARD_TIME.timeRemainingPercent(
+          windowData,
+          paceAtMs,
+        ),
+        resetCountdownDisplaysZero:
+          this.summaryWindowResetCountdownDisplaysZero(
+            windowData,
+            atMs,
+            paceAtMs,
+          ),
+        staleWindow: this.DASHBOARD_TIME.isResetWindowStale(windowData, atMs),
+        timePercent: this.DASHBOARD_TIME.timeRemainingPercent(windowData, atMs),
+      };
+    },
+
     applyPaceSummaryResetCountdown(paceSummary, applyPaceSummary) {
       if (!applyPaceSummary || !paceSummary?.resetCountdownOverride) {
         return;
@@ -124,6 +166,7 @@
         },
       );
       this.applyPaceSummaryResetCountdown(paceSummary, applyPaceSummary);
+      return paceSummary;
     },
 
     renderSummaryWindow(
@@ -135,27 +178,7 @@
     ) {
       const spec = this.WINDOW_SPECS[windowKey];
       const atMs = Date.now();
-      const resetMs = this.DASHBOARD_TIME.dateMs(windowData?.resetsAt);
-      const timePercent = this.DASHBOARD_TIME.timeRemainingPercent(
-        windowData,
-        atMs,
-      );
-      const paceTimePercent = this.DASHBOARD_TIME.timeRemainingPercent(
-        windowData,
-        paceAtMs,
-      );
-      const hasResetTiming =
-        resetMs !== null &&
-        this.DASHBOARD_TIME.windowStartMs(windowData) !== null;
-      const staleWindow = this.DASHBOARD_TIME.isResetWindowStale(
-        windowData,
-        atMs,
-      );
-      const resetCountdownDisplaysZero =
-        this.DASHBOARD_TIME.resetCountdownDisplaysZero(
-          windowData?.resetsAt,
-          atMs,
-        );
+      const timing = this.summaryWindowTiming(windowData, atMs, paceAtMs);
 
       this.elements.priorResetLabel.textContent = spec.priorResetLabel;
       this.elements.scheduledResetLabel.textContent = spec.scheduledResetLabel;
@@ -168,7 +191,7 @@
       this.paceView.setPercent(
         this.elements.timePercent,
         this.elements.timeBar,
-        timePercent,
+        timing.timePercent,
       );
       this.DASHBOARD_TIME.setResetParts(this.elements, windowData, spec, atMs);
       this.elements.resetsIn.textContent = this.DASHBOARD_TIME.resetCountdown(
@@ -177,19 +200,23 @@
       );
       this.setResetBudgetRate(windowData, atMs);
       this.setPaceBurnoutMetrics(windowData, atMs);
-      this.renderSummaryWindowPace({
+      const paceSummary = this.renderSummaryWindowPace({
         applyPaceSummary,
         history,
-        resetCountdownDisplaysZero,
-        staleWindow,
-        timePercent: paceTimePercent,
+        resetCountdownDisplaysZero: timing.resetCountdownDisplaysZero,
+        staleWindow: timing.staleWindow,
+        timePercent: timing.paceTimePercent,
         paceAtMs,
         windowData,
         windowKey,
         windows,
       });
 
-      return { hasResetTiming, staleWindow };
+      return {
+        hasResetTiming: timing.hasResetTiming,
+        heldZeroState: paceSummary?.heldZeroState === true,
+        staleWindow: timing.staleWindow,
+      };
     },
 
     renderEmptyHistory(refreshStatus = null) {
@@ -330,7 +357,8 @@
             summaryWindow,
           ),
           summaryWindow,
-          staleWindow: summaryState.staleWindow,
+          staleWindow:
+            summaryState.staleWindow && summaryState.heldZeroState !== true,
         }),
       );
       if (refreshChart) {
