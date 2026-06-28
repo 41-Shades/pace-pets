@@ -81,20 +81,36 @@
     );
   }
 
-  function isUsageAbsoluteZeroBeforeFinalTimeBand(
-    remainingPercent,
-    timePercent,
-  ) {
+  function isUsageAbsoluteZero(remainingPercent) {
     const numericRemainingPercent =
       remainingPercent === null ||
       remainingPercent === undefined ||
       remainingPercent === ""
         ? null
         : Number(remainingPercent);
+    return numericRemainingPercent === 0;
+  }
+
+  function isUsageAbsoluteZeroBeforeFinalTimeBand(
+    remainingPercent,
+    timePercent,
+  ) {
     const displayTimePercent = roundedDisplayPercent(timePercent);
-    return numericRemainingPercent === 0 && displayTimePercent !== null
+    return isUsageAbsoluteZero(remainingPercent) && displayTimePercent !== null
       ? displayTimePercent > 0
       : false;
+  }
+
+  function preservesSplatForBlockedPerfectZero(
+    remainingPercent,
+    timePercent,
+    allowPerfectZero,
+  ) {
+    return (
+      !allowPerfectZero &&
+      isUsageAbsoluteZero(remainingPercent) &&
+      isPerfectZeroPercentPair(remainingPercent, timePercent)
+    );
   }
 
   function controlledPaceDisplayRatio(state) {
@@ -105,36 +121,67 @@
       : PERFECT_PACE_RATIO;
   }
 
+  function splatPacePresentationForValues(
+    remainingPercent,
+    timePercent,
+    allowPerfectZero,
+  ) {
+    const shouldShowSplat =
+      isUsageAbsoluteZeroBeforeFinalTimeBand(remainingPercent, timePercent) ||
+      preservesSplatForBlockedPerfectZero(
+        remainingPercent,
+        timePercent,
+        allowPerfectZero,
+      );
+    return shouldShowSplat
+      ? {
+          displayRatio: controlledPaceDisplayRatio(PACE_STATES.splat),
+          paceRatio: paceRatioForValues(remainingPercent, timePercent),
+          state: PACE_STATES.splat,
+        }
+      : null;
+  }
+
+  function perfectSyncStateForValues(
+    remainingPercent,
+    timePercent,
+    allowPerfectZero,
+  ) {
+    const perfectZero = isPerfectZeroPercentPair(remainingPercent, timePercent);
+    if (perfectZero) {
+      return allowPerfectZero ? PACE_STATES.perfectZero : null;
+    }
+    if (!isPerfectSyncPercentPair(remainingPercent, timePercent)) {
+      return null;
+    }
+    return isPerfectHundredPercentPair(remainingPercent, timePercent)
+      ? PACE_STATES.bigBang
+      : PACE_STATES.sync;
+  }
+
   function controlledPacePresentationForValues(
     remainingPercent,
     timePercent,
     { allowPerfectZero = true } = {},
   ) {
-    if (isUsageAbsoluteZeroBeforeFinalTimeBand(remainingPercent, timePercent)) {
-      return {
-        displayRatio: controlledPaceDisplayRatio(PACE_STATES.splat),
-        paceRatio: paceRatioForValues(remainingPercent, timePercent),
-        state: PACE_STATES.splat,
-      };
+    const splatPresentation = splatPacePresentationForValues(
+      remainingPercent,
+      timePercent,
+      allowPerfectZero,
+    );
+    if (splatPresentation) {
+      return splatPresentation;
     }
 
-    const perfectZero = isPerfectZeroPercentPair(remainingPercent, timePercent);
-    if (perfectZero && !allowPerfectZero) {
-      return null;
-    }
-    if (
-      !perfectZero &&
-      !isPerfectSyncPercentPair(remainingPercent, timePercent)
-    ) {
+    const state = perfectSyncStateForValues(
+      remainingPercent,
+      timePercent,
+      allowPerfectZero,
+    );
+    if (!state) {
       return null;
     }
 
-    let state = PACE_STATES.sync;
-    if (perfectZero) {
-      state = PACE_STATES.perfectZero;
-    } else if (isPerfectHundredPercentPair(remainingPercent, timePercent)) {
-      state = PACE_STATES.bigBang;
-    }
     return {
       displayRatio: controlledPaceDisplayRatio(state),
       paceRatio: paceRatioForValues(remainingPercent, timePercent),
@@ -196,60 +243,6 @@
   function isResetWindowStale(windowData, atMs = Date.now()) {
     const resetMs = dateMs(windowData?.resetsAt);
     return resetMs !== null && resetMs <= atMs;
-  }
-
-  function usageZeroedBeforeFinalTimeBand(windowData, atMs) {
-    const remainingDisplayPercent = roundedDisplayPercent(
-      windowData?.remainingPercent,
-    );
-    const timeDisplayPercent = roundedDisplayPercent(
-      timeRemainingPercentAt(windowData, atMs),
-    );
-    return (
-      remainingDisplayPercent === 0 &&
-      timeDisplayPercent !== null &&
-      timeDisplayPercent > 0
-    );
-  }
-
-  function resetWindowBounds(windowData) {
-    const min = windowStartMs(windowData);
-    const max = dateMs(windowData?.resetsAt);
-    if (min === null || max === null || min >= max) {
-      return null;
-    }
-    return { min, max };
-  }
-
-  function resetWindowSamples(history, windowKey, windowData) {
-    const bounds = resetWindowBounds(windowData);
-    if (!bounds || !Array.isArray(history?.samples)) {
-      return [];
-    }
-
-    return history.samples
-      .filter((sample) => {
-        const collectedMs = dateMs(sample?.collectedAt);
-        return (
-          sample?.windows?.[windowKey] &&
-          collectedMs !== null &&
-          collectedMs >= bounds.min &&
-          collectedMs <= bounds.max
-        );
-      })
-      .sort((a, b) => dateMs(a.collectedAt) - dateMs(b.collectedAt));
-  }
-
-  function allowsPerfectZeroForWindow(history, windowKey, windowData) {
-    return !resetWindowSamples(history, windowKey, windowData).some(
-      (sample) => {
-        const collectedMs = dateMs(sample.collectedAt);
-        return (
-          collectedMs !== null &&
-          usageZeroedBeforeFinalTimeBand(sample.windows[windowKey], collectedMs)
-        );
-      },
-    );
   }
 
   function paceRatioForWindow(windowData, atMs = Date.now()) {
@@ -354,7 +347,6 @@
     PACE_RATIO_DISPLAY_MAX,
     PACE_STATES,
     PERFECT_PACE_RATIO,
-    allowsPerfectZeroForWindow,
     badgeColorForPaceRatio,
     badgeTextForPaceRatio,
     boundedPercent,
@@ -375,13 +367,10 @@
     paceStateForRatio,
     paceRatioForValues,
     paceRatioForWindow,
-    resetWindowBounds,
-    resetWindowSamples,
     resetCountdownDisplaysZero,
     roundedDisplayPercent,
     timeRemainingPercent,
     timeRemainingPercentAt,
-    usageZeroedBeforeFinalTimeBand,
     windowStartMs,
   };
 })(globalThis);

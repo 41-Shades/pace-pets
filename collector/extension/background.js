@@ -156,22 +156,15 @@ function runScheduledRefresh() {
   return scheduledRefreshPromise;
 }
 
-function shouldSkipBadgePresentationRefresh(refreshStatus = lastRefreshState) {
-  return (
-    scheduledRefreshPromise !== null ||
-    (refreshStatus?.refreshedAt && refreshStatus.ok === false)
-  );
-}
-
 async function runBadgePresentationRefresh() {
-  const refreshStatus = await CodexUsageHistory.readRefreshStatus().catch(
-    () => null,
-  );
-  if (shouldSkipBadgePresentationRefresh(refreshStatus || lastRefreshState)) {
-    return Promise.resolve();
-  }
-
-  return updatePaceBadgeFromHistory({ refreshStatus });
+  return PacePetsBackgroundTransitionRefresh.run({
+    lastRefreshState,
+    readHistory: CodexUsageHistory.readHistory,
+    readRefreshStatus: CodexUsageHistory.readRefreshStatus,
+    runScheduledRefresh,
+    scheduledRefreshActive: () => scheduledRefreshPromise !== null,
+    updatePaceBadgeFromHistory,
+  });
 }
 
 async function readManualRefreshCooldownUntilMs() {

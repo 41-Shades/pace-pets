@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = "pacePetsDeveloperOptions";
   const FORCED_PACE_STATE_KEY = "forcedPaceState";
+  const BADGE_HIDDEN_KEY = "badgeHidden";
   const CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY =
     "checkerboardRevealWhiteTransparent";
   const CRITICAL_BADGE_WINDOW_KEY = "criticalBadgeWindow";
@@ -85,6 +86,14 @@
   );
   const FEATURE_PREVIEW_OPTIONS = Object.freeze([
     featurePreviewOption({
+      activeLabel: "Show badge",
+      disableStatus: "Extension badge shown.",
+      enableStatus: "Extension badge hidden.",
+      key: BADGE_HIDDEN_KEY,
+      label: "Hide badge",
+      value: "badge-hidden",
+    }),
+    featurePreviewOption({
       activeLabel: "Black squares transparent",
       disableStatus:
         "Checkerboard reveal returned to transparent black squares.",
@@ -135,6 +144,7 @@
     under50: "under50",
   });
   const BOOLEAN_STORAGE_KEYS = Object.freeze([
+    BADGE_HIDDEN_KEY,
     CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY,
     CRITICAL_BADGE_WINDOW_KEY,
     MANUAL_REFRESH_LEAD_WINDOW_KEY,
@@ -160,6 +170,10 @@
 
   function normalizeForcedPaceStateKey(value) {
     return FORCEABLE_PACE_STATE_KEYS.includes(value) ? value : null;
+  }
+
+  function normalizeBadgeHidden(value) {
+    return value === true;
   }
 
   function normalizeManualRefreshLeadWindow(value) {
@@ -208,6 +222,7 @@
       source[SPLAT_TIME_REMAINING_PREVIEW_KEY],
     );
     return Object.freeze({
+      badgeHidden: normalizeBadgeHidden(source[BADGE_HIDDEN_KEY]),
       checkerboardRevealWhiteTransparent:
         normalizeCheckerboardRevealWhiteTransparent(
           source[CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY],
@@ -241,6 +256,7 @@
     }
 
     return {
+      [BADGE_HIDDEN_KEY]: options.badgeHidden,
       [CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY]:
         options.checkerboardRevealWhiteTransparent,
       [CRITICAL_BADGE_WINDOW_KEY]: options.criticalBadgeWindow,
@@ -300,6 +316,7 @@
   }
 
   root.PacePetsDeveloperOptions = Object.freeze({
+    BADGE_HIDDEN_KEY,
     CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY,
     CRITICAL_BADGE_WINDOW_KEY,
     FEATURE_PREVIEW_OPTIONS,
@@ -322,6 +339,7 @@
     developerOptionsStorageItems,
     hasDeveloperOptionsChange,
     hasStoredDeveloperOptionsValue,
+    normalizeBadgeHidden,
     normalizeCriticalBadgeWindow,
     normalizeCheckerboardRevealWhiteTransparent,
     normalizeDeveloperOptions,

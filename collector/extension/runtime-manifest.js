@@ -27,10 +27,12 @@
     "sprint-intensity.js",
     "developer-options.js",
     "pace-logic.js",
+    "pace-window-history.js",
     "preview-control.js",
   ]);
   const BACKGROUND_ONLY_SCRIPT_SOURCES = Object.freeze([
     "background-logic.js",
+    "background-transition-refresh.js",
     "background-badge-presentation.js",
     "background-usage-source.js",
     "background-context-menu.js",
@@ -150,10 +152,11 @@
     ...COMMON_SCRIPT_SOURCES.map(extensionPageSource),
     ...DEV_FLAGS_ONLY_SCRIPT_SOURCES,
   ]);
-
   const dependencyEdge = (before, after) => Object.freeze([before, after]);
-  const extensionPageDependencyEdge = ([before, after]) =>
+  const pageEdge = (before, after) =>
     dependencyEdge(extensionPageSource(before), extensionPageSource(after));
+  const extensionPageDependencyEdge = ([before, after]) =>
+    pageEdge(before, after);
   const dashboardFile = (name) =>
     name ? `./dashboard-${name}.js` : "./dashboard.js";
   const dashboardFileEdge = (before, after) =>
@@ -207,12 +210,16 @@
     dependencyEdge("sprint-intensity.js", "preview-control.js"),
     dependencyEdge("pace-state-data.js", "developer-options.js"),
     dependencyEdge("pace-state-data.js", "pace-logic.js"),
+    dependencyEdge("pace-logic.js", "pace-window-history.js"),
     dependencyEdge("pace-logic.js", "preview-control.js"),
     dependencyEdge("usage-values.js", "preview-control.js"),
   ]);
   const BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("product-metadata.js", "background-logic.js"),
     dependencyEdge("developer-options.js", "background-logic.js"),
+    dependencyEdge("pace-window-history.js", "background-logic.js"),
+    dependencyEdge("refresh-schedule.js", "background-transition-refresh.js"),
+    dependencyEdge("pace-logic.js", "background-transition-refresh.js"),
     dependencyEdge("background-logic.js", "background-badge-presentation.js"),
     dependencyEdge("usage-providers.js", "background-usage-source.js"),
   ]);
@@ -221,6 +228,7 @@
     dependencyEdge("./developer-options.js", "./dashboard.js"),
     dependencyEdge("./integration-config.js", "./dashboard-chart-data.js"),
     dependencyEdge("./pace-logic.js", "./dashboard-chart-data.js"),
+    dependencyEdge("./pace-window-history.js", "./dashboard-chart-data.js"),
     dashboardFileEdge("chart-data", "chart"),
     dependencyEdge("./pace-logic.js", "./dashboard-chart.js"),
     ...DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS.map(
@@ -329,6 +337,7 @@
     dashboardFileEdge("reset-exhausted-methods", ""),
     dashboardFileEdge("app-core", ""),
     dependencyEdge("./dashboard-info-template.js", "./dashboard.js"),
+    pageEdge("pace-window-history.js", "dashboard-history-methods.js"),
     dashboardFileEdge("history-methods", ""),
     dashboardFileEdge("event-methods", ""),
     dashboardFileEdge("dom-contract", ""),

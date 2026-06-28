@@ -2,9 +2,11 @@
 
 Status: reference.
 
-Pace presentation is owned by `collector/extension/pace-logic.js`. The
-dashboard, toolbar badge, chart, favicon, and developer override controls reuse
-that shared state model instead of each surface defining its own thresholds.
+Pace presentation is owned by `collector/extension/pace-logic.js`, with
+reset-window history helpers in `collector/extension/pace-window-history.js`.
+The dashboard, toolbar badge, chart, favicon, and developer override controls
+reuse that shared state model instead of each surface defining its own
+thresholds.
 
 When running the unpacked extension, local developer settings can force one pace
 state for the dashboard card and toolbar badge. That display override is owned by
@@ -73,12 +75,15 @@ Perfect Zero on live presentation surfaces when its reset-countdown rule is also
 true. Perfect Zero wins over Perfect Sync when the matching rounded percent is
 zero.
 
-Perfect presentation is suppressed when the reset window is stale, meaning
-`resetsAt` is at or before the current time. Perfect Zero can also be disallowed
-for a current reset window when history shows usage already reached displayed
-zero while rounded time still displayed above zero in that same window.
-Singularity inherits that Perfect Zero guard and also requires the countdown
-display-zero band, not an ended window.
+Perfect presentation is normally suppressed when the reset window is stale,
+meaning `resetsAt` is at or before the current time. The exception is held
+zero-state presentation: when the latest known reading is already a zero-state,
+the dashboard keeps that zero state instead of showing a new-window waiting
+state until a new usage reading arrives. Perfect Zero can also be disallowed for
+a current reset window when history shows usage already reached displayed zero
+while rounded time still displayed above zero in that same window. Singularity
+inherits that Perfect Zero guard and also requires the countdown display-zero
+band, not an ended window.
 
 ## Display-Zero Timing Bands
 
@@ -106,8 +111,11 @@ Product implications:
 - Splat wins when usage is reported as `0%` remaining while time percent still
   displays above zero: `>= 90s` remaining for 5h, `>= 50m 24s` remaining for 7d.
 - If history already shows usage reached display zero earlier in the same reset
-  window, the current guard disallows later Perfect Zero and therefore also
-  disallows Singularity for that window.
+  window, the current guard keeps exact exhausted usage in Splat through the
+  final zero-time band instead of promoting it to Perfect Zero or Singularity.
+- After `resetsAt` passes, the dashboard holds the latest zero-state
+  presentation instead of showing `Waiting for reading`. The next successful
+  reset reading moves the display to Big Bang.
 
 ## Display-Hundred Timing Bands
 
@@ -123,38 +131,47 @@ a 7d window.
 
 These rough countdown bands assume current WHAM integer usage precision. `R` is
 the reported remaining usage percent after normalization, where `R = 100 -
-used_percent`. The rows below assume `R = 0`; Perfect Zero and Singularity also
-require no earlier reported-zero history block in the same reset window.
+used_percent`. The rows below assume `R = 0`; Perfect Zero and Singularity only
+apply when no earlier reported-zero history blocks perfect presentation in the
+same reset window. When that block exists, exact zero usage remains Splat. After
+the window ends, the dashboard holds whichever zero-state presentation was
+derived from the latest exhausted reading until a new usage reading arrives.
 
 ### 5h Window
 
-| Usage remaining | Time remaining          | `Resets In` display | Duration              | State                        |
-| --------------- | ----------------------- | ------------------- | --------------------- | ---------------------------- |
-| 0%              | 90 seconds or more      | 1 minute or more    | Until 90 seconds left | Splat (`splat`)              |
-| 0%              | 60 to 89 seconds        | 1 minute            | About 30 seconds      | Perfect zero (`perfectZero`) |
-| 0%              | 1 to 59 seconds         | 0 minutes           | About 59 seconds      | Singularity (`singularity`)  |
-| Any             | 0 seconds or past reset | Window ended        | Ended                 | Ended or stale window        |
+| Usage remaining  | Time remaining          | `Resets In` display | Duration              | State                        |
+| ---------------- | ----------------------- | ------------------- | --------------------- | ---------------------------- |
+| 0%               | 90 seconds or more      | 1 minute or more    | Until 90 seconds left | Splat (`splat`)              |
+| 0%               | 60 to 89 seconds        | 1 minute            | About 30 seconds      | Perfect zero (`perfectZero`) |
+| 0%               | 1 to 59 seconds         | 0 minutes           | About 59 seconds      | Singularity (`singularity`)  |
+| 0%               | 0 seconds or past reset | Window ended        | Until next reading    | Held zero state              |
+| Non-zero/unknown | 0 seconds or past reset | Window ended        | Ended                 | Ended or stale window        |
 
 ### 7d Window
 
-| Usage remaining | Time remaining                      | `Resets In` display | Duration           | State                        |
-| --------------- | ----------------------------------- | ------------------- | ------------------ | ---------------------------- |
-| 0%              | 50 minutes 24 seconds or more       | 50 minutes or more  | Until 50m 24s left | Splat (`splat`)              |
-| 0%              | 60 seconds to 50 minutes 23 seconds | 1 to 50 minutes     | About 49m 24s      | Perfect zero (`perfectZero`) |
-| 0%              | 1 to 59 seconds                     | 0 minutes           | About 59 seconds   | Singularity (`singularity`)  |
-| Any             | 0 seconds or past reset             | Window ended        | Ended              | Ended or stale window        |
+| Usage remaining  | Time remaining                      | `Resets In` display | Duration           | State                        |
+| ---------------- | ----------------------------------- | ------------------- | ------------------ | ---------------------------- |
+| 0%               | 50 minutes 24 seconds or more       | 50 minutes or more  | Until 50m 24s left | Splat (`splat`)              |
+| 0%               | 60 seconds to 50 minutes 23 seconds | 1 to 50 minutes     | About 49m 24s      | Perfect zero (`perfectZero`) |
+| 0%               | 1 to 59 seconds                     | 0 minutes           | About 59 seconds   | Singularity (`singularity`)  |
+| 0%               | 0 seconds or past reset             | Window ended        | Until next reading | Held zero state              |
+| Non-zero/unknown | 0 seconds or past reset             | Window ended        | Ended              | Ended or stale window        |
 
 If the first observed `R = 0` sample arrives during the final countdown minute
 and no earlier reported-zero history blocks perfect presentation, the display can
 enter Singularity directly. If `R = 0` is observed earlier, the current history
-guard blocks later Perfect Zero and Singularity for that reset window.
+guard keeps later exact-zero presentation in Splat. Once the reset time passes,
+the dashboard keeps the held zero-state presentation until the next successful
+usage reading replaces it.
 
 ## Imperfect State Contract
 
 Splat is an imperfect special state. It uses normalized zero remaining usage,
 which is commonly derived from source-reported `used_percent: 100` in current
-WHAM data. It only wins before the final rounded time band because upstream
-source precision can be whole-percent at the low end.
+WHAM data. Live Splat wins before the final rounded time band because upstream
+source precision can be whole-percent at the low end. Held zero-state
+presentation can keep Splat visible after the reset boundary until a new usage
+reading arrives.
 
 | State           | Surface                     | Rule                                                                                    | Presentation                                                      |
 | --------------- | --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |

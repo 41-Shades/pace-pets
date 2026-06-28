@@ -20,10 +20,12 @@ runtime constants, supported usage windows, and forbidden data list.
 3. Click Load unpacked.
 4. Select this folder: `collector/extension`.
 
-The extension refreshes every five minutes. Click the extension toolbar icon to
-open the Pace Pets page. Right-click the toolbar icon to choose whether the
-badge normally shows the 7d or 5h view. A `Brake hard!` window temporarily takes
-over the badge with its `7d` or `5h` label until the critical pace clears.
+The extension refreshes every five minutes, and every minute while a supported
+window is at `2%` usage remaining or less so end-of-window transitions land
+promptly. Click the extension toolbar icon to open the Pace Pets page.
+Right-click the toolbar icon to choose whether the badge normally shows the 7d
+or 5h view. A `Brake hard!` window temporarily takes over the badge with its
+`7d` or `5h` label until the critical pace clears.
 
 If the toolbar badge shows `!`, confirm that Chrome is signed in to ChatGPT.
 When the dashboard shows a missing sign-in, failed check, stale check,

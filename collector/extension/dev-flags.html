@@ -5,74 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pace Pets Dev Controls</title>
     <link rel="stylesheet" href="./dev-flags.css" />
+    <link rel="stylesheet" href="./dev-flags-scenario-triggers.css" />
     <link rel="stylesheet" href="./dev-flags-current-mode.css" />
   </head>
   <body>
     <main class="dev-flags-shell">
-      <header class="dev-flags-header">
-        <p class="eyebrow">Local unpacked extension</p>
-        <h1>Pace Pets Dev Controls</h1>
-      </header>
-
       <div class="dev-controls-layout">
-        <section class="current-mode-panel" aria-live="polite">
-          <div class="current-mode-summary" id="current-mode-summary">
-            <output
-              class="current-mode-status"
-              id="status-message"
-              role="status"
-            ></output>
-          </div>
-          <button class="live-data-button" id="reset-all" type="button" hidden>
-            Return to live data
-          </button>
-        </section>
+        <div class="current-controls-row">
+          <header class="dev-flags-header">
+            <h1>Pace Pets Dev Controls</h1>
+          </header>
+          <section class="current-mode-panel" aria-live="polite">
+            <div class="current-mode-summary" id="current-mode-summary">
+              <output
+                class="current-mode-status"
+                id="status-message"
+                role="status"
+              ></output>
+            </div>
+            <button
+              class="live-data-button"
+              id="reset-all"
+              type="button"
+              hidden
+            >
+              Return to live data
+            </button>
+          </section>
+          <section
+            class="theme-mode-control"
+            aria-labelledby="theme-mode-title"
+          >
+            <h2 id="theme-mode-title">Theme</h2>
+            <div class="option-list" id="theme-mode-list"></div>
+          </section>
+        </div>
 
         <section class="state-columns" aria-label="State override">
-          <div class="state-overrides-row">
-            <section
-              class="state-column state-column-wrap-options"
-              aria-labelledby="pace-levels-title"
-            >
-              <h2 id="pace-levels-title">Pace Levels</h2>
-              <div class="option-list" id="pace-level-list"></div>
-            </section>
+          <section
+            class="state-overrides-panel"
+            aria-labelledby="state-overrides-title"
+          >
+            <h2 id="state-overrides-title">State Overrides</h2>
+            <div class="state-overrides-grid">
+              <section
+                class="state-override-group state-column-wrap-options"
+                aria-labelledby="pace-levels-title"
+              >
+                <h3 id="pace-levels-title">Pace Levels</h3>
+                <div class="option-list" id="pace-level-list"></div>
+              </section>
 
-            <section
-              class="state-column state-column-wrap-options"
-              aria-labelledby="special-states-title"
-            >
-              <h2 id="special-states-title">Special States</h2>
-              <div class="state-subsection">
-                <h3 class="state-subsection-title">Perfect</h3>
-                <div class="option-list" id="perfect-state-list"></div>
-              </div>
-              <div class="state-subsection">
-                <h3 class="state-subsection-title">Imperfect</h3>
-                <div class="option-list" id="imperfect-state-list"></div>
-              </div>
-            </section>
-          </div>
+              <section
+                class="state-override-group state-column-wrap-options"
+                aria-labelledby="special-states-title"
+              >
+                <div class="state-subsection">
+                  <h3 id="special-states-title" class="state-subsection-title">
+                    Perfect States
+                  </h3>
+                  <div class="option-list" id="perfect-state-list"></div>
+                </div>
+                <div class="state-subsection">
+                  <h3 class="state-subsection-title">Imperfect State</h3>
+                  <div class="option-list" id="imperfect-state-list"></div>
+                </div>
+              </section>
+            </div>
+          </section>
 
-          <div class="state-preview-row">
-            <section
-              class="state-column state-column-wrap-options"
-              aria-labelledby="sprint-faster-preview-title"
-            >
-              <h2 id="sprint-faster-preview-title">Sprint faster!</h2>
-              <div class="option-list" id="sprint-intensity-preview-list"></div>
-            </section>
+          <section
+            class="scenario-triggers-panel"
+            aria-labelledby="scenario-triggers-title"
+          >
+            <h2 id="scenario-triggers-title">Scenario Triggers</h2>
+            <div class="scenario-trigger-list">
+              <section
+                class="scenario-trigger-card scenario-trigger-card-sprint"
+                aria-labelledby="sprint-faster-preview-title"
+              >
+                <h3 id="sprint-faster-preview-title">Sprint faster!</h3>
+                <div
+                  class="sprint-scale-control"
+                  id="sprint-intensity-preview-list"
+                  role="group"
+                  aria-label="Sprint faster pace preview scale"
+                ></div>
+              </section>
+              <div id="scenario-preview-list"></div>
+            </div>
+          </section>
 
-            <div class="state-preview-panels" id="feature-preview-list"></div>
-
-            <section
-              class="state-column state-column-wrap-options"
-              aria-labelledby="theme-mode-title"
-            >
-              <h2 id="theme-mode-title">Theme Mode</h2>
-              <div class="option-list" id="theme-mode-list"></div>
-            </section>
-          </div>
+          <div class="state-preview-row" id="feature-preview-list"></div>
         </section>
       </div>
     </main>
