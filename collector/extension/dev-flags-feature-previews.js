@@ -69,7 +69,10 @@
       stateKey: PACE_STATES.splat.key,
     }),
     featurePreviewGroup({
-      actionKeys: [ACTION_KEYS.checkerboardReveal],
+      actionKeys: [
+        ACTION_KEYS.paceStateTransition,
+        ACTION_KEYS.checkerboardReveal,
+      ],
       key: "global-previews",
       optionKeys: [DEVELOPER_OPTIONS.CHECKERBOARD_REVEAL_WHITE_TRANSPARENT_KEY],
       title: "Global Previews",

@@ -192,6 +192,8 @@
         this.EXTENSION_STORAGE.hasAnyChange(changes, [
           CodexUsageHistory.HISTORY_STORAGE_KEY,
           CodexUsageHistory.REFRESH_STATUS_STORAGE_KEY,
+          this.BADGE_WINDOW_STORAGE_KEY,
+          this.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY,
           this.DEVELOPER_OPTIONS_STORAGE_KEY,
         ])
       );
@@ -203,6 +205,8 @@
       if (
         !refreshStatusChange ||
         changes[CodexUsageHistory.HISTORY_STORAGE_KEY] ||
+        changes[this.BADGE_WINDOW_STORAGE_KEY] ||
+        changes[this.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY] ||
         changes[this.DEVELOPER_OPTIONS_STORAGE_KEY]
       ) {
         return false;

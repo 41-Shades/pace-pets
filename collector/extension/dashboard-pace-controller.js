@@ -13,6 +13,7 @@
     const controller = new Controller(options);
     controller.bindBrakeExtremePreviewRequests?.();
     controller.bindCheckerboardRevealPreviewRequests?.();
+    controller.bindPaceStateTransitionPreviewRequests?.();
     controller.bindSyncMonkEscapePreviewRequests?.();
     return Object.freeze({
       hasForcedPaceStateOverride:

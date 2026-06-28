@@ -5,12 +5,14 @@
     brakeMaxBurst: "brakeMaxBurst",
     checkerboardReveal: "checkerboardReveal",
     monkEscape: "monkEscape",
+    paceStateTransition: "paceStateTransition",
     rareSweat: "rareSweat",
   });
   const ACTION_ORDER = Object.freeze([
     ACTION_KEYS.brakeMaxBurst,
     ACTION_KEYS.rareSweat,
     ACTION_KEYS.monkEscape,
+    ACTION_KEYS.paceStateTransition,
     ACTION_KEYS.checkerboardReveal,
   ]);
 
@@ -50,6 +52,17 @@
       messageType: "pacePets.syncMonkEscapePreview.launch",
       responseRequired: false,
       status: "Monk escape launch requested.",
+    }),
+    [ACTION_KEYS.paceStateTransition]: previewAction({
+      controlMessageName: "playMessage",
+      controlPredicateName: "isPlayMessage",
+      fallbackErrorMessage:
+        "Open the dashboard with motion on before previewing Pace transition.",
+      key: ACTION_KEYS.paceStateTransition,
+      label: "Pace transition",
+      messageType: "pacePets.paceStateTransitionPreview.play",
+      responseRequired: true,
+      status: "Pace transition preview requested.",
     }),
     [ACTION_KEYS.checkerboardReveal]: previewAction({
       controlMessageName: "playMessage",

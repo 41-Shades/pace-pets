@@ -88,6 +88,36 @@
       return PacePetsLogic.formatPaceRatioValue(paceRatio);
     },
 
+    applyPaceSummary({
+      comparisonPaceRatio,
+      copy,
+      displayState,
+      level,
+      paceRatio,
+      paceRatioForDisplay,
+      previousState,
+      timePercent,
+      title,
+    }) {
+      this.currentPaceSummaryTimePercent = timePercent;
+      this.setPaceLevel(level);
+      this.updateSprintSmokeIntensity?.(paceRatio);
+      this.elements.paceTitle.textContent = title;
+      this.elements.paceCopy.textContent = copy;
+      this.elements.paceStats.hidden = paceRatioForDisplay === null;
+      this.elements.paceRatioStat.hidden = paceRatioForDisplay === null;
+      this.elements.paceRatioValue.textContent =
+        paceRatioForDisplay === null
+          ? "--"
+          : this.formatFeaturedPaceRatioValue(
+              displayState,
+              paceRatioForDisplay,
+            );
+      this.renderPaceAltRatio(comparisonPaceRatio);
+      this.updateTabTitle(title, paceRatioForDisplay);
+      this.updateSpecialTransitionState?.(previousState, displayState);
+    },
+
     setPaceSummary({
       comparisonPaceRatio = null,
       copy,
@@ -107,24 +137,19 @@
           : paceRatioDisplayOverride;
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const displayState = this.paceStateForClassName(level);
-
-      this.currentPaceSummaryTimePercent = timePercent;
-      this.setPaceLevel(level);
-      this.updateSprintSmokeIntensity?.(paceRatio);
-      this.elements.paceTitle.textContent = title;
-      this.elements.paceCopy.textContent = copy;
-      this.elements.paceStats.hidden = paceRatioForDisplay === null;
-      this.elements.paceRatioStat.hidden = paceRatioForDisplay === null;
-      this.elements.paceRatioValue.textContent =
-        paceRatioForDisplay === null
-          ? "--"
-          : this.formatFeaturedPaceRatioValue(
-              displayState,
-              paceRatioForDisplay,
-            );
-      this.renderPaceAltRatio(comparisonPaceRatio);
-      this.updateTabTitle(title, paceRatioForDisplay);
-      this.updateSpecialTransitionState?.(previousState, displayState);
+      this.applyPaceStateChange(previousState, displayState, () => {
+        this.applyPaceSummary({
+          comparisonPaceRatio,
+          copy,
+          displayState,
+          level,
+          paceRatio,
+          paceRatioForDisplay,
+          previousState,
+          timePercent,
+          title,
+        });
+      });
     },
 
     waitingPaceSummary() {

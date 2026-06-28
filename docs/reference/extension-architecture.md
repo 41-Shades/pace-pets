@@ -24,8 +24,9 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
   auth-session probes and WHAM usage fetch for the current provider.
 - `collector/extension/background-context-menu.js` owns the toolbar action
   context-menu items for opening the dashboard, requesting a cooldown-limited
-  usage check, and selecting the stored badge usage window.
-- `collector/extension/usage-windows.js` owns supported usage-window keys, durations, labels, the badge preference storage key, and window-key helpers shared by collection, storage, badge, and dashboard code.
+  usage check, selecting the stored badge usage window, and toggling dashboard
+  and badge window sync.
+- `collector/extension/usage-windows.js` owns supported usage-window keys, durations, labels, the badge preference storage key, the dashboard/badge window sync preference key, and window-key helpers shared by collection, storage, badge, and dashboard code.
 - `collector/extension/usage-values.js` owns shared primitive usage value normalization, date parsing, reset-window time math, and stored-window normalization.
 - `collector/extension/persisted-text.js` owns safe persisted text normalization, length caps, and secret redaction shared by history and refresh-status storage boundaries.
 - `collector/extension/refresh-status.js` owns refresh-status construction, normalization, storage key, and safe observable failure messages.
@@ -98,7 +99,7 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 6. `history-store.js` appends a safe normalized sample to `chrome.storage.local`.
 7. `background.js` updates the selected toolbar badge view, applies the critical-window badge attention override when needed, and writes refresh status through `refresh-status.js`.
 8. Between usage polls, `background.js` refreshes only the toolbar badge presentation from stored history at the presentation interval defined by `refresh-schedule.js` so time-derived pace ratios stay current without calling the usage endpoint. It skips that presentation refresh while a network refresh is in flight or after a same-worker refresh failure so the failure badge remains visible.
-9. `dashboard.js` renders summaries, reset timing, and pace state from extension-local storage plus the page-local dashboard window selection, delegates chart rendering to the dashboard chart helper, then reuses cached state for minute-by-minute countdown and pace updates until storage changes or the page window selection changes.
+9. `dashboard.js` renders summaries, reset timing, and pace state from extension-local storage plus the dashboard window selection, delegates chart rendering to the dashboard chart helper, then reuses cached state for minute-by-minute countdown and pace updates until storage changes or the page window selection changes. When the dashboard/badge window sync preference is unset or enabled, dashboard window selection follows the stored badge window and dashboard window toggles update that badge preference; disabling sync keeps dashboard toggles page-local.
 
 `refresh-schedule.js` is the single owner for alarm names, initial delays,
 periods, and dashboard automatic-check copy. The dashboard can also request a
@@ -141,10 +142,10 @@ ratio string from `1.55` through `7.00`. Returning to live data removes those
 overrides. `collector/extension/dev-preview-action-registry.js` owns the
 one-shot dev action catalog, message types, button labels, requested-status
 copy, and fallback error copy for Brake hard max debris burst, Rare burst (5%),
-monk escape previews, and the shared checkerboard reveal replay. Those actions
-send runtime messages to dashboard pages and do not store developer option
-state; the individual preview control modules remain thin compatibility
-adapters around the shared registry.
+monk escape previews, Pace card transition preview, and the shared checkerboard
+reveal replay. Those actions send runtime messages to dashboard pages and do
+not store developer option state; the individual preview control modules remain
+thin compatibility adapters around the shared registry.
 
 Forced states reuse the preview-control synthetic ratios and percent pairs so
 the dashboard card, usage/time bars, tab title, and toolbar badge match

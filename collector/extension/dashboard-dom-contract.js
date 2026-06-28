@@ -26,6 +26,7 @@
     paceAltRatio: "#pace-alt-ratio",
     paceBurnoutIn: "#pace-burnout-in",
     paceCard: "#pace-card",
+    paceChangePulse: "#pace-change-pulse",
     paceCopy: "#pace-copy",
     paceIcon: "#pace-icon",
     paceRatioStat: "#pace-ratio-stat",

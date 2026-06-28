@@ -22,6 +22,11 @@
     constructor(options) {
       Object.assign(this, options);
       this.paceIconEffectCleanups = new WeakMap();
+      this.paceChangePulseTimer = null;
+      this.paceStateTransitionPreviewRequestsBound = false;
+      this.paceStateTransitionPreviewTimer = null;
+      this.paceStateFadeInTimer = null;
+      this.paceStateFadeOutTimer = null;
       this.lastForcedPaceStateKey = null;
       this.currentPaceSummaryTimePercent = null;
       this.bigBangTransitionInFlight = false;

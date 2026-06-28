@@ -1,6 +1,5 @@
 (function attachCodexExtensionRuntime(root) {
   "use strict";
-
   const COMMON_SCRIPT_SOURCES = Object.freeze([
     "product-metadata.js",
     "integration-config.js",
@@ -99,6 +98,7 @@
     "./dashboard-ease-up-methods.js",
     "./dashboard-pace-icon-render-methods.js",
     "./dashboard-pace-icon-methods.js",
+    "./dashboard-pace-transition-methods.js",
     "./dashboard-cart-spill-data.js",
     "./dashboard-cart-spill-pile-renderer.js",
     "./dashboard-cart-spill-methods.js",
@@ -150,6 +150,7 @@
     ...COMMON_SCRIPT_SOURCES.map(extensionPageSource),
     ...DEV_FLAGS_ONLY_SCRIPT_SOURCES,
   ]);
+
   const dependencyEdge = (before, after) => Object.freeze([before, after]);
   const extensionPageDependencyEdge = ([before, after]) =>
     dependencyEdge(extensionPageSource(before), extensionPageSource(after));
@@ -269,42 +270,32 @@
     dashboardFileEdge("big-bang-scene", "big-bang-transition-renderer"),
     dashboardFileEdge("checkerboard-reveal", "checkerboard-reveal-methods"),
     dashboardFileEdge("checkerboard-reveal", "singularity-transition-renderer"),
-    dashboardFileEdge(
-      "big-bang-transition-renderer",
-      "singularity-transition-methods",
-    ),
-    dashboardFileEdge(
-      "singularity-black-hole-v2-shaders",
-      "singularity-black-hole-v2-scene",
-    ),
-    dashboardFileEdge(
-      "singularity-black-hole-v2-scene",
-      "singularity-transition-renderer",
-    ),
-    dashboardFileEdge(
-      "singularity-chrome-collapse-fragments",
-      "singularity-chrome-collapse-motion",
-    ),
-    dashboardFileEdge(
-      "singularity-chrome-collapse-fragments",
-      "singularity-chrome-collapse-scene",
-    ),
-    dashboardFileEdge(
-      "singularity-chrome-collapse-motion",
-      "singularity-chrome-collapse-scene",
-    ),
-    dashboardFileEdge(
-      "singularity-chrome-collapse-scene",
-      "singularity-transition-renderer",
-    ),
-    dashboardFileEdge(
-      "singularity-transition-renderer",
-      "singularity-transition-methods",
-    ),
+    ...[
+      ["big-bang-transition-renderer", "singularity-transition-methods"],
+      ["singularity-black-hole-v2-shaders", "singularity-black-hole-v2-scene"],
+      ["singularity-black-hole-v2-scene", "singularity-transition-renderer"],
+      [
+        "singularity-chrome-collapse-fragments",
+        "singularity-chrome-collapse-motion",
+      ],
+      [
+        "singularity-chrome-collapse-fragments",
+        "singularity-chrome-collapse-scene",
+      ],
+      [
+        "singularity-chrome-collapse-motion",
+        "singularity-chrome-collapse-scene",
+      ],
+      ["singularity-chrome-collapse-scene", "singularity-transition-renderer"],
+      ["singularity-transition-renderer", "singularity-transition-methods"],
+    ].map(([before, after]) => dashboardFileEdge(before, after)),
     dashboardFileEdge("pace-core", "checkerboard-reveal-methods"),
     dashboardFileEdge("checkerboard-reveal-methods", "pace-controller"),
     dashboardFileEdge("pace-core", "pace-icon-render-methods"),
     dashboardFileEdge("pace-icon-render-methods", "pace-icon-methods"),
+    dashboardFileEdge("pace-core", "pace-transition-methods"),
+    dashboardFileEdge("pace-transition-methods", "pace-summary-methods"),
+    dashboardFileEdge("pace-transition-methods", "pace-preview-methods"),
     dashboardFileEdge("pace-icon-methods", "pace-rail-methods"),
     dashboardFileEdge("splat-fall-profile", "splat-fall-methods"),
     dashboardFileEdge("splat-fall-profile", "splat-entry-playback"),

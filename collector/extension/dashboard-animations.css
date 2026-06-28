@@ -20,6 +20,38 @@
   }
 }
 
+@keyframes pace-change-dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0
+      color-mix(in srgb, var(--pace-change-dot) 22%, transparent);
+  }
+
+  45% {
+    box-shadow: 0 0 0 4px
+      color-mix(in srgb, var(--pace-change-dot) 16%, transparent);
+  }
+
+  72% {
+    box-shadow: 0 0 0 6px
+      color-mix(in srgb, var(--pace-change-dot) 0%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0
+      color-mix(in srgb, var(--pace-change-dot) 0%, transparent);
+  }
+}
+
+@keyframes pace-card-state-fade-in {
+  0% {
+    opacity: 0.42;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
 @keyframes pace-sync-float {
   0%,
   100% {

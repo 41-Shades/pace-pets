@@ -42,7 +42,7 @@ Stored samples contain only normalized safe usage fields: collection timestamps,
 
 Pace Pets does not inject code into ChatGPT pages or read ChatGPT chats or page contents. The rare Singularity dashboard transition uses generated WebGL/canvas layers plus live dashboard DOM geometry and does not capture, store, or upload screenshots. The extension does not request browser tab or screen capture permissions.
 
-The selected usage window is also stored locally so the dashboard, toolbar badge, and badge-view menu stay in sync. Dashboard theme and motion preferences stay in extension-page `localStorage`.
+The selected badge window is stored locally, and the extension menu's `Sync dashboard and badge` setting defaults on so dashboard window changes and badge-view menu changes stay in sync. Turning that setting off leaves dashboard window changes page-local. Dashboard theme and motion preferences stay in extension-page `localStorage`.
 
 `data/usage.sample.json` is a safe fixture used by static checks and docs. Do not publish generated local usage exports such as `data/usage.json`.
 
