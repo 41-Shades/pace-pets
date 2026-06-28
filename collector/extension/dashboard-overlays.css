@@ -18,7 +18,7 @@
   box-sizing: border-box;
   color: color-mix(in srgb, var(--muted) 78%, var(--surface-mix));
   display: inline-flex;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 680;
   justify-content: center;
   line-height: 1;
@@ -32,6 +32,7 @@
   background: color-mix(in srgb, var(--panel) 86%, var(--track));
   box-shadow: inset 0 0 0 1px rgb(var(--shadow-color) / 4%);
   color: color-mix(in srgb, var(--accent) 88%, var(--muted));
+  font-weight: 760;
 }
 
 .window-toggle:disabled {
