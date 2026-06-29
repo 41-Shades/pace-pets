@@ -98,17 +98,16 @@ describe("PacePetsBackgroundLogic auth", () => {
 });
 
 describe("PacePetsBackgroundLogic badge selection", () => {
-  it("defaults dashboard and badge window sync on", () => {
+  it("defines the shared badge window preference", () => {
     const usageWindows = globalThis.CodexUsageWindows;
 
-    expect(usageWindows.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY).toBe(
-      "pacePetsSyncDashboardBadgeWindow",
-    );
-    expect(usageWindows.DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED).toBe(true);
-    expect(usageWindows.dashboardBadgeWindowSyncEnabled(undefined)).toBe(true);
-    expect(usageWindows.dashboardBadgeWindowSyncEnabled(null)).toBe(true);
-    expect(usageWindows.dashboardBadgeWindowSyncEnabled(true)).toBe(true);
-    expect(usageWindows.dashboardBadgeWindowSyncEnabled(false)).toBe(false);
+    expect(usageWindows.BADGE_WINDOW_STORAGE_KEY).toBe("codex-usage-window");
+    expect(usageWindows.DEFAULT_WINDOW_KEY).toBe("weekly");
+    expect(usageWindows.WINDOW_KEYS).toEqual(["weekly", "fiveHour"]);
+    expect(usageWindows.WINDOW_BADGE_LABELS).toEqual({
+      fiveHour: "5h",
+      weekly: "7d",
+    });
   });
 
   it("selects badge windows from valid stored preferences and available data", () => {

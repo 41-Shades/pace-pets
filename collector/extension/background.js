@@ -3,46 +3,20 @@ importScripts(...CodexExtensionRuntime.BACKGROUND_SCRIPT_SOURCES);
 
 const DASHBOARD_PATH = CodexProductMetadata.DASHBOARD_PATH;
 const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
-const DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY =
-  CodexUsageWindows.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY;
 const BADGE_PRESENTATION = PacePetsBackgroundBadgePresentation;
 const HISTORY_STORAGE_KEY = CodexUsageHistory.HISTORY_STORAGE_KEY;
 const REFRESH_RUNNER = PacePetsBackgroundRefreshRunner;
 
 async function createBadgeContextMenus() {
-  const [selectedWindowKey, syncDashboardBadgeWindow] = await Promise.all([
-    BADGE_PRESENTATION.selectedBadgeWindowKey(),
-    readDashboardBadgeWindowSyncEnabled(),
-  ]);
+  const selectedWindowKey = await BADGE_PRESENTATION.selectedBadgeWindowKey();
   await PacePetsBackgroundContextMenu.createBadgeContextMenus({
     selectedWindowKey,
-    syncDashboardBadgeWindow,
   });
 }
 
 async function syncBadgeContextMenuSelection() {
   await PacePetsBackgroundContextMenu.syncBadgeContextMenuSelection(
     await BADGE_PRESENTATION.selectedBadgeWindowKey(),
-  );
-}
-
-async function readDashboardBadgeWindowSyncEnabled() {
-  try {
-    const items = await CodexExtensionStorage.getLocal(
-      DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY,
-    );
-    return CodexUsageWindows.dashboardBadgeWindowSyncEnabled(
-      items[DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY],
-    );
-  } catch (error) {
-    console.warn("Could not read dashboard badge sync preference:", error);
-    return CodexUsageWindows.DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED;
-  }
-}
-
-async function syncDashboardBadgeWindowContextMenu() {
-  await PacePetsBackgroundContextMenu.syncDashboardBadgeWindowContextMenu(
-    await readDashboardBadgeWindowSyncEnabled(),
   );
 }
 
@@ -94,10 +68,6 @@ function storageChangeFlags(changes) {
       changes,
       HISTORY_STORAGE_KEY,
     ),
-    syncPreferenceChanged: CodexExtensionStorage.hasChange(
-      changes,
-      DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY,
-    ),
   });
 }
 
@@ -117,18 +87,10 @@ function handleBadgeStorageChange({
   });
 }
 
-function syncContextMenusForStorageChange({
-  badgeWindowChanged,
-  syncPreferenceChanged,
-}) {
+function syncContextMenusForStorageChange({ badgeWindowChanged }) {
   if (badgeWindowChanged) {
     syncBadgeContextMenuSelection().catch((error) => {
       console.warn("Codex usage badge menu sync failed:", error);
-    });
-  }
-  if (syncPreferenceChanged) {
-    syncDashboardBadgeWindowContextMenu().catch((error) => {
-      console.warn("Codex usage badge sync menu update failed:", error);
     });
   }
 }
@@ -183,19 +145,6 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
   if (PacePetsBackgroundContextMenu.isCheckUsageNowMenuItem(info.menuItemId)) {
     runContextMenuRefresh().catch((error) => {
       console.warn("Codex usage context-menu refresh failed:", error);
-    });
-    return;
-  }
-
-  if (
-    PacePetsBackgroundContextMenu.isSyncDashboardBadgeWindowMenuItem(
-      info.menuItemId,
-    )
-  ) {
-    CodexExtensionStorage.setLocal({
-      [DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY]: info.checked !== false,
-    }).catch((error) => {
-      console.warn("Codex usage badge sync update failed:", error);
     });
     return;
   }
