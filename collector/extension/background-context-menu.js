@@ -23,8 +23,6 @@
   const OPEN_DASHBOARD_CONTEXT_MENU_ID = "open-dashboard";
   const CHECK_USAGE_NOW_CONTEXT_MENU_ID = "check-usage-now";
   const BADGE_CONTEXT_MENU_SEPARATOR_ID = "badge-window-separator";
-  const SYNC_DASHBOARD_BADGE_WINDOW_CONTEXT_MENU_ID =
-    "sync-dashboard-badge-window";
   const BADGE_CONTEXT_MENU_ID_PREFIX = "badge-window:";
   const BADGE_CONTEXT_MENU_CONTEXTS = Object.freeze(["action"]);
 
@@ -70,10 +68,7 @@
     });
   }
 
-  async function createBadgeContextMenus({
-    selectedWindowKey,
-    syncDashboardBadgeWindow,
-  }) {
+  async function createBadgeContextMenus({ selectedWindowKey }) {
     if (!contextMenusAvailable()) {
       return;
     }
@@ -94,14 +89,6 @@
       id: BADGE_CONTEXT_MENU_SEPARATOR_ID,
       type: "separator",
     });
-    await createContextMenu({
-      checked: syncDashboardBadgeWindow,
-      contexts: BADGE_CONTEXT_MENU_CONTEXTS,
-      id: SYNC_DASHBOARD_BADGE_WINDOW_CONTEXT_MENU_ID,
-      title: "Sync dashboard and badge",
-      type: "checkbox",
-    });
-
     for (const windowKey of USAGE_WINDOWS.WINDOW_KEYS) {
       await createContextMenu({
         checked: windowKey === selectedWindowKey,
@@ -125,16 +112,6 @@
     }
   }
 
-  async function syncDashboardBadgeWindowContextMenu(enabled) {
-    if (!contextMenusAvailable()) {
-      return;
-    }
-
-    await updateContextMenu(SYNC_DASHBOARD_BADGE_WINDOW_CONTEXT_MENU_ID, {
-      checked: enabled,
-    });
-  }
-
   root.PacePetsBackgroundContextMenu = Object.freeze({
     badgeWindowKeyFromContextMenuId,
     createBadgeContextMenus,
@@ -142,9 +119,6 @@
       menuItemId === CHECK_USAGE_NOW_CONTEXT_MENU_ID,
     isOpenDashboardMenuItem: (menuItemId) =>
       menuItemId === OPEN_DASHBOARD_CONTEXT_MENU_ID,
-    isSyncDashboardBadgeWindowMenuItem: (menuItemId) =>
-      menuItemId === SYNC_DASHBOARD_BADGE_WINDOW_CONTEXT_MENU_ID,
     syncBadgeContextMenuSelection,
-    syncDashboardBadgeWindowContextMenu,
   });
 })(globalThis);

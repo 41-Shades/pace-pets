@@ -140,14 +140,13 @@ function assertDashboardCacheSource({ assert, dashboardSource }) {
     "New dashboard pages must seed selected window from the badge preference through the storage adapter.",
   );
   assert(
-    dashboardSource.includes("DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY") &&
-      dashboardSource.includes("dashboardBadgeWindowSyncEnabled("),
-    "Dashboard badge-window sync must be controlled by the shared sync preference.",
+    dashboardSource.includes("readSessionWindowKey()") &&
+      dashboardSource.includes("return sessionWindowKey;"),
+    "Existing dashboard pages must prefer their page-scoped window selection.",
   );
   assert(
-    dashboardSource.includes("this.EXTENSION_STORAGE.setLocal(") &&
-      dashboardSource.includes("[this.BADGE_WINDOW_STORAGE_KEY]: windowKey"),
-    "Dashboard window changes must update the badge preference when sync is enabled.",
+    !dashboardSource.includes("[this.BADGE_WINDOW_STORAGE_KEY]: windowKey"),
+    "Dashboard window changes must not update the badge preference.",
   );
   assert(
     dashboardSource.includes("this.currentHistory = null;") &&

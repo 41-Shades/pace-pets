@@ -229,8 +229,6 @@ export async function storageSchemaGeneratedMarkdown() {
     `- Badge-window preference key: \`${usageWindows.BADGE_WINDOW_STORAGE_KEY}\``,
     `- Default badge window: \`${usageWindows.DEFAULT_WINDOW_KEY}\``,
     `- Supported badge-window values: ${usageWindows.WINDOW_KEYS.map((key) => `\`${key}\``).join(", ")}`,
-    `- Dashboard/badge window sync preference key: \`${usageWindows.DASHBOARD_BADGE_WINDOW_SYNC_STORAGE_KEY}\``,
-    `- Default dashboard/badge window sync: \`${usageWindows.DEFAULT_DASHBOARD_BADGE_WINDOW_SYNC_ENABLED}\``,
     `- Developer-options key: \`${developerOptions.STORAGE_KEY}\``,
     `- Supported forced pace-state values: ${developerOptions.FORCEABLE_PACE_STATE_KEYS.map((key) => `\`${key}\``).join(", ")}`,
     `- Developer feature preview fields: ${developerOptions.FEATURE_PREVIEW_OPTIONS.map((option) => `\`${option.key}\``).join(", ")}`,
