@@ -100,30 +100,30 @@ body.has-nothingness-page-background .theme-toggle-icon {
   background:
     radial-gradient(
       circle at 48% 108%,
-      rgb(220 38 38 / 94%) 0 30%,
+      rgb(220 38 38 / 84%) 0 28%,
       transparent 58%
     ),
     radial-gradient(
       circle at 38% 20%,
-      rgb(254 215 170 / 48%) 0 16%,
+      rgb(254 215 170 / 36%) 0 14%,
       transparent 34%
     ),
     radial-gradient(
       circle at 48% 50%,
       rgb(251 146 60) 0 36%,
-      rgb(234 88 12 / 98%) 62%,
-      rgb(153 27 27 / 98%) 84%,
-      rgb(69 10 10 / 96%) 100%
+      rgb(234 88 12 / 94%) 58%,
+      rgb(153 27 27 / 98%) 80%,
+      rgb(69 10 10 / 100%) 100%
     );
-  border: 1px solid rgb(251 146 60 / 36%);
+  border: 1px solid rgb(154 52 18 / 52%);
   box-shadow:
-    inset -5px -5px 10px rgb(69 10 10 / 58%),
-    inset 3px 4px 8px rgb(255 237 213 / 24%),
-    0 0 0 1px rgb(69 10 10 / 52%),
-    0 0 12px rgb(194 65 12 / 28%);
-  filter: brightness(1.12) contrast(1.12) saturate(1.2);
+    inset -6px -6px 11px rgb(69 10 10 / 72%),
+    inset 3px 4px 8px rgb(255 237 213 / 16%),
+    0 0 0 1px rgb(69 10 10 / 62%),
+    0 0 10px rgb(194 65 12 / 18%);
+  filter: brightness(1.04) contrast(1.18) saturate(1.14);
   height: 22px;
-  opacity: 0.9;
+  opacity: 0.86;
   transform: scale(1);
   transform-origin: center;
   width: 22px;
@@ -140,30 +140,30 @@ body.has-nothingness-page-background .theme-toggle:hover .theme-toggle-icon,
 body.has-nothingness-page-background
   .theme-toggle:focus-visible
   .theme-toggle-icon {
-  opacity: 0.96;
+  opacity: 0.94;
 }
 
 body.has-nothingness-page-background .theme-toggle-icon::before {
   background:
     radial-gradient(
       circle at 68% 34%,
-      rgb(69 10 10 / 62%) 0 14%,
-      transparent 24%
-    ),
-    radial-gradient(
-      circle at 34% 55%,
-      rgb(127 29 29 / 58%) 0 18%,
-      transparent 28%
-    ),
-    radial-gradient(
-      circle at 74% 74%,
-      rgb(127 29 29 / 64%) 0 16%,
+      rgb(69 10 10 / 78%) 0 16%,
       transparent 27%
     ),
     radial-gradient(
+      circle at 34% 55%,
+      rgb(92 15 15 / 74%) 0 21%,
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 74% 74%,
+      rgb(127 29 29 / 78%) 0 18%,
+      transparent 30%
+    ),
+    radial-gradient(
       circle at 48% 28%,
-      rgb(69 10 10 / 42%) 0 10%,
-      transparent 20%
+      rgb(69 10 10 / 62%) 0 12%,
+      transparent 23%
     );
   border-radius: 50%;
   content: "";
@@ -176,8 +176,8 @@ body.has-nothingness-page-background .theme-toggle-icon::after {
   background:
     radial-gradient(
       ellipse at 50% 0,
-      rgb(255 237 213 / 62%) 0 7%,
-      rgb(251 191 36 / 40%) 15%,
+      rgb(255 237 213 / 42%) 0 6%,
+      rgb(251 191 36 / 28%) 14%,
       transparent 38%
     ),
     radial-gradient(
@@ -187,9 +187,9 @@ body.has-nothingness-page-background .theme-toggle-icon::after {
     ),
     radial-gradient(
       circle at 50% 50%,
-      transparent 0 60%,
-      rgb(0 0 0 / 24%) 82%,
-      rgb(0 0 0 / 48%) 100%
+      transparent 0 56%,
+      rgb(0 0 0 / 34%) 80%,
+      rgb(0 0 0 / 62%) 100%
   );
   border-radius: 50%;
   content: "";
