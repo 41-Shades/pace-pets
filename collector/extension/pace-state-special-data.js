@@ -258,7 +258,7 @@
       key: "nothingness",
       className: "pace-nothingness",
       title: "Nothingness",
-      copy: "Empty",
+      copy: "The Void",
       copyByReason: Object.freeze({
         checkFailed: "Check failed in this void.",
         noHistory: "No history yet in this void.",
