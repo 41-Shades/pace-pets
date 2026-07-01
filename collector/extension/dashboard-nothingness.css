@@ -115,12 +115,12 @@ body.has-nothingness-page-background .theme-toggle-icon {
       rgb(153 27 27 / 98%) 80%,
       rgb(69 10 10 / 100%) 100%
     );
-  border: 1px solid rgb(154 52 18 / 52%);
+  border: 1px solid rgb(154 52 18 / 44%);
   box-shadow:
     inset -6px -6px 11px rgb(69 10 10 / 72%),
-    inset 3px 4px 8px rgb(255 237 213 / 16%),
+    inset 3px 4px 8px rgb(255 237 213 / 12%),
     0 0 0 1px rgb(69 10 10 / 62%),
-    0 0 10px rgb(194 65 12 / 18%);
+    0 0 8px rgb(194 65 12 / 10%);
   filter: brightness(1.04) contrast(1.18) saturate(1.14);
   height: 22px;
   opacity: 0.86;
@@ -152,8 +152,8 @@ body.has-nothingness-page-background .theme-toggle-icon::before {
     ),
     radial-gradient(
       circle at 34% 55%,
-      rgb(92 15 15 / 74%) 0 21%,
-      transparent 32%
+      rgb(92 15 15 / 84%) 0 24%,
+      transparent 36%
     ),
     radial-gradient(
       circle at 74% 74%,
@@ -176,8 +176,8 @@ body.has-nothingness-page-background .theme-toggle-icon::after {
   background:
     radial-gradient(
       ellipse at 50% 0,
-      rgb(255 237 213 / 42%) 0 6%,
-      rgb(251 191 36 / 28%) 14%,
+      rgb(255 237 213 / 34%) 0 6%,
+      rgb(251 191 36 / 22%) 14%,
       transparent 38%
     ),
     radial-gradient(
