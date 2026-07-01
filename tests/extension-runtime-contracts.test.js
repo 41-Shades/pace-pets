@@ -147,6 +147,7 @@ describe("CodexThemeAssets", () => {
     expect(assets.isPackagedPaceIconState("singularity")).toBe(false);
     expect(assets.PACE_ICON_STATE_EXCLUSIONS).toEqual({
       muted: "No playful image.",
+      nothingness: "Uses an outline placeholder.",
       singularity: "Uses generated in-memory art.",
     });
     expect(assets.appIconPathForSize(32)).toBe(

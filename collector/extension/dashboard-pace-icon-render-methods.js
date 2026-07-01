@@ -18,6 +18,7 @@
   Object.assign(Controller.prototype, {
     renderPlayfulPaceIcon(container, src, state, useEffects) {
       container.classList.add("is-playful");
+      container.classList.remove("is-outline-placeholder");
       const image = document.createElement("img");
       image.src = src;
       image.alt = "";
@@ -31,6 +32,7 @@
 
     renderSvgPaceIcon(container, state, useEffects) {
       container.classList.remove("is-playful");
+      container.classList.remove("is-outline-placeholder");
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("viewBox", "0 0 24 24");
       svg.setAttribute("role", "img");
@@ -50,6 +52,7 @@
 
     renderPerfectZeroApertureIcon(container, src) {
       container.classList.remove("is-playful");
+      container.classList.remove("is-outline-placeholder");
       if (!src) {
         return;
       }
@@ -62,6 +65,12 @@
       image.loading = "lazy";
       image.setAttribute("aria-hidden", "true");
       container.append(image);
+    },
+
+    renderOutlinePlaceholderPaceIcon(container) {
+      container.classList.remove("is-playful");
+      container.classList.add("is-outline-placeholder");
+      container.setAttribute("aria-hidden", "true");
     },
   });
 })();

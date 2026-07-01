@@ -353,13 +353,16 @@
       brakeIntensityPreview,
       sprintIntensityPreview,
     });
-    if (paceRatio === null) {
+    if (paceRatio === null && state.noPaceRatio !== true) {
       return null;
     }
 
     return Object.freeze({
       badgeColor: state.badgeColor,
-      badgeText: PACE_LOGIC.badgeTextForPaceRatio(paceRatio),
+      badgeText:
+        state.noPaceRatio === true
+          ? ""
+          : PACE_LOGIC.badgeTextForPaceRatio(paceRatio),
       paceRatio,
       state,
       stateKey: normalizedStateKey,

@@ -102,6 +102,7 @@
     "./dashboard-pace-wobble-methods.js",
     "./dashboard-ease-up-methods.js",
     "./dashboard-pace-icon-render-methods.js",
+    "./dashboard-pace-icon-selection.js",
     "./dashboard-pace-icon-methods.js",
     "./dashboard-pace-transition-methods.js",
     "./dashboard-cart-spill-data.js",
@@ -168,8 +169,6 @@
   const dashboardPageEdge = (before, dashboardName) =>
     pageEdge(before, `dashboard-${dashboardName}.js`);
   const collapseFile = (name) => `singularity-chrome-collapse-${name}`;
-  const dashboardPreferenceDependencyEdge = (after) =>
-    dependencyEdge("./dashboard-preferences.js", after);
   const DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS = Object.freeze([
     "./dashboard-shell-controls.js",
     "./dashboard-app-core.js",
@@ -250,8 +249,8 @@
     dependencyEdge("./pace-window-history.js", "./dashboard-chart-data.js"),
     dashboardFileEdge("chart-data", "chart"),
     dependencyEdge("./pace-logic.js", "./dashboard-chart.js"),
-    ...DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS.map(
-      dashboardPreferenceDependencyEdge,
+    ...DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS.map((after) =>
+      dependencyEdge("./dashboard-preferences.js", after),
     ),
     pageEdge("perfect-zero-space-draw.js", "perfect-zero-space-scene.js"),
     dashboardFileEdge("status-logic", "status-controller"),
@@ -307,6 +306,8 @@
     dashboardFileEdge("checkerboard-reveal-methods", "pace-controller"),
     dashboardFileEdge("pace-core", "pace-icon-render-methods"),
     dashboardFileEdge("pace-icon-render-methods", "pace-icon-methods"),
+    dashboardFileEdge("pace-data", "pace-icon-selection"),
+    dashboardFileEdge("pace-icon-selection", "pace-icon-methods"),
     dashboardFileEdge("pace-core", "pace-transition-methods"),
     dashboardFileEdge("pace-transition-methods", "pace-summary-methods"),
     dashboardFileEdge("pace-transition-methods", "pace-preview-methods"),

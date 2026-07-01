@@ -2,9 +2,10 @@
   "use strict";
 
   const REFRESH_SCHEDULE = globalThis.PacePetsRefreshSchedule;
-  if (!REFRESH_SCHEDULE) {
+  const PACE_LOGIC = globalThis.PacePetsLogic;
+  if (!REFRESH_SCHEDULE || !PACE_LOGIC) {
     throw new Error(
-      "Refresh schedule must load before dashboard-status-logic.js.",
+      "Refresh schedule and pace logic must load before dashboard-status-logic.js.",
     );
   }
 
@@ -12,6 +13,7 @@
     REFRESH_SCHEDULE.AUTO_CHECKS_STATUS_TOOLTIP;
   const CHECKS_EVERY_ARIA = REFRESH_SCHEDULE.CHECKS_EVERY_ARIA;
   const COLLECTION_STATUS_TITLE = "Usage collection status";
+  const NOTHINGNESS_STATE = PACE_LOGIC.PACE_STATES.nothingness;
   const STATUS_TEXT = Object.freeze({
     live: "Live",
     waiting: "Waiting",
@@ -20,13 +22,9 @@
     signInNotFound: "ChatGPT sign-in not found",
     checkFailed: "Check failed",
   });
-  const SIGN_IN_NOT_FOUND_COPY = "Open ChatGPT to resume checks.";
   const SIGN_IN_NOT_FOUND_DETAIL =
     "Latest check failed because ChatGPT sign-in was not found.";
-  const EMPTY_HISTORY_TITLE = "No history yet";
-  const EMPTY_HISTORY_COPY = "Waiting for the first automatic usage check.";
   const EMPTY_HISTORY_CHART_COPY = "Waiting for local history.";
-  const FAILED_HISTORY_COPY = "The latest usage check failed.";
   const COLLECTION_STATUS_LABELS = Object.freeze({
     [STATUS_TEXT.checkFailed]: "Check failed",
     [STATUS_TEXT.refreshNeeded]: "Refresh needed",
@@ -61,7 +59,7 @@
   }
 
   function isRecentRefreshStatus(refreshStatus) {
-    const refreshedMs = PacePetsLogic.dateMs(refreshStatus?.refreshedAt);
+    const refreshedMs = PACE_LOGIC.dateMs(refreshStatus?.refreshedAt);
     return (
       refreshedMs !== null &&
       Date.now() - refreshedMs <= COLLECTION_STATUS_STALE_AFTER_MS
@@ -179,9 +177,9 @@
           ? STATUS_TEXT.signInNotFound
           : EMPTY_HISTORY_CHART_COPY,
         paceCopy: isSignInNotFoundStatus(refreshStatus)
-          ? SIGN_IN_NOT_FOUND_COPY
-          : refreshStatus?.message || FAILED_HISTORY_COPY,
-        paceTitle: failedStatus.text,
+          ? NOTHINGNESS_STATE.copyByReason.signInNotFound
+          : NOTHINGNESS_STATE.copyByReason.checkFailed,
+        paceTitle: NOTHINGNESS_STATE.title,
         status: failedStatus,
       };
     }
@@ -191,8 +189,8 @@
       collectionStatusState({ text: STATUS_TEXT.waiting });
     return {
       chartCopy: EMPTY_HISTORY_CHART_COPY,
-      paceCopy: EMPTY_HISTORY_COPY,
-      paceTitle: EMPTY_HISTORY_TITLE,
+      paceCopy: NOTHINGNESS_STATE.copyByReason.noHistory,
+      paceTitle: NOTHINGNESS_STATE.title,
       status: {
         ...refreshNeeded,
         manualRefresh: true,
@@ -276,7 +274,6 @@
     MANUAL_REFRESH_COOLDOWN_PREFIX,
     MANUAL_REFRESH_DEFAULT_LABEL,
     MANUAL_REFRESH_FAILURE_VISIBLE_MS,
-    SIGN_IN_NOT_FOUND_COPY,
     SIGN_IN_NOT_FOUND_DETAIL,
     STATUS_TEXT,
     collectionStatusLabelText,

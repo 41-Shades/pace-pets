@@ -1,0 +1,302 @@
+body.has-nothingness-page-background {
+  color-scheme: dark;
+
+  --bg: #000000;
+  --panel: #000000;
+  --text: #f8fafc;
+  --muted: #8b949e;
+  --subhead: #64748b;
+  --line: rgb(248 250 252 / 12%);
+  --line-strong: rgb(248 250 252 / 17%);
+  --metric-icon-bg: rgb(248 250 252 / 4%);
+  --metric-icon-border: rgb(248 250 252 / 8%);
+  --pace-color: rgb(20 184 166 / 30%);
+  --surface-mix: #000000;
+  --track: rgb(248 250 252 / 5%);
+  --chart-plot-bg: #000000;
+  --shadow-color: 0 0 0;
+}
+
+body.has-nothingness-page-background .usage-panel,
+body.has-nothingness-page-background .pace-card.pace-nothingness,
+body.has-nothingness-page-background .metrics,
+body.has-nothingness-page-background .reset-card,
+body.has-nothingness-page-background .chart-panel,
+body.has-nothingness-page-background .chart-frame.empty {
+  background: #000000;
+  box-shadow: none;
+}
+
+body.has-nothingness-page-background .usage-panel,
+body.has-nothingness-page-background .pace-card.pace-nothingness,
+body.has-nothingness-page-background .metrics,
+body.has-nothingness-page-background .reset-card,
+body.has-nothingness-page-background .chart-panel {
+  border-color: rgb(248 250 252 / 10%);
+}
+
+body.has-nothingness-page-background .pace-card.pace-nothingness {
+  border-color: rgb(248 250 252 / 13%);
+}
+
+body.has-nothingness-page-background .chart-frame.empty {
+  border-color: rgb(248 250 252 / 5%);
+}
+
+body.has-nothingness-page-background .chart-frame.empty-data {
+  background: #000000;
+}
+
+body.has-nothingness-page-background .chart-frame.empty-data canvas {
+  opacity: 0.26;
+}
+
+body.has-nothingness-page-background .usage-panel::after {
+  animation: nothingness-pulse 12s ease-in-out infinite;
+  background: #000000;
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 50;
+}
+
+html[data-motion="off"]
+  body.has-nothingness-page-background
+  .usage-panel::after {
+  animation: none;
+  opacity: 0;
+}
+
+body.has-nothingness-page-background .brand-title h1 {
+  color: rgb(248 250 252 / 78%);
+}
+
+body.has-nothingness-page-background .pace-card.pace-nothingness #pace-title {
+  color: rgb(248 250 252 / 84%);
+}
+
+body.has-nothingness-page-background .pace-card.pace-nothingness #pace-copy {
+  color: rgb(248 250 252 / 76%);
+}
+
+body.has-nothingness-page-background
+  .pace-card.pace-nothingness
+  .pace-icon.is-outline-placeholder {
+  border-color: rgb(154 52 18 / 18%);
+}
+
+body.has-nothingness-page-background .theme-toggle {
+  background: transparent;
+  color: rgb(154 52 18 / 58%);
+  overflow: visible;
+  position: relative;
+  z-index: 51;
+}
+
+body.has-nothingness-page-background .theme-toggle:hover {
+  background: rgb(154 52 18 / 8%);
+  color: rgb(194 65 12 / 72%);
+}
+
+body.has-nothingness-page-background .theme-toggle-icon {
+  animation: nothingness-blood-moon-rise 12s ease-in-out infinite;
+  background:
+    radial-gradient(
+      circle at 48% 108%,
+      rgb(220 38 38 / 84%) 0 28%,
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at 38% 20%,
+      rgb(254 215 170 / 36%) 0 14%,
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 48% 50%,
+      rgb(251 146 60) 0 36%,
+      rgb(234 88 12 / 94%) 58%,
+      rgb(153 27 27 / 98%) 80%,
+      rgb(69 10 10 / 100%) 100%
+    );
+  border: 1px solid rgb(154 52 18 / 44%);
+  box-shadow:
+    inset -6px -6px 11px rgb(69 10 10 / 72%),
+    inset 3px 4px 8px rgb(255 237 213 / 12%),
+    0 0 0 1px rgb(69 10 10 / 62%),
+    0 0 8px rgb(194 65 12 / 10%);
+  filter: brightness(1.04) contrast(1.18) saturate(1.14);
+  height: 22px;
+  opacity: 0.86;
+  transform: scale(1);
+  transform-origin: center;
+  width: 22px;
+}
+
+html[data-motion="off"]
+  body.has-nothingness-page-background
+  .theme-toggle-icon {
+  animation: none;
+  transform: scale(1);
+}
+
+body.has-nothingness-page-background .theme-toggle:hover .theme-toggle-icon,
+body.has-nothingness-page-background
+  .theme-toggle:focus-visible
+  .theme-toggle-icon {
+  opacity: 0.94;
+}
+
+body.has-nothingness-page-background .theme-toggle-icon::before {
+  background:
+    radial-gradient(
+      circle at 68% 34%,
+      rgb(69 10 10 / 78%) 0 16%,
+      transparent 27%
+    ),
+    radial-gradient(
+      circle at 34% 55%,
+      rgb(92 15 15 / 84%) 0 24%,
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 74% 74%,
+      rgb(127 29 29 / 78%) 0 18%,
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 48% 28%,
+      rgb(69 10 10 / 62%) 0 12%,
+      transparent 23%
+    );
+  border-radius: 50%;
+  content: "";
+  inset: 2px;
+  opacity: 0.86;
+  position: absolute;
+}
+
+body.has-nothingness-page-background .theme-toggle-icon::after {
+  background:
+    radial-gradient(
+      ellipse at 50% 0,
+      rgb(255 237 213 / 34%) 0 6%,
+      rgb(251 191 36 / 22%) 14%,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 50% 105%,
+      rgb(127 29 29 / 54%) 0 28%,
+      transparent 62%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 56%,
+      rgb(0 0 0 / 34%) 80%,
+      rgb(0 0 0 / 62%) 100%
+    );
+  border-radius: 50%;
+  content: "";
+  height: auto;
+  inset: 0;
+  position: absolute;
+  width: auto;
+}
+
+body.has-nothingness-page-background .motion-toggle {
+  color: rgb(148 163 184 / 36%);
+}
+
+body.has-nothingness-page-background .motion-toggle:hover {
+  color: rgb(148 163 184 / 54%);
+}
+
+body.has-nothingness-page-background .info-toggle-icon {
+  --info-toggle-mark: rgb(148 163 184 / 36%);
+  --info-toggle-ring: rgb(148 163 184 / 26%);
+}
+
+body.has-nothingness-page-background .info-toggle:hover .info-toggle-icon,
+body.has-nothingness-page-background
+  .info-toggle:focus-visible
+  .info-toggle-icon {
+  --info-toggle-mark: rgb(148 163 184 / 54%);
+  --info-toggle-ring: rgb(148 163 184 / 40%);
+}
+
+body.has-nothingness-page-background .chart-state,
+body.has-nothingness-page-background .metric-title,
+body.has-nothingness-page-background .reset-date-value,
+body.has-nothingness-page-background #prior-reset-time,
+body.has-nothingness-page-background #scheduled-reset-time {
+  color: rgb(248 250 252 / 44%);
+}
+
+body.has-nothingness-page-background .reset-label,
+body.has-nothingness-page-background .reset-details dt,
+body.has-nothingness-page-background .pace-burnout-line,
+body.has-nothingness-page-background .reset-note {
+  color: rgb(148 163 184 / 34%);
+}
+
+body.has-nothingness-page-background .metric-value,
+body.has-nothingness-page-background #resets-in {
+  color: rgb(248 250 252 / 48%);
+}
+
+body.has-nothingness-page-background .metric-icon,
+body.has-nothingness-page-background .reset-label-icon {
+  color: rgb(20 184 166 / 30%);
+}
+
+body.has-nothingness-page-background .collection-meta,
+body.has-nothingness-page-background #collection-status-label,
+body.has-nothingness-page-background .last-collected {
+  color: rgb(148 163 184 / 46%);
+}
+
+body.has-nothingness-page-background .collection-pulse.live {
+  --collection-dot: rgb(20 184 166 / 42%);
+
+  animation: none;
+}
+
+body.has-nothingness-page-background .brand-title p {
+  opacity: 0.5;
+}
+
+body.has-nothingness-page-background .chart-panel {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+body.has-nothingness-page-background .chart-meta {
+  display: none;
+}
+
+body.has-nothingness-page-background .reset-progress {
+  visibility: hidden;
+}
+
+@keyframes nothingness-pulse {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes nothingness-blood-moon-rise {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.32);
+  }
+}

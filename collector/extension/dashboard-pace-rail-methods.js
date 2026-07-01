@@ -25,8 +25,41 @@
     if (state.key === DATA.PACE_STATES.splat.key) {
       return "Zero arrived early. Gravity noticed.";
     }
+    if (state.key === DATA.PACE_STATES.nothingness.key) {
+      return "All interim states.";
+    }
 
     return state.copy;
+  }
+
+  function stateColumnHeading(titleText, subtitleText) {
+    const heading = document.createElement("div");
+    heading.className = "state-column-heading";
+    const title = document.createElement("h2");
+    title.className = "state-column-title";
+    title.textContent = titleText;
+    heading.append(title);
+    if (subtitleText) {
+      const subtitle = document.createElement("p");
+      subtitle.className = "state-column-subtitle";
+      subtitle.textContent = subtitleText;
+      heading.append(subtitle);
+    }
+    return heading;
+  }
+
+  function shouldHideStateRail(controller, activeKey) {
+    return (
+      controller.getCurrentRailHidden?.() === true ||
+      activeKey === DATA.PACE_STATES.nothingness.key
+    );
+  }
+
+  function setStateRailHidden(controller, hidden) {
+    if (controller.elements.paceStateRail) {
+      controller.elements.paceStateRail.hidden = hidden;
+    }
+    controller.elements.paceStateStack.hidden = hidden;
   }
 
   Object.assign(Controller.prototype, {
@@ -63,15 +96,12 @@
       className,
       titleText,
       stateKeys,
-      { showChipTooltips = true } = {},
+      { showChipTooltips = true, subtitleText = "" } = {},
     ) {
       const column = document.createElement("div");
       column.className = `state-column ${className}`;
-      const title = document.createElement("h2");
-      title.className = "state-column-title";
-      title.textContent = titleText;
       column.replaceChildren(
-        title,
+        stateColumnHeading(titleText, subtitleText),
         ...stateKeys.map((stateKey) =>
           this.renderStateChip(stateKey, { showTooltip: showChipTooltips }),
         ),
@@ -79,14 +109,16 @@
       return column;
     },
 
-    renderStateSection(className, titleText, stateKeys) {
+    renderStateSection(
+      className,
+      titleText,
+      stateKeys,
+      { subtitleText = "" } = {},
+    ) {
       const section = document.createElement("div");
       section.className = `state-column-section ${className}`;
-      const title = document.createElement("h2");
-      title.className = "state-column-title";
-      title.textContent = titleText;
       section.replaceChildren(
-        title,
+        stateColumnHeading(titleText, subtitleText),
         ...stateKeys.map((stateKey) => this.renderStateChip(stateKey)),
       );
       return section;
@@ -101,6 +133,7 @@
             section.className,
             section.titleText,
             section.stateKeys,
+            { subtitleText: section.subtitleText },
           ),
         ),
       );
@@ -167,6 +200,12 @@
 
     updateStateRailActiveSelection(activeKey) {
       if (!this.elements.paceStateStack) {
+        return;
+      }
+
+      const railHidden = shouldHideStateRail(this, activeKey);
+      setStateRailHidden(this, railHidden);
+      if (railHidden) {
         return;
       }
 

@@ -371,7 +371,6 @@
 
   globalThis.PacePetsDashboardStatus = Object.freeze({
     COLLECTION_STATUS_TITLE: STATUS_LOGIC.COLLECTION_STATUS_TITLE,
-    SIGN_IN_NOT_FOUND_COPY: STATUS_LOGIC.SIGN_IN_NOT_FOUND_COPY,
     STATUS_TEXT: STATUS_LOGIC.STATUS_TEXT,
     createController,
     emptyHistoryCollectionState: STATUS_LOGIC.emptyHistoryCollectionState,

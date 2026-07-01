@@ -79,6 +79,11 @@
   z-index: 1;
 }
 
+.pace-icon.is-outline-placeholder {
+  background: transparent;
+  border-color: rgb(248 250 252 / 16%);
+}
+
 .pace-icon img {
   display: block;
   height: 106%;

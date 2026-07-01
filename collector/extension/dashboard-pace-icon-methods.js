@@ -3,10 +3,11 @@
 
   const DATA = globalThis.PacePetsDashboardPaceData;
   const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  const ICON_SELECTION = globalThis.PacePetsDashboardPaceIconSelection;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !DASHBOARD_PREFERENCES || !Controller) {
+  if (!DATA || !DASHBOARD_PREFERENCES || !ICON_SELECTION || !Controller) {
     throw new Error(
-      "Pace data, preferences, and core must load before dashboard-pace-icon-methods.js.",
+      "Pace data, preferences, icon selection, and core must load before dashboard-pace-icon-methods.js.",
     );
   }
 
@@ -28,47 +29,6 @@
     }
 
     controller.clearSplatMaxThrow?.();
-  }
-
-  function hasMatchingPlayfulPaceIcon(container, state) {
-    const image = container.firstElementChild;
-    return (
-      DATA.USE_PLAYFUL_PACE_ICONS &&
-      container.classList.contains("is-playful") &&
-      typeof state.playfulImage === "string" &&
-      image?.tagName === "IMG" &&
-      image.src === new URL(state.playfulImage, document.baseURI).href
-    );
-  }
-
-  function hasMatchingPerfectZeroApertureIcon(container, state) {
-    const image = container.querySelector(":scope > .perfect-zero-cameo");
-    return (
-      container.classList.contains("is-perfect-zero-aperture") &&
-      typeof state.playfulImage === "string" &&
-      image?.tagName === "IMG" &&
-      image.src === new URL(state.playfulImage, document.baseURI).href
-    );
-  }
-
-  function hasMatchingRenderedPaceIcon(
-    container,
-    state,
-    { usePerfectZeroPageAperture },
-  ) {
-    if (usePerfectZeroPageAperture) {
-      return hasMatchingPerfectZeroApertureIcon(container, state);
-    }
-
-    if (container.classList.contains("is-perfect-zero-aperture")) {
-      return false;
-    }
-
-    if (DATA.USE_PLAYFUL_PACE_ICONS && state.playfulImage) {
-      return hasMatchingPlayfulPaceIcon(container, state);
-    }
-
-    return container.firstElementChild?.tagName === "SVG";
   }
 
   function paceIconOrigin(controller) {
@@ -101,9 +61,18 @@
       return false;
     }
 
-    return hasMatchingRenderedPaceIcon(controller.elements.paceIcon, state, {
-      usePerfectZeroPageAperture,
-    });
+    return ICON_SELECTION.hasMatchingRenderedPaceIcon(
+      controller.elements.paceIcon,
+      state,
+      { usePerfectZeroPageAperture },
+    );
+  }
+
+  function setNothingnessPageBackground(state) {
+    globalThis.document?.body?.classList.toggle(
+      "has-nothingness-page-background",
+      state.key === DATA.PACE_STATES.nothingness.key,
+    );
   }
 
   function setSplatFallIntro(container, shouldPlay) {
@@ -330,13 +299,11 @@
         container.dataset.splatFallIntro = "true";
       }
 
-      if (shouldRenderPerfectZeroPageAperture) {
-        this.renderPerfectZeroApertureIcon(container, src);
-      } else if (DATA.USE_PLAYFUL_PACE_ICONS && src) {
-        this.renderPlayfulPaceIcon(container, src, state, useEffects);
-      } else {
-        this.renderSvgPaceIcon(container, state, useEffects);
-      }
+      ICON_SELECTION.renderSelectedPaceIcon(this, container, state, {
+        shouldRenderPerfectZeroPageAperture,
+        src,
+        useEffects,
+      });
     },
 
     setPaceLevel(
@@ -369,6 +336,7 @@
       const staleClasses = DATA.PACE_CLASSES.filter((name) => name !== level);
       this.elements.paceCard.classList.remove(...staleClasses);
       this.elements.paceCard.classList.add(level);
+      setNothingnessPageBackground(state);
       updatePrimaryPaceIcon(this, {
         level,
         playSplatFall,

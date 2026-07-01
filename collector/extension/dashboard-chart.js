@@ -140,6 +140,44 @@
     };
   }
 
+  function emptyUsageChartConfig(windowData) {
+    const colors = CHART_DATA.chartColors();
+    const yBounds = CHART_DATA.ratioChartBounds([]);
+    return {
+      type: "line",
+      data: {
+        datasets: [
+          {
+            ...CHART_DATA.paceChartDataset([], colors, yBounds),
+            data: [],
+          },
+        ],
+      },
+      options: {
+        animation: false,
+        interaction: {
+          axis: "x",
+          intersect: false,
+          mode: "nearest",
+        },
+        maintainAspectRatio: false,
+        normalized: true,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            enabled: false,
+          },
+        },
+        scales: {
+          x: xScaleOptions(chartWindowRange(windowData)),
+          y: yScaleOptions(yBounds, colors),
+        },
+      },
+    };
+  }
+
   class UsageChartRenderer {
     constructor({ chartCanvas, chartFrame, chartState, windowSpecs }) {
       this.chartCanvas = chartCanvas;
@@ -173,6 +211,7 @@
     setEmpty(message) {
       this.destroy();
       this.chartFrame.classList.add("empty");
+      this.chartFrame.classList.remove("empty-data");
       this.chartCanvas.hidden = true;
       this.chartState.hidden = false;
       this.chartState.textContent = message;
@@ -188,6 +227,7 @@
 
     showChartCanvas(spec, preview) {
       this.chartFrame.classList.remove("empty");
+      this.chartFrame.classList.remove("empty-data");
       this.chartCanvas.hidden = false;
       this.chartCanvas.setAttribute(
         "aria-label",
@@ -212,6 +252,24 @@
       this.usageChart.options.scales.x = config.options.scales.x;
       this.usageChart.options.scales.y = config.options.scales.y;
       this.usageChart.update();
+    }
+
+    renderEmptyData({ windowData = null, windowKey }) {
+      const spec = this.windowSpecs[windowKey];
+      if (!globalThis.Chart) {
+        this.setEmpty("Chart.js did not load from the extension asset.");
+        return;
+      }
+
+      this.chartFrame.classList.remove("empty");
+      this.chartFrame.classList.add("empty-data");
+      this.chartCanvas.hidden = false;
+      this.chartCanvas.setAttribute(
+        "aria-label",
+        `${spec.chartSampleLabel} pace ratio across active reset window with no data`,
+      );
+      this.chartState.hidden = true;
+      this.updateChart(emptyUsageChartConfig(windowData));
     }
 
     renderPoints(points, windowKey, windowData, { preview = false } = {}) {
@@ -301,6 +359,7 @@
   function createRenderer(options) {
     const renderer = new UsageChartRenderer(options);
     return Object.freeze({
+      renderEmptyData: renderer.renderEmptyData.bind(renderer),
       renderHistory: renderer.renderHistory.bind(renderer),
       renderPreview: renderer.renderPreview.bind(renderer),
       setEmpty: renderer.setEmpty.bind(renderer),

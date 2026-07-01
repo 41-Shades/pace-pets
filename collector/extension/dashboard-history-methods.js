@@ -162,7 +162,6 @@
             windowData,
           ),
           resetCountdownDisplaysZero,
-          waitingForReadingText: this.STATUS_TEXT.waitingForReading,
         },
       );
       this.applyPaceSummaryResetCountdown(paceSummary, applyPaceSummary);
@@ -248,13 +247,13 @@
       if (!this.paceView.hasForcedPaceStateOverride()) {
         this.paceView.setPaceSummary({
           copy: state.paceCopy,
-          level: this.paceView.mutedClassName,
+          level: this.paceView.nothingnessClassName,
           remainingPercent: null,
           timePercent: null,
           title: state.paceTitle,
         });
       }
-      this.usageChartView.setEmpty(state.chartCopy);
+      this.usageChartView.renderEmptyData({ windowData: null, windowKey });
       this.setLatestMetadata(null, refreshStatus);
       this.paceView.refreshForcedPaceStateOverride();
     },
@@ -283,14 +282,14 @@
       this.clearPaceBurnoutMetrics();
       if (!this.paceView.hasForcedPaceStateOverride()) {
         this.paceView.setPaceSummary({
-          copy: "Could not read local history.",
-          level: this.paceView.mutedClassName,
+          copy: PacePetsLogic.PACE_STATES.nothingness.copyByReason.checkFailed,
+          level: this.paceView.nothingnessClassName,
           remainingPercent: null,
           timePercent: null,
-          title: this.STATUS_TEXT.checkFailed,
+          title: this.paceView.nothingnessTitle,
         });
       }
-      this.usageChartView.setEmpty("Could not read local history.");
+      this.usageChartView.renderEmptyData({ windowData: null, windowKey });
       this.paceView.refreshForcedPaceStateOverride();
     },
 

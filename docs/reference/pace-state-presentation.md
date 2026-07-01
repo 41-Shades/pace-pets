@@ -24,7 +24,9 @@ paceRatio = remainingPercent / timeRemainingPercent
 
 `timeRemainingPercent` is derived from `resetsAt`, `windowMinutes`, and the
 current time. If either percent cannot be normalized, or if the time remaining
-percent is zero, the ratio is unavailable and the muted state is used.
+percent is zero, the ratio is unavailable. Dashboard interim presentations use
+Nothingness; the muted state remains an internal fallback for unknown ratio
+presentation.
 
 Percent inputs are bounded to `0..100`. Display surfaces choose their own
 formatting, but the stored history keeps source precision after normalization.
@@ -45,11 +47,12 @@ the current observed provider contract.
 | `ahead`          | `pace-ahead`           | `> 1.10` and `<= 1.25`  | Pick up speed     |
 | `strongAhead`    | `pace-strong-ahead`    | `> 1.25` and `<= 1.55`  | Push harder       |
 | `wellAhead`      | `pace-well-ahead`      | `> 1.55`                | Sprint faster!    |
-| `muted`          | `pace-muted`           | unavailable             | Waiting for usage |
+| `muted`          | `pace-muted`           | unavailable             | Internal fallback |
 
-Big Bang, Perfect Sync, Perfect Zero, Splat, and Singularity are controlled
+Big Bang, Perfect Sync, Perfect Zero, Splat, Singularity, and Nothingness are
 presentation states, not threshold states. They sit above threshold mapping and
-can override the displayed state when their exact rule matches.
+can override the displayed state when their exact rule matches or when the
+dashboard has no usable pace reading.
 
 ## Perfect State Contract
 
@@ -114,8 +117,8 @@ Product implications:
   window, the current guard keeps exact exhausted usage in Splat through the
   final zero-time band instead of promoting it to Perfect Zero or Singularity.
 - After `resetsAt` passes, the dashboard holds the latest zero-state
-  presentation instead of showing `Waiting for reading`. The next successful
-  reset reading moves the display to Big Bang.
+  presentation instead of showing Nothingness with the waiting-for-reading copy.
+  The next successful reset reading moves the display to Big Bang.
 
 ## Display-Hundred Timing Bands
 
@@ -173,9 +176,14 @@ source precision can be whole-percent at the low end. Held zero-state
 presentation can keep Splat visible after the reset boundary until a new usage
 reading arrives.
 
-| State           | Surface                     | Rule                                                                                    | Presentation                                                      |
-| --------------- | --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Splat (`splat`) | Dashboard and toolbar badge | Remaining usage percent is reported as `0` and rounded time-remaining percent is `> 0`. | Uses the `splat` state with a controlled display ratio of `0.00`. |
+Nothingness is the user-facing imperfect state for interim dashboard card
+presentations where no rail threshold state should be shown. It has no icon
+asset; the dashboard and rail render only a faint icon-slot outline.
+
+| State                       | Surface                     | Rule                                                                                    | Presentation                                                      |
+| --------------------------- | --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Splat (`splat`)             | Dashboard and toolbar badge | Remaining usage percent is reported as `0` and rounded time-remaining percent is `> 0`. | Uses the `splat` state with a controlled display ratio of `0.00`. |
+| Nothingness (`nothingness`) | Dashboard                   | No usable live pace reading for the selected interim condition.                         | Uses the `nothingness` state with no pace ratio.                  |
 
 Perfect Zero wins when both usage and time display as zero. That avoids treating
 a provider-rounded usage `0` as absolute exhaustion during the final rounded time
@@ -191,7 +199,7 @@ catalog:
 ```text
 levels: wellAhead, strongAhead, ahead, on, behind, wellBehind, criticalBehind
 perfect: bigBang, sync, perfectZero, singularity
-imperfect: splat
+imperfect: splat, nothingness
 ```
 
 Preview controls are owned by `collector/extension/preview-control.js`.
@@ -201,7 +209,8 @@ controls can still force regular, perfect, and imperfect states for inspection.
 Rail size, spacing, type scale, and icon dimensions are owned by
 `collector/extension/dashboard-rail.css`; state and theme styles may adjust
 contrast for dark space presentations but should not redefine rail structure.
-Forced toolbar badge states use the same synthetic ratio model.
+Forced toolbar badge states use the same synthetic ratio model except
+Nothingness, which is a no-ratio dashboard preview.
 
 Synthetic and forced developer states use one preview timing model for percent
 bars, chart data, reset dates, reset progress, and `Resets in`. Regular examples
@@ -249,9 +258,9 @@ the displayed pace state changes from another regular level or Perfect Sync.
 The card fades down briefly, swaps to the new state, then fades back in. A small
 finite pulse appears beside the usage-window control in the new state's
 dashboard color as a short state-change afterglow. Big Bang, Perfect Zero,
-Singularity, Splat, muted/waiting states, and transitions to or from those
-states do not use this shared pulse/fade because their presentation is either
-static/waiting or already handled by a state-specific transition. Local
+Singularity, Splat, Nothingness, and transitions to or from those states do not
+use this shared pulse/fade because their presentation is either static/interim
+or already handled by a state-specific transition. Local
 developer controls include a one-shot Pace transition action that stages Keep
 pace, then previews the shared transition into Brake hard without storing
 developer option state.
@@ -552,9 +561,10 @@ values when raw pace is outside the plotted bounds.
 Each shipped pace state gets its image path from
 `collector/extension/themes/default/asset-manifest.js`. The same manifest owns
 the explicit non-packaged pace-state exceptions used by static checks; the muted
-state has no playful image, and Singularity uses generated in-memory art. Big
-Bang uses the packaged `pace-icons/big-bang.png` raster icon for dashboard and
-state-rail presentation. Its dashboard-only transition uses a temporary
+state has no playful image, Nothingness uses an outline placeholder, and
+Singularity uses generated in-memory art. Big Bang uses the packaged
+`pace-icons/big-bang.png` raster icon for dashboard and state-rail presentation.
+Its dashboard-only transition uses a temporary
 generated canvas overlay and the shared full-page space backdrop. Perfect Zero
 also uses the dedicated canvas scene in
 `collector/extension/perfect-zero-space-scene.js` when the main dashboard card

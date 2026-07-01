@@ -59,7 +59,7 @@
 
     setPercent(element, bar, value) {
       if (value === null || value === undefined || !Number.isFinite(value)) {
-        element.textContent = "--%";
+        element.textContent = "--";
         bar.style.width = "0%";
         return;
       }

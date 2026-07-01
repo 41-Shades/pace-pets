@@ -9,12 +9,6 @@
     );
   }
 
-  function hasUsableTime(timePercent, paceRatio) {
-    return (
-      Number.isFinite(timePercent) && timePercent > 0 && paceRatio !== null
-    );
-  }
-
   function shouldBlockPerfectZero({
     allowPerfectZero,
     remainingPercent,
@@ -50,8 +44,28 @@
     return ZERO_STATE_KEYS.includes(controlledPresentation?.state.key);
   }
 
+  function nothingnessCopy(reasonKey) {
+    const state = DATA.PACE_STATES.nothingness;
+    return state.copyByReason?.[reasonKey] || state.copy;
+  }
+
   Object.assign(Controller.prototype, {
+    nothingnessPaceSummary(reasonKey, context = {}) {
+      const state = DATA.PACE_STATES.nothingness;
+      return {
+        ...context,
+        copy: nothingnessCopy(reasonKey),
+        level: state.className,
+        title: state.title,
+      };
+    },
+
     updateTabTitle(title, paceRatio) {
+      if (title === DATA.PACE_STATES.nothingness.title) {
+        document.title = "The Void";
+        return;
+      }
+
       const selectedWindowKey = this.getSelectedWindowKey();
       const spec =
         this.windowSpecs[selectedWindowKey] ||
@@ -164,29 +178,18 @@
     },
 
     waitingPaceSummary() {
-      return {
-        copy: "Waiting for the next automatic check.",
-        level: DATA.MUTED_PACE_CLASS,
+      return this.nothingnessPaceSummary("waitingForUsage", {
         remainingPercent: null,
         timePercent: null,
-        title: "Waiting for usage",
-      };
+      });
     },
 
-    stalePaceSummary({
-      comparisonPaceRatio,
-      remainingPercent,
-      timePercent,
-      waitingForReadingText,
-    }) {
-      return {
+    stalePaceSummary({ comparisonPaceRatio, remainingPercent, timePercent }) {
+      return this.nothingnessPaceSummary("waitingForReading", {
         comparisonPaceRatio,
-        copy: "New window, no reading yet.",
-        level: DATA.MUTED_PACE_CLASS,
         remainingPercent,
         timePercent,
-        title: waitingForReadingText,
-      };
+      });
     },
 
     perfectZeroBlockedSummary(context) {
@@ -240,16 +243,11 @@
       return { ...summary, heldZeroState: true };
     },
 
-    resetTimeMissingSummary(context) {
-      return {
-        ...context,
-        copy: "Reset timing is unavailable.",
-        level: DATA.MUTED_PACE_CLASS,
-        title: "Reset time missing",
-      };
-    },
-
     ratioPaceSummary(context, paceRatio) {
+      if (paceRatio === null) {
+        return this.nothingnessPaceSummary("resetTimingMissing", context);
+      }
+
       const state = PacePetsLogic.paceStatePresentationForRatio(paceRatio);
       return {
         ...context,
@@ -266,7 +264,6 @@
       resetCountdownDisplaysZero,
       staleWindow,
       timePercent,
-      waitingForReadingText,
     }) {
       if (!Number.isFinite(remainingPercent)) {
         return this.waitingPaceSummary();
@@ -289,7 +286,7 @@
             context,
             controlledPresentation,
             resetCountdownDisplaysZero,
-          ) || this.stalePaceSummary({ ...context, waitingForReadingText })
+          ) || this.stalePaceSummary(context)
         );
       }
       if (
@@ -313,9 +310,6 @@
       if (controlledPresentation) {
         return this.controlledPaceSummary(context, controlledPresentation);
       }
-      if (!hasUsableTime(timePercent, paceRatio)) {
-        return this.resetTimeMissingSummary(context);
-      }
 
       return this.ratioPaceSummary(context, paceRatio);
     },
@@ -329,7 +323,6 @@
         applySummary = true,
         allowPerfectZero = true,
         resetCountdownDisplaysZero = false,
-        waitingForReadingText = "Waiting",
       } = {},
     ) {
       const summary = this.paceSummaryModel({
@@ -339,7 +332,6 @@
         resetCountdownDisplaysZero,
         staleWindow,
         timePercent,
-        waitingForReadingText,
       });
       if (applySummary) {
         this.setPaceSummary(summary);

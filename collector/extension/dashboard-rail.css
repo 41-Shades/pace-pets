@@ -59,13 +59,27 @@
   gap: var(--state-chip-gap-y);
 }
 
+.state-column-heading {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 2px;
+  padding-left: 6px;
+}
+
 .state-column-title {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 620;
   line-height: 1.1;
-  margin: 0 0 2px;
-  padding-left: 6px;
+  margin: 0;
+}
+
+.state-column-subtitle {
+  color: var(--subhead);
+  font-size: 0.72rem;
+  font-weight: 620;
+  line-height: 1.1;
+  margin: 0;
 }
 
 .state-chip {
@@ -145,10 +159,33 @@
   z-index: 1;
 }
 
+.state-icon.is-outline-placeholder::before {
+  border: 1px solid color-mix(in srgb, var(--pace-color) 32%, transparent);
+  border-radius: 7px;
+  content: "";
+  height: 72%;
+  opacity: 0.7;
+  width: 72%;
+}
+
 .state-chip.pace-splat .state-icon img {
   object-fit: cover;
   transform: scale(1.08);
   transform-origin: center;
+}
+
+.state-chip.pace-nothingness,
+.state-chip.pace-nothingness:hover,
+.state-chip.pace-nothingness.is-active {
+  background: #000000;
+  border-color: #000000;
+  box-shadow: none;
+}
+
+.state-chip.pace-nothingness .state-icon.is-outline-placeholder::before {
+  background: rgb(248 250 252 / 2%);
+  border-color: rgb(248 250 252 / 30%);
+  opacity: 1;
 }
 
 .state-chip strong {

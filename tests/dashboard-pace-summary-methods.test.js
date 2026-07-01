@@ -111,7 +111,7 @@ describe("PacePetsDashboardPaceController blocked zero summary", () => {
 });
 
 describe("PacePetsDashboardPaceController stale zero fallback", () => {
-  it("leaves non-zero stale windows on the waiting state", () => {
+  it("leaves non-zero stale windows on Nothingness", () => {
     const controller = createController();
     const summary = controller.paceSummaryModel({
       allowPerfectZero: true,
@@ -124,8 +124,8 @@ describe("PacePetsDashboardPaceController stale zero fallback", () => {
     });
 
     expect(summary).toMatchObject({
-      level: globalThis.PacePetsDashboardPaceData.MUTED_PACE_CLASS,
-      title: "Waiting for reading",
+      level: globalThis.PacePetsLogic.PACE_STATES.nothingness.className,
+      title: "Nothingness",
     });
     expect(summary.heldZeroState).toBeUndefined();
   });
