@@ -1,0 +1,268 @@
+body.has-nothingness-page-background {
+  color-scheme: dark;
+
+  --bg: #000000;
+  --panel: #000000;
+  --text: #f8fafc;
+  --muted: #8b949e;
+  --subhead: #64748b;
+  --line: rgb(248 250 252 / 10%);
+  --line-strong: rgb(248 250 252 / 14%);
+  --metric-icon-bg: rgb(248 250 252 / 2%);
+  --metric-icon-border: rgb(248 250 252 / 4%);
+  --pace-color: rgb(20 184 166 / 22%);
+  --surface-mix: #000000;
+  --track: rgb(248 250 252 / 3%);
+  --chart-plot-bg: #000000;
+  --shadow-color: 0 0 0;
+}
+
+body.has-nothingness-page-background .usage-panel,
+body.has-nothingness-page-background .pace-card.pace-nothingness,
+body.has-nothingness-page-background .metrics,
+body.has-nothingness-page-background .reset-card,
+body.has-nothingness-page-background .chart-panel,
+body.has-nothingness-page-background .chart-frame.empty {
+  background: #000000;
+  box-shadow: none;
+}
+
+body.has-nothingness-page-background .usage-panel,
+body.has-nothingness-page-background .pace-card.pace-nothingness,
+body.has-nothingness-page-background .metrics,
+body.has-nothingness-page-background .reset-card,
+body.has-nothingness-page-background .chart-panel {
+  border-color: rgb(248 250 252 / 7%);
+}
+
+body.has-nothingness-page-background .pace-card.pace-nothingness {
+  border-color: rgb(248 250 252 / 10%);
+}
+
+body.has-nothingness-page-background .chart-frame.empty {
+  border-color: rgb(248 250 252 / 5%);
+}
+
+body.has-nothingness-page-background .chart-frame.empty-data {
+  background: #000000;
+}
+
+body.has-nothingness-page-background .chart-frame.empty-data canvas {
+  opacity: 0.18;
+}
+
+body.has-nothingness-page-background .usage-panel::after {
+  animation: nothingness-pulse 12s ease-in-out infinite;
+  background: #000000;
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 50;
+}
+
+html[data-motion="off"]
+  body.has-nothingness-page-background
+  .usage-panel::after {
+  animation: none;
+  opacity: 0;
+}
+
+body.has-nothingness-page-background .brand-title h1 {
+  color: rgb(248 250 252 / 78%);
+}
+
+body.has-nothingness-page-background .pace-card.pace-nothingness #pace-title {
+  color: rgb(248 250 252 / 84%);
+}
+
+body.has-nothingness-page-background .pace-card.pace-nothingness #pace-copy {
+  color: rgb(248 250 252 / 70%);
+}
+
+body.has-nothingness-page-background .theme-toggle {
+  background: transparent;
+  color: rgb(154 52 18 / 58%);
+  position: relative;
+  z-index: 51;
+}
+
+body.has-nothingness-page-background .theme-toggle:hover {
+  background: rgb(154 52 18 / 8%);
+  color: rgb(194 65 12 / 72%);
+}
+
+body.has-nothingness-page-background .theme-toggle-icon {
+  animation: nothingness-blood-moon-rise 12s ease-in-out infinite;
+  background:
+    radial-gradient(
+      circle at 63% 74%,
+      rgb(251 191 36 / 48%) 0 12%,
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 38% 32%,
+      rgb(127 29 29 / 86%) 0 34%,
+      rgb(154 52 18 / 78%) 56%,
+      rgb(39 7 7 / 92%) 100%
+    );
+  border: 1px solid rgb(251 146 60 / 18%);
+  box-shadow:
+    inset -5px -5px 10px rgb(0 0 0 / 68%),
+    inset 4px 5px 8px rgb(248 113 22 / 18%),
+    0 0 0 1px rgb(69 10 10 / 36%),
+    0 0 8px rgb(154 52 18 / 12%);
+  height: 20px;
+  opacity: 0.58;
+  transform: scale(1);
+  transform-origin: center;
+  width: 20px;
+}
+
+html[data-motion="off"]
+  body.has-nothingness-page-background
+  .theme-toggle-icon {
+  animation: none;
+  transform: scale(1);
+}
+
+body.has-nothingness-page-background .theme-toggle:hover .theme-toggle-icon,
+body.has-nothingness-page-background
+  .theme-toggle:focus-visible
+  .theme-toggle-icon {
+  opacity: 0.82;
+}
+
+body.has-nothingness-page-background .theme-toggle-icon::before {
+  background:
+    radial-gradient(
+      circle at 30% 40%,
+      rgb(0 0 0 / 24%) 0 1px,
+      transparent 1.4px
+    ),
+    radial-gradient(
+      circle at 70% 34%,
+      rgb(0 0 0 / 18%) 0 0.8px,
+      transparent 1.2px
+    ),
+    radial-gradient(
+      circle at 58% 68%,
+      rgb(0 0 0 / 18%) 0 1.2px,
+      transparent 1.7px
+    );
+  border-radius: 50%;
+  content: "";
+  inset: 3px;
+  opacity: 0.58;
+  position: absolute;
+}
+
+body.has-nothingness-page-background .theme-toggle-icon::after {
+  background: radial-gradient(
+    circle at 42% 36%,
+    transparent 0 34%,
+    rgb(0 0 0 / 24%) 66%,
+    rgb(0 0 0 / 52%) 100%
+  );
+  height: 100%;
+  inset: 0;
+  width: 100%;
+}
+
+body.has-nothingness-page-background .motion-toggle {
+  color: rgb(148 163 184 / 28%);
+}
+
+body.has-nothingness-page-background .motion-toggle:hover {
+  color: rgb(148 163 184 / 46%);
+}
+
+body.has-nothingness-page-background .info-toggle-icon {
+  --info-toggle-mark: rgb(148 163 184 / 28%);
+  --info-toggle-ring: rgb(148 163 184 / 18%);
+}
+
+body.has-nothingness-page-background .info-toggle:hover .info-toggle-icon,
+body.has-nothingness-page-background
+  .info-toggle:focus-visible
+  .info-toggle-icon {
+  --info-toggle-mark: rgb(148 163 184 / 46%);
+  --info-toggle-ring: rgb(148 163 184 / 32%);
+}
+
+body.has-nothingness-page-background .chart-state,
+body.has-nothingness-page-background .metric-title,
+body.has-nothingness-page-background .reset-date-value,
+body.has-nothingness-page-background #prior-reset-time,
+body.has-nothingness-page-background #scheduled-reset-time {
+  color: rgb(248 250 252 / 34%);
+}
+
+body.has-nothingness-page-background .reset-label,
+body.has-nothingness-page-background .reset-details dt,
+body.has-nothingness-page-background .pace-burnout-line,
+body.has-nothingness-page-background .reset-note {
+  color: rgb(148 163 184 / 24%);
+}
+
+body.has-nothingness-page-background .metric-value,
+body.has-nothingness-page-background #resets-in {
+  color: rgb(248 250 252 / 38%);
+}
+
+body.has-nothingness-page-background .metric-icon,
+body.has-nothingness-page-background .reset-label-icon {
+  color: rgb(20 184 166 / 22%);
+}
+
+body.has-nothingness-page-background .collection-meta,
+body.has-nothingness-page-background #collection-status-label,
+body.has-nothingness-page-background .last-collected {
+  color: rgb(148 163 184 / 36%);
+}
+
+body.has-nothingness-page-background .collection-pulse.live {
+  --collection-dot: rgb(20 184 166 / 32%);
+
+  animation: none;
+}
+
+body.has-nothingness-page-background .brand-title p {
+  opacity: 0.42;
+}
+
+body.has-nothingness-page-background .chart-panel {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+body.has-nothingness-page-background .chart-meta {
+  display: none;
+}
+
+body.has-nothingness-page-background .reset-progress {
+  visibility: hidden;
+}
+
+@keyframes nothingness-pulse {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.58;
+  }
+}
+
+@keyframes nothingness-blood-moon-rise {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.32);
+  }
+}

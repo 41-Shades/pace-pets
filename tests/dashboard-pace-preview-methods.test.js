@@ -26,6 +26,12 @@ beforeAll(async () => {
   await importExtensionScript("collector/extension/dashboard-pace-data.js");
   await importExtensionScript("collector/extension/dashboard-pace-core.js");
   await importExtensionScript(
+    "collector/extension/dashboard-pace-icon-render-methods.js",
+  );
+  await importExtensionScript(
+    "collector/extension/dashboard-pace-icon-selection.js",
+  );
+  await importExtensionScript(
     "collector/extension/dashboard-pace-icon-methods.js",
   );
   await importExtensionScript(

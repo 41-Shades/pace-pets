@@ -17,8 +17,6 @@
       this.COLLECTION_STATUS_TITLE =
         this.DASHBOARD_STATUS.COLLECTION_STATUS_TITLE;
       this.STATUS_TEXT = this.DASHBOARD_STATUS.STATUS_TEXT;
-      this.SIGN_IN_NOT_FOUND_COPY =
-        this.DASHBOARD_STATUS.SIGN_IN_NOT_FOUND_COPY;
       this.WINDOW_SPECS = this.USAGE_WINDOWS.WINDOW_SPECS;
       this.currentHistory = null;
       this.currentRefreshStatus = null;

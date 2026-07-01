@@ -52,8 +52,8 @@ describe("PacePetsDashboardStatus empty history", () => {
       status.emptyHistoryCollectionState({ formatClockTime }),
     ).toMatchObject({
       chartCopy: "Waiting for local history.",
-      paceCopy: "Waiting for the first automatic usage check.",
-      paceTitle: "No history yet",
+      paceCopy: "No history yet in this void.",
+      paceTitle: "Nothingness",
       status: {
         detail: "",
         manualRefresh: true,
@@ -92,8 +92,8 @@ describe("PacePetsDashboardStatus empty history", () => {
 
     expect(state).toMatchObject({
       chartCopy: "ChatGPT sign-in not found",
-      paceCopy: "Open ChatGPT to resume checks.",
-      paceTitle: "ChatGPT sign-in not found",
+      paceCopy: "ChatGPT sign-in not found in this void.",
+      paceTitle: "Nothingness",
       status: {
         manualRefresh: true,
         mode: "warning",

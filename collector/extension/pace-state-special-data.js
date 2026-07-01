@@ -253,9 +253,34 @@
     });
   }
 
+  function nothingnessState() {
+    return Object.freeze({
+      key: "nothingness",
+      className: "pace-nothingness",
+      title: "Nothingness",
+      copy: "Empty",
+      copyByReason: Object.freeze({
+        checkFailed: "Check failed in this void.",
+        noHistory: "No history yet in this void.",
+        resetTimingMissing: "Reset timing missing in this void.",
+        signInNotFound: "ChatGPT sign-in not found in this void.",
+        waitingForReading: "Waiting for reading in this void.",
+        waitingForUsage: "Waiting for usage in this void.",
+      }),
+      ratioLabel: "Empty",
+      badgeColor: "#000000",
+      favicon: { bg: "#000000", color: "#f8fafc" },
+      iconParts: [],
+      iconPresentation: "outline",
+      noPaceRatio: true,
+      playfulImage: "",
+    });
+  }
+
   function specialPaceStates() {
     return Object.freeze({
       bigBang: bigBangState(),
+      nothingness: nothingnessState(),
       sync: syncState(),
       perfectZero: perfectZeroState(),
       singularity: singularityState(),

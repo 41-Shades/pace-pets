@@ -30,8 +30,13 @@
   }
   function paceState(state) {
     const stateIconParts = iconParts(state.iconParts);
+    const copyByReason =
+      state.copyByReason && typeof state.copyByReason === "object"
+        ? Object.freeze({ ...state.copyByReason })
+        : undefined;
     return Object.freeze({
       ...state,
+      ...(copyByReason ? { copyByReason } : {}),
       favicon: Object.freeze({
         ...state.favicon,
         iconParts: iconParts(state.favicon.iconParts || state.iconParts),
@@ -201,7 +206,7 @@
     "singularity",
     "bigBang",
   ]);
-  const PACE_IMPERFECT_STATE_KEYS = Object.freeze(["splat"]);
+  const PACE_IMPERFECT_STATE_KEYS = Object.freeze(["splat", "nothingness"]);
   const PACE_STATE_GROUPS = Object.freeze([
     paceStateGroup(
       "paceLevels",

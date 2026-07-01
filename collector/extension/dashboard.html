@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="./dashboard-train-smoke.css" />
     <link rel="stylesheet" href="./dashboard-sprint-smoke.css" />
     <link rel="stylesheet" href="./dashboard-pace-states.css" />
+    <link rel="stylesheet" href="./dashboard-nothingness.css" />
     <link rel="stylesheet" href="./dashboard-sync-effects.css" />
     <link rel="stylesheet" href="./dashboard-splat-fall.css" />
     <link rel="stylesheet" href="./dashboard-splat-extreme.css" />
@@ -43,7 +44,7 @@
     <link rel="stylesheet" href="./dashboard-singularity-transition.css" />
     <link rel="stylesheet" href="./dashboard-big-bang-transition.css" />
   </head>
-  <body>
+  <body class="has-nothingness-page-background">
     <main class="shell">
       <canvas
         class="perfect-zero-page-background"
@@ -147,18 +148,18 @@
             </div>
           </header>
           <section
-            class="pace-card"
+            class="pace-card pace-nothingness"
             id="pace-card"
             aria-labelledby="pace-title"
           >
-            <div class="pace-icon" id="pace-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" role="img">
-                <path d="M20 6 9 17l-5-5"></path>
-              </svg>
-            </div>
+            <div
+              class="pace-icon is-outline-placeholder"
+              id="pace-icon"
+              aria-hidden="true"
+            ></div>
             <div class="pace-copy">
-              <h2 id="pace-title">Checking pace</h2>
-              <p id="pace-copy">Waiting for usage.</p>
+              <h2 id="pace-title">Nothingness</h2>
+              <p id="pace-copy">Waiting for usage in this void.</p>
             </div>
             <div class="pace-stats" aria-label="Usage to time summary" hidden>
               <div
@@ -183,7 +184,7 @@
                   role="img"
                   hidden
                 ></canvas>
-                <p class="chart-state" id="chart-state">Waiting for history.</p>
+                <p class="chart-state" id="chart-state">Empty</p>
               </div>
             </section>
             <section
@@ -200,7 +201,7 @@
                     </svg>
                   </div>
                   <span class="metric-copy metric-title">Usage remaining</span>
-                  <span class="metric-value" id="usage-percent">--%</span>
+                  <span class="metric-value" id="usage-percent">--</span>
                 </div>
                 <div class="metric-bar" aria-hidden="true">
                   <div class="metric-bar-fill" id="usage-bar"></div>
@@ -215,7 +216,7 @@
                     </svg>
                   </div>
                   <span class="metric-copy metric-title">Time remaining</span>
-                  <span class="metric-value" id="time-percent">--%</span>
+                  <span class="metric-value" id="time-percent">--</span>
                 </div>
                 <div class="metric-bar" aria-hidden="true">
                   <div class="metric-bar-fill" id="time-bar"></div>

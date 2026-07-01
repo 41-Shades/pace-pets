@@ -24,8 +24,16 @@
     return controller.motionPreferenceEnabled?.() !== false;
   }
 
+  function isNoRatioPreviewState(state) {
+    return state.noPaceRatio === true;
+  }
+
   Object.assign(Controller.prototype, {
     paceStatePreview(state) {
+      if (isNoRatioPreviewState(state)) {
+        return { forcedPaceRatio: null, noPaceRatio: true, state };
+      }
+
       const forcedPaceRatio = this.forcedPaceRatioForState(state.key);
       if (forcedPaceRatio === null) {
         return null;
@@ -63,6 +71,18 @@
       }
 
       return state.previewRatioLabel || state.ratioLabel;
+    },
+
+    applyNoRatioPreviewResetTiming() {
+      const windowKey = this.selectedSupportedWindowKey();
+      const spec =
+        this.windowSpecs[windowKey] || this.windowSpecs[this.defaultWindowKey];
+      DASHBOARD_TIME.setResetParts(this.elements, null, spec);
+      this.elements.resetsIn.textContent = "--";
+      this.elements.resetBudgetRateValue.textContent = "--";
+      this.elements.resetBudgetRateUnit.textContent = "";
+      this.elements.resetBudgetRate.hidden = true;
+      this.elements.paceBurnoutIn.textContent = "--";
     },
 
     applyPreviewResetTiming(state, previewWindow) {
@@ -120,6 +140,34 @@
     ) {
       const { forcedPaceRatio, previewWindow, state } = preview;
       const renderPreview = () => {
+        if (preview.noPaceRatio) {
+          this.setPreviewPercentPair(null);
+          this.setPaceLevel(state.className, {
+            playSplatFallOnEntry,
+            replaySplatFall,
+          });
+          this.updateBrakeWobbleIntensity?.(null);
+          this.updateSprintSmokeIntensity?.(null);
+          this.elements.paceTitle.textContent = state.title;
+          this.elements.paceCopy.textContent = state.copy;
+          this.elements.paceStats.hidden = true;
+          this.elements.paceRatioStat.hidden = true;
+          this.elements.paceRatioValue.textContent = "--";
+          this.renderPaceAltRatio(null);
+          if (state.key === DATA.PACE_STATES.nothingness.key) {
+            this.usageChartView.renderEmptyData({
+              windowData: null,
+              windowKey: this.selectedSupportedWindowKey(),
+            });
+          } else {
+            this.usageChartView.setEmpty(state.copy);
+          }
+          this.applyNoRatioPreviewResetTiming();
+          this.updateTabTitle(state.title, null);
+          this.updateSpecialTransitionState?.(previousState, state);
+          return;
+        }
+
         this.setPreviewPercentPair(previewWindow.percentPair);
         this.setPaceLevel(state.className, {
           playSplatFallOnEntry,

@@ -18,7 +18,8 @@
     return Object.freeze({
       hasForcedPaceStateOverride:
         controller.hasForcedPaceStateOverride.bind(controller),
-      mutedClassName: DATA.MUTED_PACE_CLASS,
+      nothingnessClassName: DATA.PACE_STATES.nothingness.className,
+      nothingnessTitle: DATA.PACE_STATES.nothingness.title,
       pauseHiddenDocumentMotionEffects:
         controller.pauseHiddenDocumentMotionEffects.bind(controller),
       playPendingSpecialTransition:

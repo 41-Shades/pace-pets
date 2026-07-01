@@ -162,9 +162,22 @@
   --pace-icon-bg: #e2e8f0;
 }
 
+.pace-nothingness {
+  --pace-color: #f8fafc;
+  --pace-bg: #000000;
+  --pace-border: #111827;
+  --pace-copy-color: #cbd5e1;
+  --pace-icon-bg: transparent;
+}
+
 .pace-card.pace-splat .pace-icon > img {
   transform: translateY(4px) scale(1.1);
   transform-origin: center;
+}
+
+.pace-card.pace-nothingness .pace-copy p,
+.pace-card.pace-nothingness .pace-alt-ratio {
+  color: var(--pace-copy-color);
 }
 
 .pace-card.pace-singularity .pace-copy p,
@@ -320,6 +333,14 @@
   --pace-bg: #202829;
   --pace-border: #64748b;
   --pace-icon-bg: #303a42;
+}
+
+[data-theme="dark"] .pace-nothingness {
+  --pace-color: #f8fafc;
+  --pace-bg: #000000;
+  --pace-border: #111827;
+  --pace-copy-color: #cbd5e1;
+  --pace-icon-bg: transparent;
 }
 
 [data-theme="dark"] .pace-ahead {

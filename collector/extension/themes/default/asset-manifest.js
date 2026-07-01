@@ -80,6 +80,7 @@
   });
   const PACE_ICON_STATE_EXCLUSIONS = Object.freeze({
     muted: "No playful image.",
+    nothingness: "Uses an outline placeholder.",
     singularity: "Uses generated in-memory art.",
   });
 
