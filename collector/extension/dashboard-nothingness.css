@@ -99,23 +99,23 @@ body.has-nothingness-page-background .theme-toggle-icon {
   background:
     radial-gradient(
       circle at 63% 74%,
-      rgb(251 191 36 / 48%) 0 12%,
+      rgb(251 191 36 / 56%) 0 12%,
       transparent 30%
     ),
     radial-gradient(
       circle at 38% 32%,
-      rgb(127 29 29 / 86%) 0 34%,
-      rgb(154 52 18 / 78%) 56%,
+      rgb(127 29 29 / 92%) 0 34%,
+      rgb(154 52 18 / 86%) 56%,
       rgb(39 7 7 / 92%) 100%
     );
-  border: 1px solid rgb(251 146 60 / 18%);
+  border: 1px solid rgb(251 146 60 / 24%);
   box-shadow:
     inset -5px -5px 10px rgb(0 0 0 / 68%),
-    inset 4px 5px 8px rgb(248 113 22 / 18%),
-    0 0 0 1px rgb(69 10 10 / 36%),
-    0 0 8px rgb(154 52 18 / 12%);
+    inset 4px 5px 8px rgb(248 113 22 / 24%),
+    0 0 0 1px rgb(69 10 10 / 42%),
+    0 0 10px rgb(154 52 18 / 18%);
   height: 20px;
-  opacity: 0.58;
+  opacity: 0.66;
   transform: scale(1);
   transform-origin: center;
   width: 20px;
@@ -132,7 +132,7 @@ body.has-nothingness-page-background .theme-toggle:hover .theme-toggle-icon,
 body.has-nothingness-page-background
   .theme-toggle:focus-visible
   .theme-toggle-icon {
-  opacity: 0.82;
+  opacity: 0.9;
 }
 
 body.has-nothingness-page-background .theme-toggle-icon::before {
