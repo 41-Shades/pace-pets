@@ -25,6 +25,9 @@
     if (state.key === DATA.PACE_STATES.splat.key) {
       return "Zero arrived early. Gravity noticed.";
     }
+    if (state.key === DATA.PACE_STATES.nothingness.key) {
+      return "All interim states.";
+    }
 
     return state.copy;
   }

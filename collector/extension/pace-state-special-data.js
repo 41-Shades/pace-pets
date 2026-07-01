@@ -267,7 +267,7 @@
         waitingForReading: "Waiting for reading in this void.",
         waitingForUsage: "Waiting for usage in this void.",
       }),
-      ratioLabel: "Empty",
+      ratioLabel: "The Void",
       badgeColor: "#000000",
       favicon: { bg: "#000000", color: "#f8fafc" },
       iconParts: [],
