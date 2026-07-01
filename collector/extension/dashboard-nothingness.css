@@ -6,13 +6,13 @@ body.has-nothingness-page-background {
   --text: #f8fafc;
   --muted: #8b949e;
   --subhead: #64748b;
-  --line: rgb(248 250 252 / 10%);
-  --line-strong: rgb(248 250 252 / 14%);
-  --metric-icon-bg: rgb(248 250 252 / 2%);
-  --metric-icon-border: rgb(248 250 252 / 4%);
-  --pace-color: rgb(20 184 166 / 22%);
+  --line: rgb(248 250 252 / 12%);
+  --line-strong: rgb(248 250 252 / 17%);
+  --metric-icon-bg: rgb(248 250 252 / 4%);
+  --metric-icon-border: rgb(248 250 252 / 8%);
+  --pace-color: rgb(20 184 166 / 30%);
   --surface-mix: #000000;
-  --track: rgb(248 250 252 / 3%);
+  --track: rgb(248 250 252 / 5%);
   --chart-plot-bg: #000000;
   --shadow-color: 0 0 0;
 }
@@ -32,11 +32,11 @@ body.has-nothingness-page-background .pace-card.pace-nothingness,
 body.has-nothingness-page-background .metrics,
 body.has-nothingness-page-background .reset-card,
 body.has-nothingness-page-background .chart-panel {
-  border-color: rgb(248 250 252 / 7%);
+  border-color: rgb(248 250 252 / 10%);
 }
 
 body.has-nothingness-page-background .pace-card.pace-nothingness {
-  border-color: rgb(248 250 252 / 10%);
+  border-color: rgb(248 250 252 / 13%);
 }
 
 body.has-nothingness-page-background .chart-frame.empty {
@@ -48,7 +48,7 @@ body.has-nothingness-page-background .chart-frame.empty-data {
 }
 
 body.has-nothingness-page-background .chart-frame.empty-data canvas {
-  opacity: 0.18;
+  opacity: 0.26;
 }
 
 body.has-nothingness-page-background .usage-panel::after {
@@ -79,7 +79,7 @@ body.has-nothingness-page-background .pace-card.pace-nothingness #pace-title {
 }
 
 body.has-nothingness-page-background .pace-card.pace-nothingness #pace-copy {
-  color: rgb(248 250 252 / 70%);
+  color: rgb(248 250 252 / 76%);
 }
 
 body.has-nothingness-page-background .theme-toggle {
@@ -172,24 +172,24 @@ body.has-nothingness-page-background .theme-toggle-icon::after {
 }
 
 body.has-nothingness-page-background .motion-toggle {
-  color: rgb(148 163 184 / 28%);
+  color: rgb(148 163 184 / 36%);
 }
 
 body.has-nothingness-page-background .motion-toggle:hover {
-  color: rgb(148 163 184 / 46%);
+  color: rgb(148 163 184 / 54%);
 }
 
 body.has-nothingness-page-background .info-toggle-icon {
-  --info-toggle-mark: rgb(148 163 184 / 28%);
-  --info-toggle-ring: rgb(148 163 184 / 18%);
+  --info-toggle-mark: rgb(148 163 184 / 36%);
+  --info-toggle-ring: rgb(148 163 184 / 26%);
 }
 
 body.has-nothingness-page-background .info-toggle:hover .info-toggle-icon,
 body.has-nothingness-page-background
   .info-toggle:focus-visible
   .info-toggle-icon {
-  --info-toggle-mark: rgb(148 163 184 / 46%);
-  --info-toggle-ring: rgb(148 163 184 / 32%);
+  --info-toggle-mark: rgb(148 163 184 / 54%);
+  --info-toggle-ring: rgb(148 163 184 / 40%);
 }
 
 body.has-nothingness-page-background .chart-state,
@@ -197,40 +197,40 @@ body.has-nothingness-page-background .metric-title,
 body.has-nothingness-page-background .reset-date-value,
 body.has-nothingness-page-background #prior-reset-time,
 body.has-nothingness-page-background #scheduled-reset-time {
-  color: rgb(248 250 252 / 34%);
+  color: rgb(248 250 252 / 44%);
 }
 
 body.has-nothingness-page-background .reset-label,
 body.has-nothingness-page-background .reset-details dt,
 body.has-nothingness-page-background .pace-burnout-line,
 body.has-nothingness-page-background .reset-note {
-  color: rgb(148 163 184 / 24%);
+  color: rgb(148 163 184 / 34%);
 }
 
 body.has-nothingness-page-background .metric-value,
 body.has-nothingness-page-background #resets-in {
-  color: rgb(248 250 252 / 38%);
+  color: rgb(248 250 252 / 48%);
 }
 
 body.has-nothingness-page-background .metric-icon,
 body.has-nothingness-page-background .reset-label-icon {
-  color: rgb(20 184 166 / 22%);
+  color: rgb(20 184 166 / 30%);
 }
 
 body.has-nothingness-page-background .collection-meta,
 body.has-nothingness-page-background #collection-status-label,
 body.has-nothingness-page-background .last-collected {
-  color: rgb(148 163 184 / 36%);
+  color: rgb(148 163 184 / 46%);
 }
 
 body.has-nothingness-page-background .collection-pulse.live {
-  --collection-dot: rgb(20 184 166 / 32%);
+  --collection-dot: rgb(20 184 166 / 42%);
 
   animation: none;
 }
 
 body.has-nothingness-page-background .brand-title p {
-  opacity: 0.42;
+  opacity: 0.5;
 }
 
 body.has-nothingness-page-background .chart-panel {
@@ -252,7 +252,7 @@ body.has-nothingness-page-background .reset-progress {
   }
 
   50% {
-    opacity: 0.58;
+    opacity: 0.48;
   }
 }
 
