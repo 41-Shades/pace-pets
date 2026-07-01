@@ -82,6 +82,12 @@ body.has-nothingness-page-background .pace-card.pace-nothingness #pace-copy {
   color: rgb(248 250 252 / 76%);
 }
 
+body.has-nothingness-page-background
+  .pace-card.pace-nothingness
+  .pace-icon.is-outline-placeholder {
+  border-color: rgb(154 52 18 / 18%);
+}
+
 body.has-nothingness-page-background .theme-toggle {
   background: transparent;
   color: rgb(154 52 18 / 58%);
