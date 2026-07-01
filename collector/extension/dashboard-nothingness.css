@@ -98,24 +98,36 @@ body.has-nothingness-page-background .theme-toggle-icon {
   animation: nothingness-blood-moon-rise 12s ease-in-out infinite;
   background:
     radial-gradient(
-      circle at 63% 74%,
-      rgb(251 191 36 / 56%) 0 12%,
-      transparent 30%
+      circle at 38% 22%,
+      rgb(255 237 213 / 54%) 0 7%,
+      rgb(251 146 60 / 54%) 16%,
+      transparent 36%
     ),
     radial-gradient(
-      circle at 38% 32%,
-      rgb(127 29 29 / 92%) 0 34%,
-      rgb(154 52 18 / 86%) 56%,
-      rgb(39 7 7 / 92%) 100%
+      circle at 52% 84%,
+      rgb(248 113 22 / 96%) 0 22%,
+      transparent 48%
+    ),
+    radial-gradient(
+      circle at 72% 68%,
+      rgb(220 38 38 / 90%) 0 26%,
+      transparent 52%
+    ),
+    radial-gradient(
+      circle at 43% 46%,
+      rgb(251 146 60 / 98%) 0 28%,
+      rgb(234 88 12 / 98%) 55%,
+      rgb(153 27 27 / 98%) 78%,
+      rgb(69 10 10 / 96%) 100%
     );
-  border: 1px solid rgb(251 146 60 / 24%);
+  border: 1px solid rgb(251 146 60 / 32%);
   box-shadow:
-    inset -5px -5px 10px rgb(0 0 0 / 68%),
-    inset 4px 5px 8px rgb(248 113 22 / 24%),
-    0 0 0 1px rgb(69 10 10 / 42%),
-    0 0 10px rgb(154 52 18 / 18%);
+    inset -5px -5px 10px rgb(69 10 10 / 58%),
+    inset 3px 4px 8px rgb(255 237 213 / 20%),
+    0 0 0 1px rgb(69 10 10 / 48%),
+    0 0 12px rgb(194 65 12 / 24%);
   height: 20px;
-  opacity: 0.66;
+  opacity: 0.78;
   transform: scale(1);
   transform-origin: center;
   width: 20px;
@@ -132,43 +144,68 @@ body.has-nothingness-page-background .theme-toggle:hover .theme-toggle-icon,
 body.has-nothingness-page-background
   .theme-toggle:focus-visible
   .theme-toggle-icon {
-  opacity: 0.9;
+  opacity: 0.96;
 }
 
 body.has-nothingness-page-background .theme-toggle-icon::before {
   background:
     radial-gradient(
-      circle at 30% 40%,
-      rgb(0 0 0 / 24%) 0 1px,
-      transparent 1.4px
+      circle at 68% 34%,
+      rgb(69 10 10 / 56%) 0 10%,
+      transparent 17%
     ),
     radial-gradient(
-      circle at 70% 34%,
-      rgb(0 0 0 / 18%) 0 0.8px,
-      transparent 1.2px
+      circle at 34% 55%,
+      rgb(127 29 29 / 50%) 0 14%,
+      transparent 22%
     ),
     radial-gradient(
-      circle at 58% 68%,
-      rgb(0 0 0 / 18%) 0 1.2px,
-      transparent 1.7px
+      circle at 74% 74%,
+      rgb(127 29 29 / 58%) 0 12%,
+      transparent 21%
+    ),
+    radial-gradient(
+      circle at 43% 30%,
+      rgb(251 191 36 / 42%) 0 5%,
+      transparent 10%
+    ),
+    radial-gradient(
+      circle at 54% 58%,
+      rgb(255 237 213 / 30%) 0 4%,
+      transparent 9%
     );
   border-radius: 50%;
   content: "";
-  inset: 3px;
-  opacity: 0.58;
+  inset: 2px;
+  opacity: 0.82;
   position: absolute;
 }
 
 body.has-nothingness-page-background .theme-toggle-icon::after {
-  background: radial-gradient(
-    circle at 42% 36%,
-    transparent 0 34%,
-    rgb(0 0 0 / 24%) 66%,
-    rgb(0 0 0 / 52%) 100%
+  background:
+    radial-gradient(
+      ellipse at 50% 0,
+      rgb(255 237 213 / 62%) 0 7%,
+      rgb(251 191 36 / 40%) 15%,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 50% 105%,
+      rgb(127 29 29 / 54%) 0 28%,
+      transparent 62%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 60%,
+      rgb(0 0 0 / 24%) 82%,
+      rgb(0 0 0 / 48%) 100%
   );
-  height: 100%;
+  border-radius: 50%;
+  content: "";
+  height: auto;
   inset: 0;
-  width: 100%;
+  position: absolute;
+  width: auto;
 }
 
 body.has-nothingness-page-background .motion-toggle {
