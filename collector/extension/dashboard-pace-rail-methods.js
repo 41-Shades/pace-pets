@@ -177,7 +177,6 @@
             DATA.PACE_IMPERFECT_LEGEND_STATE_KEYS.length === 1
               ? "Imperfect state"
               : "Imperfect states",
-          subtitleText: DATA.PACE_STATES.nothingness.ratioLabel,
           stateKeys: DATA.PACE_IMPERFECT_LEGEND_STATE_KEYS,
         });
       }
