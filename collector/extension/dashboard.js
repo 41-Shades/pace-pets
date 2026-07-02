@@ -28,6 +28,10 @@
       "PacePetsDashboardChart",
       "Pace Pets dashboard chart",
     ),
+    DASHBOARD_AUDIO_CONTROL: requiredGlobal(
+      "PacePetsDashboardAudioControl",
+      "Pace Pets dashboard audio control",
+    ),
     DASHBOARD_PREFERENCES: requiredGlobal(
       "PacePetsDashboardPreferences",
       "Pace Pets dashboard preferences",
@@ -43,6 +47,10 @@
     DASHBOARD_TIME: requiredGlobal(
       "PacePetsDashboardTime",
       "Pace Pets dashboard time",
+    ),
+    DASHBOARD_TRANSITION_AUDIO: requiredGlobal(
+      "PacePetsDashboardTransitionAudio",
+      "Pace Pets dashboard transition audio",
     ),
     DEVELOPER_OPTIONS: requiredGlobal(
       "PacePetsDeveloperOptions",

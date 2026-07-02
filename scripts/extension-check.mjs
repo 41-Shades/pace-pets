@@ -351,6 +351,7 @@ const allowedPackagedExtensions = new Set([
   ".js",
   ".json",
   ".map",
+  ".m4a",
   ".png",
 ]);
 const allowedPackagedFiles = new Set(["README.md"]);

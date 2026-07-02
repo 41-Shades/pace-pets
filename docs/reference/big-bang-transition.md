@@ -68,6 +68,9 @@ Current user-facing beats:
   cover and disabled legacy middle/aftermath draw path.
 - `collector/extension/dashboard-big-bang-scene.js`: transition clock,
   Canvas/WebGL mounting, reveal milestones, and teardown.
+- `collector/extension/dashboard-big-bang-audio-timeline.js`: Big Bang
+  two-clip music timeline, clip durations, 500ms crossfade, and 2500ms final
+  fade timing.
 - `collector/extension/dashboard-big-bang-transition-renderer.js`: body
   classes, dashboard chrome hiding/reveal, shared-space handoff callbacks, and
   transition promise lifecycle.
@@ -104,6 +107,32 @@ the seed sparkle before the stage-one bang helpers activate.
 |             `14600ms` | Big Bang canvases are removed (`CANVAS_DONE_AT_MS`).                                                                                                          |
 |       `14200-19400ms` | Dashboard chrome opacity fade (`DASHBOARD_FADE_DURATION_MS`).                                                                                                 |
 |             `19400ms` | Transition promise completes.                                                                                                                                 |
+
+## Audio Timing
+
+Big Bang has a bounded two-clip music effect. The files are packaged extension
+assets under `collector/extension/assets/audio/`, and playback is requested by
+the named `bigBang` transition timeline rather than by visual draw code.
+When dashboard audio is ready, the dashboard preloads and decodes this timeline
+before Big Bang starts so transition playback does not perform first-use decode
+work during the animation's opening frames. Playback captures one Web Audio
+clock anchor at transition start and schedules both clips relative to that
+anchor.
+
+|    Offset | Audio behavior                                                                    |
+| --------: | --------------------------------------------------------------------------------- |
+|  `1000ms` | Start `bigBangTransition` / `the-great-beyond-21s-31s.m4a`; linear 500ms fade in. |
+| `10500ms` | Start `bigBangReturn` / `the-great-beyond-60s-72p5s.m4a`; linear 500ms crossfade. |
+| `20500ms` | Begin the return clip's linear 2500ms final fade out.                             |
+| `23000ms` | End the bounded Big Bang music group.                                             |
+
+The audio tail after the `19400ms` visual transition completion is intentional:
+it covers the first part of the returned dashboard presentation. It is not an
+ambient loop and should not continue past the declared timeline.
+
+Big Bang audio plays only when the dashboard audio manager is ready in the
+current page. If Chrome still requires a user gesture, that transition occurrence
+stays silent rather than replaying later after audio is allowed.
 
 ## Current Layering
 
@@ -215,3 +244,5 @@ Useful code-level review questions:
   completion, stop, reduced motion, or setup failure?
 - Does WebGL failure leave a coherent fallback instead of blocking the
   transition promise?
+- Does Big Bang audio skip reduced-motion runs, stop/fade on interrupted
+  transitions, and remain bounded to the declared two-clip timeline?

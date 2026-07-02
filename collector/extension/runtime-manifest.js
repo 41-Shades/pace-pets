@@ -16,6 +16,7 @@
     "sync-monk-escape-preview-control.js",
     "checkerboard-reveal-preview-control.js",
     "storage-adapter.js",
+    "audio-preferences.js",
     "usage-permissions.js",
     "usage-integration-adapters.js",
     "usage-providers.js",
@@ -48,6 +49,11 @@
     "./perfect-zero-space-motion.js",
     "./perfect-zero-space-draw.js",
     "./perfect-zero-space-scene.js",
+    "./audio-clips.js",
+    "./dashboard-audio-manager.js",
+    "./dashboard-audio-control.js",
+    "./dashboard-big-bang-audio-timeline.js",
+    "./dashboard-transition-audio.js",
     "./dashboard-tooltips.js",
     "./dashboard-early-reset.js",
     "./dashboard-chart-data.js",
@@ -169,21 +175,12 @@
   const dashboardPageEdge = (before, dashboardName) =>
     pageEdge(before, `dashboard-${dashboardName}.js`);
   const collapseFile = (name) => `singularity-chrome-collapse-${name}`;
-  const DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS = Object.freeze([
-    "./dashboard-shell-controls.js",
-    "./dashboard-app-core.js",
-    "./dashboard-eclipse-icon.js",
-    "./dashboard-brake-debris-methods.js",
-    "./dashboard-cart-spill-methods.js",
-    "./dashboard-push-stretch-methods.js",
-    "./dashboard-sync-sunburst-renderer.js",
-    "./dashboard-sync-monk-escape-scene.js",
-    "./dashboard-ease-up-methods.js",
-    "./dashboard-pace-icon-methods.js",
-    "./dashboard-splat-fall-methods.js",
-    "./dashboard-train-roll-methods.js",
-    "./dashboard-singularity-transition-methods.js",
-  ]);
+  const THEME_ASSET_MANIFEST = "themes/default/asset-manifest.js";
+  const DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS = Object.freeze(
+    "shell-controls app-core eclipse-icon brake-debris-methods cart-spill-methods push-stretch-methods sync-sunburst-renderer sync-monk-escape-scene ease-up-methods pace-icon-methods splat-fall-methods train-roll-methods singularity-transition-methods"
+      .split(" ")
+      .map(dashboardFile),
+  );
   const COMMON_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("integration-config.js", "usage.js"),
     dependencyEdge("usage-windows.js", "dashboard-preferences.js"),
@@ -205,11 +202,8 @@
     dependencyEdge("usage-integration-adapters.js", "usage-providers.js"),
     dependencyEdge("usage-providers.js", "usage.js"),
     dependencyEdge("usage-providers.js", "history-store.js"),
-    dependencyEdge("themes/default/asset-manifest.js", "pace-logic.js"),
-    dependencyEdge(
-      "themes/default/asset-manifest.js",
-      "pace-state-special-data.js",
-    ),
+    dependencyEdge(THEME_ASSET_MANIFEST, "pace-logic.js"),
+    dependencyEdge(THEME_ASSET_MANIFEST, "pace-state-special-data.js"),
     dependencyEdge("pace-state-art.js", "pace-state-special-data.js"),
     dependencyEdge("pace-state-special-data.js", "pace-state-data.js"),
     dependencyEdge("brake-intensity.js", "developer-options.js"),
@@ -223,6 +217,7 @@
     dependencyEdge("usage-values.js", "preview-control.js"),
     dependencyEdge("integration-config.js", "usage-permissions.js"),
     dependencyEdge("storage-adapter.js", "usage-permissions.js"),
+    dependencyEdge("storage-adapter.js", "audio-preferences.js"),
   ]);
   const BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("product-metadata.js", "background-logic.js"),
@@ -232,14 +227,9 @@
     dependencyEdge("pace-logic.js", "background-transition-refresh.js"),
     dependencyEdge("background-logic.js", "background-badge-presentation.js"),
     dependencyEdge("usage-providers.js", "background-usage-source.js"),
-    ...[
-      "history-store.js",
-      "refresh-control.js",
-      "usage.js",
-      "usage-permissions.js",
-      "background-badge-presentation.js",
-      "background-usage-source.js",
-    ].map((source) => dependencyEdge(source, "background-refresh-runner.js")),
+    ..."history-store.js refresh-control.js usage.js usage-permissions.js background-badge-presentation.js background-usage-source.js"
+      .split(" ")
+      .map((source) => dependencyEdge(source, "background-refresh-runner.js")),
   ]);
   const DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES = Object.freeze([
     dependencyEdge("./product-metadata.js", "./dashboard.js"),
@@ -249,6 +239,15 @@
     dependencyEdge("./pace-window-history.js", "./dashboard-chart-data.js"),
     dashboardFileEdge("chart-data", "chart"),
     dependencyEdge("./pace-logic.js", "./dashboard-chart.js"),
+    dependencyEdge("./audio-clips.js", "./dashboard-audio-manager.js"),
+    dependencyEdge("./audio-preferences.js", "./dashboard-audio-manager.js"),
+    dependencyEdge(
+      "./dashboard-audio-manager.js",
+      "./dashboard-audio-control.js",
+    ),
+    dashboardFileEdge("audio-control", "app-core"),
+    dashboardFileEdge("big-bang-audio-timeline", "transition-audio"),
+    dashboardFileEdge("transition-audio", "app-core"),
     ...DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS.map((after) =>
       dependencyEdge("./dashboard-preferences.js", after),
     ),
@@ -318,8 +317,8 @@
     dashboardFileEdge("splat-fall-methods", "splat-max-throw-methods"),
     dashboardPageEdge("brake-intensity.js", "pace-wobble-methods"),
     dashboardPageEdge("sprint-intensity.js", "sprint-smoke-methods"),
-    dashboardPageEdge("themes/default/asset-manifest.js", "cart-spill-data"),
-    dashboardPageEdge("themes/default/asset-manifest.js", "push-tank-renderer"),
+    dashboardPageEdge(THEME_ASSET_MANIFEST, "cart-spill-data"),
+    dashboardPageEdge(THEME_ASSET_MANIFEST, "push-tank-renderer"),
     dashboardFileEdge("train-smoke-data", "train-smoke"),
     dashboardFileEdge("pace-core", "pace-controller"),
     dashboardFileEdge("pace-rail-methods", "pace-controller"),
@@ -329,10 +328,7 @@
     dashboardFileEdge("reset-exhausted-figure", "reset-exhausted-methods"),
     dashboardFileEdge("reset-exhausted-arm-motion", "reset-exhausted-methods"),
     dashboardFileEdge("pace-data", "reset-exhausted-methods"),
-    dashboardPageEdge(
-      "themes/default/asset-manifest.js",
-      "reset-exhausted-methods",
-    ),
+    dashboardPageEdge(THEME_ASSET_MANIFEST, "reset-exhausted-methods"),
     dashboardFileEdge("reset-exhausted-methods", ""),
     dashboardFileEdge("app-core", ""),
     dependencyEdge("./dashboard-info-template.js", "./dashboard.js"),

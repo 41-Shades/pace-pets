@@ -32,6 +32,15 @@
           this.elements.motionToggle,
         );
       });
+      this.elements.audioToggle.addEventListener("click", (event) => {
+        this.audioControl.toggleAudio().catch((error) => {
+          console.warn("Could not toggle dashboard audio:", error);
+        });
+        this.appTooltips.releasePointerClickFocus(
+          event,
+          this.elements.audioToggle,
+        );
+      });
       this.elements.manualRefreshButton.addEventListener("click", (event) => {
         this.dashboardStatus.runManualRefresh().catch((error) => {
           console.warn("Codex usage manual refresh failed:", error);

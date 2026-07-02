@@ -38,12 +38,29 @@ Pace Pets is a Manifest V3 Chrome extension. The extension page is the canonical
 - `collector/extension/dashboard-preferences.js` owns dashboard-local preference keys, scopes, supported values, and read/write helpers for tab-scoped usage-window selection, extension-page theme selection, and extension-page motion selection.
 - `collector/extension/preview-control.js` owns synthetic pace-state ratios and preview timing used by local developer state overrides; `collector/extension/brake-intensity.js` and `collector/extension/sprint-intensity.js` own exact Brake hard and Sprint faster intensity preview ladders.
 - `collector/extension/storage-adapter.js` owns Promise-based `chrome.storage.local` reads/writes, shared Chrome `lastError` callback wrapping, and local-storage change helpers shared by history, background, and dashboard code.
+- `collector/extension/audio-preferences.js` owns the persisted dashboard audio
+  enablement and default-volume preference stored in `chrome.storage.local`.
+  `collector/extension/audio-clips.js` owns the packaged audio clip registry,
+  and `collector/extension/dashboard-audio-manager.js` owns the dashboard Web
+  Audio graph, readiness statuses, clip loading, scheduling, fades, and group
+  cleanup. `collector/extension/dashboard-audio-control.js` owns the dashboard
+  sound icon state, tooltip text, and explicit enable/unmute flow. Audio
+  enablement is persisted, but Web Audio readiness is live per dashboard page:
+  dashboard startup attempts to restore readiness when sound is enabled, and
+  Chrome can still require a fresh user gesture before playback.
+  `collector/extension/dashboard-big-bang-audio-timeline.js` owns the packaged
+  Big Bang two-clip music timeline, including the 0.5s crossfade and 2.5s final
+  fade timing.
+  `collector/extension/dashboard-transition-audio.js` owns the declarative
+  transition-audio adapter that maps named transition timelines to audio manager
+  clip preloading, clock-anchored scheduling, and idempotent group
+  cancellation.
 - `collector/extension/usage.js` owns raw-to-safe usage normalization through the default WHAM adapter into supported usage windows.
 - `collector/extension/history-store.js` owns sample normalization, dedupe, retention, and sample caps.
 - `collector/extension/themes/default/asset-manifest.js` owns the packaged theme asset manifest for app icons, pace icons, icon variants, effect assets, cart-spill grocery icons, push-tank ocean icons, and the pace-state exceptions that intentionally do not ship themed PNG art.
 - `collector/extension/themes/default/` contains the default replaceable extension artwork.
 - `collector/extension/developer-options.js` owns local developer state-override normalization and projects forceable state groups from the pace-state catalog. `collector/extension/dev-flags.html` and `collector/extension/dev-flags-loader.js` are unpacked-extension tooling only, load shared scripts through the runtime manifest's dev-controls target, and are excluded from Chrome Web Store release packages.
-- `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, pace-state group metadata, inline icon geometry, legend metadata, controlled Big Bang/Perfect Sync/Perfect Zero/Singularity presentation, reset-countdown display-zero checks, and stale-reset guards. `collector/extension/pace-window-history.js` extends that shared model with reset-window sample bounds and perfect-zero eligibility history. Dashboard pace helpers own dashboard-only special transitions for Big Bang and Singularity.
+- `collector/extension/pace-logic.js` owns shared pace math, pace-state thresholds, badge colors, dashboard copy, pace-state group metadata, inline icon geometry, legend metadata, controlled Big Bang/Perfect Sync/Perfect Zero/Singularity presentation, reset-countdown display-zero checks, and stale-reset guards. `collector/extension/pace-window-history.js` extends that shared model with reset-window sample bounds and perfect-zero eligibility history. Dashboard pace helpers own dashboard-only special transitions for Big Bang and Singularity, and special-transition methods request optional named audio timelines without constructing Web Audio nodes directly.
 - `collector/extension/perfect-zero-space-scene.js` owns the `PERFECT ZERO` canvas scene, including icon and full-bleed profiles, reduced-motion handling, page-visibility pause/resume behavior, and scene teardown. `collector/extension/dashboard-eclipse-icon.js` owns the smaller Perfect Zero theme-control canvas, which uses canvas for organic corona plumes, wispy shimmer, and sparse rim glints where CSS gradients proved too uniform.
 - `collector/extension/dashboard.html`, ordered `dashboard*.css` stylesheets, dashboard helper scripts, and `dashboard.js` own the extension dashboard UI. `collector/extension/dashboard-dom-contract.js` owns the dashboard selector map, required element IDs, and element collection helper shared by dashboard bootstrap and static smoke checks. Dashboard HTML bootstraps the runtime manifest and loader; full dashboard renders read extension-local storage and the tab-scoped dashboard window selection, while the 60-second status tick reuses cached dashboard state for time-sensitive values without messaging the background worker. Because that tick reapplies the current pace summary, `collector/extension/dashboard-pace-icon-methods.js` preserves same-state long-running icon effects that own live canvas state instead of tearing them down and recreating them. Perfect Zero activates a full-page canvas background profile and anchors a featured planet to the status icon aperture; Big Bang and Singularity reuse the full-page space backdrop without that icon-anchored planet.
 - `collector/extension/dashboard-big-bang-origin.js`,

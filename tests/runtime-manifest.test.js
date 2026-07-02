@@ -44,6 +44,10 @@ function expectCommonRuntimeDependencyEdges(runtime) {
     "refresh-control.js",
   ]);
   expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "storage-adapter.js",
+    "audio-preferences.js",
+  ]);
+  expect(runtime.COMMON_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "persisted-text.js",
     "refresh-status.js",
   ]);
@@ -105,7 +109,35 @@ function expectBackgroundRuntimeDependencyEdges(runtime) {
   ]);
 }
 
+function expectDashboardAudioRuntimeDependencyEdges(runtime) {
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./audio-clips.js",
+    "./dashboard-audio-manager.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./audio-preferences.js",
+    "./dashboard-audio-manager.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-audio-manager.js",
+    "./dashboard-audio-control.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-audio-control.js",
+    "./dashboard-app-core.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-big-bang-audio-timeline.js",
+    "./dashboard-transition-audio.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-transition-audio.js",
+    "./dashboard-app-core.js",
+  ]);
+}
+
 function expectDashboardRuntimeDependencyEdges(runtime) {
+  expectDashboardAudioRuntimeDependencyEdges(runtime);
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-status-logic.js",
     "./dashboard-status-controller.js",
