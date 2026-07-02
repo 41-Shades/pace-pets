@@ -21,6 +21,7 @@ describe("PacePetsDashboardDom", () => {
     const dom = globalThis.PacePetsDashboardDom;
 
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("pace-card");
+    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-toggle");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("clear-data-button");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("dynamic-favicon");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain(
@@ -53,6 +54,7 @@ describe("PacePetsDashboardDom", () => {
 
     expect(Object.isFrozen(elements)).toBe(true);
     expect(elements.paceCard).toEqual({ selector: "#pace-card" });
+    expect(elements.audioToggle).toEqual({ selector: "#audio-toggle" });
     expect(elements.clearDataButton).toEqual({
       selector: "#clear-data-button",
     });

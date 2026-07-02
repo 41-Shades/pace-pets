@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const methodsSource = fs.readFileSync(
   new URL(
@@ -11,7 +11,7 @@ const methodsSource = fs.readFileSync(
   "utf8",
 );
 
-function createHarness() {
+function createHarness({ motionEnabled = true, transitionAudio = null } = {}) {
   const calls = {
     bigBang: 0,
     singularity: 0,
@@ -39,7 +39,7 @@ function createHarness() {
       },
     },
     PacePetsDashboardPreferences: {
-      motionPreferenceEnabled: () => true,
+      motionPreferenceEnabled: () => motionEnabled,
     },
     PacePetsDashboardBigBangTransitionRenderer: {
       create: () => {
@@ -65,6 +65,7 @@ function createHarness() {
       singularityTransitionRunId: 0,
       singularityTransitionScene: null,
       specialTransitions: null,
+      transitionAudio,
     },
   );
   controller.currentPaceLevel = () => states.bigBang.className;
@@ -148,5 +149,43 @@ describe("Singularity transition state updates", () => {
     expect(calls.bigBang).toBe(0);
     expect(controller.bigBangTransitionPending).toBe(false);
     expect(controller.bigBangTransitionInFlight).toBe(false);
+  });
+
+  it("requests the Big Bang audio timeline when motion is enabled", () => {
+    const transitionAudio = {
+      playTimeline: vi.fn(() => null),
+    };
+    const { controller, states } = createHarness({ transitionAudio });
+
+    controller.updateSpecialTransitionState(states.on, states.bigBang);
+
+    expect(transitionAudio.playTimeline).toHaveBeenCalledWith("bigBang");
+  });
+
+  it("does not request transition audio when motion is disabled", () => {
+    const transitionAudio = {
+      playTimeline: vi.fn(() => null),
+    };
+    const { controller, states } = createHarness({
+      motionEnabled: false,
+      transitionAudio,
+    });
+
+    controller.updateSpecialTransitionState(states.on, states.bigBang);
+
+    expect(transitionAudio.playTimeline).not.toHaveBeenCalled();
+  });
+
+  it("stops active transition audio when special transitions stop", () => {
+    const audioHandle = { stop: vi.fn() };
+    const transitionAudio = {
+      playTimeline: vi.fn(() => audioHandle),
+    };
+    const { controller, states } = createHarness({ transitionAudio });
+
+    controller.updateSpecialTransitionState(states.on, states.bigBang);
+    controller.stopSpecialTransitions();
+
+    expect(audioHandle.stop).toHaveBeenCalledWith({ fadeOutMs: 300 });
   });
 });

@@ -93,6 +93,7 @@ body,
 .reset-progress-dot,
 .reset-progress-fill,
 .motion-toggle,
+.audio-toggle,
 .info-toggle,
 .info-close {
   transition:

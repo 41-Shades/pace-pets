@@ -9,7 +9,7 @@ const projectRoot = path.resolve(
   "..",
 );
 
-async function importExtensionScript(relativePath) {
+export async function importExtensionScript(relativePath) {
   await import(pathToFileURL(path.join(projectRoot, relativePath)));
 }
 

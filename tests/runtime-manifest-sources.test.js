@@ -24,6 +24,7 @@ function expectCommonScriptSourceContent(runtime) {
   expect(runtime.COMMON_SCRIPT_SOURCES).toContain("usage-providers.js");
   expect(runtime.COMMON_SCRIPT_SOURCES).toContain("dashboard-preferences.js");
   expect(runtime.COMMON_SCRIPT_SOURCES).toContain("persisted-text.js");
+  expect(runtime.COMMON_SCRIPT_SOURCES).toContain("audio-preferences.js");
   expect(runtime.COMMON_SCRIPT_SOURCES).toContain("refresh-schedule.js");
   expect(runtime.COMMON_SCRIPT_SOURCES).toContain(
     "dev-preview-action-registry.js",
@@ -36,6 +37,9 @@ function expectCommonScriptSourceContent(runtime) {
   expect(
     runtime.COMMON_SCRIPT_SOURCES.indexOf("refresh-schedule.js"),
   ).toBeLessThan(runtime.COMMON_SCRIPT_SOURCES.indexOf("refresh-control.js"));
+  expect(
+    runtime.COMMON_SCRIPT_SOURCES.indexOf("storage-adapter.js"),
+  ).toBeLessThan(runtime.COMMON_SCRIPT_SOURCES.indexOf("audio-preferences.js"));
   expect(
     runtime.COMMON_SCRIPT_SOURCES.indexOf("pace-state-data.js"),
   ).toBeLessThan(runtime.COMMON_SCRIPT_SOURCES.indexOf("developer-options.js"));
@@ -65,12 +69,41 @@ function expectTargetScriptSourceComposition(runtime) {
 function expectDashboardScriptSourceContent(runtime) {
   for (const source of [
     "./dashboard-dom-contract.js",
+    "./audio-clips.js",
+    "./dashboard-audio-manager.js",
+    "./dashboard-audio-control.js",
+    "./dashboard-big-bang-audio-timeline.js",
+    "./dashboard-transition-audio.js",
     "./dashboard-preferences.js",
     "./dashboard-singularity-black-hole-v2-shaders.js",
     "./dashboard-big-bang-scene.js",
   ]) {
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(source);
   }
+  expect(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./audio-clips.js"),
+  ).toBeLessThan(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-audio-manager.js"),
+  );
+  expect(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-audio-manager.js"),
+  ).toBeLessThan(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-audio-control.js"),
+  );
+  expect(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-audio-control.js"),
+  ).toBeLessThan(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-big-bang-audio-timeline.js",
+    ),
+  );
+  expect(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-big-bang-audio-timeline.js",
+    ),
+  ).toBeLessThan(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-transition-audio.js"),
+  );
   expect(
     runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
       "./dashboard-big-bang-ejecta-draw.js",

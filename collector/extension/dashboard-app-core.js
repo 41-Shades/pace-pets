@@ -3,6 +3,7 @@
 
   const DASHBOARD_STATUS_REFRESH_INTERVAL_MS = 60 * 1000;
   const MS_PER_MINUTE = 60 * 1000;
+  const PRELOAD_AUDIO_TIMELINES = Object.freeze(["bigBang"]);
 
   class PacePetsDashboardApp {
     constructor({ dependencies, elements }) {
@@ -49,6 +50,18 @@
         hideTooltip: this.appTooltips.hide,
         popover: this.elements.earlyResetPopover,
         popoverText: this.elements.earlyResetPopoverText,
+      });
+      this.audioControl = this.DASHBOARD_AUDIO_CONTROL.createController({
+        appTooltips: this.appTooltips,
+        button: this.elements.audioToggle,
+      });
+      this.transitionAudio = this.DASHBOARD_TRANSITION_AUDIO.createController({
+        audioManager: this.audioControl.audioManager(),
+      });
+      this.audioControl.audioManager().addStatusChangeListener?.(() => {
+        this.preloadTransitionAudio().catch((error) => {
+          console.warn("Could not preload dashboard audio:", error);
+        });
       });
       this.usageChartView = this.DASHBOARD_CHART.createRenderer({
         chartCanvas: this.elements.chartCanvas,
@@ -99,6 +112,7 @@
         renderHistory: (history, refreshStatus, options) =>
           this.renderHistory(history, refreshStatus, options),
         selectedSupportedWindowKey: () => this.selectedSupportedWindowKey(),
+        transitionAudio: this.transitionAudio,
         usageChartView: this.usageChartView,
         windowSpecs: this.WINDOW_SPECS,
       });
@@ -300,8 +314,21 @@
       this.renderHistory(this.currentHistory, this.currentRefreshStatus);
     }
 
+    preloadTransitionAudio() {
+      return Promise.all(
+        PRELOAD_AUDIO_TIMELINES.map((timelineId) =>
+          this.transitionAudio.preloadTimeline(timelineId),
+        ),
+      );
+    }
+
     start() {
       this.bindEvents();
+      this.audioControl
+        .loadPreference({ resumeIfNeeded: true })
+        .catch((error) => {
+          console.warn("Could not load dashboard audio preference:", error);
+        });
       window.setInterval(() => {
         this.refreshDashboardTimeSensitiveViews().catch((error) =>
           this.renderHistoryLoadFailure(error),

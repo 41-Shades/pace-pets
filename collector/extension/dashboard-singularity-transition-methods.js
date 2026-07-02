@@ -22,6 +22,7 @@
 
   const TRANSITION_DEFINITIONS = Object.freeze({
     bigBang: Object.freeze({
+      audioTimeline: "bigBang",
       key: "bigBang",
       logName: "Big Bang",
       renderer: BIG_BANG_RENDERER,
@@ -51,9 +52,13 @@
       controller.specialTransitions[definition.key] = {
         inFlight: Boolean(controller[`${legacyPrefix}InFlight`]),
         pending: Boolean(controller[`${legacyPrefix}Pending`]),
+        audio: null,
         runId: controller[`${legacyPrefix}RunId`] || 0,
         scene: controller[`${legacyPrefix}Scene`] || null,
       };
+    }
+    if (!("audio" in controller.specialTransitions[definition.key])) {
+      controller.specialTransitions[definition.key].audio = null;
     }
     return controller.specialTransitions[definition.key];
   }
@@ -135,9 +140,23 @@
     };
   }
 
+  function playTransitionAudio(controller, definition, rendererOptions) {
+    if (!definition.audioTimeline || rendererOptions.motionDisabled) {
+      return null;
+    }
+
+    return controller.transitionAudio?.playTimeline(definition.audioTimeline);
+  }
+
+  function stopTransitionAudio(transition, { fadeOutMs = 300 } = {}) {
+    transition.audio?.stop?.({ fadeOutMs });
+    transition.audio = null;
+  }
+
   function stopTransition(controller, definition) {
     const state = transitionState(controller, definition);
     state.runId += 1;
+    stopTransitionAudio(state);
     state.scene?.stop();
     state.scene = null;
     state.inFlight = false;
@@ -208,14 +227,29 @@
     transition.inFlight = true;
     transition.pending = false;
 
-    const scene = definition.renderer.create(
-      transitionRendererOptions(controller, definition),
-    );
+    const rendererOptions = transitionRendererOptions(controller, definition);
+    const scene = definition.renderer.create(rendererOptions);
     transition.scene = scene;
+    transition.audio = playTransitionAudio(
+      controller,
+      definition,
+      rendererOptions,
+    );
     syncLegacyTransitionState(controller, definition, transition);
-    await scene.play();
+    let completed;
+    try {
+      completed = await scene.play();
+    } catch (error) {
+      if (transition.runId === runId) {
+        stopTransitionAudio(transition);
+      }
+      throw error;
+    }
 
     if (transition.runId === runId) {
+      if (completed === false) {
+        stopTransitionAudio(transition);
+      }
       transition.scene = null;
       transition.inFlight = false;
       syncLegacyTransitionState(controller, definition, transition);
