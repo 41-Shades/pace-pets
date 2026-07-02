@@ -190,9 +190,7 @@
 }
 
 .state-chip.pace-nothingness .state-icon.is-outline-placeholder::before {
-  background: transparent;
-  border-color: rgb(154 52 18 / 28%);
-  opacity: 1;
+  content: none;
 }
 
 .state-chip strong {
