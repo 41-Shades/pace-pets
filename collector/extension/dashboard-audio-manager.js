@@ -47,14 +47,8 @@
     return null;
   }
 
-  function scheduleClipEnd({
-    durationMs,
-    fadeOutMs,
-    gain,
-    source,
-    startAt,
-    volume,
-  }) {
+  function scheduleClipEnd(options) {
+    const { durationMs, fadeOutMs, gain, source, startAt, volume } = options;
     if (durationMs === null) {
       return;
     }
@@ -146,9 +140,7 @@
 
     addStatusChangeListener(listener) {
       this.statusListeners.add(listener);
-      return () => {
-        this.statusListeners.delete(listener);
-      };
+      return () => this.statusListeners.delete(listener);
     }
 
     notifyStatusChanged() {
@@ -175,10 +167,7 @@
     }
 
     async setVolume(volume) {
-      const result = await this.storePreference({
-        ...this.preference,
-        volume,
-      });
+      const result = await this.storePreference({ ...this.preference, volume });
       return Object.freeze({ ...result, status: this.status() });
     }
 
@@ -193,9 +182,9 @@
       }
 
       this.context = new this.AudioContextConstructor();
-      this.context.addEventListener?.("statechange", () => {
-        this.notifyStatusChanged();
-      });
+      this.context.addEventListener?.("statechange", () =>
+        this.notifyStatusChanged(),
+      );
       this.gains = this.createGainGraph();
       this.applyPreference();
       return this.context;
@@ -260,9 +249,7 @@
           this.buffers.set(clipId, buffer);
           return buffer;
         })
-        .finally(() => {
-          this.bufferPromises.delete(clipId);
-        });
+        .finally(() => this.bufferPromises.delete(clipId));
       this.bufferPromises.set(clipId, bufferPromise);
       return bufferPromise;
     }
@@ -283,17 +270,33 @@
       return channel === "music" ? this.gains.music : this.gains.effects;
     }
 
+    clipForPlayback(clipId) {
+      const clip = this.clips.clipForId(clipId);
+      if (!clip) {
+        throw new Error(`Unknown audio clip: ${clipId}`);
+      }
+      return clip;
+    }
+
+    canStartLoadedClip(preferenceRevision) {
+      return (
+        preferenceRevision === this.preferenceRevision &&
+        this.status() === STATUS_READY
+      );
+    }
+
     async playClip(clipId, options = {}) {
       if (this.status() !== STATUS_READY) {
         return null;
       }
 
-      const clip = this.clips.clipForId(clipId);
-      if (!clip) {
-        throw new Error(`Unknown audio clip: ${clipId}`);
+      const clip = this.clipForPlayback(clipId);
+      const preferenceRevision = this.preferenceRevision;
+      const buffer = await this.loadBuffer(clipId);
+      if (!this.canStartLoadedClip(preferenceRevision)) {
+        return null;
       }
 
-      const buffer = await this.loadBuffer(clipId);
       const source = this.context.createBufferSource();
       const gain = this.context.createGain();
       const requestedStartAt = Number.isFinite(options.startAt)
@@ -385,9 +388,7 @@
     }
   }
 
-  function create(options) {
-    return new DashboardAudioManager(options);
-  }
+  const create = (options) => new DashboardAudioManager(options);
 
   root.PacePetsDashboardAudioManager = Object.freeze({
     STATUS_MUTED,

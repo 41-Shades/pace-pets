@@ -120,6 +120,21 @@ function deferredPreferenceRead() {
   };
 }
 
+function deferredAudioFetch() {
+  let resolveArrayBuffer;
+  const arrayBufferPromise = new Promise((resolve) => {
+    resolveArrayBuffer = resolve;
+  });
+  return {
+    fetchClip: vi.fn(() =>
+      Promise.resolve({
+        arrayBuffer: () => arrayBufferPromise,
+      }),
+    ),
+    resolveArrayBuffer,
+  };
+}
+
 beforeAll(async () => {
   globalThis.chrome = {
     runtime: {
@@ -285,6 +300,25 @@ describe("PacePetsDashboardAudioManager playback", () => {
     await manager.scheduleClip("bigBangTransition");
 
     expect(fetchClip).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not start stale clips muted while buffers load", async () => {
+    const deferredFetch = deferredAudioFetch();
+    const manager = globalThis.PacePetsDashboardAudioManager.create({
+      AudioContextConstructor: FakeAudioContext,
+      clips: clipRegistry(),
+      fetchAudio: deferredFetch.fetchClip,
+      preferences: preferences(),
+    });
+
+    await manager.setEnabled(true);
+    const playPromise = manager.playClip("bigBangTransition");
+    await manager.setEnabled(false);
+    await manager.setEnabled(true);
+    deferredFetch.resolveArrayBuffer(new ArrayBuffer(8));
+
+    await expect(playPromise).resolves.toBeNull();
+    expect(manager.context.sources).toHaveLength(0);
   });
 
   it("does not preload clips until playback is ready", async () => {
