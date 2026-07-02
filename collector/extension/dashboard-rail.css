@@ -177,14 +177,21 @@
 .state-chip.pace-nothingness,
 .state-chip.pace-nothingness:hover,
 .state-chip.pace-nothingness.is-active {
-  background: #000000;
+  --pace-color: #111827;
+
+  background: color-mix(in srgb, var(--surface-mix) 96%, #000000);
   border-color: #000000;
   box-shadow: none;
 }
 
+.state-chip.pace-nothingness .state-icon {
+  background: #000000;
+  border: 1px solid #000000;
+}
+
 .state-chip.pace-nothingness .state-icon.is-outline-placeholder::before {
-  background: rgb(248 250 252 / 2%);
-  border-color: rgb(248 250 252 / 30%);
+  background: transparent;
+  border-color: rgb(154 52 18 / 28%);
   opacity: 1;
 }
 
