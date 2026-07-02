@@ -302,7 +302,7 @@ describe("PacePetsDashboardAudioManager playback", () => {
     expect(fetchClip).toHaveBeenCalledTimes(1);
   });
 
-  it("does not start clips muted while buffers load", async () => {
+  it("does not start stale clips muted while buffers load", async () => {
     const deferredFetch = deferredAudioFetch();
     const manager = globalThis.PacePetsDashboardAudioManager.create({
       AudioContextConstructor: FakeAudioContext,
@@ -314,6 +314,7 @@ describe("PacePetsDashboardAudioManager playback", () => {
     await manager.setEnabled(true);
     const playPromise = manager.playClip("bigBangTransition");
     await manager.setEnabled(false);
+    await manager.setEnabled(true);
     deferredFetch.resolveArrayBuffer(new ArrayBuffer(8));
 
     await expect(playPromise).resolves.toBeNull();

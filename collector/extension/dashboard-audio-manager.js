@@ -140,9 +140,7 @@
 
     addStatusChangeListener(listener) {
       this.statusListeners.add(listener);
-      return () => {
-        this.statusListeners.delete(listener);
-      };
+      return () => this.statusListeners.delete(listener);
     }
 
     notifyStatusChanged() {
@@ -169,10 +167,7 @@
     }
 
     async setVolume(volume) {
-      const result = await this.storePreference({
-        ...this.preference,
-        volume,
-      });
+      const result = await this.storePreference({ ...this.preference, volume });
       return Object.freeze({ ...result, status: this.status() });
     }
 
@@ -187,9 +182,9 @@
       }
 
       this.context = new this.AudioContextConstructor();
-      this.context.addEventListener?.("statechange", () => {
-        this.notifyStatusChanged();
-      });
+      this.context.addEventListener?.("statechange", () =>
+        this.notifyStatusChanged(),
+      );
       this.gains = this.createGainGraph();
       this.applyPreference();
       return this.context;
@@ -254,9 +249,7 @@
           this.buffers.set(clipId, buffer);
           return buffer;
         })
-        .finally(() => {
-          this.bufferPromises.delete(clipId);
-        });
+        .finally(() => this.bufferPromises.delete(clipId));
       this.bufferPromises.set(clipId, bufferPromise);
       return bufferPromise;
     }
@@ -285,14 +278,22 @@
       return clip;
     }
 
+    canStartLoadedClip(preferenceRevision) {
+      return (
+        preferenceRevision === this.preferenceRevision &&
+        this.status() === STATUS_READY
+      );
+    }
+
     async playClip(clipId, options = {}) {
       if (this.status() !== STATUS_READY) {
         return null;
       }
 
       const clip = this.clipForPlayback(clipId);
+      const preferenceRevision = this.preferenceRevision;
       const buffer = await this.loadBuffer(clipId);
-      if (this.status() !== STATUS_READY) {
+      if (!this.canStartLoadedClip(preferenceRevision)) {
         return null;
       }
 
