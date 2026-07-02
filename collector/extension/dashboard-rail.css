@@ -29,6 +29,10 @@
   width: auto;
 }
 
+.state-rail[hidden] {
+  display: none;
+}
+
 .state-stack {
   display: grid;
   gap: var(--state-chip-gap-y) var(--state-chip-gap-x);

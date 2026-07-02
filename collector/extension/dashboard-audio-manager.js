@@ -47,14 +47,8 @@
     return null;
   }
 
-  function scheduleClipEnd({
-    durationMs,
-    fadeOutMs,
-    gain,
-    source,
-    startAt,
-    volume,
-  }) {
+  function scheduleClipEnd(options) {
+    const { durationMs, fadeOutMs, gain, source, startAt, volume } = options;
     if (durationMs === null) {
       return;
     }
@@ -283,17 +277,25 @@
       return channel === "music" ? this.gains.music : this.gains.effects;
     }
 
+    clipForPlayback(clipId) {
+      const clip = this.clips.clipForId(clipId);
+      if (!clip) {
+        throw new Error(`Unknown audio clip: ${clipId}`);
+      }
+      return clip;
+    }
+
     async playClip(clipId, options = {}) {
       if (this.status() !== STATUS_READY) {
         return null;
       }
 
-      const clip = this.clips.clipForId(clipId);
-      if (!clip) {
-        throw new Error(`Unknown audio clip: ${clipId}`);
+      const clip = this.clipForPlayback(clipId);
+      const buffer = await this.loadBuffer(clipId);
+      if (this.status() !== STATUS_READY) {
+        return null;
       }
 
-      const buffer = await this.loadBuffer(clipId);
       const source = this.context.createBufferSource();
       const gain = this.context.createGain();
       const requestedStartAt = Number.isFinite(options.startAt)
@@ -385,9 +387,7 @@
     }
   }
 
-  function create(options) {
-    return new DashboardAudioManager(options);
-  }
+  const create = (options) => new DashboardAudioManager(options);
 
   root.PacePetsDashboardAudioManager = Object.freeze({
     STATUS_MUTED,
