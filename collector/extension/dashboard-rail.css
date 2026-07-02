@@ -179,14 +179,15 @@
 .state-chip.pace-nothingness.is-active {
   --pace-color: #111827;
 
-  background: color-mix(in srgb, var(--surface-mix) 96%, #000000);
+  background: color-mix(in srgb, var(--surface-mix) 99%, #000000);
   border-color: #000000;
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px rgb(154 52 18 / 10%);
 }
 
 .state-chip.pace-nothingness .state-icon {
   background: #000000;
   border: 1px solid #000000;
+  box-shadow: inset 0 0 0 1px rgb(154 52 18 / 16%);
 }
 
 .state-chip.pace-nothingness .state-icon.is-outline-placeholder::before {
