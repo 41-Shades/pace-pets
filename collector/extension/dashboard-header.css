@@ -94,6 +94,8 @@
 }
 
 .info-toggle {
+  --info-toggle-hover: color-mix(in srgb, var(--muted) 64%, var(--accent));
+
   background: transparent;
   color: color-mix(in srgb, var(--control-icon-disc) 42%, var(--subhead));
   height: 17px;
@@ -121,7 +123,7 @@
 
 .info-toggle:hover {
   background: transparent;
-  color: color-mix(in srgb, var(--muted) 64%, var(--accent));
+  color: var(--info-toggle-hover);
 }
 
 .info-close:hover {
@@ -213,6 +215,15 @@
   position: absolute;
 }
 
+.info-toggle:hover .info-toggle-icon {
+  --info-toggle-mark: var(--info-toggle-hover);
+  --info-toggle-ring: color-mix(
+    in srgb,
+    var(--info-toggle-hover) 58%,
+    var(--control-icon-disc)
+  );
+}
+
 .info-close-icon {
   display: block;
   height: 18px;
@@ -244,6 +255,15 @@
 [aria-expanded="true"].info-toggle {
   background: transparent;
   color: var(--accent);
+}
+
+[aria-expanded="true"].info-toggle .info-toggle-icon {
+  --info-toggle-mark: var(--accent);
+  --info-toggle-ring: color-mix(
+    in srgb,
+    var(--accent) 58%,
+    var(--control-icon-disc)
+  );
 }
 
 [data-theme="dark"] .theme-toggle-icon {

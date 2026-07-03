@@ -231,7 +231,9 @@
 
       document.body.append(canvas);
       state.debrisLayers.add(canvas);
-      this.transitionAudio?.playTimeline?.(BRAKE_EXTREME_AUDIO_TIMELINE);
+      state.brakeExtremeAudio = this.transitionAudio?.playTimeline?.(
+        BRAKE_EXTREME_AUDIO_TIMELINE,
+      );
       animation.frameId = window.requestAnimationFrame(renderFrame);
       animation.cleanupTimer = window.setTimeout(
         cleanup,
