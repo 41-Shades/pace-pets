@@ -53,6 +53,7 @@
     "./dashboard-audio-manager.js",
     "./dashboard-audio-control.js",
     "./dashboard-big-bang-audio-timeline.js",
+    "./dashboard-brake-extreme-audio-timeline.js",
     "./dashboard-transition-audio.js",
     "./dashboard-tooltips.js",
     "./dashboard-early-reset.js",
@@ -247,6 +248,7 @@
     ),
     dashboardFileEdge("audio-control", "app-core"),
     dashboardFileEdge("big-bang-audio-timeline", "transition-audio"),
+    dashboardFileEdge("brake-extreme-audio-timeline", "transition-audio"),
     dashboardFileEdge("transition-audio", "app-core"),
     ...DASHBOARD_PREFERENCE_DEPENDENCY_TARGETS.map((after) =>
       dependencyEdge("./dashboard-preferences.js", after),

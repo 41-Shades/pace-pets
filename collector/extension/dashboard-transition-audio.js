@@ -2,9 +2,12 @@
   "use strict";
 
   const BIG_BANG_AUDIO_TIMELINE = root.PacePetsDashboardBigBangAudioTimeline;
+  const BRAKE_EXTREME_AUDIO_TIMELINE =
+    root.PacePetsDashboardBrakeExtremeAudioTimeline;
   const DEFAULT_STOP_FADE_OUT_MS = 300;
   const TIMELINES = Object.freeze({
     ...(BIG_BANG_AUDIO_TIMELINE?.TIMELINES || {}),
+    ...(BRAKE_EXTREME_AUDIO_TIMELINE?.TIMELINES || {}),
   });
 
   function finiteMilliseconds(value, fallback = 0) {

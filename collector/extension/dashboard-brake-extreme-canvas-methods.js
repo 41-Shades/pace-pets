@@ -18,6 +18,7 @@
     smoke: "#94a3b8",
     spark: "#fb923c",
   });
+  const BRAKE_EXTREME_AUDIO_TIMELINE = "brakeExtreme";
 
   function randomFloatInRange(controller, [min, max]) {
     return controller.randomIntegerInRange([min * 100, max * 100]) / 100;
@@ -230,6 +231,7 @@
 
       document.body.append(canvas);
       state.debrisLayers.add(canvas);
+      this.transitionAudio?.playTimeline?.(BRAKE_EXTREME_AUDIO_TIMELINE);
       animation.frameId = window.requestAnimationFrame(renderFrame);
       animation.cleanupTimer = window.setTimeout(
         cleanup,

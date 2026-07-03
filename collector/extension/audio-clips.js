@@ -6,6 +6,11 @@
   const DEFAULT_CHANNEL = "effects";
   const DEFAULT_GROUP = "global";
   const CLIPS = Object.freeze({
+    brakeExtremeBurst: Object.freeze({
+      channel: "effects",
+      group: "brakeExtreme",
+      path: `${AUDIO_BASE_PATH}/brake-extreme-burst.m4a`,
+    }),
     bigBangReturn: Object.freeze({
       channel: "music",
       group: "bigBang",
