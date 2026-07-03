@@ -21,7 +21,11 @@ describe("PacePetsDashboardDom", () => {
     const dom = globalThis.PacePetsDashboardDom;
 
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("pace-card");
+    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-control");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-toggle");
+    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-volume");
+    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-volume-panel");
+    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-volume-rail");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("clear-data-button");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("dynamic-favicon");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain(
@@ -54,7 +58,15 @@ describe("PacePetsDashboardDom", () => {
 
     expect(Object.isFrozen(elements)).toBe(true);
     expect(elements.paceCard).toEqual({ selector: "#pace-card" });
+    expect(elements.audioControlGroup).toEqual({ selector: "#audio-control" });
     expect(elements.audioToggle).toEqual({ selector: "#audio-toggle" });
+    expect(elements.audioVolume).toEqual({ selector: "#audio-volume" });
+    expect(elements.audioVolumePanel).toEqual({
+      selector: "#audio-volume-panel",
+    });
+    expect(elements.audioVolumeRail).toEqual({
+      selector: "#audio-volume-rail",
+    });
     expect(elements.clearDataButton).toEqual({
       selector: "#clear-data-button",
     });

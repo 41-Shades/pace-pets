@@ -54,6 +54,7 @@ Packaged files are limited to extension runtime assets with these extensions:
 - `.js`
 - `.json`
 - `.map`
+- `.m4a`
 - `.png`
 
 The package script rejects private, generated, or sensitive-looking paths such

@@ -54,6 +54,7 @@
       this.audioControl = this.DASHBOARD_AUDIO_CONTROL.createController({
         appTooltips: this.appTooltips,
         button: this.elements.audioToggle,
+        volumeSlider: this.elements.audioVolume,
       });
       this.transitionAudio = this.DASHBOARD_TRANSITION_AUDIO.createController({
         audioManager: this.audioControl.audioManager(),
@@ -225,7 +226,7 @@
       });
     }
 
-    async loadDashboard({ refreshWindowSelection = true } = {}) {
+    async readDashboardState({ refreshWindowSelection = true } = {}) {
       const [history, refreshStatus, dashboardWindowKey, developerOptions] =
         await Promise.all([
           CodexUsageHistory.readHistory(),
@@ -235,6 +236,23 @@
             : Promise.resolve(null),
           this.readDeveloperOptions(),
         ]);
+
+      return Object.freeze({
+        dashboardWindowKey,
+        developerOptions,
+        history,
+        refreshStatus,
+        refreshWindowSelection,
+      });
+    }
+
+    applyDashboardState({
+      dashboardWindowKey,
+      developerOptions,
+      history,
+      refreshStatus,
+      refreshWindowSelection,
+    }) {
       if (refreshWindowSelection) {
         this.selectedWindowKey = dashboardWindowKey;
       }
@@ -258,6 +276,11 @@
       this.renderResetExhaustedPreview();
       this.paceView.renderStateRail();
       this.renderHistory(this.currentHistory, this.currentRefreshStatus);
+    }
+
+    async loadDashboard(options) {
+      const dashboardState = await this.readDashboardState(options);
+      this.applyDashboardState(dashboardState);
     }
 
     async refreshDashboardTimeSensitiveViews() {
@@ -322,19 +345,29 @@
       );
     }
 
+    async prepareAudioForInitialDashboardRender() {
+      try {
+        await this.audioControl.loadPreference({ resumeIfNeeded: true });
+        await this.preloadTransitionAudio();
+      } catch (error) {
+        console.warn("Could not prepare dashboard audio:", error);
+      }
+    }
+
+    async loadInitialDashboard() {
+      this.prepareAudioForInitialDashboardRender();
+      const dashboardState = await this.readDashboardState();
+      this.applyDashboardState(dashboardState);
+    }
+
     start() {
       this.bindEvents();
-      this.audioControl
-        .loadPreference({ resumeIfNeeded: true })
-        .catch((error) => {
-          console.warn("Could not load dashboard audio preference:", error);
-        });
       window.setInterval(() => {
         this.refreshDashboardTimeSensitiveViews().catch((error) =>
           this.renderHistoryLoadFailure(error),
         );
       }, DASHBOARD_STATUS_REFRESH_INTERVAL_MS);
-      this.loadDashboard().catch((error) =>
+      this.loadInitialDashboard().catch((error) =>
         this.renderHistoryLoadFailure(error),
       );
     }

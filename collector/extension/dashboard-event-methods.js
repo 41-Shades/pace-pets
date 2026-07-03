@@ -41,6 +41,18 @@
           this.elements.audioToggle,
         );
       });
+      this.elements.audioVolume.addEventListener("pointerdown", () => {
+        this.appTooltips.hide();
+        this.appTooltips.suppressTemporarily();
+      });
+      this.elements.audioVolume.addEventListener("input", (event) => {
+        this.appTooltips.hide();
+        this.audioControl
+          .setVolumePercent(event.target.value)
+          .catch((error) => {
+            console.warn("Could not set dashboard audio volume:", error);
+          });
+      });
       this.elements.manualRefreshButton.addEventListener("click", (event) => {
         this.dashboardStatus.runManualRefresh().catch((error) => {
           console.warn("Codex usage manual refresh failed:", error);

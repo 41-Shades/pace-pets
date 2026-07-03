@@ -24,6 +24,23 @@
     return target?.dataset?.tooltipHint?.trim() || "";
   }
 
+  function anchorForTarget(target) {
+    const selector = target?.dataset?.tooltipAnchor?.trim() || "";
+    return selector ? document.querySelector(selector) || target : target;
+  }
+
+  function offsetForTarget(target) {
+    const offset = Number(target?.dataset?.tooltipOffset);
+    return Number.isFinite(offset) && offset >= 0
+      ? offset
+      : APP_TOOLTIP_OFFSET_PX;
+  }
+
+  function horizontalNudgeForTarget(target) {
+    const nudge = Number(target?.dataset?.tooltipNudgeX);
+    return Number.isFinite(nudge) ? nudge : 0;
+  }
+
   function clampNumber(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -76,15 +93,15 @@
       delete target.dataset.appTooltipDescribed;
     }
 
-    positionBesideTarget(target, targetRect, tooltipRect) {
+    positionBesideTarget(target, targetRect, tooltipRect, offset) {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const margin = APP_TOOLTIP_VIEWPORT_MARGIN_PX;
       let placement = "right";
-      let left = targetRect.right + APP_TOOLTIP_OFFSET_PX;
+      let left = targetRect.right + offset;
       if (left + tooltipRect.width > viewportWidth - margin) {
         placement = "left";
-        left = targetRect.left - tooltipRect.width - APP_TOOLTIP_OFFSET_PX;
+        left = targetRect.left - tooltipRect.width - offset;
       }
 
       left = clampNumber(
@@ -112,16 +129,16 @@
       );
     }
 
-    positionAboveOrBelowTarget(targetRect, tooltipRect) {
+    positionAboveOrBelowTarget(targetRect, tooltipRect, offset, nudgeX) {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const margin = APP_TOOLTIP_VIEWPORT_MARGIN_PX;
       let placement = "top";
-      let top = targetRect.top - tooltipRect.height - APP_TOOLTIP_OFFSET_PX;
+      let top = targetRect.top - tooltipRect.height - offset;
 
       if (top < margin) {
         placement = "bottom";
-        top = targetRect.bottom + APP_TOOLTIP_OFFSET_PX;
+        top = targetRect.bottom + offset;
       }
 
       top = clampNumber(
@@ -129,15 +146,15 @@
         margin,
         viewportHeight - tooltipRect.height - margin,
       );
-      const centeredLeft =
-        targetRect.left + targetRect.width / 2 - tooltipRect.width / 2;
+      const targetCenterX = targetRect.left + targetRect.width / 2 + nudgeX;
+      const centeredLeft = targetCenterX - tooltipRect.width / 2;
       const left = clampNumber(
         centeredLeft,
         margin,
         viewportWidth - tooltipRect.width - margin,
       );
       const arrowLeft = clampNumber(
-        targetRect.left + targetRect.width / 2 - left,
+        targetCenterX - left,
         12,
         tooltipRect.width - 12,
       );
@@ -156,14 +173,17 @@
         return;
       }
 
-      const targetRect = target.getBoundingClientRect();
+      const anchor = anchorForTarget(target);
+      const offset = offsetForTarget(target);
+      const nudgeX = horizontalNudgeForTarget(target);
+      const targetRect = anchor.getBoundingClientRect();
       const tooltipRect = this.tooltipElement.getBoundingClientRect();
       if (target.dataset.tooltipPlacement === "right") {
-        this.positionBesideTarget(target, targetRect, tooltipRect);
+        this.positionBesideTarget(target, targetRect, tooltipRect, offset);
         return;
       }
 
-      this.positionAboveOrBelowTarget(targetRect, tooltipRect);
+      this.positionAboveOrBelowTarget(targetRect, tooltipRect, offset, nudgeX);
     }
 
     clearTimers() {

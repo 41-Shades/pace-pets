@@ -62,6 +62,180 @@
   color: color-mix(in srgb, var(--accent) 72%, var(--muted));
 }
 
+.audio-control {
+  --audio-volume-offset-x: -1.5px;
+
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 20px;
+  isolation: isolate;
+  justify-content: center;
+  position: relative;
+  width: 20px;
+}
+
+.audio-control::before {
+  background: color-mix(in srgb, var(--surface-mix) 42%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--control-icon-disc) 58%, transparent);
+  border-radius: 999px;
+  bottom: -4px;
+  box-shadow: 0 8px 20px rgb(var(--shadow-color) / 6%);
+  content: "";
+  height: 110px;
+  left: calc(50% + var(--audio-volume-offset-x));
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  width: 28px;
+  z-index: -1;
+}
+
+.audio-control:hover::before,
+.audio-control:has(.audio-volume-slider:focus-visible)::before {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.audio-volume-panel {
+  --audio-volume-percent: 0%;
+
+  align-items: center;
+  color: color-mix(in srgb, var(--control-icon-disc) 42%, var(--subhead));
+  bottom: 20px;
+  display: flex;
+  height: 84px;
+  justify-content: center;
+  left: calc(50% + var(--audio-volume-offset-x));
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  width: 28px;
+  z-index: 4;
+}
+
+.audio-volume-panel[data-audio-status="ready"] {
+  color: color-mix(in srgb, var(--collection-live-dot) 18%, var(--subhead));
+}
+
+.audio-volume-panel[data-audio-status="needsGesture"] {
+  color: color-mix(in srgb, var(--accent) 38%, var(--subhead));
+}
+
+.audio-volume-panel[data-audio-status="unavailable"] {
+  color: color-mix(in srgb, var(--danger) 24%, var(--subhead));
+  opacity: 0.48;
+}
+
+.audio-control:hover .audio-volume-panel,
+.audio-control:has(.audio-volume-slider:focus-visible) .audio-volume-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.audio-volume-rail {
+  background: var(--track);
+  border-radius: 999px;
+  height: 76px;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  width: 4px;
+}
+
+.audio-volume-fill {
+  background: currentcolor;
+  border-radius: inherit;
+  bottom: 0;
+  height: var(--audio-volume-percent);
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.audio-volume-thumb {
+  background: currentcolor;
+  border: 2px solid var(--surface-mix);
+  border-radius: 999px;
+  bottom: var(--audio-volume-percent);
+  box-shadow: 0 1px 4px rgb(var(--shadow-color) / 16%);
+  height: 12px;
+  left: 50%;
+  position: absolute;
+  transform: translate(-50%, 50%);
+  width: 12px;
+}
+
+.audio-volume-slider {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 28px;
+  left: 50%;
+  margin: 0;
+  opacity: 0;
+  padding: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  transform-origin: center;
+  width: 76px;
+}
+
+.audio-volume-slider:disabled {
+  cursor: default;
+}
+
+.audio-volume-slider:focus-visible {
+  outline: 0;
+}
+
+.audio-volume-panel:has(.audio-volume-slider:focus-visible) .audio-volume-rail {
+  outline: 2px solid var(--accent-line);
+  outline-offset: 4px;
+}
+
+.audio-control:hover .audio-volume-slider,
+.audio-control:has(.audio-volume-slider:focus-visible) .audio-volume-slider {
+  pointer-events: auto;
+}
+
+.audio-volume-slider::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.audio-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  height: 28px;
+  width: 28px;
+}
+
+.audio-volume-slider::-moz-range-track {
+  background: transparent;
+}
+
+.audio-volume-slider::-moz-range-thumb {
+  background: transparent;
+  border: 0;
+  height: 28px;
+  width: 28px;
+}
+
 .motion-toggle-icon,
 .audio-toggle-icon {
   background: currentcolor;
