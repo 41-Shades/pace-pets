@@ -1,4 +1,10 @@
 .audio-toggle {
+  --audio-toggle-hover: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--muted) 64%, var(--accent)) 58%,
+    var(--control-icon-disc)
+  );
+
   align-items: center;
   appearance: none;
   background: transparent;
@@ -13,10 +19,6 @@
   padding: 0;
   transition: color 180ms ease;
   width: 20px;
-}
-
-.audio-toggle[data-audio-status="ready"] {
-  color: color-mix(in srgb, var(--collection-live-dot) 18%, var(--subhead));
 }
 
 .audio-toggle[data-audio-status="unavailable"] {
@@ -34,11 +36,7 @@
 
 .audio-toggle:hover {
   background: transparent;
-  color: color-mix(in srgb, var(--muted) 64%, var(--accent));
-}
-
-.audio-toggle[data-audio-status="ready"]:hover {
-  color: color-mix(in srgb, var(--collection-live-dot) 58%, var(--accent));
+  color: var(--audio-toggle-hover);
 }
 
 .audio-toggle[data-audio-status="unavailable"]:hover {
@@ -109,10 +107,6 @@
     transform 120ms ease;
   width: 28px;
   z-index: 4;
-}
-
-.audio-volume-panel[data-audio-status="ready"] {
-  color: color-mix(in srgb, var(--collection-live-dot) 18%, var(--subhead));
 }
 
 .audio-volume-panel[data-audio-status="needsGesture"] {

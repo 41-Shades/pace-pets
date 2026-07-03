@@ -173,7 +173,13 @@
     layer.remove();
   }
 
+  function stopBrakeExtremeAudio(state) {
+    state.brakeExtremeAudio?.stop?.({ fadeOutMs: 0 });
+    state.brakeExtremeAudio = null;
+  }
+
   function clearDebrisLayers(state) {
+    stopBrakeExtremeAudio(state);
     for (const timer of state.debrisTimers) {
       window.clearTimeout(timer);
     }

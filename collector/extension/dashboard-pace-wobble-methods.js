@@ -67,6 +67,7 @@
   function brakeDebrisState({ isActive = true, isFirstBurst = true } = {}) {
     return {
       brakeIntensity: 0,
+      brakeExtremeAudio: null,
       brakeWobbleBurstChancesPercent: DATA.BRAKE_WOBBLE_BURST_CHANCES_PERCENT,
       debrisAnimationCleanups: new Set(),
       debrisLayers: new Set(),
