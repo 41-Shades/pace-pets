@@ -28,6 +28,7 @@ describe("PacePetsDashboardDom", () => {
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-volume-rail");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("clear-data-button");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("dynamic-favicon");
+    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("info-motion-toggle");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain(
       "manual-refresh-button",
     );
@@ -72,6 +73,9 @@ describe("PacePetsDashboardDom", () => {
     });
     expect(elements.earlyResetPopoverText).toEqual({
       selector: "#early-reset-popover .early-reset-popover-text",
+    });
+    expect(elements.infoMotionToggle).toEqual({
+      selector: "#info-motion-toggle",
     });
     expect(elements.windowOptions).toEqual([
       {

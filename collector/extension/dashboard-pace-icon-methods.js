@@ -31,6 +31,22 @@
     controller.clearSplatMaxThrow?.();
   }
 
+  function paceThemeContext(controller) {
+    return controller.elements.paceCard
+      .closest?.(".usage-panel")
+      ?.querySelector?.(".panel-header");
+  }
+
+  function syncPaceThemeContext(controller, level, staleClasses) {
+    const context = paceThemeContext(controller);
+    if (!context) {
+      return;
+    }
+
+    context.classList.remove(...staleClasses);
+    context.classList.add(level);
+  }
+
   function paceIconOrigin(controller) {
     const iconRect = controller.elements.paceIcon.getBoundingClientRect();
     return {
@@ -336,6 +352,7 @@
       const staleClasses = DATA.PACE_CLASSES.filter((name) => name !== level);
       this.elements.paceCard.classList.remove(...staleClasses);
       this.elements.paceCard.classList.add(level);
+      syncPaceThemeContext(this, level, staleClasses);
       setNothingnessPageBackground(state);
       updatePrimaryPaceIcon(this, {
         level,

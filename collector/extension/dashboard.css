@@ -54,6 +54,57 @@
   --info-overlay-bg: rgb(245 247 249 / 72%);
   --info-panel-bg: rgb(255 255 255 / 88%);
   --info-panel-border: rgb(207 216 226 / 72%);
+  --info-panel-surface: #ffffff;
+  --info-panel-text: #141b24;
+  --info-panel-muted: #66717f;
+  --info-panel-subhead: #96a0ad;
+  --info-panel-accent: #0f766e;
+  --info-panel-track: #e7edf3;
+  --info-panel-focus-ring: color-mix(
+    in srgb,
+    var(--info-panel-accent) 56%,
+    var(--info-panel-surface)
+  );
+  --info-panel-close: color-mix(
+    in srgb,
+    var(--info-panel-subhead) 72%,
+    var(--info-panel-surface)
+  );
+  --info-panel-close-hover: color-mix(
+    in srgb,
+    var(--info-panel-muted) 70%,
+    var(--info-panel-accent)
+  );
+  --info-panel-control-bg: color-mix(
+    in srgb,
+    var(--info-panel-track) 72%,
+    var(--info-panel-surface)
+  );
+  --info-panel-control-hover: color-mix(
+    in srgb,
+    var(--info-panel-track) 78%,
+    var(--info-panel-surface)
+  );
+  --info-panel-control-selected-bg: color-mix(
+    in srgb,
+    var(--info-panel-surface) 86%,
+    var(--info-panel-track)
+  );
+  --info-panel-action-bg: color-mix(
+    in srgb,
+    var(--info-panel-track) 42%,
+    transparent
+  );
+  --info-panel-action-hover: color-mix(
+    in srgb,
+    var(--info-panel-track) 58%,
+    var(--info-panel-surface)
+  );
+  --info-panel-divider: color-mix(
+    in srgb,
+    var(--info-panel-border) 72%,
+    transparent
+  );
   --tooltip-bg: #ffffff;
   --tooltip-text: #24313d;
   --tooltip-border: #cfd8e2;
@@ -92,9 +143,9 @@ body,
 .metric-bar,
 .reset-progress-dot,
 .reset-progress-fill,
-.motion-toggle,
 .audio-toggle,
 .info-toggle,
+.info-panel-motion-toggle,
 .info-close {
   transition:
     background-color 180ms ease,

@@ -189,13 +189,22 @@
 }
 
 .state-chip.pace-nothingness .state-icon {
-  background: #000000;
-  border: 1px solid #000000;
-  box-shadow: inset 0 0 0 1px rgb(154 52 18 / 16%);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .state-chip.pace-nothingness .state-icon.is-outline-placeholder::before {
-  content: none;
+  background: #000000;
+  border: 1px solid rgb(154 52 18 / 18%);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 3%),
+    0 0 7px rgb(154 52 18 / 8%);
+  content: "";
+  height: 70%;
+  opacity: 1;
+  width: 70%;
 }
 
 [data-theme="dark"] .state-chip.pace-nothingness,
@@ -209,7 +218,16 @@
 }
 
 [data-theme="dark"] .state-chip.pace-nothingness .state-icon {
-  box-shadow: inset 0 0 0 1px rgb(249 115 22 / 18%);
+  box-shadow: none;
+}
+
+[data-theme="dark"]
+  .state-chip.pace-nothingness
+  .state-icon.is-outline-placeholder::before {
+  border-color: rgb(249 115 22 / 18%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 4%),
+    0 0 8px rgb(249 115 22 / 10%);
 }
 
 .state-chip strong {

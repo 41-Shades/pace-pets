@@ -265,6 +265,12 @@
   --info-overlay-bg: rgb(18 24 23 / 70%);
   --info-panel-bg: rgb(32 39 38 / 88%);
   --info-panel-border: rgb(59 73 70 / 74%);
+  --info-panel-surface: #202726;
+  --info-panel-text: #eef4f2;
+  --info-panel-muted: #a8b7b4;
+  --info-panel-subhead: #849391;
+  --info-panel-accent: #66cfc0;
+  --info-panel-track: #2b3635;
   --tooltip-bg: #1b2422;
   --tooltip-text: #eef4f2;
   --tooltip-border: #3b4946;
