@@ -205,12 +205,10 @@ body.has-nothingness-page-background .theme-toggle-icon::after {
   width: auto;
 }
 
-body.has-nothingness-page-background .motion-toggle,
 body.has-nothingness-page-background .audio-toggle {
   color: rgb(148 163 184 / 36%);
 }
 
-body.has-nothingness-page-background .motion-toggle:hover,
 body.has-nothingness-page-background .audio-toggle:hover {
   color: rgb(148 163 184 / 54%);
 }

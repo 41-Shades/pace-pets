@@ -131,16 +131,25 @@
       return this.motionPreference === "on" ? "off" : "on";
     }
 
+    motionToggleElements() {
+      return [this.elements.infoMotionToggle].filter(Boolean);
+    }
+
     updateMotionToggle(motion) {
-      if (!this.elements.motionToggle) {
+      const motionToggles = this.motionToggleElements();
+      if (motionToggles.length === 0) {
         return;
       }
 
       const enabled = motion === "on";
-      const label = enabled ? "Turn all motion off" : "Turn all motion on";
-      this.elements.motionToggle.setAttribute("aria-pressed", String(enabled));
-      this.elements.motionToggle.setAttribute("aria-label", label);
-      this.appTooltips.setText(this.elements.motionToggle, label);
+      const label = enabled
+        ? "Turn motion effects off"
+        : "Turn motion effects on";
+      motionToggles.forEach((toggle) => {
+        toggle.setAttribute("aria-pressed", String(enabled));
+        toggle.setAttribute("aria-label", label);
+        this.appTooltips.setText(toggle, label);
+      });
     }
 
     applyMotionPreference({ notify = false } = {}) {
@@ -194,7 +203,7 @@
 
       window.requestAnimationFrame(() => {
         const [firstFocusable] = this.infoPanelFocusableElements();
-        firstFocusable?.focus();
+        (this.elements.infoClose || firstFocusable)?.focus();
       });
     }
 
