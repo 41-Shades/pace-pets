@@ -242,6 +242,21 @@
       this.showInfoPanel({ restoreFocus });
     }
 
+    restoreInfoPanelTabFocus(event, firstElement, lastElement) {
+      const activeElement = document.activeElement;
+      const activeElementInPanel =
+        activeElement instanceof HTMLElement &&
+        this.elements.infoPanel?.contains(activeElement);
+
+      if (activeElementInPanel) {
+        return false;
+      }
+
+      event.preventDefault();
+      (event.shiftKey ? lastElement : firstElement).focus();
+      return true;
+    }
+
     trapInfoPanelFocus(event) {
       if (!this.isInfoPanelOpen() || event.key !== "Tab") {
         return;
@@ -257,6 +272,9 @@
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
       const activeElement = document.activeElement;
+      if (this.restoreInfoPanelTabFocus(event, firstElement, lastElement)) {
+        return;
+      }
 
       if (event.shiftKey && activeElement === firstElement) {
         event.preventDefault();
