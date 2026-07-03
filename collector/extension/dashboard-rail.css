@@ -185,7 +185,6 @@
 
   background: color-mix(in srgb, var(--surface-mix) 99%, #000000);
   border-color: #000000;
-  box-shadow: inset 0 0 0 1px rgb(154 52 18 / 10%);
 }
 
 .state-chip.pace-nothingness .state-icon {
@@ -212,9 +211,7 @@
 [data-theme="dark"] .state-chip.pace-nothingness.is-active {
   border-color: color-mix(in srgb, var(--line-strong) 76%, #9a3412);
   border-left-color: color-mix(in srgb, #9a3412 50%, var(--line-strong));
-  box-shadow:
-    inset 0 0 0 1px rgb(249 115 22 / 10%),
-    0 0 10px rgb(249 115 22 / 5%);
+  box-shadow: 0 0 10px rgb(249 115 22 / 5%);
 }
 
 [data-theme="dark"] .state-chip.pace-nothingness .state-icon {
@@ -284,4 +281,8 @@
 
 .state-chip.pace-singularity strong {
   color: var(--pace-color);
+}
+
+.state-chip.pace-singularity .state-ratio {
+  opacity: 0.56;
 }
