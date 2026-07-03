@@ -15,7 +15,7 @@ beforeAll(async () => {
 });
 
 describe("PacePetsDashboardApp startup", () => {
-  it("prepares audio before applying the initial dashboard render", async () => {
+  it("does not wait for audio preparation before applying the initial dashboard render", async () => {
     const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
     const audioReady = deferredPromise();
     const dashboardState = Object.freeze({
@@ -32,12 +32,11 @@ describe("PacePetsDashboardApp startup", () => {
     await Promise.resolve();
 
     expect(app.readDashboardState).toHaveBeenCalled();
-    expect(app.applyDashboardState).not.toHaveBeenCalled();
-
-    audioReady.resolve();
+    expect(app.applyDashboardState).toHaveBeenCalledWith(dashboardState);
     await loadPromise;
 
-    expect(app.applyDashboardState).toHaveBeenCalledWith(dashboardState);
+    audioReady.resolve();
+    expect(app.prepareAudioForInitialDashboardRender).toHaveBeenCalled();
   });
 
   it("loads and preloads audio for the first dashboard render", async () => {

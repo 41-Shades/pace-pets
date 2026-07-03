@@ -355,9 +355,8 @@
     }
 
     async loadInitialDashboard() {
-      const audioReadyPromise = this.prepareAudioForInitialDashboardRender();
+      this.prepareAudioForInitialDashboardRender();
       const dashboardState = await this.readDashboardState();
-      await audioReadyPromise;
       this.applyDashboardState(dashboardState);
     }
 
