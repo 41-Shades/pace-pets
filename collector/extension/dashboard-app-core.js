@@ -3,7 +3,7 @@
 
   const DASHBOARD_STATUS_REFRESH_INTERVAL_MS = 60 * 1000;
   const MS_PER_MINUTE = 60 * 1000;
-  const PRELOAD_AUDIO_TIMELINES = Object.freeze(["bigBang"]);
+  const PRELOAD_AUDIO_TIMELINES = Object.freeze(["bigBang", "brakeExtreme"]);
 
   class PacePetsDashboardApp {
     constructor({ dependencies, elements }) {
