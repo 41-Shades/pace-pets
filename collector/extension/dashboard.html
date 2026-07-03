@@ -100,16 +100,46 @@
                 >
                   <span class="motion-toggle-icon" aria-hidden="true"></span>
                 </button>
-                <button
-                  class="audio-toggle"
-                  id="audio-toggle"
-                  type="button"
-                  aria-label="Turn sound on"
-                  aria-pressed="false"
-                  data-tooltip="Turn sound on"
-                >
-                  <span class="audio-toggle-icon" aria-hidden="true"></span>
-                </button>
+                <span class="audio-control" id="audio-control">
+                  <span class="audio-volume-panel" id="audio-volume-panel">
+                    <span
+                      class="audio-volume-rail"
+                      id="audio-volume-rail"
+                      aria-hidden="true"
+                    >
+                      <span class="audio-volume-fill"></span>
+                      <span class="audio-volume-thumb"></span>
+                    </span>
+                    <input
+                      class="audio-volume-slider"
+                      id="audio-volume"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value="0"
+                      aria-label="Volume"
+                      aria-orientation="vertical"
+                      data-tooltip="Volume"
+                      data-tooltip-anchor="#audio-volume-rail"
+                      data-tooltip-nudge-x="-1.0"
+                      data-tooltip-offset="14"
+                    />
+                  </span>
+                  <button
+                    class="audio-toggle"
+                    id="audio-toggle"
+                    type="button"
+                    aria-label="Unmute"
+                    aria-pressed="false"
+                    data-tooltip="Unmute"
+                    data-tooltip-anchor="#audio-volume-rail"
+                    data-tooltip-nudge-x="-1.0"
+                    data-tooltip-offset="14"
+                  >
+                    <span class="audio-toggle-icon" aria-hidden="true"></span>
+                  </button>
+                </span>
                 <button
                   class="info-toggle"
                   id="info-toggle"
@@ -158,7 +188,7 @@
             </div>
           </header>
           <section
-            class="pace-card pace-nothingness"
+            class="pace-card pace-muted"
             id="pace-card"
             aria-labelledby="pace-title"
           >
@@ -168,8 +198,8 @@
               aria-hidden="true"
             ></div>
             <div class="pace-copy">
-              <h2 id="pace-title">Nothingness</h2>
-              <p id="pace-copy">Waiting for usage in this void.</p>
+              <h2 id="pace-title">Waiting for usage</h2>
+              <p id="pace-copy">Waiting for usage.</p>
             </div>
             <div class="pace-stats" aria-label="Usage to time summary" hidden>
               <div

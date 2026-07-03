@@ -3,7 +3,11 @@
 
   const DASHBOARD_ELEMENT_SELECTORS = Object.freeze({
     appTooltip: "#app-tooltip",
+    audioControlGroup: "#audio-control",
     audioToggle: "#audio-toggle",
+    audioVolume: "#audio-volume",
+    audioVolumePanel: "#audio-volume-panel",
+    audioVolumeRail: "#audio-volume-rail",
     chartCanvas: "#usage-chart",
     chartFrame: "#chart-frame",
     chartState: "#chart-state",

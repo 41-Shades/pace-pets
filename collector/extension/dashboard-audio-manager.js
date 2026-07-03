@@ -171,6 +171,10 @@
       return Object.freeze({ ...result, status: this.status() });
     }
 
+    volume() {
+      return this.preference.volume;
+    }
+
     ensureContext() {
       if (this.context || this.unavailable) {
         return this.context;
@@ -255,11 +259,7 @@
     }
 
     async preloadClip(clipId) {
-      if (this.status() !== STATUS_READY) {
-        return null;
-      }
-
-      return this.loadBuffer(clipId);
+      return this.status() === STATUS_READY ? this.loadBuffer(clipId) : null;
     }
 
     timelineStartTime() {

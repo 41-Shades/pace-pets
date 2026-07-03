@@ -25,8 +25,8 @@ paceRatio = remainingPercent / timeRemainingPercent
 `timeRemainingPercent` is derived from `resetsAt`, `windowMinutes`, and the
 current time. If either percent cannot be normalized, or if the time remaining
 percent is zero, the ratio is unavailable. Dashboard interim presentations use
-Nothingness; the muted state remains an internal fallback for unknown ratio
-presentation.
+Nothingness; the muted state remains the neutral startup and internal fallback
+for unknown ratio presentation.
 
 Percent inputs are bounded to `0..100`. Display surfaces choose their own
 formatting, but the stored history keeps source precision after normalization.
@@ -38,16 +38,16 @@ the current observed provider contract.
 
 `PacePetsLogic.paceStateForRatio()` maps numeric ratios to threshold states:
 
-| State            | Class                  | Ratio                   | Dashboard title   |
-| ---------------- | ---------------------- | ----------------------- | ----------------- |
-| `criticalBehind` | `pace-critical-behind` | `< 0.55`                | Brake hard!       |
-| `wellBehind`     | `pace-well-behind`     | `>= 0.55` and `< 0.75`  | Slow down         |
-| `behind`         | `pace-behind`          | `>= 0.75` and `< 0.90`  | Ease up           |
-| `on`             | `pace-on`              | `>= 0.90` and `<= 1.10` | Keep pace         |
-| `ahead`          | `pace-ahead`           | `> 1.10` and `<= 1.25`  | Pick up speed     |
-| `strongAhead`    | `pace-strong-ahead`    | `> 1.25` and `<= 1.55`  | Push harder       |
-| `wellAhead`      | `pace-well-ahead`      | `> 1.55`                | Sprint faster!    |
-| `muted`          | `pace-muted`           | unavailable             | Internal fallback |
+| State            | Class                  | Ratio                   | Dashboard title  |
+| ---------------- | ---------------------- | ----------------------- | ---------------- |
+| `criticalBehind` | `pace-critical-behind` | `< 0.55`                | Brake hard!      |
+| `wellBehind`     | `pace-well-behind`     | `>= 0.55` and `< 0.75`  | Slow down        |
+| `behind`         | `pace-behind`          | `>= 0.75` and `< 0.90`  | Ease up          |
+| `on`             | `pace-on`              | `>= 0.90` and `<= 1.10` | Keep pace        |
+| `ahead`          | `pace-ahead`           | `> 1.10` and `<= 1.25`  | Pick up speed    |
+| `strongAhead`    | `pace-strong-ahead`    | `> 1.25` and `<= 1.55`  | Push harder      |
+| `wellAhead`      | `pace-well-ahead`      | `> 1.55`                | Sprint faster!   |
+| `muted`          | `pace-muted`           | unavailable             | Neutral fallback |
 
 Big Bang, Perfect Sync, Perfect Zero, Splat, Singularity, and Nothingness are
 presentation states, not threshold states. They sit above threshold mapping and
