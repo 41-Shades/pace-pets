@@ -32,7 +32,7 @@
   const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
     REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY;
   let lastRefreshState = REFRESH_STATUS.initialState();
-  let scheduledRefreshPromise = null;
+  let scheduledRefresh = null;
   let manualRefreshCooldownUntilMs = 0;
   let usageDataGeneration = 0;
 
@@ -41,7 +41,7 @@
   }
 
   function scheduledRefreshActive() {
-    return scheduledRefreshPromise !== null;
+    return scheduledRefresh?.generation === usageDataGeneration;
   }
 
   function isCurrentUsageDataGeneration(generation) {
@@ -162,12 +162,12 @@
   }
 
   function runScheduledRefresh() {
-    if (scheduledRefreshPromise) {
-      return scheduledRefreshPromise;
+    const refreshGeneration = usageDataGeneration;
+    if (scheduledRefresh?.generation === refreshGeneration) {
+      return scheduledRefresh.promise;
     }
 
-    const refreshGeneration = usageDataGeneration;
-    scheduledRefreshPromise = USAGE_PERMISSIONS.hasChatGptHostPermission()
+    const refreshPromise = USAGE_PERMISSIONS.hasChatGptHostPermission()
       .then((hasPermission) =>
         hasPermission ? refreshUsage(refreshGeneration) : lastRefreshState,
       )
@@ -179,10 +179,16 @@
         return recordRefreshFailure(error, refreshGeneration).catch(() => {});
       })
       .finally(() => {
-        scheduledRefreshPromise = null;
+        if (scheduledRefresh?.promise === refreshPromise) {
+          scheduledRefresh = null;
+        }
       });
 
-    return scheduledRefreshPromise;
+    scheduledRefresh = Object.freeze({
+      generation: refreshGeneration,
+      promise: refreshPromise,
+    });
+    return refreshPromise;
   }
 
   async function readManualRefreshCooldownUntilMs() {

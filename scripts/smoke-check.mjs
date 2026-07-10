@@ -260,12 +260,16 @@ assert(
   "Manual refresh must be conditional, cooldown guarded, and routed through the scheduled refresh path.",
 );
 assert(
-  backgroundJs.includes("let scheduledRefreshPromise = null;") &&
-    /function runScheduledRefresh\(\) \{\s*if \(scheduledRefreshPromise\) \{\s*return scheduledRefreshPromise;\s*\}/s.test(
-      backgroundJs,
+  backgroundJs.includes("let scheduledRefresh = null;") &&
+    backgroundJs.includes(
+      "if (scheduledRefresh?.generation === refreshGeneration)",
     ) &&
-    /finally\(\(\) => \{\s*scheduledRefreshPromise = null;/s.test(backgroundJs),
-  "Background alarm refreshes must be guarded against same-worker overlap.",
+    backgroundJs.includes("return scheduledRefresh.promise;") &&
+    backgroundJs.includes(
+      "if (scheduledRefresh?.promise === refreshPromise)",
+    ) &&
+    backgroundJs.includes("scheduledRefresh = Object.freeze({"),
+  "Background alarm refreshes must be generation-scoped and guarded against same-worker overlap.",
 );
 assert(
   !backgroundJs.includes("badgePreviewRestoreTimer") &&

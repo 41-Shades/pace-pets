@@ -115,6 +115,50 @@ describe("PacePetsBackgroundRefreshRunner usage-data lifecycle", () => {
     });
   });
 
+  it("starts fresh work after clear without letting the stale task release it", async () => {
+    const preClearUsage = deferredPromise();
+    const postClearUsage = deferredPromise();
+    usageSource.fetchUsageWithProvider
+      .mockReturnValueOnce(preClearUsage.promise)
+      .mockReturnValueOnce(postClearUsage.promise);
+    usageData.appendUsageSnapshot.mockResolvedValue({
+      history: { samples: [{ id: "post-clear" }] },
+      sample: { id: "post-clear", windows: {} },
+      stored: true,
+      checkedAt: "2026-05-25T12:00:00.000Z",
+    });
+    badgePresentation.updatePaceBadge.mockResolvedValue({
+      badgePaceRatio: 1,
+      badgeWindowKey: "fiveHour",
+      pacePresentationAt: "2026-05-25T12:00:00.000Z",
+    });
+    chrome.storage.local.get.mockImplementation((_key, done) => done({}));
+    chrome.storage.local.set.mockImplementation((_items, done) => done());
+
+    const preClearRefresh = refreshRunner.runScheduledRefresh();
+    for (let turn = 0; turn < 4; turn += 1) {
+      await Promise.resolve();
+    }
+    await refreshRunner.runClearUsageData();
+
+    expect(refreshRunner.scheduledRefreshActive()).toBe(false);
+    const postClearRefresh = refreshRunner.runManualRefresh();
+    for (let turn = 0; turn < 8; turn += 1) {
+      await Promise.resolve();
+    }
+    expect(usageSource.fetchUsageWithProvider).toHaveBeenCalledTimes(2);
+    expect(chrome.storage.local.set).toHaveBeenCalledTimes(1);
+
+    preClearUsage.resolve({ usage: "stale" });
+    await preClearRefresh;
+    expect(refreshRunner.scheduledRefreshActive()).toBe(true);
+
+    postClearUsage.resolve({ usage: "current" });
+    await expect(postClearRefresh).resolves.toMatchObject({ ok: true });
+    expect(usageData.appendUsageSnapshot).toHaveBeenCalledTimes(1);
+    expect(refreshRunner.scheduledRefreshActive()).toBe(false);
+  });
+
   it("persists the normalized timeout failure before releasing the refresh", async () => {
     const timeoutError = Object.assign(
       new Error("ChatGPT usage check timed out."),

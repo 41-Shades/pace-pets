@@ -175,7 +175,7 @@ The manual refresh cooldown key stores only an ISO timestamp for when the curren
 - Windows without valid `remainingPercent`, `resetsAt`, and `windowMinutes` are discarded.
 - Windows whose `windowMinutes` do not match the canonical duration for their supported key are discarded.
 - Percent values are bounded to `0..100`; display surfaces choose their own rounding. Fractional percent normalization is supported for adapter resilience, but current observed WHAM usage-window precision is whole-percent.
-- Relative upstream reset durations are converted to deterministic minute-boundary timestamps; absolute upstream reset timestamps retain their supplied precision.
+- Positive relative upstream reset durations round up to deterministic minute-boundary timestamps so normalization never moves a reset earlier than its full offset; absolute upstream reset timestamps retain their supplied precision.
 - Text markers are whitespace-normalized and capped at 80 characters.
 - Stored history is deduped by sample `id`, sorted by `collectedAt`, pruned to retention, compacted for unchanged plateaus, and capped at the newest 500 samples.
 - History reads and writes share one cross-context Web Lock. A read persists pruning or normalization only when the stored representation changed, and `Clear data` invalidates older refresh generations before removing history and refresh status.

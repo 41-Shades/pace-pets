@@ -37,8 +37,18 @@ describe("relative usage reset normalization", () => {
       rawFiveHourUsage(55 * 60),
     ).windows.fiveHour.resetsAt;
 
-    expect(firstReset).toBe("2026-05-25T13:00:00.000Z");
+    expect(firstReset).toBe("2026-05-25T13:01:00.000Z");
     expect(secondReset).toBe(firstReset);
+  });
+
+  it("keeps positive relative resets after their observation time", () => {
+    vi.setSystemTime(new Date("2026-05-25T12:00:10.000Z"));
+
+    const reset = globalThis.CodexWeeklyUsage.normalizeWhamUsage(
+      rawFiveHourUsage(5),
+    ).windows.fiveHour.resetsAt;
+
+    expect(reset).toBe("2026-05-25T12:01:00.000Z");
   });
 
   it("compacts equivalent jittered polls into the plateau interval", () => {

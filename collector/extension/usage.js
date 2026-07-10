@@ -81,8 +81,9 @@
 
   function deterministicRelativeResetMs(relativeSeconds, observedAtMs) {
     const estimatedResetMs = observedAtMs + relativeSeconds * 1000;
+    const roundToBoundary = relativeSeconds > 0 ? Math.ceil : Math.round;
     return (
-      Math.round(estimatedResetMs / RELATIVE_RESET_PRECISION_MS) *
+      roundToBoundary(estimatedResetMs / RELATIVE_RESET_PRECISION_MS) *
       RELATIVE_RESET_PRECISION_MS
     );
   }
