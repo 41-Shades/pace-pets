@@ -35,6 +35,7 @@
   class DashboardStatusController {
     constructor({
       appTooltips,
+      completeHistoryPresentation,
       elements,
       formatClockTime,
       getCurrentHistory,
@@ -42,6 +43,7 @@
       setCurrentRefreshStatus,
     }) {
       this.appTooltips = appTooltips;
+      this.completeHistoryPresentation = completeHistoryPresentation;
       this.elements = elements;
       this.formatClockTime = formatClockTime;
       this.getCurrentHistory = getCurrentHistory;
@@ -330,6 +332,7 @@
         { manualRefresh: true },
       );
       this.showManualRefreshFailure(null, error);
+      this.completeHistoryPresentation?.();
     }
 
     async runManualRefresh() {

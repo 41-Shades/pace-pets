@@ -4,7 +4,37 @@ import { describe, expect, it } from "vitest";
 
 installExtensionRuntimeHooks();
 
-describe("PacePetsRefreshControl", () => {
+describe("PacePetsRefreshControl clear data", () => {
+  it("owns the background clear-data message contract", () => {
+    const refreshControl = globalThis.PacePetsRefreshControl;
+    const result = {
+      history: { historyVersion: 1, samples: [] },
+      refreshStatus: null,
+    };
+
+    expect(refreshControl.clearUsageDataMessage()).toEqual({
+      type: refreshControl.CLEAR_USAGE_DATA_MESSAGE_TYPE,
+    });
+    expect(
+      refreshControl.isClearUsageDataMessage(
+        refreshControl.clearUsageDataMessage(),
+      ),
+    ).toBe(true);
+    expect(refreshControl.isClearUsageDataMessage({ type: "other" })).toBe(
+      false,
+    );
+    expect(refreshControl.clearUsageDataResponse(result)).toEqual({
+      ok: true,
+      ...result,
+    });
+    expect(refreshControl.clearUsageDataErrorResponse()).toEqual({
+      ok: false,
+      message: refreshControl.CLEAR_USAGE_DATA_FAILURE_MESSAGE,
+    });
+  });
+});
+
+describe("PacePetsRefreshControl manual refresh", () => {
   it("owns manual refresh message, response, and cooldown semantics", () => {
     const refreshControl = globalThis.PacePetsRefreshControl;
     const refreshState = globalThis.CodexRefreshStatus.successState({

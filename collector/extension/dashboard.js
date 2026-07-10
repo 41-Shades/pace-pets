@@ -20,6 +20,10 @@
     "Pace Pets dashboard DOM contract",
   );
   const dependencies = {
+    AUDIO_PREFERENCES: requiredGlobal(
+      "PacePetsAudioPreferences",
+      "Pace Pets audio preferences",
+    ),
     APP_TOOLTIPS: requiredGlobal(
       "PacePetsAppTooltips",
       "Pace Pets app tooltips",

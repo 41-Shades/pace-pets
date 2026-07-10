@@ -9,6 +9,8 @@
   }
 
   const REFRESH_NOW_MESSAGE_TYPE = "pacePets.refreshUsageNow";
+  const CLEAR_USAGE_DATA_MESSAGE_TYPE = "pacePets.clearUsageData";
+  const CLEAR_USAGE_DATA_FAILURE_MESSAGE = "Could not clear local usage data.";
   const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
     "pacePetsManualRefreshCooldownUntil";
   const MANUAL_REFRESH_COOLDOWN_MS = 60 * 1000;
@@ -48,6 +50,31 @@
 
   function isRefreshNowMessage(message) {
     return message?.type === REFRESH_NOW_MESSAGE_TYPE;
+  }
+
+  function clearUsageDataMessage() {
+    return {
+      type: CLEAR_USAGE_DATA_MESSAGE_TYPE,
+    };
+  }
+
+  function isClearUsageDataMessage(message) {
+    return message?.type === CLEAR_USAGE_DATA_MESSAGE_TYPE;
+  }
+
+  function clearUsageDataResponse(result) {
+    return {
+      ok: true,
+      history: result?.history || null,
+      refreshStatus: result?.refreshStatus || null,
+    };
+  }
+
+  function clearUsageDataErrorResponse() {
+    return {
+      ok: false,
+      message: CLEAR_USAGE_DATA_FAILURE_MESSAGE,
+    };
   }
 
   function normalizeRefreshStatus(refreshState) {
@@ -102,10 +129,16 @@
   }
 
   root.PacePetsRefreshControl = Object.freeze({
+    CLEAR_USAGE_DATA_FAILURE_MESSAGE,
+    CLEAR_USAGE_DATA_MESSAGE_TYPE,
     MANUAL_REFRESH_COOLDOWN_MS,
     MANUAL_REFRESH_COOLDOWN_STORAGE_KEY,
     REFRESH_NOW_MESSAGE_TYPE,
+    clearUsageDataErrorResponse,
+    clearUsageDataMessage,
+    clearUsageDataResponse,
     cooldownRemainingMs,
+    isClearUsageDataMessage,
     isManualRefreshCooldownResponse,
     isRefreshNowMessage,
     manualRefreshCooldownResponse,

@@ -6,6 +6,8 @@ const BADGE_WINDOW_STORAGE_KEY = CodexUsageWindows.BADGE_WINDOW_STORAGE_KEY;
 const BADGE_PRESENTATION = PacePetsBackgroundBadgePresentation;
 const HISTORY_STORAGE_KEY = CodexUsageHistory.HISTORY_STORAGE_KEY;
 const REFRESH_RUNNER = PacePetsBackgroundRefreshRunner;
+const DEV_PREVIEW_BROKER =
+  globalThis.PacePetsBackgroundDevPreviewBroker.createController();
 
 async function createBadgeContextMenus() {
   const selectedWindowKey = await BADGE_PRESENTATION.selectedBadgeWindowKey();
@@ -121,6 +123,7 @@ function openDashboard() {
 chrome.runtime.onInstalled.addListener(initializeExtension);
 chrome.runtime.onStartup.addListener(initializeExtension);
 chrome.action.onClicked.addListener(openDashboard);
+chrome.runtime.onConnect.addListener(DEV_PREVIEW_BROKER.connectDashboard);
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (PacePetsRefreshControl.isRefreshNowMessage(message)) {
     REFRESH_RUNNER.runManualRefresh()
@@ -131,6 +134,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse(PacePetsRefreshControl.refreshErrorResponse(error));
       });
 
+    return true;
+  }
+  if (PacePetsRefreshControl.isClearUsageDataMessage(message)) {
+    REFRESH_RUNNER.runClearUsageData()
+      .then((result) => {
+        sendResponse(PacePetsRefreshControl.clearUsageDataResponse(result));
+      })
+      .catch((error) => {
+        console.warn("Could not clear local usage data:", error);
+        sendResponse(PacePetsRefreshControl.clearUsageDataErrorResponse());
+      });
+
+    return true;
+  }
+  if (DEV_PREVIEW_BROKER.handleRequest(message, sendResponse)) {
     return true;
   }
 

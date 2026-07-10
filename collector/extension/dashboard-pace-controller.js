@@ -2,8 +2,9 @@
   "use strict";
 
   const DATA = globalThis.PacePetsDashboardPaceData;
+  const PREVIEW_BROKER = globalThis.PacePetsDashboardDevPreviewBroker;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !Controller) {
+  if (!DATA || !PREVIEW_BROKER || !Controller) {
     throw new Error(
       "Pace data and controller core must load before dashboard-pace-controller.js.",
     );
@@ -12,9 +13,11 @@
   function createController(options) {
     const controller = new Controller(options);
     controller.bindBrakeExtremePreviewRequests?.();
+    controller.bindBigBangReplayRequests?.();
     controller.bindCheckerboardRevealPreviewRequests?.();
     controller.bindPaceStateTransitionPreviewRequests?.();
     controller.bindSyncMonkEscapePreviewRequests?.();
+    PREVIEW_BROKER.start();
     return Object.freeze({
       hasForcedPaceStateOverride:
         controller.hasForcedPaceStateOverride.bind(controller),

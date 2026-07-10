@@ -3,10 +3,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { createRuntimeDependencyContract } from "../scripts/runtime-dependency-contract.mjs";
+
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
+let runtimeContract;
 
 function dashboardSource(source) {
   return `./${source}`;
@@ -96,6 +99,10 @@ function expectTargetRuntimeDependencyEdges(runtime) {
 
 function expectBackgroundRuntimeDependencyEdges(runtime) {
   expect(runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "dev-preview-action-registry.js",
+    "background-dev-preview-broker.js",
+  ]);
+  expect(runtime.BACKGROUND_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "usage-providers.js",
     "background-usage-source.js",
   ]);
@@ -110,6 +117,10 @@ function expectBackgroundRuntimeDependencyEdges(runtime) {
 }
 
 function expectDashboardAudioRuntimeDependencyEdges(runtime) {
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./audio-preferences.js",
+    "./dashboard.js",
+  ]);
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./audio-clips.js",
     "./dashboard-audio-manager.js",
@@ -136,8 +147,25 @@ function expectDashboardAudioRuntimeDependencyEdges(runtime) {
   ]);
 }
 
-function expectDashboardRuntimeDependencyEdges(runtime) {
+function expectDashboardInfrastructureRuntimeDependencyEdges(runtime) {
   expectDashboardAudioRuntimeDependencyEdges(runtime);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-preview-action-registry.js",
+    "./dashboard-dev-preview-broker.js",
+  ]);
+  for (const target of [
+    "./dashboard-pace-wobble-methods.js",
+    "./dashboard-push-stretch-methods.js",
+    "./dashboard-checkerboard-reveal-methods.js",
+    "./dashboard-singularity-transition-methods.js",
+    "./dashboard-pace-preview-methods.js",
+    "./dashboard-pace-controller.js",
+  ]) {
+    expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+      "./dashboard-dev-preview-broker.js",
+      target,
+    ]);
+  }
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-status-logic.js",
     "./dashboard-status-controller.js",
@@ -150,6 +178,9 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
     "./dashboard-dom-contract.js",
     "./dashboard.js",
   ]);
+}
+
+function expectDashboardTransitionRuntimeDependencyEdges(runtime) {
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-big-bang-scene-factory.js",
     "./dashboard-big-bang-scene.js",
@@ -207,6 +238,13 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
     "./dashboard-singularity-transition-methods.js",
   ]);
   expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dev-preview-action-registry.js",
+    "./dashboard-singularity-transition-methods.js",
+  ]);
+}
+
+function expectDashboardPresentationRuntimeDependencyEdges(runtime) {
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
     "./dashboard-preferences.js",
     "./dashboard-shell-controls.js",
   ]);
@@ -226,6 +264,24 @@ function expectDashboardRuntimeDependencyEdges(runtime) {
     "./brake-intensity.js",
     "./dashboard-pace-wobble-methods.js",
   ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-state-loader.js",
+    "./dashboard-app-core.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-app-core.js",
+    "./dashboard-state-methods.js",
+  ]);
+  expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+    "./dashboard-state-methods.js",
+    "./dashboard.js",
+  ]);
+}
+
+function expectDashboardRuntimeDependencyEdges(runtime) {
+  expectDashboardInfrastructureRuntimeDependencyEdges(runtime);
+  expectDashboardTransitionRuntimeDependencyEdges(runtime);
+  expectDashboardPresentationRuntimeDependencyEdges(runtime);
 }
 
 function expectDevFlagsRuntimeDependencyEdges(runtime) {
@@ -280,11 +336,15 @@ beforeAll(async () => {
       path.join(projectRoot, "collector/extension/runtime-manifest.js"),
     )
   );
+  runtimeContract = Object.freeze({
+    ...globalThis.CodexExtensionRuntime,
+    ...createRuntimeDependencyContract(globalThis.CodexExtensionRuntime),
+  });
 });
 
 describe("CodexExtensionRuntime dependency edges", () => {
   it("derives target runtime dependency edges from shared contracts", () => {
-    const runtime = globalThis.CodexExtensionRuntime;
+    const runtime = runtimeContract;
 
     expectCommonRuntimeDependencyEdges(runtime);
     expectTargetRuntimeDependencyEdges(runtime);
@@ -292,5 +352,8 @@ describe("CodexExtensionRuntime dependency edges", () => {
     expectDashboardRuntimeDependencyEdges(runtime);
     expectDevFlagsRuntimeDependencyEdges(runtime);
     expectFrozenRuntimeDependencyEdgeLists(runtime);
+    expect(globalThis.CodexExtensionRuntime).not.toHaveProperty(
+      "DASHBOARD_RUNTIME_DEPENDENCY_EDGES",
+    );
   });
 });

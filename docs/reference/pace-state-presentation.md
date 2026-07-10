@@ -461,11 +461,18 @@ Bang star field thins into residual matter while the shared full-page space
 backdrop is prepared underneath the opaque Big Bang canvases. The canvases then
 fade away over that real backdrop while the dashboard chrome stays hidden; the
 dashboard fades in later, after the shared space backdrop is already established.
-Same-state refreshes do not replay the transition. If Big Bang is selected from
-the developer controls while the dashboard tab is hidden, the transition is
-queued and plays when the dashboard becomes visible. After playback starts,
-ordinary pace-state changes update the dashboard DOM under the active transition
-instead of cancelling it. Reduced-motion users skip the animated sequence.
+Same-state refreshes do not replay the transition. Local dev controls expose a
+Video Capture section with a one-shot `Replay Big Bang` action that restarts
+the presentation only when the dashboard is already on Big Bang. If Big Bang is
+selected from the developer controls while the dashboard tab is hidden, the
+transition is queued. When the dashboard becomes visible, it refreshes the
+current time-sensitive state first and plays only if Big Bang remains current.
+After playback starts, ordinary pace-state changes update the dashboard DOM
+under the active transition instead of cancelling it. If the dashboard becomes hidden
+during playback, the controller stops transition audio, tears down temporary
+scenes and presentation classes, exposes the latest rendered dashboard state,
+and does not replay the interrupted transition when the tab becomes visible.
+Reduced-motion users skip the animated sequence.
 
 Current Big Bang transition timing is measured from the first animation frame in
 `collector/extension/dashboard-big-bang-scene.js`. The scene has a 2-second
@@ -518,12 +525,16 @@ cone/funnel visualization, falls through the singularity point into a full
 whiteout, then plays the shared checkerboard reveal over the current dashboard
 state. Same-state refreshes do not replay the transition. If Singularity is
 selected from the separate developer controls while the dashboard tab is
-hidden, the transition is queued and plays when the dashboard becomes visible.
-After playback starts, ordinary pace-state changes update the dashboard DOM
-under the active transition instead of cancelling it. Reduced-motion users skip
-the animated sequence. The renderer removes the temporary WebGL canvas and
-restores distorted chrome at terminal whiteout, when motion effects are
-explicitly stopped, or when a transition phase fails. See
+hidden, the transition is queued. Visibility return refreshes the current
+time-sensitive state first and plays only if Singularity remains current. After
+playback starts, ordinary pace-state changes update the dashboard DOM under the
+active transition instead of cancelling it. Reduced-motion users skip the
+animated sequence. If the dashboard becomes hidden during playback, the
+controller invalidates the active run, tears down the temporary WebGL and DOM
+presentation, reveals the latest dashboard state, and does not replay the
+interrupted transition when visibility returns. The renderer also removes the
+temporary WebGL canvas and restores distorted chrome at terminal whiteout, when
+motion effects are explicitly stopped, or when a transition phase fails. See
 `docs/reference/singularity-transition.md` for the full architecture and
 lifecycle contract.
 

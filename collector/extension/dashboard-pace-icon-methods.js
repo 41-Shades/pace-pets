@@ -100,6 +100,12 @@
     delete container.dataset.splatFallIntro;
   }
 
+  function clearBrakeExtremePreviewForState(controller, state) {
+    if (state.key !== DATA.PACE_STATES.criticalBehind.key) {
+      controller.clearBrakeExtremeDebrisPreview?.();
+    }
+  }
+
   function setSyncSunburstPageBackground(controller, previousState, state) {
     if (
       state.key !== DATA.PACE_STATES.sync.key ||
@@ -264,6 +270,7 @@
     },
 
     stopMotionEffects() {
+      this.clearBrakeExtremeDebrisPreview?.();
       this.clearPaceIconEffects(this.elements.paceIcon);
       this.clearPaceStateCardTransition();
       this.clearPaceChangePulse();
@@ -277,6 +284,8 @@
     },
 
     pauseHiddenDocumentMotionEffects() {
+      this.settleHiddenSpecialTransitions?.();
+      this.clearBrakeExtremeDebrisPreview?.();
       this.clearPaceIconEffects(this.elements.paceIcon);
       this.clearPaceStateCardTransition();
       this.clearPaceChangePulse();
@@ -333,6 +342,7 @@
     ) {
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const state = this.paceStateForClassName(level);
+      clearBrakeExtremePreviewForState(this, state);
       if (state.key !== DATA.PACE_STATES.splat.key) {
         clearSplatMaxPreview(this);
       }

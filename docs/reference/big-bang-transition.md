@@ -22,8 +22,14 @@ as one canonical transition path, not as a collection of parallel experiments.
 - The effect does not capture screenshots, request page content, or use Chrome
   tab pixels. It uses generated Canvas/WebGL layers and the shared space
   backdrop.
-- Same-state refreshes do not replay the transition. To replay in development,
-  force a different pace state first, then force Big Bang again.
+- Same-state refreshes do not replay the transition. Local dev controls expose
+  a Video Capture section with a one-shot `Replay Big Bang` action that
+  restarts the presentation only when the dashboard is already on Big Bang.
+- A Big Bang first discovered while its dashboard is hidden waits until that
+  dashboard becomes visible, then plays only after a visible-state refresh
+  confirms Big Bang is still current. If a running transition becomes hidden,
+  it stops its audio and temporary scenes immediately, reveals the current
+  dashboard presentation, and does not replay when visibility returns.
 - Reduced-motion users skip the animated sequence.
 
 ## User Experience
@@ -241,7 +247,7 @@ Useful code-level review questions:
 - Are pixel-ratio caps still explicit?
 - Does the shared backdrop reveal before dashboard chrome returns?
 - Are temporary canvases removed and animation frames/timers cancelled on
-  completion, stop, reduced motion, or setup failure?
+  completion, stop, visibility loss, reduced motion, or setup failure?
 - Does WebGL failure leave a coherent fallback instead of blocking the
   transition promise?
 - Does Big Bang audio skip reduced-motion runs, stop/fade on interrupted

@@ -41,6 +41,19 @@
     });
   }
 
+  function audioPreferenceFromStorageChange(changes, areaName) {
+    if (
+      !STORAGE.isLocalArea(areaName) ||
+      !STORAGE.hasChange(changes, AUDIO_PREFERENCE_STORAGE_KEY)
+    ) {
+      return null;
+    }
+
+    return storedAudioPreferenceValue(
+      changes[AUDIO_PREFERENCE_STORAGE_KEY]?.newValue,
+    );
+  }
+
   async function readAudioPreference(storage = STORAGE) {
     try {
       const result = await storage.getLocal(AUDIO_PREFERENCE_STORAGE_KEY);
@@ -69,6 +82,7 @@
     DEFAULT_AUDIO_VOLUME,
     MAX_AUDIO_VOLUME,
     MIN_AUDIO_VOLUME,
+    audioPreferenceFromStorageChange,
     normalizeVolume,
     readAudioPreference,
     storeAudioPreference,

@@ -3,6 +3,7 @@
 
   const Controller = globalThis.PacePetsDashboardPaceController;
   const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  const PREVIEW_BROKER = globalThis.PacePetsDashboardDevPreviewBroker;
   const PushSweatPreview = globalThis.PacePetsPushSweatPreviewControl;
   const PushStretch = globalThis.PacePetsDashboardPushStretch;
   const PushSweat = globalThis.PacePetsDashboardPushSweat;
@@ -10,6 +11,7 @@
   if (
     !Controller ||
     !DASHBOARD_PREFERENCES ||
+    !PREVIEW_BROKER ||
     !PushSweatPreview ||
     !PushStretch ||
     !PushSweat ||
@@ -166,7 +168,7 @@
 
       const { layer, stretchCanvas, sweatCanvas } = createPushStretchLayer();
       let animationFrameId = null;
-      let rareSweatPreviewMessageHandler = null;
+      let unregisterRareSweatPreview = null;
       let renderer = null;
       let waterState = null;
       let sweatRenderer = null;
@@ -220,26 +222,16 @@
         container.append(layer);
         animationFrameId = window.requestAnimationFrame(renderFrame);
       };
-      if (globalThis.chrome?.runtime?.onMessage) {
-        rareSweatPreviewMessageHandler = (message, _sender, sendResponse) => {
-          if (!PushSweatPreview.isForceRareMessage(message)) {
-            return false;
-          }
+      unregisterRareSweatPreview = PREVIEW_BROKER.registerHandler(
+        PushSweatPreview.actionKey,
+        () => {
           pulseState.forceRareSweat = true;
-          sendResponse?.({ ok: true });
-          return false;
-        };
-        globalThis.chrome.runtime.onMessage.addListener(
-          rareSweatPreviewMessageHandler,
-        );
-      }
+          return { ok: true };
+        },
+      );
       const stop = () => {
         pulseState.stopped = true;
-        if (rareSweatPreviewMessageHandler) {
-          globalThis.chrome.runtime.onMessage.removeListener(
-            rareSweatPreviewMessageHandler,
-          );
-        }
+        unregisterRareSweatPreview?.();
         image.removeEventListener("load", start);
         window.cancelAnimationFrame(animationFrameId);
         renderer?.destroy();

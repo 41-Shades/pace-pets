@@ -41,11 +41,13 @@ version.
 
 ## Zip Contents
 
-The zip root is `collector/extension/` without the source-only extension
-`README.md` and unpacked-extension dev controls. Dev-control script exclusions
-are derived from `collector/extension/runtime-manifest.js`, so new
-dev-controls-only modules stay out of release packages when they are added to
-the runtime manifest.
+The zip root contains one explicit release allowlist derived from the manifest,
+background/dashboard runtime script lists, dashboard HTML styles and bootstrap
+scripts, the default theme asset manifest, and the configured audio clip
+registry. Files merely present under `collector/extension/` are not packaged.
+This keeps the source-only extension `README.md`, unpacked developer controls,
+inactive extracted artwork, ignored files, and unrelated local artifacts out of
+release packages by construction.
 
 Packaged files are limited to extension runtime assets with these extensions:
 
@@ -57,10 +59,11 @@ Packaged files are limited to extension runtime assets with these extensions:
 - `.m4a`
 - `.png`
 
-The package script rejects private, generated, or sensitive-looking paths such
-as raw usage data, cookies, tokens, session material, screenshots, databases,
-dumps, logs, archives, hidden files, `data/`, `docs/`, `scripts/`, `tests/`,
-`node_modules/`, and `dist/`.
+Every allowlisted path must exist as a regular extension-local file. The package
+script also rejects private, generated, or sensitive-looking allowlisted paths
+such as raw usage data, cookies, tokens, session material, screenshots,
+databases, dumps, logs, archives, hidden files, `data/`, `docs`, `scripts`,
+`tests`, `node_modules`, and `dist`.
 
 Package text files are also scanned for local user-profile paths, concrete
 bearer headers, and private key material.

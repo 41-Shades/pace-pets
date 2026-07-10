@@ -54,6 +54,11 @@
   ]);
   const FEATURE_PREVIEW_GROUPS = Object.freeze([
     featurePreviewGroup({
+      actionKeys: [ACTION_KEYS.bigBangReplay],
+      key: "video-capture",
+      title: "Video Capture",
+    }),
+    featurePreviewGroup({
       actionKeys: [ACTION_KEYS.brakeMaxBurst],
       key: "brake-hard",
       stateKey: PACE_STATES.criticalBehind.key,

@@ -22,6 +22,21 @@
     return String(status === AUDIO_MANAGER.STATUS_READY);
   }
 
+  function resumeWithin(manager, waitMs) {
+    const resumePromise = manager.resume();
+    if (!Number.isFinite(waitMs)) {
+      return resumePromise;
+    }
+
+    let timeoutId = null;
+    const timeoutPromise = new Promise((resolve) => {
+      timeoutId = root.setTimeout(resolve, Math.max(0, waitMs));
+    });
+    return Promise.race([resumePromise, timeoutPromise]).finally(() => {
+      root.clearTimeout(timeoutId);
+    });
+  }
+
   class DashboardAudioControl {
     constructor({
       appTooltips = null,
@@ -109,16 +124,26 @@
       this.appTooltips?.setText(this.volumeSlider, VOLUME_TOOLTIP);
     }
 
-    async loadPreference({ resumeIfNeeded = false } = {}) {
+    async loadPreference({ resumeIfNeeded = false, resumeWaitMs = null } = {}) {
       const result = await this.manager.loadPreference();
       if (
         resumeIfNeeded &&
         result.status === AUDIO_MANAGER.STATUS_NEEDS_GESTURE
       ) {
-        await this.manager.resume();
+        await resumeWithin(this.manager, resumeWaitMs);
       }
       this.updateControls();
       return Object.freeze({ ...result, status: this.status() });
+    }
+
+    applyStoredPreference(preference) {
+      const alreadyApplied =
+        this.manager.volume() === preference.volume &&
+        (this.status() !== AUDIO_MANAGER.STATUS_MUTED) === preference.enabled;
+      if (!alreadyApplied) {
+        this.manager.setPreference(preference);
+      }
+      return this.status();
     }
 
     async toggleAudio() {
@@ -176,6 +201,7 @@
 
   root.PacePetsDashboardAudioControl = Object.freeze({
     STATUS_LABELS,
+    STATUS_READY: AUDIO_MANAGER.STATUS_READY,
     createController,
   });
 })(globalThis);

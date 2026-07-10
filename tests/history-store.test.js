@@ -1,6 +1,6 @@
 import { installExtensionRuntimeHooks } from "./helpers/extension-runtime.js";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 installExtensionRuntimeHooks();
 
@@ -178,6 +178,90 @@ describe("CodexUsageHistory.normalizeHistory compaction", () => {
       "plateau-interval",
       "changed",
     ]);
+  });
+});
+
+describe("CodexUsageHistory durable storage normalization", () => {
+  it("persists a pruned read once and skips the redundant repair afterward", async () => {
+    const storedHistory = {
+      historyVersion: 1,
+      samples: [
+        {
+          id: "expired",
+          collectedAt: "2026-05-01T12:00:00.000Z",
+          windows: {
+            weekly: {
+              remainingPercent: 80,
+              resetsAt: "2026-05-08T12:00:00.000Z",
+              windowMinutes: 10080,
+            },
+          },
+        },
+        {
+          id: "recent",
+          collectedAt: "2026-05-25T10:00:00.000Z",
+          windows: {
+            fiveHour: {
+              remainingPercent: 50,
+              resetsAt: "2026-05-25T15:00:00.000Z",
+              windowMinutes: 300,
+            },
+          },
+        },
+      ],
+    };
+    let persistedHistory = storedHistory;
+    globalThis.chrome.storage.local.get.mockImplementation((_keys, done) => {
+      done({ codexUsageHistory: persistedHistory });
+    });
+    globalThis.chrome.storage.local.set.mockImplementation((items, done) => {
+      persistedHistory = items.codexUsageHistory;
+      done();
+    });
+
+    const firstRead = await globalThis.CodexUsageHistory.readHistory();
+
+    expect(firstRead.samples.map((sample) => sample.id)).toEqual(["recent"]);
+    expect(globalThis.chrome.storage.local.set).toHaveBeenCalledTimes(1);
+
+    vi.clearAllMocks();
+    globalThis.chrome.storage.local.get.mockImplementation((_keys, done) => {
+      done({ codexUsageHistory: persistedHistory });
+    });
+    await globalThis.CodexUsageHistory.readHistory();
+
+    expect(globalThis.chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  it("does not rewrite history when a new sample compacts into a plateau", async () => {
+    const windows = {
+      fiveHour: {
+        remainingPercent: 50,
+        resetsAt: "2026-05-25T15:00:00.000Z",
+        windowMinutes: 300,
+      },
+    };
+    const storedHistory = globalThis.CodexUsageHistory.normalizeHistory({
+      samples: [
+        {
+          id: "first",
+          collectedAt: "2026-05-25T10:00:00.000Z",
+          windows,
+        },
+      ],
+    });
+    globalThis.chrome.storage.local.get.mockImplementation((_keys, done) => {
+      done({ codexUsageHistory: storedHistory });
+    });
+
+    const result = await globalThis.CodexUsageHistory.appendUsageSnapshot(
+      { windows },
+      "2026-05-25T10:10:00.000Z",
+    );
+
+    expect(result.stored).toBe(false);
+    expect(result.history).toEqual(storedHistory);
+    expect(globalThis.chrome.storage.local.set).not.toHaveBeenCalled();
   });
 });
 

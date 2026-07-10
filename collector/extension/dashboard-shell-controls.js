@@ -70,6 +70,7 @@
       });
       window.addEventListener("storage", (event) => {
         this.handleThemeStorageChange(event);
+        this.handleMotionStorageChange(event);
       });
       this.applyResolvedTheme();
       this.applyMotionPreference();
@@ -125,6 +126,17 @@
 
       this.explicitTheme = DASHBOARD_PREFERENCES.normalizeTheme(event.newValue);
       this.applyResolvedTheme({ refresh: true });
+    }
+
+    handleMotionStorageChange(event) {
+      if (event.key !== DASHBOARD_PREFERENCES.MOTION_STORAGE_KEY) {
+        return;
+      }
+
+      this.motionPreference =
+        DASHBOARD_PREFERENCES.normalizeMotion(event.newValue) ||
+        DASHBOARD_PREFERENCES.DEFAULT_MOTION;
+      this.applyMotionPreference({ notify: true });
     }
 
     nextMotionPreference() {

@@ -193,6 +193,7 @@
 
     bindStorageEvents() {
       chrome.storage.onChanged.addListener((changes, areaName) => {
+        this.syncAudioPreferenceChange(changes, areaName);
         if (!this.hasDashboardStorageChange(changes, areaName)) {
           return;
         }
@@ -205,6 +206,20 @@
           this.renderChangedHistoryFallback(changes);
         });
       });
+    },
+
+    syncAudioPreferenceChange(changes, areaName) {
+      const preference =
+        this.AUDIO_PREFERENCES.audioPreferenceFromStorageChange(
+          changes,
+          areaName,
+        );
+      if (!preference) {
+        return false;
+      }
+
+      this.audioControl.applyStoredPreference(preference);
+      return true;
     },
 
     hasDashboardStorageChange(changes, areaName) {
@@ -264,17 +279,19 @@
       });
     },
 
-    handleVisibilityChange() {
+    async handleVisibilityChange() {
       if (document.hidden) {
         this.appTooltips.hide();
         this.paceView.pauseHiddenDocumentMotionEffects?.();
         return;
       }
 
-      this.paceView.playPendingSpecialTransition?.();
-      this.refreshDashboardTimeSensitiveViews().catch((error) =>
-        this.renderHistoryLoadFailure(error),
-      );
+      try {
+        await this.refreshDashboardTimeSensitiveViews();
+      } catch (error) {
+        this.renderHistoryLoadFailure(error);
+        return;
+      }
     },
 
     bindEvents() {

@@ -291,6 +291,7 @@
       }
       this.usageChartView.renderEmptyData({ windowData: null, windowKey });
       this.paceView.refreshForcedPaceStateOverride();
+      this.completeHistoryPresentation();
     },
 
     isManualRefreshLeadWindow(windowKey, windowData, atMs = Date.now()) {
@@ -318,10 +319,23 @@
       );
     },
 
+    completeHistoryPresentation() {
+      if (
+        this.dashboardStateMutationInProgress ||
+        this.dashboardStateLoader?.isLoading?.()
+      ) {
+        return;
+      }
+      this.dashboardPresentationAuthoritative = true;
+      this.initialDashboardLoadComplete = true;
+      this.paceView.playPendingSpecialTransition?.();
+    },
+
     renderHistory(history, refreshStatus = null, { refreshChart = true } = {}) {
       const latest = CodexUsageHistory.latestSample(history);
       if (!latest) {
         this.renderEmptyHistory(refreshStatus);
+        this.completeHistoryPresentation();
         return;
       }
 
@@ -370,6 +384,7 @@
       }
       this.setLatestMetadata(latest, refreshStatus);
       this.paceView.refreshForcedPaceStateOverride();
+      this.completeHistoryPresentation();
     },
   });
 })();

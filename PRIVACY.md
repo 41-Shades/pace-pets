@@ -28,9 +28,21 @@ install. Stored samples are bounded by code constants and contain only:
 - reset timestamps
 - window duration
 
-The selected badge/dashboard usage window is also stored in
-`chrome.storage.local`. The dashboard theme preference is stored in the
-extension page's `localStorage`.
+Other local state is separated by its required lifetime:
+
+- `chrome.storage.local` stores the selected toolbar-badge usage window, safe
+  refresh status, the manual-refresh cooldown timestamp, and the dashboard
+  audio enabled/volume preference.
+- Each dashboard page stores its own selected usage window in page-scoped
+  `sessionStorage` so open dashboards can use different windows.
+- The dashboard theme and motion preferences are stored in the extension
+  page's `localStorage`.
+- The unpacked extension's local developer controls can store display-only
+  preview overrides in `chrome.storage.local`; release packages do not include
+  the developer-controls page.
+
+These preferences and status fields do not contain chat content or account
+identifiers.
 
 ## What The Extension Does Not Store
 

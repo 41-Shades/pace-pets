@@ -61,6 +61,12 @@ function audioManager(
       notify();
       return currentStatus;
     }),
+    setPreference: vi.fn((preference) => {
+      currentStatus = preference.enabled ? enabledStatus : "muted";
+      currentVolume = preference.volume;
+      notify();
+      return preference;
+    }),
     setEnabled: vi.fn(async (enabled) => {
       currentStatus = enabled ? enabledStatus : "muted";
       notify();
@@ -125,7 +131,9 @@ describe("PacePetsDashboardAudioControl", () => {
     expect(appTooltips.setText).toHaveBeenCalledWith(button, "Unmute");
     expect(appTooltips.setText).toHaveBeenCalledWith(volumeSlider, "Volume");
   });
+});
 
+describe("PacePetsDashboardAudioControl preference loading", () => {
   it("loads preference state and renders needs-gesture status", async () => {
     const button = buttonElement();
     const manager = audioManager();
@@ -153,7 +161,7 @@ describe("PacePetsDashboardAudioControl", () => {
     });
 
     await expect(
-      control.loadPreference({ resumeIfNeeded: true }),
+      control.loadPreference({ resumeIfNeeded: true, resumeWaitMs: 250 }),
     ).resolves.toEqual({
       error: null,
       status: "ready",
@@ -162,6 +170,34 @@ describe("PacePetsDashboardAudioControl", () => {
     expect(manager.resume).toHaveBeenCalled();
     expect(button.dataset.audioStatus).toBe("ready");
     expect(button.attribute("aria-label")).toBe("Mute");
+  });
+
+  it("stops waiting when startup resume remains gesture-blocked", async () => {
+    vi.useFakeTimers();
+    const button = buttonElement();
+    const manager = audioManager();
+    manager.resume.mockImplementation(() => new Promise(() => {}));
+    const control = globalThis.PacePetsDashboardAudioControl.createController({
+      audioManager: manager,
+      button,
+    });
+
+    try {
+      const loadPromise = control.loadPreference({
+        resumeIfNeeded: true,
+        resumeWaitMs: 250,
+      });
+      await vi.advanceTimersByTimeAsync(250);
+
+      await expect(loadPromise).resolves.toEqual({
+        error: null,
+        status: "needsGesture",
+      });
+      expect(manager.resume).toHaveBeenCalledOnce();
+      expect(button.dataset.audioStatus).toBe("needsGesture");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("does not request playback after loading a muted preference", async () => {
@@ -181,6 +217,41 @@ describe("PacePetsDashboardAudioControl", () => {
 
     expect(manager.resume).not.toHaveBeenCalled();
     expect(button.dataset.audioStatus).toBe("muted");
+  });
+});
+
+describe("PacePetsDashboardAudioControl preference sync", () => {
+  it("applies external preferences once and refreshes controls", () => {
+    const button = buttonElement();
+    const volumeSlider = volumeElement();
+    const manager = audioManager("ready", { volume: 0.4 });
+    const control = globalThis.PacePetsDashboardAudioControl.createController({
+      audioManager: manager,
+      button,
+      volumeSlider,
+    });
+
+    expect(control.applyStoredPreference({ enabled: true, volume: 0.4 })).toBe(
+      "ready",
+    );
+    expect(manager.setPreference).not.toHaveBeenCalled();
+
+    expect(control.applyStoredPreference({ enabled: true, volume: 0.7 })).toBe(
+      "ready",
+    );
+    expect(manager.setPreference).toHaveBeenCalledWith({
+      enabled: true,
+      volume: 0.7,
+    });
+    expect(manager.resume).not.toHaveBeenCalled();
+    expect(volumeSlider.value).toBe("70");
+
+    expect(control.applyStoredPreference({ enabled: false, volume: 0.4 })).toBe(
+      "muted",
+    );
+    expect(manager.setPreference).toHaveBeenCalledTimes(2);
+    expect(button.dataset.audioStatus).toBe("muted");
+    expect(volumeSlider.value).toBe("0");
   });
 });
 

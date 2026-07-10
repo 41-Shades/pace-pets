@@ -74,12 +74,25 @@ function expectDashboardScriptSourceContent(runtime) {
     "./dashboard-audio-control.js",
     "./dashboard-big-bang-audio-timeline.js",
     "./dashboard-transition-audio.js",
+    "./dashboard-dev-preview-broker.js",
     "./dashboard-preferences.js",
+    "./dashboard-state-loader.js",
+    "./dashboard-state-methods.js",
     "./dashboard-singularity-black-hole-v2-shaders.js",
     "./dashboard-big-bang-scene.js",
   ]) {
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(source);
   }
+  expect(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-state-loader.js"),
+  ).toBeLessThan(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-app-core.js"),
+  );
+  expect(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-app-core.js"),
+  ).toBeLessThan(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./dashboard-state-methods.js"),
+  );
   expect(
     runtime.DASHBOARD_SCRIPT_SOURCES.indexOf("./audio-clips.js"),
   ).toBeLessThan(
@@ -175,6 +188,7 @@ describe("CodexExtensionRuntime target-only script sources", () => {
     const runtime = globalThis.CodexExtensionRuntime;
 
     expect(runtime.BACKGROUND_ONLY_SCRIPT_SOURCES).toEqual([
+      "background-dev-preview-broker.js",
       "background-logic.js",
       "background-transition-refresh.js",
       "background-badge-presentation.js",

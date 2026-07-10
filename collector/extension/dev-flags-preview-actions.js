@@ -15,24 +15,26 @@
 
   function requestPreviewActionWithResponse(action) {
     return new Promise((resolve, reject) => {
-      runtimeMessaging().sendMessage(
-        REGISTRY.messageForKey(action.key),
-        (response) => {
-          const error = chrome.runtime.lastError;
-          if (error) {
-            reject(new Error(error.message));
-            return;
-          }
-          if (!response?.ok) {
-            reject(
-              new Error(REGISTRY.responseErrorMessage(action.key, response)),
-            );
-            return;
-          }
+      const request = REGISTRY.brokerRequestForKey(action.key);
+      runtimeMessaging().sendMessage(request, (response) => {
+        const error = chrome.runtime.lastError;
+        if (error) {
+          reject(new Error(error.message));
+          return;
+        }
+        if (response?.requestId !== request.requestId) {
+          reject(new Error("Dashboard preview response ID did not match."));
+          return;
+        }
+        if (!response?.ok) {
+          reject(
+            new Error(REGISTRY.responseErrorMessage(action.key, response)),
+          );
+          return;
+        }
 
-          resolve(response);
-        },
-      );
+        resolve(response);
+      });
     });
   }
 

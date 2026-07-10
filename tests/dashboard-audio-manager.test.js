@@ -313,8 +313,8 @@ describe("PacePetsDashboardAudioManager playback", () => {
 
     await manager.setEnabled(true);
     const playPromise = manager.playClip("bigBangTransition");
-    await manager.setEnabled(false);
-    await manager.setEnabled(true);
+    manager.setPreference({ enabled: false, volume: 0.6 });
+    manager.setPreference({ enabled: true, volume: 0.6 });
     deferredFetch.resolveArrayBuffer(new ArrayBuffer(8));
 
     await expect(playPromise).resolves.toBeNull();
