@@ -27,27 +27,36 @@ describe("PacePetsDevPreviewActionRegistry", () => {
     const registry = globalThis.PacePetsDevPreviewActionRegistry;
     const actionKey = registry.ACTION_KEYS.brakeMaxBurst;
     const action = registry.requireActionForKey(actionKey);
-    const message = registry.messageForKey(actionKey);
 
     expect(action).toMatchObject({
       fallbackErrorMessage:
         "Open the dashboard on Brake hard before previewing Max debris burst.",
       key: "brakeMaxBurst",
       label: "Max debris burst",
-      messageType: "pacePets.brakeExtremePreview.max",
       responseRequired: true,
       status: "Max debris burst preview requested.",
     });
     expect(Object.isFrozen(action)).toBe(true);
-    expect(message).toEqual({ type: action.messageType });
-    expect(Object.isFrozen(message)).toBe(true);
-    expect(registry.isMessageForKey(actionKey, message)).toBe(true);
+    expect(() => registry.messageForKey(actionKey)).toThrow(
+      "Preview action requires the broker: brakeMaxBurst",
+    );
     expect(registry.fallbackErrorMessageForKey(actionKey)).toBe(
       action.fallbackErrorMessage,
     );
     expect(registry.responseErrorMessage(actionKey, {})).toBe(
       action.fallbackErrorMessage,
     );
+    expect(registry.controlForAction(actionKey).actionKey).toBe(actionKey);
+    expect(
+      registry.requireActionForKey(registry.ACTION_KEYS.bigBangReplay),
+    ).toMatchObject({
+      fallbackErrorMessage:
+        "Open the dashboard on Big Bang before replaying Big Bang.",
+      key: "bigBangReplay",
+      label: "Replay Big Bang",
+      responseRequired: true,
+      status: "Big Bang replay requested.",
+    });
     expect(
       registry.requireActionForKey(registry.ACTION_KEYS.rareSweat),
     ).toMatchObject({
@@ -55,7 +64,6 @@ describe("PacePetsDevPreviewActionRegistry", () => {
         "Open the dashboard on Push harder before previewing Rare burst (5%).",
       key: "rareSweat",
       label: "Rare burst (5%)",
-      messageType: "pacePets.pushSweatPreview.rare",
       responseRequired: true,
       status: "Rare burst (5%) requested.",
     });
@@ -64,34 +72,35 @@ describe("PacePetsDevPreviewActionRegistry", () => {
     );
   });
 
-  it("keeps legacy preview controls backed by the shared registry", () => {
+  it("exposes direct messages only for fire-and-forget controls", () => {
     const registry = globalThis.PacePetsDevPreviewActionRegistry;
 
-    expect(
-      globalThis.PacePetsBrakeExtremePreviewControl.maxBurstMessage(),
-    ).toEqual(registry.messageForKey(registry.ACTION_KEYS.brakeMaxBurst));
-    expect(
-      globalThis.PacePetsBrakeExtremePreviewControl.fallbackErrorMessage,
-    ).toBe(
-      registry.fallbackErrorMessageForKey(registry.ACTION_KEYS.brakeMaxBurst),
-    );
-    expect(
-      globalThis.PacePetsPushSweatPreviewControl.isForceRareMessage(
-        registry.messageForKey(registry.ACTION_KEYS.rareSweat),
+    expect(globalThis.PacePetsBrakeExtremePreviewControl).toEqual({
+      actionKey: registry.ACTION_KEYS.brakeMaxBurst,
+      fallbackErrorMessage: registry.fallbackErrorMessageForKey(
+        registry.ACTION_KEYS.brakeMaxBurst,
       ),
-    ).toBe(true);
+    });
+    expect(globalThis.PacePetsPushSweatPreviewControl).toEqual({
+      actionKey: registry.ACTION_KEYS.rareSweat,
+      fallbackErrorMessage: registry.fallbackErrorMessageForKey(
+        registry.ACTION_KEYS.rareSweat,
+      ),
+    });
     expect(
       globalThis.PacePetsSyncMonkEscapePreviewControl.isLaunchMessage(
         registry.messageForKey(registry.ACTION_KEYS.monkEscape),
       ),
     ).toBe(true);
   });
+});
 
+describe("PacePetsDevPreviewActionRegistry broker transport", () => {
   it("sends response-backed preview actions through the shared request path", async () => {
     const actions = globalThis.PacePetsDevFlagsPreviewActions;
     const registry = globalThis.PacePetsDevPreviewActionRegistry;
-    globalThis.chrome.runtime.sendMessage = vi.fn((_message, done) => {
-      done({ ok: false });
+    globalThis.chrome.runtime.sendMessage = vi.fn((message, done) => {
+      done({ ok: false, requestId: message.requestId });
     });
 
     await expect(
@@ -100,9 +109,54 @@ describe("PacePetsDevPreviewActionRegistry", () => {
       "Open the dashboard on Push harder before previewing Rare burst (5%).",
     );
     expect(globalThis.chrome.runtime.sendMessage).toHaveBeenCalledWith(
-      registry.messageForKey(registry.ACTION_KEYS.rareSweat),
+      expect.objectContaining({
+        actionKey: registry.ACTION_KEYS.rareSweat,
+        requestId: expect.any(String),
+        type: registry.BROKER.requestType,
+      }),
       expect.any(Function),
     );
+  });
+
+  it("correlates broker execution and result messages by request ID", () => {
+    const registry = globalThis.PacePetsDevPreviewActionRegistry;
+    const request = registry.brokerRequestForKey(
+      registry.ACTION_KEYS.checkerboardReveal,
+      "request-123",
+    );
+    const execution = registry.brokerExecutionForRequest(request);
+    const result = registry.brokerResultForExecution(execution, { ok: true });
+
+    expect(request).toEqual({
+      actionKey: registry.ACTION_KEYS.checkerboardReveal,
+      requestId: "request-123",
+      type: registry.BROKER.requestType,
+    });
+    expect(registry.isBrokerRequest(request)).toBe(true);
+    expect(registry.isBrokerExecution(execution)).toBe(true);
+    expect(registry.isBrokerResult(result)).toBe(true);
+    expect(result).toEqual({
+      actionKey: registry.ACTION_KEYS.checkerboardReveal,
+      requestId: "request-123",
+      response: { ok: true },
+      retryable: false,
+      type: registry.BROKER.resultType,
+    });
+    expect(registry.brokerResponseForRequest(request, result.response)).toEqual(
+      { ok: true, requestId: "request-123" },
+    );
+  });
+
+  it("rejects responses for a different broker request", async () => {
+    const actions = globalThis.PacePetsDevFlagsPreviewActions;
+    const registry = globalThis.PacePetsDevPreviewActionRegistry;
+    globalThis.chrome.runtime.sendMessage = vi.fn((_message, done) => {
+      done({ ok: true, requestId: "different-request" });
+    });
+
+    await expect(
+      actions.requestPreviewAction(registry.ACTION_KEYS.brakeMaxBurst),
+    ).rejects.toThrow("Dashboard preview response ID did not match.");
   });
 
   it("keeps fire-and-forget preview actions promise compatible", async () => {

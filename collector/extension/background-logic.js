@@ -137,8 +137,7 @@
   }
 
   function candidatePaceRatio(candidate) {
-    const paceRatio = Number(candidate?.paceRatio);
-    return Number.isFinite(paceRatio) ? paceRatio : null;
+    return PACE_LOGIC.finitePaceRatio(candidate?.paceRatio);
   }
 
   function candidateRatioRank(paceRatio) {
@@ -277,12 +276,14 @@
         items: attentionBadgeTitleItems(attentionCandidates),
       });
     }
+    if (candidate.badgePaceRatio === null) {
+      return PRODUCT_METADATA.ACTION_DEFAULT_TITLE;
+    }
 
-    return PRODUCT_METADATA.badgeTitle(
-      candidate.badgePaceRatio === null
-        ? null
-        : { badgeText: candidate.badgeText, label: candidate.label },
-    );
+    return PRODUCT_METADATA.badgeTitle({
+      badgeText: candidate.badgeText,
+      label: candidate.label,
+    });
   }
 
   function forcedBadgeDisplay(forcedBadgeState, paceRatio, windowKey) {

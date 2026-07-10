@@ -26,6 +26,9 @@ beforeAll(async () => {
   await importExtensionScript("collector/extension/dashboard-pace-data.js");
   await importExtensionScript("collector/extension/dashboard-pace-core.js");
   await importExtensionScript(
+    "collector/extension/dashboard-dev-preview-broker.js",
+  );
+  await importExtensionScript(
     "collector/extension/dashboard-pace-icon-render-methods.js",
   );
   await importExtensionScript(
@@ -228,11 +231,13 @@ describe("Splat preview cleanup", () => {
 
   it("clears the full Max Splat preview when hidden-tab motion pauses", () => {
     const { controller } = splatPreviewController();
+    controller.settleHiddenSpecialTransitions = vi.fn();
 
     controller.pauseHiddenDocumentMotionEffects();
 
     expect(controller.clearSplatMaxBouncePreview).toHaveBeenCalledOnce();
     expect(controller.clearSplatMaxThrow).not.toHaveBeenCalled();
+    expect(controller.settleHiddenSpecialTransitions).toHaveBeenCalledOnce();
   });
 
   it("clears the full Max Splat preview when motion stops", () => {

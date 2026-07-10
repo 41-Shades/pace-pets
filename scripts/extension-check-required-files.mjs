@@ -1,6 +1,26 @@
 const VENDORED_COMPANION_FILES_BY_SOURCE = Object.freeze({
   "vendor/chart.umd.min.js": Object.freeze(["vendor/chart.umd.min.js.map"]),
 });
+const RELEASE_EXTENSION_FILE_EXTENSIONS = new Set([
+  ".css",
+  ".html",
+  ".js",
+  ".json",
+  ".map",
+  ".m4a",
+  ".png",
+]);
+const DISALLOWED_RELEASE_PATH_PATTERNS = Object.freeze([
+  /(^|\/)usage\.json$/i,
+  /(^|\/)cookies?(?:[._-]|\/|$)/i,
+  /(^|\/)tokens?(?:[._-]|\/|$)/i,
+  /(^|\/)sessions?(?:[._-]|\/|$)/i,
+  /(^|\/)raw(?:[._-]|\/|$)/i,
+  /(^|\/)screenshots?(?:[._-]|\/|$)/i,
+  /(^|\/)(?:data|docs|scripts|tests|node_modules|dist)(\/|$)/i,
+  /(^|\/)\./,
+  /\.(db|dump|har|log|sqlite|tar|tgz|zip)$/i,
+]);
 
 function attributeValue(tag, name) {
   const match = tag.match(new RegExp(`\\s${name}=["']([^"']+)["']`, "i"));
@@ -13,6 +33,26 @@ function unique(values) {
       return source.indexOf(value) === index;
     }),
   );
+}
+
+function extensionOf(relativePath) {
+  return relativePath.match(/(?:^|\/)([^/]*)(\.[^./]+)$/)?.[2] || "";
+}
+
+export function validateReleaseExtensionPath(relativePath) {
+  if (!RELEASE_EXTENSION_FILE_EXTENSIONS.has(extensionOf(relativePath))) {
+    throw new Error(`Unexpected release extension file type: ${relativePath}`);
+  }
+  if (
+    DISALLOWED_RELEASE_PATH_PATTERNS.some((pattern) =>
+      pattern.test(relativePath),
+    )
+  ) {
+    throw new Error(
+      `Release extension must not include private/generated artifacts: ${relativePath}`,
+    );
+  }
+  return relativePath;
 }
 
 function localExtensionPagePath(src, label) {
@@ -28,6 +68,19 @@ function dashboardScriptPath(src) {
 
 function extensionPagePath(src, label) {
   return localExtensionPagePath(src, label);
+}
+
+function extensionAssetPath(src, label) {
+  if (
+    typeof src !== "string" ||
+    !src ||
+    src.startsWith("/") ||
+    src.split("/").includes("..") ||
+    /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src)
+  ) {
+    throw new Error(`${label} must be extension-local: ${src}`);
+  }
+  return src.startsWith("./") ? src.slice(2) : src;
 }
 
 function dashboardLinkSources(dashboardHtml, { relPattern, readAttribute }) {
@@ -131,14 +184,21 @@ function themeAssetPaths(themeAssets) {
   ];
 }
 
+function audioAssetPaths(audioClips) {
+  return Object.entries(audioClips.CLIPS || {}).map(([clipId, clip]) =>
+    extensionAssetPath(clip?.path, `${clipId} audio clip`),
+  );
+}
+
 function companionFilesFor(sources) {
   return sources.flatMap(
     (source) => VENDORED_COMPANION_FILES_BY_SOURCE[source] || [],
   );
 }
 
-export function requiredExtensionFilesFromContracts({
+export function releaseExtensionFilesFromContracts({
   attributeValue: readAttribute = attributeValue,
+  audioClips,
   dashboardHtml,
   manifest,
   runtimeManifest,
@@ -154,7 +214,13 @@ export function requiredExtensionFilesFromContracts({
     ...runtimeScriptSources(runtimeManifest),
     ...dashboardAssetPaths(dashboardAssets),
     ...themeAssetPaths(themeAssets),
+    ...audioAssetPaths(audioClips),
   ];
 
-  return unique([...contractFiles, ...companionFilesFor(contractFiles)]);
+  const releaseFiles = unique([
+    ...contractFiles,
+    ...companionFilesFor(contractFiles),
+  ]);
+  releaseFiles.forEach(validateReleaseExtensionPath);
+  return releaseFiles;
 }

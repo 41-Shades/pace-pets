@@ -252,6 +252,18 @@
     );
   }
 
+  function finitePaceRatio(value) {
+    if (
+      (typeof value !== "number" && typeof value !== "string") ||
+      (typeof value === "string" && value.trim() === "")
+    ) {
+      return null;
+    }
+
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
+  }
+
   function formatPaceRatioValue(
     value,
     {
@@ -260,8 +272,8 @@
       showSmallPositive = true,
     } = {},
   ) {
-    const numericValue = Number(value);
-    if (!Number.isFinite(numericValue)) {
+    const numericValue = finitePaceRatio(value);
+    if (numericValue === null) {
       return `--${suffix}`;
     }
 
@@ -284,8 +296,8 @@
   }
 
   function paceStateForRatio(paceRatio) {
-    const numericValue = Number(paceRatio);
-    if (!Number.isFinite(numericValue)) {
+    const numericValue = finitePaceRatio(paceRatio);
+    if (numericValue === null) {
       return PACE_STATES.muted;
     }
 
@@ -324,10 +336,10 @@
   }
 
   function chartPaceRatio(value, bounds = null) {
-    const numericValue = Number(value);
+    const numericValue = finitePaceRatio(value);
     const min = bounds?.min ?? PACE_RATIO_CHART_MIN;
     const max = bounds?.max ?? PACE_RATIO_CHART_MAX;
-    return Number.isFinite(numericValue)
+    return numericValue !== null
       ? Math.max(min, Math.min(max, numericValue))
       : null;
   }
@@ -356,6 +368,7 @@
     controlledPacePresentationForWindow,
     dateMs,
     elapsedWindowPercentAt,
+    finitePaceRatio,
     formatPaceRatioValue,
     isPerfectSyncPercentPair,
     isPerfectHundredPercentPair,

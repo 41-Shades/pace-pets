@@ -17,6 +17,7 @@ async function importExtensionScript(source) {
 installExtensionRuntimeHooks();
 
 beforeAll(async () => {
+  await importExtensionScript("collector/extension/dashboard-state-loader.js");
   await importExtensionScript("collector/extension/dashboard-app-core.js");
   await importExtensionScript(
     "collector/extension/dashboard-history-methods.js",
@@ -104,6 +105,43 @@ describe("PacePetsDashboardApp history presentation time", () => {
 });
 
 describe("PacePetsDashboardApp stale zero history status", () => {
+  it("does not complete presentation authority during an active load", () => {
+    const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
+    let loading = true;
+    app.dashboardPresentationAuthoritative = false;
+    app.dashboardStateLoader = { isLoading: () => loading };
+    app.paceView = { playPendingSpecialTransition: vi.fn() };
+
+    app.completeHistoryPresentation();
+    expect(app.dashboardPresentationAuthoritative).toBe(false);
+    expect(app.paceView.playPendingSpecialTransition).not.toHaveBeenCalled();
+
+    loading = false;
+    app.dashboardStateMutationInProgress = true;
+    app.completeHistoryPresentation();
+    expect(app.dashboardPresentationAuthoritative).toBe(false);
+
+    app.dashboardStateMutationInProgress = false;
+    app.completeHistoryPresentation();
+    expect(app.dashboardPresentationAuthoritative).toBe(true);
+    expect(app.paceView.playPendingSpecialTransition).toHaveBeenCalledOnce();
+  });
+
+  it("closes the startup window after an empty presentation is evaluated", () => {
+    const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
+    app.initialDashboardLoadComplete = false;
+    app.renderEmptyHistory = vi.fn(() => {
+      expect(app.initialDashboardLoadComplete).toBe(false);
+    });
+    app.paceView = { playPendingSpecialTransition: vi.fn() };
+
+    app.renderHistory({ samples: [] });
+
+    expect(app.renderEmptyHistory).toHaveBeenCalledOnce();
+    expect(app.initialDashboardLoadComplete).toBe(true);
+    expect(app.paceView.playPendingSpecialTransition).toHaveBeenCalledOnce();
+  });
+
   it("does not project held zero summaries as stale waiting status", () => {
     const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
     const history = {
@@ -138,9 +176,13 @@ describe("PacePetsDashboardApp stale zero history status", () => {
       Date.parse("2026-05-25T12:00:30.000Z"),
     );
     app.renderWindowControls = vi.fn();
+    app.initialDashboardLoadComplete = false;
     app.paceView = {
       hasForcedPaceStateOverride: vi.fn(() => false),
-      refreshForcedPaceStateOverride: vi.fn(),
+      playPendingSpecialTransition: vi.fn(),
+      refreshForcedPaceStateOverride: vi.fn(() => {
+        expect(app.initialDashboardLoadComplete).toBe(false);
+      }),
     };
     app.renderSummaryWindow = vi.fn(() => ({
       hasResetTiming: true,
@@ -164,5 +206,7 @@ describe("PacePetsDashboardApp stale zero history status", () => {
       staleWindow: false,
     });
     expect(app.applyHistoryStatus).toHaveBeenCalledWith(statusState);
+    expect(app.initialDashboardLoadComplete).toBe(true);
+    expect(app.paceView.playPendingSpecialTransition).toHaveBeenCalledOnce();
   });
 });

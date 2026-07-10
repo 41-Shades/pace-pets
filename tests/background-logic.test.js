@@ -188,6 +188,30 @@ describe("PacePetsBackgroundLogic badge selection", () => {
 });
 
 describe("PacePetsBackgroundLogic special badge states", () => {
+  it("keeps an expired reset window muted when its pace ratio is unavailable", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const states = globalThis.PacePetsLogic.PACE_STATES;
+    const atMs = Date.parse("2026-05-25T12:00:00.000Z");
+    const display = logic.badgeDisplayForWindows({
+      atMs,
+      forcedBadgeState: null,
+      history: { samples: [] },
+      preferredWindowKey: "weekly",
+      windows: {
+        weekly: {
+          remainingPercent: 40,
+          resetsAt: "2026-05-25T12:00:00.000Z",
+          windowMinutes: 10080,
+        },
+      },
+    });
+
+    expect(display.badgeText).toBe("--");
+    expect(display.badgeColor).toBe(states.muted.badgeColor);
+    expect(display.badgePaceRatio).toBeNull();
+    expect(display.title).toBe("Pace Pets");
+  });
+
   it("promotes live reset-start perfect hundred to a Big Bang badge", () => {
     const logic = globalThis.PacePetsBackgroundLogic;
     const states = globalThis.PacePetsLogic.PACE_STATES;

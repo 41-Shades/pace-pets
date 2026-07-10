@@ -201,13 +201,12 @@
 
     launchBrakeDebrisBurst(container, burst, state) {
       if (burst.rangeKey === "normal" || !motionPreferenceEnabled()) {
-        return;
+        return 0;
       }
 
       const rangeKey = burst.rangeKey;
       if (rangeKey === "extreme") {
-        this.launchBrakeExtremeDebrisBurst?.(container, state);
-        return;
+        return this.launchBrakeExtremeDebrisBurst(container, state);
       }
 
       const profile = DATA.BRAKE_DEBRIS_BURST_PROFILES[rangeKey];
@@ -240,6 +239,7 @@
         removeDebrisLayer(state, layer, cleanupTimer);
       }, longestAnimationMs + 140);
       state.debrisTimers.add(cleanupTimer);
+      return longestAnimationMs + 140;
     },
   });
 })();

@@ -5,6 +5,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import zlib from "node:zlib";
 
+import { releaseExtensionFilesFromContracts } from "./extension-check-required-files.mjs";
+
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
@@ -21,31 +23,26 @@ const fixedZipDate = new Date(Date.UTC(2024, 0, 1, 0, 0, 0));
 await import(pathToFileURL(path.join(extensionRoot, "runtime-manifest.js")));
 const runtimeManifest = globalThis.CodexExtensionRuntime;
 assert(runtimeManifest, "Runtime manifest must be importable by the packager.");
-assert(
-  Array.isArray(runtimeManifest.DEV_FLAGS_ONLY_SCRIPT_SOURCES),
-  "Runtime manifest must declare dev-controls-only scripts.",
+await import(
+  pathToFileURL(
+    path.join(extensionRoot, "themes", "default", "asset-manifest.js"),
+  )
 );
-
-const sourceOnlyExtensionFiles = [
-  "README.md",
-  "dev-flags-current-mode.css",
-  "dev-flags.css",
-  "dev-flags.html",
-  "dev-flags-loader.js",
-];
-const sourceOnlyFiles = new Set([
-  ...sourceOnlyExtensionFiles,
-  ...runtimeManifest.DEV_FLAGS_ONLY_SCRIPT_SOURCES.map(extensionPageSourcePath),
-]);
-const allowedPackagedExtensions = new Set([
-  ".css",
-  ".html",
-  ".js",
-  ".json",
-  ".map",
-  ".m4a",
-  ".png",
-]);
+const themeAssets = globalThis.CodexThemeAssets;
+assert(themeAssets, "Theme asset manifest must be importable by the packager.");
+await import(pathToFileURL(path.join(extensionRoot, "audio-clips.js")));
+const audioClips = globalThis.PacePetsAudioClips;
+assert(audioClips, "Audio clip manifest must be importable by the packager.");
+const releaseExtensionFiles = releaseExtensionFilesFromContracts({
+  audioClips,
+  dashboardHtml: fs.readFileSync(
+    path.join(extensionRoot, "dashboard.html"),
+    "utf8",
+  ),
+  manifest,
+  runtimeManifest,
+  themeAssets,
+});
 const textPackagedExtensions = new Set([
   ".css",
   ".html",
@@ -53,17 +50,6 @@ const textPackagedExtensions = new Set([
   ".json",
   ".map",
 ]);
-const disallowedPackagedPathPatterns = [
-  /(^|\/)usage\.json$/i,
-  /(^|\/)cookies?([._-]|$)/i,
-  /(^|\/)tokens?([._-]|$)/i,
-  /(^|\/)sessions?([._-]|$)/i,
-  /(^|\/)raw([._-]|$)/i,
-  /(^|\/)screenshots?([._-]|$)/i,
-  /(^|\/)(?:data|docs|scripts|tests|node_modules|dist)(\/|$)/i,
-  /(^|\/)\./,
-  /\.(db|dump|har|log|sqlite|tar|tgz|zip)$/i,
-];
 const localUserProfilePathPattern =
   /(?:\/(?:Users|home)\/[^/\s]+|[A-Za-z]:[\\/]+Users[\\/][^\\/\s]+)/i;
 const disallowedPackagedContentPatterns = [
@@ -91,33 +77,30 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function normalizePackagePath(filePath) {
-  return filePath.replace(/\\/g, "/");
-}
-
-function extensionPageSourcePath(source) {
+function packageSourcePath(relativePath) {
   assert(
-    source.startsWith("./") && !/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(source),
-    `Source-only dev-control script must be extension-local: ${source}`,
+    relativePath &&
+      !path.isAbsolute(relativePath) &&
+      !relativePath.split("/").includes(".."),
+    `Release file must be extension-local: ${relativePath}`,
   );
-  return source.slice(2);
-}
-
-function listFiles(directory) {
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const absolutePath = path.join(directory, entry.name);
+  let absolutePath = extensionRoot;
+  const segments = relativePath.split("/");
+  for (const [index, segment] of segments.entries()) {
+    absolutePath = path.join(absolutePath, segment);
     const stat = fs.lstatSync(absolutePath);
     if (stat.isSymbolicLink()) {
       throw new Error(`Package must not include symlinks: ${absolutePath}`);
     }
-    if (entry.isDirectory()) {
-      return listFiles(absolutePath);
-    }
-    if (!entry.isFile()) {
+    const finalSegment = index === segments.length - 1;
+    if (finalSegment && !stat.isFile()) {
       throw new Error(`Package path must be a regular file: ${absolutePath}`);
     }
-    return [absolutePath];
-  });
+    if (!finalSegment && !stat.isDirectory()) {
+      throw new Error(`Package parent must be a directory: ${absolutePath}`);
+    }
+  }
+  return absolutePath;
 }
 
 function assertVersionConsistency() {
@@ -137,17 +120,6 @@ function assertVersionConsistency() {
 
 function assertPackageFile(relativePath, absolutePath) {
   const extension = path.extname(relativePath);
-  assert(
-    allowedPackagedExtensions.has(extension),
-    `Unexpected packaged extension file type: ${relativePath}`,
-  );
-  assert(
-    !disallowedPackagedPathPatterns.some((pattern) =>
-      pattern.test(relativePath),
-    ),
-    `Packaged extension must not include private/generated artifacts: ${relativePath}`,
-  );
-
   if (!textPackagedExtensions.has(extension)) {
     return;
   }
@@ -159,14 +131,11 @@ function assertPackageFile(relativePath, absolutePath) {
 }
 
 function packageEntries() {
-  const entries = listFiles(extensionRoot)
-    .map((absolutePath) => ({
-      absolutePath,
-      relativePath: normalizePackagePath(
-        path.relative(extensionRoot, absolutePath),
-      ),
+  const entries = releaseExtensionFiles
+    .map((relativePath) => ({
+      absolutePath: packageSourcePath(relativePath),
+      relativePath,
     }))
-    .filter(({ relativePath }) => !sourceOnlyFiles.has(relativePath))
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
 
   assert(

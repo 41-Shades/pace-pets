@@ -5,6 +5,8 @@
     globalThis.PacePetsDashboardBigBangTransitionRenderer;
   const DATA = globalThis.PacePetsDashboardPaceData;
   const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
+  const PREVIEW_ACTION_REGISTRY = globalThis.PacePetsDevPreviewActionRegistry;
+  const PREVIEW_BROKER = globalThis.PacePetsDashboardDevPreviewBroker;
   const SINGULARITY_RENDERER =
     globalThis.PacePetsDashboardSingularityTransitionRenderer;
   const Controller = globalThis.PacePetsDashboardPaceController;
@@ -12,6 +14,8 @@
     !BIG_BANG_RENDERER ||
     !DATA ||
     !DASHBOARD_PREFERENCES ||
+    !PREVIEW_ACTION_REGISTRY ||
+    !PREVIEW_BROKER ||
     !SINGULARITY_RENDERER ||
     !Controller
   ) {
@@ -35,6 +39,9 @@
       stateKey: DATA.PACE_STATES.singularity.key,
     }),
   });
+  const BIG_BANG_REPLAY_PREVIEW = PREVIEW_ACTION_REGISTRY.controlForAction(
+    PREVIEW_ACTION_REGISTRY.ACTION_KEYS.bigBangReplay,
+  );
 
   function motionPreferenceEnabled() {
     return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
@@ -55,6 +62,8 @@
         audio: null,
         runId: controller[`${legacyPrefix}RunId`] || 0,
         scene: controller[`${legacyPrefix}Scene`] || null,
+        useStartupAudioOutcome: false,
+        waitedForAudio: false,
       };
     }
     if (!("audio" in controller.specialTransitions[definition.key])) {
@@ -82,9 +91,8 @@
     controller.singularityTransitionScene = state.scene;
   }
 
-  function isTransitionState(definition, state) {
-    return state?.key === definition.stateKey;
-  }
+  const isTransitionState = (definition, state) =>
+    state?.key === definition.stateKey;
 
   function hasOtherTransitionInFlight(controller, definition) {
     return Object.values(TRANSITION_DEFINITIONS).some((otherDefinition) => {
@@ -153,15 +161,45 @@
     transition.audio = null;
   }
 
-  function stopTransition(controller, definition) {
+  function stopTransition(controller, definition, { fadeOutMs = 300 } = {}) {
     const state = transitionState(controller, definition);
     state.runId += 1;
-    stopTransitionAudio(state);
+    stopTransitionAudio(state, { fadeOutMs });
     state.scene?.stop();
     state.scene = null;
     state.inFlight = false;
     state.pending = false;
+    state.useStartupAudioOutcome = false;
+    state.waitedForAudio = false;
     syncLegacyTransitionState(controller, definition, state);
+  }
+
+  function queueTransitionIfUnavailable(controller, definition) {
+    const waitingForAudio =
+      controller.specialTransitionAudioReady?.() === false;
+    const waitingForDashboard =
+      controller.specialTransitionStateReady?.() === false;
+    if (!document.hidden && !waitingForAudio && !waitingForDashboard) {
+      return false;
+    }
+
+    const transition = transitionState(controller, definition);
+    transition.pending = true;
+    if (waitingForAudio) {
+      transition.waitedForAudio = true;
+    }
+    syncLegacyTransitionState(controller, definition, transition);
+    return true;
+  }
+
+  function startupAudioAllowed(controller, transition) {
+    const required =
+      transition.waitedForAudio ||
+      transition.useStartupAudioOutcome ||
+      controller.specialTransitionUsesStartupAudioOutcome?.() === true;
+    transition.useStartupAudioOutcome = false;
+    transition.waitedForAudio = false;
+    return !required || controller.specialTransitionAudioAllowed?.() !== false;
   }
 
   function updateTransitionState(controller, definition, previousState, state) {
@@ -188,9 +226,9 @@
       return;
     }
 
-    if (document.hidden) {
-      transition.pending = true;
-      syncLegacyTransitionState(controller, definition, transition);
+    transition.useStartupAudioOutcome =
+      controller.specialTransitionUsesStartupAudioOutcome?.() === true;
+    if (queueTransitionIfUnavailable(controller, definition)) {
       return;
     }
 
@@ -202,7 +240,6 @@
   function playPendingTransition(controller, definition) {
     const transition = transitionState(controller, definition);
     if (
-      document.hidden ||
       !transition.pending ||
       transition.inFlight ||
       !isTransitionState(
@@ -210,6 +247,9 @@
         controller.paceStateForClassName(controller.currentPaceLevel()),
       )
     ) {
+      return;
+    }
+    if (queueTransitionIfUnavailable(controller, definition)) {
       return;
     }
 
@@ -222,6 +262,10 @@
 
   async function playTransition(controller, definition) {
     const transition = transitionState(controller, definition);
+    if (queueTransitionIfUnavailable(controller, definition)) {
+      return false;
+    }
+
     const runId = transition.runId + 1;
     transition.runId = runId;
     transition.inFlight = true;
@@ -229,12 +273,11 @@
 
     const rendererOptions = transitionRendererOptions(controller, definition);
     const scene = definition.renderer.create(rendererOptions);
+    const audioAllowed = startupAudioAllowed(controller, transition);
     transition.scene = scene;
-    transition.audio = playTransitionAudio(
-      controller,
-      definition,
-      rendererOptions,
-    );
+    transition.audio = audioAllowed
+      ? playTransitionAudio(controller, definition, rendererOptions)
+      : null;
     syncLegacyTransitionState(controller, definition, transition);
     let completed;
     try {
@@ -257,6 +300,62 @@
   }
 
   Object.assign(Controller.prototype, {
+    replayBigBangTransition() {
+      const definition = TRANSITION_DEFINITIONS.bigBang;
+      if (globalThis.document?.hidden === true) {
+        return {
+          ok: false,
+          message: "Open the dashboard tab before replaying Big Bang.",
+        };
+      }
+      if (!motionPreferenceEnabled()) {
+        return {
+          ok: false,
+          message: "Turn motion on before replaying Big Bang.",
+        };
+      }
+      if (!isTransitionState(definition, currentPaceState(this))) {
+        return {
+          ok: false,
+          message: BIG_BANG_REPLAY_PREVIEW.fallbackErrorMessage,
+        };
+      }
+      if (hasOtherTransitionInFlight(this, definition)) {
+        return {
+          ok: false,
+          message:
+            "Wait for the current special transition to finish before replaying Big Bang.",
+        };
+      }
+
+      stopTransition(this, definition);
+      playTransition(this, definition).catch((error) => {
+        console.warn("Pace Pets Big Bang replay failed:", error);
+      });
+      return { ok: true };
+    },
+
+    bindBigBangReplayRequests() {
+      if (this.bigBangReplayRequestsBound) {
+        return;
+      }
+
+      this.bigBangReplayRequestsBound = true;
+      PREVIEW_BROKER.registerHandler(
+        PREVIEW_ACTION_REGISTRY.ACTION_KEYS.bigBangReplay,
+        () => this.replayBigBangTransition(),
+      );
+    },
+
+    settleHiddenSpecialTransitions() {
+      for (const definition of Object.values(TRANSITION_DEFINITIONS)) {
+        const state = transitionState(this, definition);
+        if (state.inFlight || state.scene || state.audio) {
+          stopTransition(this, definition, { fadeOutMs: 0 });
+        }
+      }
+    },
+
     stopSpecialTransitions() {
       for (const definition of Object.values(TRANSITION_DEFINITIONS)) {
         stopTransition(this, definition);

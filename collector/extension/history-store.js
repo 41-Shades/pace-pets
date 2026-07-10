@@ -177,23 +177,63 @@
 
   const normalizeRefreshStatus = REFRESH_STATUS.normalizeRefreshStatus;
 
-  async function readHistory() {
-    const items = await EXTENSION_STORAGE.getLocal(HISTORY_STORAGE_KEY);
-    return normalizeHistory(items[HISTORY_STORAGE_KEY]);
+  function historyValuesEqual(left, right) {
+    return JSON.stringify(left) === JSON.stringify(right);
   }
 
-  async function writeHistory(history) {
+  function historySnapshot(items) {
+    const hasStoredValue = Object.hasOwn(items || {}, HISTORY_STORAGE_KEY);
+    const storedValue = hasStoredValue ? items[HISTORY_STORAGE_KEY] : undefined;
+    return {
+      hasStoredValue,
+      history: normalizeHistory(storedValue),
+      storedValue,
+    };
+  }
+
+  async function persistHistoryChange(snapshot, history) {
     const normalized = normalizeHistory(history);
+    if (
+      snapshot.hasStoredValue &&
+      historyValuesEqual(snapshot.storedValue, normalized)
+    ) {
+      return normalized;
+    }
+
     await EXTENSION_STORAGE.setLocal({ [HISTORY_STORAGE_KEY]: normalized });
     return normalized;
   }
 
-  async function readRefreshStatus() {
+  async function readHistorySnapshot({ repair = true } = {}) {
+    const items = await EXTENSION_STORAGE.getLocal(HISTORY_STORAGE_KEY);
+    const snapshot = historySnapshot(items);
+    if (
+      repair &&
+      snapshot.hasStoredValue &&
+      !historyValuesEqual(snapshot.storedValue, snapshot.history)
+    ) {
+      await EXTENSION_STORAGE.setLocal({
+        [HISTORY_STORAGE_KEY]: snapshot.history,
+      });
+    }
+    return snapshot;
+  }
+
+  async function readHistoryInTransaction() {
+    return (await readHistorySnapshot()).history;
+  }
+
+  async function writeHistoryInTransaction(history) {
+    const snapshot = await readHistorySnapshot({ repair: false });
+    return persistHistoryChange(snapshot, history);
+  }
+
+  async function readRefreshStatusInTransaction() {
     const items = await EXTENSION_STORAGE.getLocal(REFRESH_STATUS_STORAGE_KEY);
     return normalizeRefreshStatus(items[REFRESH_STATUS_STORAGE_KEY]);
   }
 
-  async function writeRefreshStatus(refreshStatus) {
+  async function writeRefreshStatusInTransaction(refreshStatus) {
     const normalized = normalizeRefreshStatus(refreshStatus);
     if (!normalized) {
       throw new Error("Refresh status did not include a valid checked time.");
@@ -205,7 +245,7 @@
     return normalized;
   }
 
-  async function clearUsageData() {
+  async function clearUsageDataInTransaction() {
     await EXTENSION_STORAGE.removeLocal([
       HISTORY_STORAGE_KEY,
       REFRESH_STATUS_STORAGE_KEY,
@@ -216,7 +256,7 @@
     };
   }
 
-  async function appendUsageSnapshot(
+  async function appendUsageSnapshotInTransaction(
     payload,
     collectedAt = new Date().toISOString(),
   ) {
@@ -227,10 +267,10 @@
       );
     }
 
-    const history = await readHistory();
-    const updatedHistory = await writeHistory({
+    const snapshot = await readHistorySnapshot({ repair: false });
+    const updatedHistory = await persistHistoryChange(snapshot, {
       historyVersion: HISTORY_VERSION,
-      samples: history.samples.concat(sample),
+      samples: snapshot.history.samples.concat(sample),
     });
     const storedSample = updatedHistory.samples.find(
       (candidate) => candidate.id === sample.id,
@@ -243,6 +283,53 @@
       stored: Boolean(storedSample),
       checkedAt: sample.collectedAt,
     };
+  }
+
+  const USAGE_DATA_TRANSACTION = Object.freeze({
+    appendUsageSnapshot: appendUsageSnapshotInTransaction,
+    clearUsageData: clearUsageDataInTransaction,
+    readHistory: readHistoryInTransaction,
+    readRefreshStatus: readRefreshStatusInTransaction,
+    writeHistory: writeHistoryInTransaction,
+    writeRefreshStatus: writeRefreshStatusInTransaction,
+  });
+
+  function runUsageDataTransaction(operation) {
+    return EXTENSION_STORAGE.runExclusiveLocalStorageOperation(() =>
+      operation(USAGE_DATA_TRANSACTION),
+    );
+  }
+
+  function readHistory() {
+    return runUsageDataTransaction((usageData) => usageData.readHistory());
+  }
+
+  function writeHistory(history) {
+    return runUsageDataTransaction((usageData) =>
+      usageData.writeHistory(history),
+    );
+  }
+
+  function readRefreshStatus() {
+    return runUsageDataTransaction((usageData) =>
+      usageData.readRefreshStatus(),
+    );
+  }
+
+  function writeRefreshStatus(refreshStatus) {
+    return runUsageDataTransaction((usageData) =>
+      usageData.writeRefreshStatus(refreshStatus),
+    );
+  }
+
+  function clearUsageData() {
+    return runUsageDataTransaction((usageData) => usageData.clearUsageData());
+  }
+
+  function appendUsageSnapshot(payload, collectedAt) {
+    return runUsageDataTransaction((usageData) =>
+      usageData.appendUsageSnapshot(payload, collectedAt),
+    );
   }
 
   function latestSample(history) {
@@ -263,6 +350,7 @@
     normalizeRefreshStatus,
     readHistory,
     readRefreshStatus,
+    runUsageDataTransaction,
     writeRefreshStatus,
     writeHistory,
   };

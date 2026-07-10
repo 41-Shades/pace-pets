@@ -231,6 +231,8 @@ describe("PacePetsLogic presentation", () => {
     expect(globalThis.PacePetsLogic.badgeTextForPaceRatio(undefined)).toBe(
       "--",
     );
+    expect(globalThis.PacePetsLogic.badgeTextForPaceRatio(null)).toBe("--");
+    expect(globalThis.PacePetsLogic.badgeTextForPaceRatio("  ")).toBe("--");
   });
 
   it("maps pace ratios to badge colors at threshold boundaries", () => {
@@ -263,6 +265,10 @@ describe("PacePetsLogic presentation", () => {
     );
     expect(globalThis.PacePetsLogic.paceStateForRatio(undefined)).toBe(
       states.muted,
+    );
+    expect(globalThis.PacePetsLogic.paceStateForRatio(null)).toBe(states.muted);
+    expect(globalThis.PacePetsLogic.badgeColorForPaceRatio(null)).toBe(
+      colors.muted,
     );
     expect(globalThis.PacePetsLogic.paceStateForRatio(0.54)).toBe(
       states.criticalBehind,
@@ -308,5 +314,6 @@ describe("PacePetsLogic presentation", () => {
       globalThis.PacePetsLogic.chartPaceRatio(12, { min: 0.5, max: 2 }),
     ).toBe(2);
     expect(globalThis.PacePetsLogic.chartPaceRatio("nope")).toBeNull();
+    expect(globalThis.PacePetsLogic.chartPaceRatio(null)).toBeNull();
   });
 });

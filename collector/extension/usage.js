@@ -26,6 +26,7 @@
   const DEFAULT_USAGE_ADAPTER = DEFAULT_USAGE_PROVIDER.adapter;
   const UNSUPPORTED_USAGE_MESSAGE =
     "ChatGPT usage response changed; Pace Pets needs an update.";
+  const RELATIVE_RESET_PRECISION_MS = 60 * 1000;
   const { dateMs, numberFrom, percentComplement, percentFrom } = USAGE_VALUES;
 
   function valueFrom(object, key) {
@@ -78,7 +79,16 @@
     return null;
   }
 
-  function resetMsFrom(windowData, adapter) {
+  function deterministicRelativeResetMs(relativeSeconds, observedAtMs) {
+    const estimatedResetMs = observedAtMs + relativeSeconds * 1000;
+    const roundToBoundary = relativeSeconds > 0 ? Math.ceil : Math.round;
+    return (
+      roundToBoundary(estimatedResetMs / RELATIVE_RESET_PRECISION_MS) *
+      RELATIVE_RESET_PRECISION_MS
+    );
+  }
+
+  function resetMsFrom(windowData, adapter, observedAtMs) {
     const absoluteMs = epochMs(
       firstValueFromKeys(windowData, adapter.resetAtKeys),
     );
@@ -91,7 +101,7 @@
     );
     return relativeSeconds === null
       ? null
-      : Date.now() + relativeSeconds * 1000;
+      : deterministicRelativeResetMs(relativeSeconds, observedAtMs);
   }
 
   function durationMinutesFrom(windowData, adapter) {
@@ -137,14 +147,14 @@
     };
   }
 
-  function normalizeRawWindow(windowData, adapter) {
+  function normalizeRawWindow(windowData, adapter, observedAtMs) {
     if (!windowData || typeof windowData !== "object") {
       return null;
     }
 
     const spec = WINDOW_SPECS[adapter.windowKey];
     const remainingPercent = remainingPercentFrom(windowData, adapter);
-    const resetMs = resetMsFrom(windowData, adapter);
+    const resetMs = resetMsFrom(windowData, adapter, observedAtMs);
     const durationMinutes = durationMinutesFrom(windowData, adapter);
     if (
       !spec ||
@@ -191,7 +201,12 @@
     return adapter.candidatePathPattern?.test(candidate.path) || false;
   }
 
-  function chooseMatchingCandidate(candidates, adapter, usedCandidates) {
+  function chooseMatchingCandidate(
+    candidates,
+    adapter,
+    usedCandidates,
+    observedAtMs,
+  ) {
     for (const candidate of candidates) {
       if (
         usedCandidates.has(candidate) ||
@@ -200,7 +215,11 @@
         continue;
       }
 
-      const normalized = normalizeRawWindow(candidate.rawWindow, adapter);
+      const normalized = normalizeRawWindow(
+        candidate.rawWindow,
+        adapter,
+        observedAtMs,
+      );
       if (normalized) {
         return {
           candidate,
@@ -222,7 +241,7 @@
       .filter(Boolean);
   }
 
-  function normalizeCandidateWindows(rawUsage, adapter, windows) {
+  function normalizeCandidateWindows(rawUsage, adapter, windows, observedAtMs) {
     if (!adapter.candidateMaxDepth) {
       return;
     }
@@ -246,6 +265,7 @@
         candidates,
         windowAdapter,
         usedCandidates,
+        observedAtMs,
       );
       if (selected) {
         usedCandidates.add(selected.candidate);
@@ -260,18 +280,20 @@
     { source = DEFAULT_USAGE_PROVIDER.sourceMarkers.normalizedUsage } = {},
   ) {
     const windows = {};
+    const observedAtMs = Date.now();
 
     for (const windowAdapter of adapter.windows) {
       const normalized = normalizeRawWindow(
         firstValueAtPaths(rawUsage, windowAdapter.rawPaths),
         windowAdapter,
+        observedAtMs,
       );
       if (normalized) {
         windows[windowAdapter.windowKey] = normalized;
       }
     }
 
-    normalizeCandidateWindows(rawUsage, adapter, windows);
+    normalizeCandidateWindows(rawUsage, adapter, windows, observedAtMs);
 
     if (!Object.keys(windows).length) {
       throw new Error(UNSUPPORTED_USAGE_MESSAGE);
@@ -307,6 +329,7 @@
 
   root.CodexWeeklyUsage = {
     DEFAULT_USAGE_PROVIDER,
+    RELATIVE_RESET_PRECISION_MS,
     USAGE_ENDPOINT,
     BADGE_WINDOW_STORAGE_KEY: USAGE_WINDOWS.BADGE_WINDOW_STORAGE_KEY,
     WEEK_MINUTES: USAGE_WINDOWS.WEEK_MINUTES,

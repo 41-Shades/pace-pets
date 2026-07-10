@@ -115,9 +115,7 @@
         return Object.freeze({ error: result.error, status: this.status() });
       }
 
-      this.preference = result.value;
-      this.applyPreference();
-      this.notifyStatusChanged();
+      this.setPreference(result.value);
       return Object.freeze({ error: result.error, status: this.status() });
     }
 
@@ -125,6 +123,9 @@
       this.preferenceRevision += 1;
       this.preference = this.preferences.storedAudioPreferenceValue(preference);
       this.applyPreference();
+      if (!this.preference.enabled) {
+        this.stopAll();
+      }
       this.notifyStatusChanged();
       return this.preference;
     }
@@ -156,7 +157,6 @@
         enabled: enabled === true,
       });
       if (!preference.enabled) {
-        this.stopAll();
         const result = await this.storeCurrentPreference();
         return Object.freeze({ ...result, status: this.status() });
       }

@@ -32,20 +32,25 @@
   const MANUAL_REFRESH_COOLDOWN_STORAGE_KEY =
     REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY;
   let lastRefreshState = REFRESH_STATUS.initialState();
-  let scheduledRefreshPromise = null;
+  let scheduledRefresh = null;
   let manualRefreshCooldownUntilMs = 0;
+  let usageDataGeneration = 0;
 
   function currentRefreshState() {
     return lastRefreshState;
   }
 
   function scheduledRefreshActive() {
-    return scheduledRefreshPromise !== null;
+    return scheduledRefresh?.generation === usageDataGeneration;
   }
 
-  async function persistRefreshStatus(refreshState) {
+  function isCurrentUsageDataGeneration(generation) {
+    return generation === usageDataGeneration;
+  }
+
+  async function persistRefreshStatus(usageData, refreshState) {
     try {
-      await USAGE_HISTORY.writeRefreshStatus(refreshState);
+      await usageData.writeRefreshStatus(refreshState);
     } catch (error) {
       console.warn("Could not store Codex usage refresh status:", error);
     }
@@ -56,43 +61,45 @@
     persistPresentation = true,
     refreshStatus = null,
   } = {}) {
-    const history = await USAGE_HISTORY.readHistory();
-    const sample = USAGE_HISTORY.latestSample(history);
-    if (!sample) {
-      await BADGE_PRESENTATION.updateEmptyBadge({ clearWhenEmpty });
-      return;
-    }
+    return USAGE_HISTORY.runUsageDataTransaction(async (usageData) => {
+      const history = await usageData.readHistory();
+      const sample = USAGE_HISTORY.latestSample(history);
+      if (!sample) {
+        await BADGE_PRESENTATION.updateEmptyBadge({ clearWhenEmpty });
+        return;
+      }
 
-    const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
-      sample.windows,
-      history,
-    );
-    const presentationState = REFRESH_STATUS.statusWithPacePresentation(
-      refreshStatus || lastRefreshState,
-      {
-        badgePaceRatio: badgeState.badgePaceRatio,
+      const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
+        sample.windows,
+        history,
+      );
+      const presentationState = REFRESH_STATUS.statusWithPacePresentation(
+        refreshStatus || lastRefreshState,
+        {
+          badgePaceRatio: badgeState.badgePaceRatio,
+          badgeWindowKey: badgeState.windowKey,
+          pacePresentationAt: badgeState.pacePresentationAt,
+          pacePresentationSampleId: sample.id,
+          sampleCount: history.samples.length,
+        },
+      );
+
+      if (!persistPresentation || !presentationState) {
+        return;
+      }
+
+      lastRefreshState = {
+        ...presentationState,
         badgeWindowKey: badgeState.windowKey,
+        badgePaceRatio: badgeState.badgePaceRatio,
         pacePresentationAt: badgeState.pacePresentationAt,
         pacePresentationSampleId: sample.id,
-        sampleCount: history.samples.length,
-      },
-    );
-
-    if (!persistPresentation || !presentationState) {
-      return;
-    }
-
-    lastRefreshState = {
-      ...presentationState,
-      badgeWindowKey: badgeState.windowKey,
-      badgePaceRatio: badgeState.badgePaceRatio,
-      pacePresentationAt: badgeState.pacePresentationAt,
-      pacePresentationSampleId: sample.id,
-    };
-    await persistRefreshStatus(lastRefreshState);
+      };
+      await persistRefreshStatus(usageData, lastRefreshState);
+    });
   }
 
-  async function refreshUsage() {
+  async function refreshUsage(refreshGeneration) {
     if (!(await USAGE_PERMISSIONS.hasChatGptHostPermission())) {
       throw USAGE_PERMISSIONS.chatGptAccessRequiredError();
     }
@@ -103,55 +110,85 @@
       USAGE_PROVIDER,
       { sourceMarkerKey: "background" },
     );
-    const { history, sample, stored, checkedAt } =
-      await USAGE_HISTORY.appendUsageSnapshot(payload);
-    const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
-      sample.windows,
-      history,
-    );
-    lastRefreshState = REFRESH_STATUS.successState({
-      badgePaceRatio: badgeState.badgePaceRatio,
-      badgeWindowKey: badgeState.windowKey,
-      pacePresentationAt: badgeState.pacePresentationAt,
-      pacePresentationSampleId: sample.id,
-      refreshedAt: checkedAt,
-      sampleCount: history.samples.length,
-      stored,
-      windows: sample.windows,
+    return USAGE_HISTORY.runUsageDataTransaction(async (usageData) => {
+      if (!isCurrentUsageDataGeneration(refreshGeneration)) {
+        return lastRefreshState;
+      }
+
+      const { history, sample, stored, checkedAt } =
+        await usageData.appendUsageSnapshot(payload);
+      if (!isCurrentUsageDataGeneration(refreshGeneration)) {
+        return lastRefreshState;
+      }
+
+      const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
+        sample.windows,
+        history,
+      );
+      if (!isCurrentUsageDataGeneration(refreshGeneration)) {
+        return lastRefreshState;
+      }
+
+      lastRefreshState = REFRESH_STATUS.successState({
+        badgePaceRatio: badgeState.badgePaceRatio,
+        badgeWindowKey: badgeState.windowKey,
+        pacePresentationAt: badgeState.pacePresentationAt,
+        pacePresentationSampleId: sample.id,
+        refreshedAt: checkedAt,
+        sampleCount: history.samples.length,
+        stored,
+        windows: sample.windows,
+      });
+      await persistRefreshStatus(usageData, lastRefreshState);
+      return lastRefreshState;
     });
-    await persistRefreshStatus(lastRefreshState);
-    return lastRefreshState;
   }
 
-  async function recordRefreshFailure(error) {
-    lastRefreshState = REFRESH_STATUS.failureState(error);
-    await persistRefreshStatus(lastRefreshState);
-    await BADGE_PRESENTATION.setBadge(
-      "!",
-      "#b42318",
-      PRODUCT_METADATA.REFRESH_FAILED_TITLE,
-    ).catch(() => {});
-    return lastRefreshState;
+  function recordRefreshFailure(error, refreshGeneration) {
+    return USAGE_HISTORY.runUsageDataTransaction(async (usageData) => {
+      if (!isCurrentUsageDataGeneration(refreshGeneration)) {
+        return lastRefreshState;
+      }
+
+      lastRefreshState = REFRESH_STATUS.failureState(error);
+      await persistRefreshStatus(usageData, lastRefreshState);
+      await BADGE_PRESENTATION.setBadge(
+        "!",
+        "#b42318",
+        PRODUCT_METADATA.REFRESH_FAILED_TITLE,
+      ).catch(() => {});
+      return lastRefreshState;
+    });
   }
 
   function runScheduledRefresh() {
-    if (scheduledRefreshPromise) {
-      return scheduledRefreshPromise;
+    const refreshGeneration = usageDataGeneration;
+    if (scheduledRefresh?.generation === refreshGeneration) {
+      return scheduledRefresh.promise;
     }
 
-    scheduledRefreshPromise = USAGE_PERMISSIONS.hasChatGptHostPermission()
+    const refreshPromise = USAGE_PERMISSIONS.hasChatGptHostPermission()
       .then((hasPermission) =>
-        hasPermission ? refreshUsage() : lastRefreshState,
+        hasPermission ? refreshUsage(refreshGeneration) : lastRefreshState,
       )
       .catch((error) => {
+        if (!isCurrentUsageDataGeneration(refreshGeneration)) {
+          return lastRefreshState;
+        }
         console.warn("Codex usage refresh failed:", error);
-        return recordRefreshFailure(error).catch(() => {});
+        return recordRefreshFailure(error, refreshGeneration).catch(() => {});
       })
       .finally(() => {
-        scheduledRefreshPromise = null;
+        if (scheduledRefresh?.promise === refreshPromise) {
+          scheduledRefresh = null;
+        }
       });
 
-    return scheduledRefreshPromise;
+    scheduledRefresh = Object.freeze({
+      generation: refreshGeneration,
+      promise: refreshPromise,
+    });
+    return refreshPromise;
   }
 
   async function readManualRefreshCooldownUntilMs() {
@@ -204,9 +241,11 @@
   }
 
   async function runManualRefresh() {
+    const refreshGeneration = usageDataGeneration;
     if (!(await USAGE_PERMISSIONS.hasChatGptHostPermission())) {
       const refreshState = await recordRefreshFailure(
         USAGE_PERMISSIONS.chatGptAccessRequiredError(),
+        refreshGeneration,
       );
       return REFRESH_CONTROL.refreshNowResponse(refreshState);
     }
@@ -225,8 +264,23 @@
     return runScheduledRefresh().then(REFRESH_CONTROL.refreshNowResponse);
   }
 
+  function runClearUsageData() {
+    usageDataGeneration += 1;
+    return USAGE_HISTORY.runUsageDataTransaction(async (usageData) => {
+      const result = await usageData.clearUsageData();
+      lastRefreshState = REFRESH_STATUS.initialState();
+      await BADGE_PRESENTATION.updateEmptyBadge({ clearWhenEmpty: true }).catch(
+        (error) => {
+          console.warn("Could not clear the Pace Pets badge:", error);
+        },
+      );
+      return result;
+    });
+  }
+
   root.PacePetsBackgroundRefreshRunner = Object.freeze({
     currentRefreshState,
+    runClearUsageData,
     runManualRefresh,
     runScheduledRefresh,
     scheduledRefreshActive,

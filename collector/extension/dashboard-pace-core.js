@@ -27,10 +27,12 @@
       this.paceStateTransitionPreviewTimer = null;
       this.paceStateFadeInTimer = null;
       this.paceStateFadeOutTimer = null;
+      this.brakeExtremePreviewState = null;
       this.lastForcedPaceStateKey = null;
       this.currentPaceSummaryTimePercent = null;
       this.bigBangTransitionInFlight = false;
       this.bigBangTransitionPending = false;
+      this.bigBangReplayRequestsBound = false;
       this.bigBangTransitionRunId = 0;
       this.bigBangTransitionScene = null;
       this.checkerboardRevealPreviewRequestsBound = false;

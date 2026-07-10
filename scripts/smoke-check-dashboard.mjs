@@ -8,7 +8,10 @@ function assertRuntimeOrder(assert, sources, orderedPairs, label) {
   }
 }
 
-function hasDashboardId({ dashboardHtml, dashboardTemplateSource }, requiredId) {
+function hasDashboardId(
+  { dashboardHtml, dashboardTemplateSource },
+  requiredId,
+) {
   return (
     dashboardHtml.includes(`id="${requiredId}"`) ||
     dashboardTemplateSource.includes(`id: "${requiredId}"`)
@@ -49,7 +52,10 @@ function assertDashboardHtml({
   );
   for (const requiredId of dashboardDomContract.REQUIRED_DASHBOARD_ELEMENT_IDS) {
     assert(
-      hasDashboardId({ dashboardHtml: dashboardMarkupSource, dashboardTemplateSource }, requiredId),
+      hasDashboardId(
+        { dashboardHtml: dashboardMarkupSource, dashboardTemplateSource },
+        requiredId,
+      ),
       `Missing dashboard id ${requiredId}: id="${requiredId}"`,
     );
   }
@@ -77,7 +83,11 @@ function assertDashboardHtml({
   );
 }
 
-function assertRuntimeManifest({ assert, runtimeManifest }) {
+function assertRuntimeManifest({
+  assert,
+  runtimeDependencies,
+  runtimeManifest,
+}) {
   for (const src of runtimeManifest.DASHBOARD_ONLY_SCRIPT_SOURCES) {
     assert(
       runtimeManifest.DASHBOARD_SCRIPT_SOURCES.includes(src),
@@ -93,13 +103,13 @@ function assertRuntimeManifest({ assert, runtimeManifest }) {
   assertRuntimeOrder(
     assert,
     runtimeManifest.DASHBOARD_SCRIPT_SOURCES,
-    runtimeManifest.DASHBOARD_RUNTIME_DEPENDENCY_EDGES,
+    runtimeDependencies.DASHBOARD_RUNTIME_DEPENDENCY_EDGES,
     "Dashboard runtime manifest",
   );
   assertRuntimeOrder(
     assert,
     runtimeManifest.BACKGROUND_SCRIPT_SOURCES,
-    runtimeManifest.BACKGROUND_RUNTIME_DEPENDENCY_EDGES,
+    runtimeDependencies.BACKGROUND_RUNTIME_DEPENDENCY_EDGES,
     "Background runtime manifest",
   );
 }

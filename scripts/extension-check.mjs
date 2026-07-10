@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { checkDashboardAssets } from "./extension-check-dashboard.mjs";
-import { requiredExtensionFilesFromContracts } from "./extension-check-required-files.mjs";
+import { releaseExtensionFilesFromContracts } from "./extension-check-required-files.mjs";
+import { createRuntimeDependencyContract } from "./runtime-dependency-contract.mjs";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -48,10 +49,6 @@ function attributeValue(tag, name) {
   return match?.[1] || null;
 }
 
-function normalizeExtensionPath(relativePath) {
-  return relativePath.replace(/\\/g, "/");
-}
-
 function extensionPathFromDashboardScript(src) {
   assert(
     src.startsWith("./") && !/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(src),
@@ -84,19 +81,10 @@ function assertScriptBefore(sources, before, after, label) {
   );
 }
 
-function listExtensionFiles(directory = extensionRoot) {
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const absolutePath = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      return listExtensionFiles(absolutePath);
-    }
-    return [normalizeExtensionPath(path.relative(extensionRoot, absolutePath))];
-  });
-}
-
 await import(pathToFileURL(path.join(extensionRoot, "runtime-manifest.js")));
 const runtimeManifest = globalThis.CodexExtensionRuntime;
 assert(runtimeManifest, "Runtime manifest must be importable by checks.");
+const runtimeDependencies = createRuntimeDependencyContract(runtimeManifest);
 await import(pathToFileURL(path.join(extensionRoot, "product-metadata.js")));
 const productMetadata = globalThis.CodexProductMetadata;
 assert(productMetadata, "Product metadata must be importable by checks.");
@@ -115,6 +103,9 @@ await import(
 );
 const themeAssets = globalThis.CodexThemeAssets;
 assert(themeAssets, "Theme asset manifest must be importable by checks.");
+await import(pathToFileURL(path.join(extensionRoot, "audio-clips.js")));
+const audioClips = globalThis.PacePetsAudioClips;
+assert(audioClips, "Audio clip manifest must be importable by checks.");
 await import(pathToFileURL(path.join(extensionRoot, "usage-values.js")));
 await import(pathToFileURL(path.join(extensionRoot, "pace-state-art.js")));
 await import(
@@ -194,13 +185,13 @@ assert(
   "Background script sources must be an array.",
 );
 assert(
-  Array.isArray(runtimeManifest.BACKGROUND_RUNTIME_DEPENDENCY_EDGES),
+  Array.isArray(runtimeDependencies.BACKGROUND_RUNTIME_DEPENDENCY_EDGES),
   "Background runtime dependency edges must be an array.",
 );
 for (const [
   before,
   after,
-] of runtimeManifest.BACKGROUND_RUNTIME_DEPENDENCY_EDGES) {
+] of runtimeDependencies.BACKGROUND_RUNTIME_DEPENDENCY_EDGES) {
   assertScriptBefore(
     backgroundImports,
     before,
@@ -229,13 +220,13 @@ assert(
   "Dev controls script sources must be an array.",
 );
 assert(
-  Array.isArray(runtimeManifest.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES),
+  Array.isArray(runtimeDependencies.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES),
   "Dev controls runtime dependency edges must be an array.",
 );
 for (const [
   before,
   after,
-] of runtimeManifest.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES) {
+] of runtimeDependencies.DEV_FLAGS_RUNTIME_DEPENDENCY_EDGES) {
   assertScriptBefore(
     runtimeManifest.DEV_FLAGS_SCRIPT_SOURCES,
     before,
@@ -283,15 +274,16 @@ assert(
   "Extension must not accept external connections.",
 );
 const dashboardHtml = readExtensionText("dashboard.html");
-const requiredExtensionFiles = requiredExtensionFilesFromContracts({
+const releaseExtensionFiles = releaseExtensionFilesFromContracts({
   attributeValue,
+  audioClips,
   dashboardHtml,
   manifest,
   runtimeManifest,
   themeAssets,
 });
-for (const requiredExtensionFile of requiredExtensionFiles) {
-  assertExtensionFile(requiredExtensionFile);
+for (const releaseExtensionFile of releaseExtensionFiles) {
+  assertExtensionFile(releaseExtensionFile);
 }
 assertExactStringSet(
   Object.keys(themeAssets.PACE_ICON_FILES_BY_STATE),
@@ -333,41 +325,8 @@ checkDashboardAssets({
   extensionPathFromExtensionPageUrl,
   productMetadata,
   readExtensionText,
+  runtimeDependencies,
   runtimeManifest,
 });
-
-const disallowedPackagedArtifactPatterns = [
-  /(^|\/)usage\.json$/i,
-  /(^|\/)cookies?([._-]|$)/i,
-  /(^|\/)tokens?([._-]|$)/i,
-  /(^|\/)sessions?([._-]|$)/i,
-  /(^|\/)raw([._-]|$)/i,
-  /(^|\/)screenshots?([._-]|$)/i,
-  /\.(db|dump|har|log|sqlite)$/i,
-];
-const allowedPackagedExtensions = new Set([
-  ".css",
-  ".html",
-  ".js",
-  ".json",
-  ".map",
-  ".m4a",
-  ".png",
-]);
-const allowedPackagedFiles = new Set(["README.md"]);
-for (const relativePath of listExtensionFiles()) {
-  const extension = path.extname(relativePath);
-  assert(
-    allowedPackagedExtensions.has(extension) ||
-      allowedPackagedFiles.has(relativePath),
-    `Unexpected packaged extension file type: ${relativePath}`,
-  );
-  assert(
-    !disallowedPackagedArtifactPatterns.some((pattern) =>
-      pattern.test(relativePath),
-    ),
-    `Packaged extension must not include raw usage/auth artifacts: ${relativePath}`,
-  );
-}
 
 console.log("Extension manifest and security checks passed.");

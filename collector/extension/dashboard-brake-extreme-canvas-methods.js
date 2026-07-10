@@ -183,12 +183,12 @@
       const profile = DATA.BRAKE_EXTREME_CANVAS_BURST_PROFILE;
       const rect = container.getBoundingClientRect();
       if (!profile || !document.body || rect.width <= 0 || rect.height <= 0) {
-        return;
+        return 0;
       }
 
       const { canvas, context, height, width } = createExtremeCanvas(profile);
       if (!context) {
-        return;
+        return 0;
       }
 
       const origin = {
@@ -240,6 +240,7 @@
         longestAnimationMs + 140,
       );
       state.debrisTimers.add(animation.cleanupTimer);
+      return longestAnimationMs + 140;
     },
   });
 })();

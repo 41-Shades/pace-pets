@@ -2,8 +2,20 @@
   "use strict";
 
   const DASHBOARD_STATUS_REFRESH_INTERVAL_MS = 60 * 1000;
+  const AUDIO_PRELOAD_FAILURE_WARNING =
+    "Could not preload dashboard transition audio.";
+  const INITIAL_AUDIO_PREPARATION_FAILURE_WARNING =
+    "Could not prepare initial dashboard audio.";
+  const INITIAL_AUDIO_RESUME_WAIT_MS = 250;
+  const INITIAL_SPECIAL_TRANSITION_AUDIO_TIMELINES = Object.freeze(["bigBang"]);
   const MS_PER_MINUTE = 60 * 1000;
   const PRELOAD_AUDIO_TIMELINES = Object.freeze(["bigBang", "brakeExtreme"]);
+  const DASHBOARD_STATE_LOADER = globalThis.PacePetsDashboardStateLoader;
+  if (!DASHBOARD_STATE_LOADER) {
+    throw new Error(
+      "Dashboard state loader must load before dashboard-app-core.js.",
+    );
+  }
 
   class PacePetsDashboardApp {
     constructor({ dependencies, elements }) {
@@ -21,6 +33,8 @@
       this.WINDOW_SPECS = this.USAGE_WINDOWS.WINDOW_SPECS;
       this.currentHistory = null;
       this.currentRefreshStatus = null;
+      this.dashboardPresentationAuthoritative = true;
+      this.dashboardStateMutationInProgress = false;
       this.currentCheckerboardRevealWhiteTransparent = false;
       this.currentBrakeIntensityPreview = null;
       this.currentForcedPaceStateKey = null;
@@ -31,12 +45,19 @@
       this.currentResetExhaustedSplatActive = false;
       this.currentSplatTimeRemainingPreview = null;
       this.currentSprintIntensityPreview = null;
+      this.initialDashboardLoadComplete = true;
+      this.initialSpecialTransitionAudioAllowed = true;
+      this.initialSpecialTransitionPreparationComplete = true;
       this.resetExhaustedArmAnimationFrame = null;
       this.resetExhaustedPreviewRepeatTimer = null;
       this.resetExhaustedSplatLaunchTimer = null;
       this.resetExhaustedSplatRepeatTimer = null;
       this.resetExhaustedSequenceStartTimer = null;
       this.selectedWindowKey = this.DEFAULT_WINDOW_KEY;
+      this.dashboardStateLoader = DASHBOARD_STATE_LOADER.createController({
+        applyState: (state) => this.applyDashboardState(state),
+        readState: (options) => this.readDashboardState(options),
+      });
       this.createControllers();
       this.applyProductMetadata();
     }
@@ -60,8 +81,8 @@
         audioManager: this.audioControl.audioManager(),
       });
       this.audioControl.audioManager().addStatusChangeListener?.(() => {
-        this.preloadTransitionAudio().catch((error) => {
-          console.warn("Could not preload dashboard audio:", error);
+        this.preloadTransitionAudio().catch(() => {
+          console.warn(AUDIO_PRELOAD_FAILURE_WARNING);
         });
       });
       this.usageChartView = this.DASHBOARD_CHART.createRenderer({
@@ -83,6 +104,7 @@
     createStatusAndPaceControllers() {
       this.dashboardStatus = this.DASHBOARD_STATUS.createController({
         appTooltips: this.appTooltips,
+        completeHistoryPresentation: () => this.completeHistoryPresentation(),
         elements: this.elements,
         formatClockTime: this.DASHBOARD_TIME.formatClockTime,
         getCurrentHistory: () => this.currentHistory,
@@ -113,6 +135,16 @@
         renderHistory: (history, refreshStatus, options) =>
           this.renderHistory(history, refreshStatus, options),
         selectedSupportedWindowKey: () => this.selectedSupportedWindowKey(),
+        specialTransitionAudioAllowed: () =>
+          this.initialSpecialTransitionAudioAllowed,
+        specialTransitionAudioReady: () =>
+          this.initialSpecialTransitionPreparationComplete,
+        specialTransitionStateReady: () =>
+          this.dashboardPresentationAuthoritative &&
+          !this.dashboardStateMutationInProgress &&
+          !this.dashboardStateLoader.isLoading(),
+        specialTransitionUsesStartupAudioOutcome: () =>
+          !this.initialDashboardLoadComplete,
         transitionAudio: this.transitionAudio,
         usageChartView: this.usageChartView,
         windowSpecs: this.WINDOW_SPECS,
@@ -176,21 +208,7 @@
         return sessionWindowKey;
       }
 
-      const badgeWindowKey = await this.readBadgeWindowKey();
-      this.storeSessionWindowKey(badgeWindowKey);
-      return badgeWindowKey;
-    }
-
-    async readDeveloperOptions() {
-      try {
-        const items = await this.EXTENSION_STORAGE.getLocal(
-          this.DEVELOPER_OPTIONS_STORAGE_KEY,
-        );
-        return this.DEVELOPER_OPTIONS.developerOptionsFromStorageItems(items);
-      } catch (error) {
-        console.warn("Could not read developer options:", error.message);
-        return this.DEVELOPER_OPTIONS.normalizeDeveloperOptions(null);
-      }
+      return this.readBadgeWindowKey();
     }
 
     selectedSupportedWindowKey() {
@@ -224,63 +242,6 @@
         option.classList.remove("unavailable");
         option.setAttribute("aria-current", active ? "true" : "false");
       });
-    }
-
-    async readDashboardState({ refreshWindowSelection = true } = {}) {
-      const [history, refreshStatus, dashboardWindowKey, developerOptions] =
-        await Promise.all([
-          CodexUsageHistory.readHistory(),
-          CodexUsageHistory.readRefreshStatus(),
-          refreshWindowSelection
-            ? this.readDashboardWindowKey()
-            : Promise.resolve(null),
-          this.readDeveloperOptions(),
-        ]);
-
-      return Object.freeze({
-        dashboardWindowKey,
-        developerOptions,
-        history,
-        refreshStatus,
-        refreshWindowSelection,
-      });
-    }
-
-    applyDashboardState({
-      dashboardWindowKey,
-      developerOptions,
-      history,
-      refreshStatus,
-      refreshWindowSelection,
-    }) {
-      if (refreshWindowSelection) {
-        this.selectedWindowKey = dashboardWindowKey;
-      }
-      this.currentCheckerboardRevealWhiteTransparent =
-        developerOptions.checkerboardRevealWhiteTransparent;
-      this.currentBrakeIntensityPreview =
-        developerOptions.brakeIntensityPreview;
-      this.currentForcedPaceStateKey = developerOptions.forcedPaceStateKey;
-      this.currentManualRefreshLeadWindow =
-        developerOptions.manualRefreshLeadWindow;
-      this.currentMaxPoolFill = developerOptions.maxPoolFill;
-      this.currentRailHidden = developerOptions.railHidden;
-      this.currentResetExhaustedPreview =
-        developerOptions.resetExhaustedPreview;
-      this.currentSplatTimeRemainingPreview =
-        developerOptions.splatTimeRemainingPreview;
-      this.currentSprintIntensityPreview =
-        developerOptions.sprintIntensityPreview;
-      this.currentHistory = history;
-      this.currentRefreshStatus = refreshStatus;
-      this.renderResetExhaustedPreview();
-      this.paceView.renderStateRail();
-      this.renderHistory(this.currentHistory, this.currentRefreshStatus);
-    }
-
-    async loadDashboard(options) {
-      const dashboardState = await this.readDashboardState(options);
-      this.applyDashboardState(dashboardState);
     }
 
     async refreshDashboardTimeSensitiveViews() {
@@ -329,35 +290,57 @@
       return true;
     }
 
-    async clearLocalUsageData() {
-      const { history, refreshStatus } =
-        await CodexUsageHistory.clearUsageData();
-      this.currentHistory = history;
-      this.currentRefreshStatus = refreshStatus;
-      this.renderHistory(this.currentHistory, this.currentRefreshStatus);
-    }
-
-    preloadTransitionAudio() {
+    preloadTransitionAudio(timelineIds = PRELOAD_AUDIO_TIMELINES) {
       return Promise.all(
-        PRELOAD_AUDIO_TIMELINES.map((timelineId) =>
+        timelineIds.map((timelineId) =>
           this.transitionAudio.preloadTimeline(timelineId),
         ),
       );
     }
 
     async prepareAudioForInitialDashboardRender() {
-      try {
-        await this.audioControl.loadPreference({ resumeIfNeeded: true });
-        await this.preloadTransitionAudio();
-      } catch (error) {
-        console.warn("Could not prepare dashboard audio:", error);
+      const result = await this.audioControl.loadPreference({
+        resumeIfNeeded: true,
+        resumeWaitMs: INITIAL_AUDIO_RESUME_WAIT_MS,
+      });
+      if (result.error) {
+        throw new Error(INITIAL_AUDIO_PREPARATION_FAILURE_WARNING);
       }
+      if (result.status !== this.DASHBOARD_AUDIO_CONTROL.STATUS_READY) {
+        return false;
+      }
+
+      await this.preloadTransitionAudio(
+        INITIAL_SPECIAL_TRANSITION_AUDIO_TIMELINES,
+      );
+      return true;
     }
 
-    async loadInitialDashboard() {
-      this.prepareAudioForInitialDashboardRender();
-      const dashboardState = await this.readDashboardState();
-      this.applyDashboardState(dashboardState);
+    beginInitialSpecialTransitionPreparation() {
+      this.initialSpecialTransitionAudioAllowed = false;
+      this.initialSpecialTransitionPreparationComplete = false;
+      this.initialSpecialTransitionPreparation = Promise.resolve()
+        .then(() => this.prepareAudioForInitialDashboardRender())
+        .then((audioAllowed) => {
+          this.initialSpecialTransitionAudioAllowed = audioAllowed === true;
+        })
+        .catch(() => {
+          console.warn(INITIAL_AUDIO_PREPARATION_FAILURE_WARNING);
+        })
+        .finally(() => {
+          this.initialSpecialTransitionPreparationComplete = true;
+          this.paceView.playPendingSpecialTransition?.();
+        });
+      return this.initialSpecialTransitionPreparation;
+    }
+
+    loadInitialDashboard() {
+      this.initialDashboardLoadComplete = false;
+      this.beginInitialSpecialTransitionPreparation();
+      return this.loadDashboard().catch((error) => {
+        this.initialDashboardLoadComplete = true;
+        throw error;
+      });
     }
 
     start() {

@@ -18,6 +18,10 @@ The Singularity transition is the dashboard-only cinematic effect for the rare
   captured page pixels.
 - Singularity reuses the full-page Perfect Zero space renderer without the
   Perfect Zero status-icon featured planet.
+- A Singularity first discovered while its dashboard is hidden waits until that
+  dashboard becomes visible. If a running transition becomes hidden, the
+  controller cancels and tears down its temporary presentation, reveals the
+  current dashboard state, and does not replay it when visibility returns.
 - The extension still does not inject code into ChatGPT pages, read ChatGPT chat
   contents, capture arbitrary websites, or persist screenshots.
 
@@ -174,8 +178,11 @@ dev-flags.html writes forcedPaceState = singularity
 ```
 
 If the dashboard tab is hidden when developer controls set Singularity, the
-transition is queued with `singularityTransitionPending` and plays from the
-dashboard `visibilitychange` handler when the dashboard becomes visible.
+transition is queued with `singularityTransitionPending`. The dashboard
+refreshes its current time-sensitive state on visibility return, then plays the
+pending transition only if Singularity is still current. A transition that was
+already running when the dashboard became hidden is instead cancelled and
+settled; returning to the dashboard does not replay it.
 
 ## Render Flow
 
@@ -269,7 +276,11 @@ the current dashboard state.
 Teardown removes temporary body classes, removes the temporary WebGL canvas,
 restores the live dashboard chrome, and cancels active animation frames or
 chrome-collapse animations when motion is disabled, the transition is explicitly
-stopped, or a transition phase fails.
+stopped, the dashboard becomes hidden, or a transition phase fails. Visibility
+loss also invalidates the active controller run before stopping its scene, so
+late promise continuations cannot reclaim transition state. Any transition audio
+is stopped immediately. The ordinary dashboard refresh on visibility return
+then presents the current state without replaying the interrupted transition.
 
 Leaving Singularity before a hidden-tab queued transition starts clears queued
 playback. Once the transition has started, ordinary pace-state changes do not
@@ -295,4 +306,6 @@ The important functional checks are:
 - confirm leaving Singularity before playback starts cancels a queued transition;
 - confirm leaving Singularity during active playback does not cancel the
   transition and the checkerboard reveal exposes the latest dashboard state;
+- confirm hiding the dashboard during active playback immediately restores live
+  chrome, removes temporary canvases/classes, and does not replay on return;
 - confirm reduced-motion skips the animated sequence.

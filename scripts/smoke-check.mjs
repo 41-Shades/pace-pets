@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { requiredExtensionFilesFromContracts } from "./extension-check-required-files.mjs";
+import { releaseExtensionFilesFromContracts } from "./extension-check-required-files.mjs";
+import { createRuntimeDependencyContract } from "./runtime-dependency-contract.mjs";
 import { assertStorageSchemaDocumentCurrent } from "./storage-schema-doc.mjs";
 import { checkDashboardSmoke } from "./smoke-check-dashboard.mjs";
 
@@ -51,6 +52,7 @@ await import(
 );
 const runtimeManifest = globalThis.CodexExtensionRuntime;
 assert(runtimeManifest, "Runtime manifest is not wired.");
+const runtimeDependencies = createRuntimeDependencyContract(runtimeManifest);
 await import(
   pathToFileURL(
     path.join(projectRoot, "collector/extension/product-metadata.js"),
@@ -87,6 +89,11 @@ await import(
 const themeAssets = globalThis.CodexThemeAssets;
 assert(themeAssets, "Theme asset manifest is not wired.");
 await import(
+  pathToFileURL(path.join(projectRoot, "collector/extension/audio-clips.js"))
+);
+const audioClips = globalThis.PacePetsAudioClips;
+assert(audioClips, "Audio clip manifest is not wired.");
+await import(
   pathToFileURL(
     path.join(projectRoot, "collector/extension/dashboard-dom-contract.js"),
   )
@@ -119,14 +126,15 @@ assert(
   "Extension must not inject localhost content scripts.",
 );
 const dashboardHtml = readText("collector/extension/dashboard.html");
-const requiredExtensionFiles = requiredExtensionFilesFromContracts({
+const releaseExtensionFiles = releaseExtensionFilesFromContracts({
+  audioClips,
   dashboardHtml,
   manifest,
   runtimeManifest,
   themeAssets,
 });
-for (const requiredExtensionFile of requiredExtensionFiles) {
-  assertFile(`collector/extension/${requiredExtensionFile}`);
+for (const releaseExtensionFile of releaseExtensionFiles) {
+  assertFile(`collector/extension/${releaseExtensionFile}`);
 }
 for (const size of ["16", "32", "48", "128"]) {
   assertFile(
@@ -201,6 +209,7 @@ checkDashboardSmoke({
   dashboardStatusSource: dashboardStatusControllerJs,
   extensionDocsHtml,
   productMetadata,
+  runtimeDependencies,
   runtimeManifest,
   themeAssets,
 });
@@ -251,12 +260,16 @@ assert(
   "Manual refresh must be conditional, cooldown guarded, and routed through the scheduled refresh path.",
 );
 assert(
-  backgroundJs.includes("let scheduledRefreshPromise = null;") &&
-    /function runScheduledRefresh\(\) \{\s*if \(scheduledRefreshPromise\) \{\s*return scheduledRefreshPromise;\s*\}/s.test(
-      backgroundJs,
+  backgroundJs.includes("let scheduledRefresh = null;") &&
+    backgroundJs.includes(
+      "if (scheduledRefresh?.generation === refreshGeneration)",
     ) &&
-    /finally\(\(\) => \{\s*scheduledRefreshPromise = null;/s.test(backgroundJs),
-  "Background alarm refreshes must be guarded against same-worker overlap.",
+    backgroundJs.includes("return scheduledRefresh.promise;") &&
+    backgroundJs.includes(
+      "if (scheduledRefresh?.promise === refreshPromise)",
+    ) &&
+    backgroundJs.includes("scheduledRefresh = Object.freeze({"),
+  "Background alarm refreshes must be generation-scoped and guarded against same-worker overlap.",
 );
 assert(
   !backgroundJs.includes("badgePreviewRestoreTimer") &&

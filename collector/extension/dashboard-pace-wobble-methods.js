@@ -4,8 +4,15 @@
   const DATA = globalThis.PacePetsDashboardPaceData;
   const BRAKE_INTENSITY = globalThis.PacePetsBrakeIntensity;
   const BRAKE_EXTREME_PREVIEW = globalThis.PacePetsBrakeExtremePreviewControl;
+  const PREVIEW_BROKER = globalThis.PacePetsDashboardDevPreviewBroker;
   const Controller = globalThis.PacePetsDashboardPaceController;
-  if (!DATA || !BRAKE_INTENSITY || !BRAKE_EXTREME_PREVIEW || !Controller) {
+  if (
+    !DATA ||
+    !BRAKE_INTENSITY ||
+    !BRAKE_EXTREME_PREVIEW ||
+    !PREVIEW_BROKER ||
+    !Controller
+  ) {
     throw new Error(
       "Pace data, intensity controls, preview controls, and core must load before dashboard-pace-wobble-methods.js.",
     );
@@ -78,12 +85,28 @@
       isFirstBurst,
       isActive,
       paceRatio: null,
+      previewLifecycleTimer: null,
       repeatDelayRangeMs: DATA.BRAKE_WOBBLE_REPEAT_DELAY_RANGE_MS,
       settleTimer: null,
     };
   }
 
   Object.assign(Controller.prototype, {
+    clearBrakeExtremeDebrisPreview() {
+      const state = this.brakeExtremePreviewState;
+      if (!state) {
+        return;
+      }
+
+      this.brakeExtremePreviewState = null;
+      state.isActive = false;
+      window.clearTimeout(state.delayTimer);
+      window.clearTimeout(state.previewLifecycleTimer);
+      window.clearTimeout(state.settleTimer);
+      this.clearBrakeDebrisLayers(state);
+      this.clearBrakeWobbleBurstClasses(this.elements.paceIcon);
+    },
+
     scheduleBrakeWobbleBurst(container, state, delayRange) {
       state.delayTimer = window.setTimeout(() => {
         state.delayTimer = null;
@@ -150,6 +173,7 @@
         };
       }
 
+      this.clearBrakeExtremeDebrisPreview();
       const container = this.elements.paceIcon;
       const burst = {
         rangeKey: "extreme",
@@ -158,6 +182,7 @@
       const durationMs =
         DATA.BRAKE_WOBBLE_DURATION_MS_BY_SHAKE_COUNT[burst.shakeCount];
       const state = brakeDebrisState({ isFirstBurst: false });
+      this.brakeExtremePreviewState = state;
       state.brakeIntensity = 1;
       state.brakeWobbleBurstChancesPercent =
         brakeWobbleBurstChancesForIntensity(1);
@@ -167,32 +192,34 @@
       container.dataset.brakeWobbleRange = burst.rangeKey;
       container.dataset.brakeWobbleShakes = String(burst.shakeCount);
       container.classList.add("is-brake-wobbling");
-      this.launchBrakeDebrisBurst(container, burst, state);
-      window.setTimeout(
-        () => this.clearBrakeWobbleBurstClasses(container),
-        durationMs,
+      const debrisDurationMs = this.launchBrakeDebrisBurst(
+        container,
+        burst,
+        state,
+      );
+      state.settleTimer = window.setTimeout(() => {
+        state.settleTimer = null;
+        this.clearBrakeWobbleBurstClasses(container);
+      }, durationMs);
+      state.previewLifecycleTimer = window.setTimeout(
+        () => {
+          if (this.brakeExtremePreviewState === state) {
+            this.clearBrakeExtremeDebrisPreview();
+          }
+        },
+        Math.max(durationMs, debrisDurationMs || 0),
       );
       return { ok: true };
     },
 
     bindBrakeExtremePreviewRequests() {
-      if (
-        this.brakeExtremePreviewRequestsBound ||
-        !globalThis.chrome?.runtime?.onMessage
-      ) {
+      if (this.brakeExtremePreviewRequestsBound) {
         return;
       }
 
       this.brakeExtremePreviewRequestsBound = true;
-      globalThis.chrome.runtime.onMessage.addListener(
-        (message, _sender, sendResponse) => {
-          if (!BRAKE_EXTREME_PREVIEW.isMaxBurstMessage(message)) {
-            return false;
-          }
-
-          sendResponse?.(this.launchBrakeExtremeDebrisPreview());
-          return false;
-        },
+      PREVIEW_BROKER.registerHandler(BRAKE_EXTREME_PREVIEW.actionKey, () =>
+        this.launchBrakeExtremeDebrisPreview(),
       );
     },
 

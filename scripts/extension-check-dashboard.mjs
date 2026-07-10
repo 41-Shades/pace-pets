@@ -58,9 +58,9 @@ function assertRuntimeOrder({
   assert,
   assertScriptBefore,
   dashboardRuntimeScripts,
-  runtimeManifest,
+  runtimeDependencies,
 }) {
-  const orderedPairs = runtimeManifest.DASHBOARD_RUNTIME_DEPENDENCY_EDGES;
+  const orderedPairs = runtimeDependencies.DASHBOARD_RUNTIME_DEPENDENCY_EDGES;
   assert(
     Array.isArray(orderedPairs),
     "Dashboard runtime dependency edges must be an array.",

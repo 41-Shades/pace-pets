@@ -46,6 +46,35 @@ describe("PacePetsAudioPreferences", () => {
     expect(preferences.normalizeVolume("quiet")).toBeNull();
   });
 
+  it("normalizes audio preference storage changes", () => {
+    const preferences = globalThis.PacePetsAudioPreferences;
+    const key = preferences.AUDIO_PREFERENCE_STORAGE_KEY;
+
+    expect(
+      preferences.audioPreferenceFromStorageChange(
+        { [key]: { newValue: { enabled: true, volume: 2 } } },
+        "local",
+      ),
+    ).toEqual({ enabled: true, volume: 1 });
+    expect(
+      preferences.audioPreferenceFromStorageChange(
+        { [key]: { oldValue: { enabled: true, volume: 0.4 } } },
+        "local",
+      ),
+    ).toEqual({ enabled: false, volume: 0.6 });
+    expect(
+      preferences.audioPreferenceFromStorageChange(
+        { [key]: { newValue: { enabled: true, volume: 0.4 } } },
+        "sync",
+      ),
+    ).toBeNull();
+    expect(
+      preferences.audioPreferenceFromStorageChange({}, "local"),
+    ).toBeNull();
+  });
+});
+
+describe("PacePetsAudioPreferences storage", () => {
   it("reads and stores audio preferences through chrome.storage.local", async () => {
     const preferences = globalThis.PacePetsAudioPreferences;
     globalThis.chrome.storage.local.get.mockImplementation((_keys, done) => {
