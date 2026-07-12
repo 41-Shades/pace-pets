@@ -13,24 +13,18 @@ describe("PacePetsLogic integer-provider zero history", () => {
     };
     const earlyAtMs = Date.parse("2026-05-25T12:00:00.000Z");
     const earlyPresentation =
-      globalThis.PacePetsLogic.controlledPacePresentationForWindow(
-        earlyWindow,
-        {
-          atMs: earlyAtMs,
-        },
-      );
+      globalThis.PacePetsLogic.pacePresentationForWindow(earlyWindow, {
+        atMs: earlyAtMs,
+      });
 
     expect(earlyPresentation.state.key).toBe("splat");
     expect(earlyPresentation.displayRatio).toBe(0);
 
     const finalAtMs = Date.parse("2026-05-25T12:01:30.000Z");
     const finalPresentation =
-      globalThis.PacePetsLogic.controlledPacePresentationForWindow(
-        earlyWindow,
-        {
-          atMs: finalAtMs,
-        },
-      );
+      globalThis.PacePetsLogic.pacePresentationForWindow(earlyWindow, {
+        atMs: finalAtMs,
+      });
 
     expect(finalPresentation.state.key).toBe("singularity");
 
@@ -53,24 +47,22 @@ describe("PacePetsLogic integer-provider zero history", () => {
       ),
     ).toBe(false);
     const blockedFinalPresentation =
-      globalThis.PacePetsLogic.controlledPacePresentationForWindow(
-        earlyWindow,
-        {
-          allowPerfectZero: false,
-          atMs: finalAtMs,
-        },
-      );
+      globalThis.PacePetsLogic.pacePresentationForWindow(earlyWindow, {
+        allowPerfectZero: false,
+        atMs: finalAtMs,
+      });
     expect(blockedFinalPresentation.state.key).toBe("splat");
     expect(blockedFinalPresentation.displayRatio).toBe(0);
 
     expect(
-      globalThis.PacePetsLogic.controlledPacePresentationForWindow(
-        earlyWindow,
-        {
-          allowPerfectZero: false,
-          atMs: Date.parse("2026-05-25T12:02:00.000Z"),
-        },
-      ),
-    ).toBeNull();
+      globalThis.PacePetsLogic.pacePresentationForWindow(earlyWindow, {
+        allowPerfectZero: false,
+        atMs: Date.parse("2026-05-25T12:02:00.000Z"),
+      }),
+    ).toMatchObject({
+      displayRatio: null,
+      paceRatio: null,
+      state: { key: "muted" },
+    });
   });
 });

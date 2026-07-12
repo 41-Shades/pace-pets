@@ -15,15 +15,6 @@
   });
   const ALWAYS_RARE_MAX_TIME_REMAINING_DISPLAY_PERCENT = 50;
 
-  function roundedDisplayPercent(value) {
-    const numericValue = Number(value);
-    if (!Number.isFinite(numericValue)) {
-      return null;
-    }
-
-    return Math.round(Math.max(0, Math.min(100, numericValue)));
-  }
-
   function usableRect(rect) {
     return (
       rect &&
@@ -37,7 +28,7 @@
   }
 
   function shouldForceRareMax(controller) {
-    const timePercent = roundedDisplayPercent(
+    const timePercent = PacePetsLogic.roundedDisplayPercent(
       controller.currentPaceSummaryTimePercent,
     );
     return (

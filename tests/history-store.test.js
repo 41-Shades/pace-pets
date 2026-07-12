@@ -285,8 +285,7 @@ describe("CodexUsageHistory.normalizeRefreshStatus", () => {
       refreshedAt: "2026-05-25T11:59:00.000Z",
       badgeWindowKey: null,
       badgePaceRatio: null,
-      pacePresentationAt: null,
-      pacePresentationSampleId: null,
+      heldZeroStates: {},
       sampleCount: 3,
       stored: false,
     });

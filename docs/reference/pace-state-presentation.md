@@ -2,11 +2,12 @@
 
 Status: reference.
 
-Pace presentation is owned by `collector/extension/pace-logic.js`, with
+Pace math and formatting are owned by `collector/extension/pace-logic.js`.
+`collector/extension/pace-presentation.js` returns one frozen active-reading
+model containing state, raw pace ratio, and displayed pace ratio, with
 reset-window history helpers in `collector/extension/pace-window-history.js`.
-The dashboard, toolbar badge, chart, favicon, and developer override controls
-reuse that shared state model instead of each surface defining its own
-thresholds.
+The dashboard and toolbar adapt that model instead of resolving normal and
+special states independently.
 
 When running the unpacked extension, local developer settings can force one pace
 state for the dashboard card and toolbar badge. That display override is owned by
@@ -34,20 +35,26 @@ Current observed WHAM usage-window data reports whole-number `used_percent`
 values, so fractional state behavior is supported by normalization but is not
 the current observed provider contract.
 
+Normal pace levels classify the ratio at the same two-decimal precision shown
+to the user. The raw ratio is rounded to two decimal places before threshold
+mapping, so a displayed boundary value and its pace level cannot disagree.
+Special presentation states are resolved before this normal threshold mapping.
+
 ## Threshold States
 
-`PacePetsLogic.paceStateForRatio()` maps numeric ratios to threshold states:
+`PacePetsLogic.paceStateForRatio()` maps two-decimal display ratios to threshold
+states:
 
-| State            | Class                  | Ratio                   | Dashboard title  |
-| ---------------- | ---------------------- | ----------------------- | ---------------- |
-| `criticalBehind` | `pace-critical-behind` | `< 0.55`                | Brake hard!      |
-| `wellBehind`     | `pace-well-behind`     | `>= 0.55` and `< 0.75`  | Slow down        |
-| `behind`         | `pace-behind`          | `>= 0.75` and `< 0.90`  | Ease up          |
-| `on`             | `pace-on`              | `>= 0.90` and `<= 1.10` | Keep pace        |
-| `ahead`          | `pace-ahead`           | `> 1.10` and `<= 1.25`  | Pick up speed    |
-| `strongAhead`    | `pace-strong-ahead`    | `> 1.25` and `<= 1.55`  | Push harder      |
-| `wellAhead`      | `pace-well-ahead`      | `> 1.55`                | Sprint faster!   |
-| `muted`          | `pace-muted`           | unavailable             | Neutral fallback |
+| State            | Class                  | Two-decimal display ratio | Dashboard title  |
+| ---------------- | ---------------------- | ------------------------- | ---------------- |
+| `criticalBehind` | `pace-critical-behind` | `< 0.55`                  | Brake hard!      |
+| `wellBehind`     | `pace-well-behind`     | `>= 0.55` and `< 0.75`    | Slow down        |
+| `behind`         | `pace-behind`          | `>= 0.75` and `< 0.90`    | Ease up          |
+| `on`             | `pace-on`              | `>= 0.90` and `<= 1.10`   | Keep pace        |
+| `ahead`          | `pace-ahead`           | `> 1.10` and `<= 1.25`    | Pick up speed    |
+| `strongAhead`    | `pace-strong-ahead`    | `> 1.25` and `<= 1.55`    | Push harder      |
+| `wellAhead`      | `pace-well-ahead`      | `> 1.55`                  | Sprint faster!   |
+| `muted`          | `pace-muted`           | unavailable               | Neutral fallback |
 
 Big Bang, Perfect Sync, Perfect Zero, Splat, Singularity, and Nothingness are
 presentation states, not threshold states. They sit above threshold mapping and
@@ -64,6 +71,8 @@ live usage normally reaches display zero only when reported used percent is
 `100`. The meaningful live rounding band is the locally computed time remaining
 percent. In current WHAM data, display-scale usage is the reported integer
 remaining percent; display-scale time is computed locally and rounded.
+Dashboard percent text uses the same `roundedDisplayPercent()` rule through
+`formatDisplayPercent()`, while bar widths retain their bounded fractional value.
 
 | State                        | Surface                                   | Rule                                                                                              | Presentation                                                                                                             |
 | ---------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
@@ -93,11 +102,11 @@ band, not an ended window.
 Display-zero bands are separate product rules. They should not be treated as one
 shared "zero" moment.
 
-| Value                         | Display-zero rule                                                              | 5h window threshold               | 7d window threshold               |
-| ----------------------------- | ------------------------------------------------------------------------------ | --------------------------------- | --------------------------------- |
-| Usage remaining percent       | Current WHAM reports `used_percent: 100`, normalized to `remainingPercent: 0`. | No fractional live band observed. | No fractional live band observed. |
-| Time remaining percent        | `Math.round(timeRemainingPercent) === 0` while `resetsAt` is still future.     | Final `< 90s`                     | Final `< 50m 24s` (`< 50.4m`)     |
-| `Resets In` countdown display | `Math.floor(remainingMs / 60000) === 0` while `resetsAt` is still future.      | Final `< 60s`                     | Final `< 60s`                     |
+| Value                         | Display-zero rule                                                                                      | 5h window threshold               | 7d window threshold               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------- | --------------------------------- |
+| Usage remaining percent       | `Math.round(remainingPercent) === 0`; current WHAM normally reaches this when `used_percent` is `100`. | No fractional live band observed. | No fractional live band observed. |
+| Time remaining percent        | `Math.round(timeRemainingPercent) === 0` while `resetsAt` is still future.                             | Final `< 90s`                     | Final `< 50m 24s` (`< 50.4m`)     |
+| `Resets In` countdown display | `Math.floor(remainingMs / 60000) === 0` while `resetsAt` is still future.                              | Final `< 60s`                     | Final `< 60s`                     |
 
 At exactly the time-percent half-point, `Math.round(0.5)` returns `1`, so the
 time percent still displays `1%`: exactly `90s` remaining for the 5h window, and
@@ -106,15 +115,15 @@ countdown displays `Window ended`, not zero.
 
 Product implications:
 
-- Perfect Zero can only appear after usage is reported as `0%` remaining and the
+- Perfect Zero can only appear after usage displays as `0%` remaining and the
   time percent display also reaches `0%`: final `< 90s` for 5h, final `< 50m
 24s` for 7d.
 - Singularity is narrower than Perfect Zero because `Resets In` must also display
   zero: final `< 60s` for both windows.
-- Splat wins when usage is reported as `0%` remaining while time percent still
+- Splat wins when usage displays as `0%` remaining while time percent still
   displays above zero: `>= 90s` remaining for 5h, `>= 50m 24s` remaining for 7d.
 - If history already shows usage reached display zero earlier in the same reset
-  window, the current guard keeps exact exhausted usage in Splat through the
+  window, the current guard keeps displayed-zero usage in Splat through the
   final zero-time band instead of promoting it to Perfect Zero or Singularity.
 - After `resetsAt` passes, the dashboard holds the latest zero-state
   presentation instead of showing Nothingness with the waiting-for-reading copy.
@@ -133,12 +142,13 @@ a 7d window.
 ## Rough Countdown Transition Conditions
 
 These rough countdown bands assume current WHAM integer usage precision. `R` is
-the reported remaining usage percent after normalization, where `R = 100 -
-used_percent`. The rows below assume `R = 0`; Perfect Zero and Singularity only
-apply when no earlier reported-zero history blocks perfect presentation in the
-same reset window. When that block exists, exact zero usage remains Splat. After
-the window ends, the dashboard holds whichever zero-state presentation was
-derived from the latest exhausted reading until a new usage reading arrives.
+the displayed remaining usage percent after normalization and rounding, derived
+from `remainingPercent = 100 - used_percent`. The rows below assume displayed
+`R = 0`; Perfect Zero and Singularity only apply when no earlier displayed-zero
+history blocks perfect presentation in the same reset window. When that block
+exists, displayed-zero usage remains Splat. After the window ends, the dashboard
+holds whichever zero-state presentation was derived from the latest exhausted
+reading until a new usage reading arrives.
 
 ### 5h Window
 
@@ -160,19 +170,18 @@ derived from the latest exhausted reading until a new usage reading arrives.
 | 0%               | 0 seconds or past reset             | Window ended        | Until next reading | Held zero state              |
 | Non-zero/unknown | 0 seconds or past reset             | Window ended        | Ended              | Ended or stale window        |
 
-If the first observed `R = 0` sample arrives during the final countdown minute
-and no earlier reported-zero history blocks perfect presentation, the display can
-enter Singularity directly. If `R = 0` is observed earlier, the current history
-guard keeps later exact-zero presentation in Splat. Once the reset time passes,
-the dashboard keeps the held zero-state presentation until the next successful
-usage reading replaces it.
+If the first observed displayed-`R = 0` sample arrives during the final countdown
+minute and no earlier displayed-zero history blocks perfect presentation, the
+display can enter Singularity directly. If displayed `R = 0` is observed
+earlier, the current history guard keeps later displayed-zero presentation in
+Splat. Once the reset time passes, the dashboard keeps the held zero-state
+presentation until the next successful usage reading replaces it.
 
 ## Imperfect State Contract
 
-Splat is an imperfect special state. It uses normalized zero remaining usage,
+Splat is an imperfect special state. It uses displayed-zero remaining usage,
 which is commonly derived from source-reported `used_percent: 100` in current
-WHAM data. Live Splat wins before the final rounded time band because upstream
-source precision can be whole-percent at the low end. Held zero-state
+WHAM data. Live Splat wins before the final rounded time band. Held zero-state
 presentation can keep Splat visible after the reset boundary until a new usage
 reading arrives.
 
@@ -180,10 +189,10 @@ Nothingness is the user-facing imperfect state for interim dashboard card
 presentations where no rail threshold state should be shown. It has no icon
 asset; the dashboard and rail render only a faint icon-slot outline.
 
-| State                       | Surface                     | Rule                                                                                    | Presentation                                                      |
-| --------------------------- | --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Splat (`splat`)             | Dashboard and toolbar badge | Remaining usage percent is reported as `0` and rounded time-remaining percent is `> 0`. | Uses the `splat` state with a controlled display ratio of `0.00`. |
-| Nothingness (`nothingness`) | Dashboard                   | No usable live pace reading for the selected interim condition.                         | Uses the `nothingness` state with no pace ratio.                  |
+| State                       | Surface                     | Rule                                                                                         | Presentation                                                      |
+| --------------------------- | --------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Splat (`splat`)             | Dashboard and toolbar badge | Rounded remaining-usage percent displays as `0` and rounded time-remaining percent is `> 0`. | Uses the `splat` state with a controlled display ratio of `0.00`. |
+| Nothingness (`nothingness`) | Dashboard                   | No usable live pace reading for the selected interim condition.                              | Uses the `nothingness` state with no pace ratio.                  |
 
 Perfect Zero wins when both usage and time display as zero. That avoids treating
 a provider-rounded usage `0` as absolute exhaustion during the final rounded time
@@ -426,10 +435,11 @@ then restrained bottom decor and crawlers appear at higher fill levels. Near max
 fill, a shark or surface-height whale can pass through without tying the scene to
 pulse intensity. See `docs/reference/push-harder-fish-tank.md` for the tank's
 asset, staging, and orientation rules.
-The dashboard's 60-second time-sensitive refresh reapplies the pace summary, so
-the active Push harder effect is preserved across same-state refreshes to keep
-the pool from resetting. Leaving Push harder or reloading the dashboard tears
-down the effect and resets the pool. The local developer controls include a
+The dashboard's boundary-aware time-sensitive refresh reapplies the pace
+summary at the next visible presentation change, with a maximum 60-second wait,
+so the active Push harder effect is preserved across same-state refreshes to
+keep the pool from resetting. Leaving Push harder or reloading the dashboard
+tears down the effect and resets the pool. The local developer controls include a
 max-pool-fill preview that forces that water layer to its configured cap for
 inspection and a one-shot Rare burst (5%) action that forces the next pulse to
 the rare profile. The legend rail remains static. The first pulse after
@@ -556,16 +566,28 @@ the stored badge window.
 
 The toolbar badge recomputes its presentation from stored history at the
 `refresh-schedule.js` presentation interval, separately from the
-`refresh-schedule.js` usage collection alarm. Each successful badge
-presentation stores its `pacePresentationAt` timestamp and latest sample id in
-the refresh status record. The dashboard uses that timestamp when rendering the
-same latest sample, so toolbar and dashboard pace values share one time basis
-without making extra usage endpoint requests.
+`refresh-schedule.js` usage collection alarm. Each pass evaluates the immutable
+presentation for every real supported window. Splat, Perfect Zero, and
+Singularity are stored as semantic per-window holds with the window's
+`resetsAt` value as identity; forced and critical-window developer previews are
+excluded.
+
+An active dashboard render captures one live timestamp and uses it consistently
+for every time-derived value in that render, including time remaining, pace
+ratio and state, alternate-window ratio, reset countdown, reset budget rate, and
+burnout projection. An open page evolves the same semantic hold across the exact
+reset boundary. Reloaded pages accept a persisted hold only when its window key
+and reset identity match; otherwise a stale window shows Nothingness. Legacy
+timestamp metadata is discarded rather than retained as a second state path.
 
 The chart clamps plotted pace values to `0..50` through
 `PacePetsLogic.chartPaceRatio()`. `dashboard.js` narrows the visible y-axis for
 normal ranges, expands high ranges in coarser steps, and marks capped tooltip
-values when raw pace is outside the plotted bounds.
+values when raw pace is outside the plotted bounds. Historical points remain
+anchored to their collection timestamps. Full and cached renders use the same
+dashboard render timestamp for one synthetic live endpoint; cached refreshes
+replace that endpoint, crossings, cap metadata, and y bounds without recreating
+the Chart instance or accumulating synthetic points.
 
 ## Asset Ownership
 

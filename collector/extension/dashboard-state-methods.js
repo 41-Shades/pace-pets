@@ -112,6 +112,7 @@
 
     commitClearedDashboardState(response) {
       this.dashboardStateLoader.invalidate();
+      this.currentHeldZeroStates = {};
       this.currentHistory = CodexUsageHistory.normalizeHistory(
         response.history,
       );

@@ -4,6 +4,7 @@
   const BADGE_PRESENTATION = root.PacePetsBackgroundBadgePresentation;
   const EXTENSION_STORAGE = root.CodexExtensionStorage;
   const PRODUCT_METADATA = root.CodexProductMetadata;
+  const HELD_ZERO_STATE = root.PacePetsHeldZeroState;
   const REFRESH_CONTROL = root.PacePetsRefreshControl;
   const REFRESH_STATUS = root.CodexRefreshStatus;
   const USAGE_HISTORY = root.CodexUsageHistory;
@@ -14,6 +15,7 @@
   const REQUIRED_DEPENDENCIES = Object.freeze([
     BADGE_PRESENTATION,
     EXTENSION_STORAGE,
+    HELD_ZERO_STATE,
     PRODUCT_METADATA,
     REFRESH_CONTROL,
     REFRESH_STATUS,
@@ -56,6 +58,19 @@
     }
   }
 
+  async function priorRefreshStatus(usageData, fallback = lastRefreshState) {
+    return (await usageData.readRefreshStatus()) || fallback;
+  }
+
+  function evolvedHeldZeroStates(previousStatus, sample, badgeState) {
+    return HELD_ZERO_STATE.nextHeldZeroStates(
+      previousStatus?.heldZeroStates,
+      sample.windows,
+      badgeState.presentedStateKeysByWindow,
+      badgeState.presentedAtMs,
+    );
+  }
+
   async function updatePaceBadgeFromHistory({
     clearWhenEmpty = false,
     persistPresentation = true,
@@ -73,13 +88,20 @@
         sample.windows,
         history,
       );
-      const presentationState = REFRESH_STATUS.statusWithPacePresentation(
+      const previousStatus = await priorRefreshStatus(
+        usageData,
         refreshStatus || lastRefreshState,
+      );
+      const presentationState = REFRESH_STATUS.statusWithBadgePresentation(
+        previousStatus,
         {
           badgePaceRatio: badgeState.badgePaceRatio,
           badgeWindowKey: badgeState.windowKey,
-          pacePresentationAt: badgeState.pacePresentationAt,
-          pacePresentationSampleId: sample.id,
+          heldZeroStates: evolvedHeldZeroStates(
+            previousStatus,
+            sample,
+            badgeState,
+          ),
           sampleCount: history.samples.length,
         },
       );
@@ -92,8 +114,6 @@
         ...presentationState,
         badgeWindowKey: badgeState.windowKey,
         badgePaceRatio: badgeState.badgePaceRatio,
-        pacePresentationAt: badgeState.pacePresentationAt,
-        pacePresentationSampleId: sample.id,
       };
       await persistRefreshStatus(usageData, lastRefreshState);
     });
@@ -129,11 +149,15 @@
         return lastRefreshState;
       }
 
+      const previousStatus = await priorRefreshStatus(usageData);
       lastRefreshState = REFRESH_STATUS.successState({
         badgePaceRatio: badgeState.badgePaceRatio,
         badgeWindowKey: badgeState.windowKey,
-        pacePresentationAt: badgeState.pacePresentationAt,
-        pacePresentationSampleId: sample.id,
+        heldZeroStates: evolvedHeldZeroStates(
+          previousStatus,
+          sample,
+          badgeState,
+        ),
         refreshedAt: checkedAt,
         sampleCount: history.samples.length,
         stored,
@@ -150,7 +174,10 @@
         return lastRefreshState;
       }
 
-      lastRefreshState = REFRESH_STATUS.failureState(error);
+      const previousStatus = await priorRefreshStatus(usageData);
+      lastRefreshState = REFRESH_STATUS.failureState(error, {
+        heldZeroStates: previousStatus?.heldZeroStates,
+      });
       await persistRefreshStatus(usageData, lastRefreshState);
       await BADGE_PRESENTATION.setBadge(
         "!",

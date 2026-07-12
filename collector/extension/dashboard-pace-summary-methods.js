@@ -9,39 +9,14 @@
     );
   }
 
-  function shouldBlockPerfectZero({
-    allowPerfectZero,
-    remainingPercent,
-    timePercent,
-  }) {
-    return (
-      PacePetsLogic.isPerfectZeroPercentPair(remainingPercent, timePercent) &&
-      !PacePetsLogic.isUsageAbsoluteZeroBeforeFinalTimeBand(
-        remainingPercent,
-        timePercent,
-      ) &&
-      !allowPerfectZero
-    );
-  }
-
-  function shouldShowSingularity(
-    controlledPresentation,
-    resetCountdownDisplaysZero,
-  ) {
-    return (
-      controlledPresentation?.state.key === DATA.PACE_STATES.perfectZero.key &&
-      resetCountdownDisplaysZero
-    );
-  }
-
   const ZERO_STATE_KEYS = Object.freeze([
     DATA.PACE_STATES.perfectZero.key,
     DATA.PACE_STATES.singularity.key,
     DATA.PACE_STATES.splat.key,
   ]);
 
-  function isZeroStatePresentation(controlledPresentation) {
-    return ZERO_STATE_KEYS.includes(controlledPresentation?.state.key);
+  function isZeroStateKey(stateKey) {
+    return ZERO_STATE_KEYS.includes(stateKey);
   }
 
   function nothingnessCopy(reasonKey) {
@@ -147,19 +122,11 @@
       comparisonPaceRatio = null,
       copy,
       level,
-      paceRatioDisplayOverride = null,
-      remainingPercent,
+      paceRatio = null,
+      paceRatioForDisplay = null,
       timePercent,
       title,
     }) {
-      const paceRatio = PacePetsLogic.paceRatioForValues(
-        remainingPercent,
-        timePercent,
-      );
-      const paceRatioForDisplay =
-        paceRatioDisplayOverride === null
-          ? paceRatio
-          : paceRatioDisplayOverride;
       const previousState = this.paceStateForClassName(this.currentPaceLevel());
       const displayState = this.paceStateForClassName(level);
       this.applyPaceStateChange(previousState, displayState, () => {
@@ -179,6 +146,8 @@
 
     waitingPaceSummary() {
       return this.nothingnessPaceSummary("waitingForUsage", {
+        paceRatio: null,
+        paceRatioForDisplay: null,
         remainingPercent: null,
         timePercent: null,
       });
@@ -187,79 +156,53 @@
     stalePaceSummary({ comparisonPaceRatio, remainingPercent, timePercent }) {
       return this.nothingnessPaceSummary("waitingForReading", {
         comparisonPaceRatio,
+        paceRatio: null,
+        paceRatioForDisplay: null,
         remainingPercent,
         timePercent,
       });
     },
 
-    perfectZeroBlockedSummary(context) {
-      const state = DATA.PACE_STATES.criticalBehind;
+    presentationPaceSummary(context, presentation) {
+      const { state } = presentation;
       return {
         ...context,
         copy: state.copy,
         level: state.className,
+        paceRatio: presentation.paceRatio,
+        paceRatioForDisplay: presentation.displayRatio,
         title: state.title,
       };
     },
 
-    controlledPaceSummary(context, controlledPresentation) {
-      const { state } = controlledPresentation;
+    singularityPaceSummary(context, presentation) {
       return {
-        ...context,
-        copy: state.copy,
-        level: state.className,
-        paceRatioDisplayOverride: controlledPresentation.displayRatio,
-        title: state.title,
-      };
-    },
-
-    singularityPaceSummary(context) {
-      const state = DATA.PACE_STATES.singularity;
-      return {
-        ...context,
-        copy: state.copy,
-        level: state.className,
-        paceRatioDisplayOverride: 0,
+        ...this.presentationPaceSummary(context, presentation),
         resetCountdownOverride: DATA.SINGULARITY_RESET_COUNTDOWN_TEXT,
-        title: state.title,
       };
     },
 
-    heldZeroPaceSummary(
-      context,
-      controlledPresentation,
-      resetCountdownDisplaysZero,
-    ) {
-      if (!isZeroStatePresentation(controlledPresentation)) {
+    heldZeroPaceSummary(context, stateKey) {
+      if (!isZeroStateKey(stateKey)) {
         return null;
       }
 
-      const summary = shouldShowSingularity(
-        controlledPresentation,
-        resetCountdownDisplaysZero,
-      )
-        ? this.singularityPaceSummary(context)
-        : this.controlledPaceSummary(context, controlledPresentation);
+      const presentation = Object.freeze({
+        displayRatio: 0,
+        paceRatio: 0,
+        state: DATA.PACE_STATES[stateKey],
+      });
+      const summary =
+        stateKey === DATA.PACE_STATES.singularity.key
+          ? this.singularityPaceSummary(context, presentation)
+          : this.presentationPaceSummary(context, presentation);
       return { ...summary, heldZeroState: true };
-    },
-
-    ratioPaceSummary(context, paceRatio) {
-      if (paceRatio === null) {
-        return this.nothingnessPaceSummary("resetTimingMissing", context);
-      }
-
-      const state = PacePetsLogic.paceStatePresentationForRatio(paceRatio);
-      return {
-        ...context,
-        copy: state.copy,
-        level: state.className,
-        title: state.title,
-      };
     },
 
     paceSummaryModel({
       allowPerfectZero,
       comparisonPaceRatio,
+      heldZeroStateKey = null,
       remainingPercent,
       resetCountdownDisplaysZero,
       staleWindow,
@@ -270,48 +213,28 @@
       }
 
       const context = { comparisonPaceRatio, remainingPercent, timePercent };
-      const paceRatio = PacePetsLogic.paceRatioForValues(
-        remainingPercent,
-        timePercent,
-      );
-      const controlledPresentation =
-        PacePetsLogic.controlledPacePresentationForValues(
-          remainingPercent,
-          timePercent,
-          { allowPerfectZero },
-        );
       if (staleWindow) {
         return (
-          this.heldZeroPaceSummary(
-            context,
-            controlledPresentation,
-            resetCountdownDisplaysZero,
-          ) || this.stalePaceSummary(context)
+          this.heldZeroPaceSummary(context, heldZeroStateKey) ||
+          this.stalePaceSummary(context)
         );
       }
-      if (
-        !controlledPresentation &&
-        shouldBlockPerfectZero({
-          allowPerfectZero,
-          remainingPercent,
-          timePercent,
-        })
-      ) {
-        return this.perfectZeroBlockedSummary(context);
-      }
-      if (
-        shouldShowSingularity(
-          controlledPresentation,
-          resetCountdownDisplaysZero,
-        )
-      ) {
-        return this.singularityPaceSummary(context);
-      }
-      if (controlledPresentation) {
-        return this.controlledPaceSummary(context, controlledPresentation);
+      const presentation = PacePetsLogic.pacePresentationForValues(
+        remainingPercent,
+        timePercent,
+        { allowPerfectZero, resetCountdownDisplaysZero },
+      );
+      if (presentation.state.key === DATA.PACE_STATES.muted.key) {
+        return this.nothingnessPaceSummary("resetTimingMissing", {
+          ...context,
+          paceRatio: null,
+          paceRatioForDisplay: null,
+        });
       }
 
-      return this.ratioPaceSummary(context, paceRatio);
+      return presentation.state.key === DATA.PACE_STATES.singularity.key
+        ? this.singularityPaceSummary(context, presentation)
+        : this.presentationPaceSummary(context, presentation);
     },
 
     renderPaceSummary(
@@ -322,12 +245,14 @@
       {
         applySummary = true,
         allowPerfectZero = true,
+        heldZeroStateKey = null,
         resetCountdownDisplaysZero = false,
       } = {},
     ) {
       const summary = this.paceSummaryModel({
         allowPerfectZero,
         comparisonPaceRatio,
+        heldZeroStateKey,
         remainingPercent: windowData?.remainingPercent,
         resetCountdownDisplaysZero,
         staleWindow,

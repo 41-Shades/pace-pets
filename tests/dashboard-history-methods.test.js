@@ -19,88 +19,227 @@ installExtensionRuntimeHooks();
 beforeAll(async () => {
   await importExtensionScript("collector/extension/dashboard-state-loader.js");
   await importExtensionScript("collector/extension/dashboard-app-core.js");
+  await importExtensionScript("collector/extension/dashboard-pace-data.js");
+  await importExtensionScript("collector/extension/dashboard-pace-core.js");
+  await importExtensionScript(
+    "collector/extension/dashboard-pace-summary-methods.js",
+  );
+  await importExtensionScript(
+    "collector/extension/dashboard-history-timing-methods.js",
+  );
   await importExtensionScript(
     "collector/extension/dashboard-history-methods.js",
   );
 });
 
+function summaryElements() {
+  return {
+    paceBurnoutIn: { textContent: "" },
+    priorResetLabel: { textContent: "" },
+    resetBudgetRate: { hidden: false },
+    resetBudgetRateUnit: { textContent: "" },
+    resetBudgetRateValue: { textContent: "" },
+    resetProgressFill: {},
+    resetWindowCard: { dataset: {} },
+    resetsIn: { textContent: "" },
+    scheduledResetLabel: { textContent: "" },
+    timeBar: {},
+    timePercent: { textContent: "" },
+    usageBar: {},
+    usagePercent: { textContent: "" },
+  };
+}
+
+function paceSummaryRenderer() {
+  const controller = Object.create(
+    globalThis.PacePetsDashboardPaceController.prototype,
+  );
+  return vi.fn(
+    (
+      windowData,
+      timePercent,
+      staleWindow,
+      comparisonPaceRatio,
+      { allowPerfectZero, heldZeroStateKey, resetCountdownDisplaysZero },
+    ) =>
+      controller.paceSummaryModel({
+        allowPerfectZero,
+        comparisonPaceRatio,
+        heldZeroStateKey,
+        remainingPercent: windowData?.remainingPercent,
+        resetCountdownDisplaysZero,
+        staleWindow,
+        timePercent,
+      }),
+  );
+}
+
+function configureSummaryApp(app, { timeRemainingPercent }) {
+  app.DASHBOARD_TIME = {
+    dateMs: globalThis.PacePetsLogic.dateMs,
+    isResetWindowStale: globalThis.PacePetsLogic.isResetWindowStale,
+    resetCountdown: vi.fn((value, atMs) =>
+      globalThis.PacePetsLogic.dateMs(value) <= atMs
+        ? "Window ended"
+        : `reset:${atMs}`,
+    ),
+    resetCountdownDisplaysZero:
+      globalThis.PacePetsLogic.resetCountdownDisplaysZero,
+    setResetParts: vi.fn(),
+    timeRemainingPercent,
+    windowStartMs: globalThis.PacePetsLogic.windowStartMs,
+  };
+  app.WINDOW_SPECS = globalThis.CodexUsageWindows.WINDOW_SPECS;
+  app.USAGE_WINDOWS = globalThis.CodexUsageWindows;
+  app.elements = summaryElements();
+  app.paceView = {
+    renderPaceSummary: paceSummaryRenderer(),
+    setPercent(element, _bar, value) {
+      element.textContent = value;
+    },
+  };
+  app.setResetBudgetRate = vi.fn();
+  app.setPaceBurnoutMetrics = vi.fn();
+  return app;
+}
+
 describe("PacePetsDashboardApp history presentation time", () => {
-  it("uses stored pace presentation time only for the matching latest sample", () => {
+  it("preserves the current semantic zero state across its reset boundary", () => {
     const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
-    const refreshStatus = {
-      pacePresentationAt: "2026-05-25T12:01:00.000Z",
-      pacePresentationSampleId: "sample-1",
-    };
-
-    expect(
-      app.pacePresentationTimeMsForSample({ id: "sample-1" }, refreshStatus),
-    ).toBe(Date.parse("2026-05-25T12:01:00.000Z"));
-
-    expect(
-      app.pacePresentationTimeMsForSample({ id: "sample-2" }, refreshStatus),
-    ).toBe(Date.parse("2026-05-25T12:00:00.000Z"));
-  });
-
-  it("keeps live timers current while pace uses the presentation time", () => {
-    const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
-    const currentMs = Date.parse("2026-05-25T12:00:00.000Z");
-    const paceMs = Date.parse("2026-05-25T11:00:00.000Z");
     const windowData = {
-      remainingPercent: 50,
-      resetsAt: "2026-05-25T13:00:00.000Z",
+      remainingPercent: 0,
+      resetsAt: "2026-05-25T12:01:00.000Z",
       windowMinutes: 300,
     };
-    const elements = {
-      priorResetLabel: { textContent: "" },
-      scheduledResetLabel: { textContent: "" },
-      resetWindowCard: { dataset: {} },
-      resetProgressFill: {},
-      resetsIn: { textContent: "" },
-      timeBar: {},
-      timePercent: { textContent: "" },
-      usageBar: {},
-      usagePercent: { textContent: "" },
+    const history = {
+      samples: [
+        {
+          collectedAt: "2026-05-25T12:00:30.000Z",
+          windows: { weekly: windowData },
+        },
+      ],
     };
-    const timeRemainingPercent = vi.fn((_windowData, atMs) =>
-      atMs === paceMs ? 40 : 20,
-    );
-    const renderPaceSummary = vi.fn(() => ({}));
-
-    app.DASHBOARD_TIME = {
-      dateMs: (value) => Date.parse(value),
-      isResetWindowStale: vi.fn(() => false),
-      resetCountdown: vi.fn((_value, atMs) => `reset:${atMs}`),
-      resetCountdownDisplaysZero: vi.fn(() => false),
-      setResetParts: vi.fn(),
-      timeRemainingPercent,
-      windowStartMs: vi.fn(() => currentMs - 300 * 60 * 1000),
-    };
-    app.WINDOW_SPECS = globalThis.CodexUsageWindows.WINDOW_SPECS;
     app.USAGE_WINDOWS = globalThis.CodexUsageWindows;
-    app.STATUS_TEXT = { waitingForReading: "Waiting" };
-    app.elements = elements;
-    app.paceView = {
-      renderPaceSummary,
-      setPercent(element, _bar, value) {
-        element.textContent = value;
+    app.currentHeldZeroStates = {};
+
+    const active = app.updateCurrentHeldZeroStates(
+      history,
+      null,
+      { weekly: windowData },
+      Date.parse("2026-05-25T12:00:30.000Z"),
+    );
+    expect(active.weekly.stateKey).toBe("singularity");
+
+    const stale = app.updateCurrentHeldZeroStates(
+      history,
+      {
+        heldZeroStates: {
+          weekly: {
+            resetsAt: "2026-05-24T12:01:00.000Z",
+            stateKey: "splat",
+          },
+        },
       },
+      { weekly: windowData },
+      Date.parse("2026-05-25T12:02:00.000Z"),
+    );
+    expect(stale).toEqual(active);
+  });
+
+  it("renders active 91/91 values and Perfect sync from one live timestamp", () => {
+    const renderAtMs = Date.parse("2026-05-25T12:00:00.000Z");
+    const windowData = {
+      remainingPercent: 91,
+      resetsAt: "2026-05-25T16:33:00.000Z",
+      windowMinutes: 300,
     };
-    app.setResetBudgetRate = vi.fn();
-    app.setPaceBurnoutMetrics = vi.fn();
+    const alternateWindowData = {
+      remainingPercent: 50,
+      resetsAt: "2026-06-01T12:00:00.000Z",
+      windowMinutes: 10080,
+    };
+    const timeRemainingPercent = vi.fn((candidate) =>
+      candidate === windowData ? 91 : 50,
+    );
+    const app = configureSummaryApp(
+      Object.create(globalThis.PacePetsDashboardApp.prototype),
+      { timeRemainingPercent },
+    );
 
     app.renderSummaryWindow(
       "weekly",
       windowData,
-      { weekly: windowData },
+      { fiveHour: alternateWindowData, weekly: windowData },
       { samples: [] },
-      { paceAtMs: paceMs },
+      { renderAtMs },
     );
 
-    expect(timeRemainingPercent).toHaveBeenCalledWith(windowData, currentMs);
-    expect(timeRemainingPercent).toHaveBeenCalledWith(windowData, paceMs);
-    expect(elements.timePercent.textContent).toBe(20);
-    expect(elements.resetsIn.textContent).toBe(`reset:${currentMs}`);
-    expect(renderPaceSummary.mock.calls[0][1]).toBe(40);
+    expect(timeRemainingPercent).toHaveBeenCalledOnce();
+    expect(timeRemainingPercent).toHaveBeenCalledWith(windowData, renderAtMs);
+    expect(app.elements.usagePercent.textContent).toBe(91);
+    expect(app.elements.timePercent.textContent).toBe(91);
+    expect(app.elements.resetsIn.textContent).toBe(`reset:${renderAtMs}`);
+    expect(app.paceView.renderPaceSummary.mock.calls[0][1]).toBe(91);
+    expect(app.paceView.renderPaceSummary.mock.results[0].value).toMatchObject({
+      level: globalThis.PacePetsLogic.PACE_STATES.sync.className,
+      paceRatioForDisplay: 1,
+      title: "Perfect sync",
+    });
+    expect(app.DASHBOARD_TIME.setResetParts).toHaveBeenCalledWith(
+      app.elements,
+      windowData,
+      globalThis.CodexUsageWindows.WINDOW_SPECS.weekly,
+      renderAtMs,
+    );
+    expect(app.setResetBudgetRate).toHaveBeenCalledWith(windowData, renderAtMs);
+    expect(app.setPaceBurnoutMetrics).toHaveBeenCalledWith(
+      windowData,
+      renderAtMs,
+    );
+  });
+});
+
+describe("PacePetsDashboardApp stale held-state presentation", () => {
+  it("renders an explicit reset-matched Singularity hold", () => {
+    const renderAtMs = Date.parse("2026-05-25T12:02:00.000Z");
+    const windowData = {
+      remainingPercent: 0,
+      resetsAt: "2026-05-25T12:01:00.000Z",
+      windowMinutes: 300,
+    };
+    const history = {
+      samples: [
+        {
+          collectedAt: "2026-05-25T12:00:30.000Z",
+          windows: { weekly: windowData },
+        },
+      ],
+    };
+    const app = configureSummaryApp(
+      Object.create(globalThis.PacePetsDashboardApp.prototype),
+      { timeRemainingPercent: globalThis.PacePetsLogic.timeRemainingPercent },
+    );
+
+    const summaryState = app.renderSummaryWindow(
+      "weekly",
+      windowData,
+      { weekly: windowData },
+      history,
+      { heldZeroStateKey: "singularity", renderAtMs },
+    );
+
+    expect(app.elements.timePercent.textContent).toBe(0);
+    expect(app.elements.resetsIn.textContent).toBe("0d 0h 0m");
+    expect(app.paceView.renderPaceSummary.mock.results[0].value).toMatchObject({
+      heldZeroState: true,
+      level: globalThis.PacePetsLogic.PACE_STATES.singularity.className,
+      resetCountdownOverride: "0d 0h 0m",
+      title: "Singularity",
+    });
+    expect(summaryState).toMatchObject({
+      heldZeroState: true,
+      staleWindow: true,
+    });
   });
 });
 
@@ -138,74 +277,6 @@ describe("PacePetsDashboardApp stale zero history status", () => {
     app.renderHistory({ samples: [] });
 
     expect(app.renderEmptyHistory).toHaveBeenCalledOnce();
-    expect(app.initialDashboardLoadComplete).toBe(true);
-    expect(app.paceView.playPendingSpecialTransition).toHaveBeenCalledOnce();
-  });
-
-  it("does not project held zero summaries as stale waiting status", () => {
-    const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
-    const history = {
-      samples: [
-        {
-          id: "sample-1",
-          collectedAt: "2026-05-25T12:00:00.000Z",
-          windows: {
-            weekly: {
-              remainingPercent: 0,
-              resetsAt: "2026-05-25T12:01:00.000Z",
-              windowMinutes: 10080,
-            },
-          },
-        },
-      ],
-    };
-    const statusState = { detail: "", manualRefresh: false, mode: "live" };
-    const historyCollectionStatusState = vi.fn(() => statusState);
-
-    app.DASHBOARD_TIME = {
-      formatClockTime: vi.fn(),
-    };
-    app.DASHBOARD_STATUS = {
-      historyCollectionStatusState,
-    };
-    app.USAGE_WINDOWS = {
-      WINDOW_KEYS: ["weekly"],
-    };
-    app.selectedSupportedWindowKey = () => "weekly";
-    app.pacePresentationTimeMsForSample = vi.fn(() =>
-      Date.parse("2026-05-25T12:00:30.000Z"),
-    );
-    app.renderWindowControls = vi.fn();
-    app.initialDashboardLoadComplete = false;
-    app.paceView = {
-      hasForcedPaceStateOverride: vi.fn(() => false),
-      playPendingSpecialTransition: vi.fn(),
-      refreshForcedPaceStateOverride: vi.fn(() => {
-        expect(app.initialDashboardLoadComplete).toBe(false);
-      }),
-    };
-    app.renderSummaryWindow = vi.fn(() => ({
-      hasResetTiming: true,
-      heldZeroState: true,
-      staleWindow: true,
-    }));
-    app.isManualRefreshLeadWindow = vi.fn(() => false);
-    app.applyHistoryStatus = vi.fn();
-    app.usageChartView = {
-      renderHistory: vi.fn(),
-    };
-    app.setLatestMetadata = vi.fn();
-
-    app.renderHistory(history, {
-      ok: true,
-      refreshedAt: history.samples[0].collectedAt,
-    });
-
-    expect(historyCollectionStatusState.mock.calls[0][0]).toMatchObject({
-      hasResetTiming: true,
-      staleWindow: false,
-    });
-    expect(app.applyHistoryStatus).toHaveBeenCalledWith(statusState);
     expect(app.initialDashboardLoadComplete).toBe(true);
     expect(app.paceView.playPendingSpecialTransition).toHaveBeenCalledOnce();
   });

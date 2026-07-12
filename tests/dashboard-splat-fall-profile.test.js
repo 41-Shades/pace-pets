@@ -3,10 +3,14 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { installExtensionRuntimeHooks } from "./helpers/extension-runtime.js";
+
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
+
+installExtensionRuntimeHooks();
 
 beforeAll(async () => {
   await import(

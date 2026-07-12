@@ -24,6 +24,9 @@ beforeAll(async () => {
   await importExtensionScript("collector/extension/dashboard-app-core.js");
   await importExtensionScript("collector/extension/dashboard-state-methods.js");
   await importExtensionScript(
+    "collector/extension/dashboard-history-timing-methods.js",
+  );
+  await importExtensionScript(
     "collector/extension/dashboard-history-methods.js",
   );
 });

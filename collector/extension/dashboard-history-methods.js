@@ -15,43 +15,6 @@
         : {};
     },
 
-    pacePresentationTimeMsForSample(sample, refreshStatus) {
-      const presentationMs = PacePetsLogic.dateMs(
-        refreshStatus?.pacePresentationAt,
-      );
-      return presentationMs !== null &&
-        refreshStatus?.pacePresentationSampleId === sample?.id
-        ? presentationMs
-        : Date.now();
-    },
-
-    paceRatioForWindow(windowData, atMs = Date.now()) {
-      return PacePetsLogic.paceRatioForValues(
-        windowData?.remainingPercent,
-        this.DASHBOARD_TIME.timeRemainingPercent(windowData, atMs),
-      );
-    },
-
-    alternatePaceRatioSummary(windows, activeKey, atMs = Date.now()) {
-      const comparisonKey = this.USAGE_WINDOWS.alternateWindowKey(activeKey);
-      if (!comparisonKey || !windows[comparisonKey]) {
-        return null;
-      }
-
-      const paceRatio = this.paceRatioForWindow(windows[comparisonKey], atMs);
-      const label = `${this.WINDOW_SPECS[comparisonKey].badge}:`;
-      if (paceRatio === null) {
-        return { className: "", label, value: "--" };
-      }
-
-      return {
-        className:
-          PacePetsLogic.paceStatePresentationForRatio(paceRatio).className,
-        label,
-        value: PacePetsLogic.formatPaceRatioValue(paceRatio),
-      };
-    },
-
     setLatestMetadata(latest, refreshStatus = null) {
       const checkedAt = refreshStatus?.refreshedAt || latest?.collectedAt;
       const checkedValue = checkedAt
@@ -85,48 +48,6 @@
       this.elements.resetBudgetRate.hidden = true;
     },
 
-    summaryWindowHasResetTiming(windowData, resetMs) {
-      return (
-        resetMs !== null &&
-        this.DASHBOARD_TIME.windowStartMs(windowData) !== null
-      );
-    },
-
-    summaryWindowResetCountdownDisplaysZero(windowData, atMs, paceAtMs) {
-      const liveResetCountdownDisplaysZero =
-        this.DASHBOARD_TIME.resetCountdownDisplaysZero(
-          windowData?.resetsAt,
-          atMs,
-        );
-      if (!this.DASHBOARD_TIME.isResetWindowStale(windowData, atMs)) {
-        return liveResetCountdownDisplaysZero;
-      }
-
-      return this.DASHBOARD_TIME.resetCountdownDisplaysZero(
-        windowData?.resetsAt,
-        paceAtMs,
-      );
-    },
-
-    summaryWindowTiming(windowData, atMs, paceAtMs) {
-      const resetMs = this.DASHBOARD_TIME.dateMs(windowData?.resetsAt);
-      return {
-        hasResetTiming: this.summaryWindowHasResetTiming(windowData, resetMs),
-        paceTimePercent: this.DASHBOARD_TIME.timeRemainingPercent(
-          windowData,
-          paceAtMs,
-        ),
-        resetCountdownDisplaysZero:
-          this.summaryWindowResetCountdownDisplaysZero(
-            windowData,
-            atMs,
-            paceAtMs,
-          ),
-        staleWindow: this.DASHBOARD_TIME.isResetWindowStale(windowData, atMs),
-        timePercent: this.DASHBOARD_TIME.timeRemainingPercent(windowData, atMs),
-      };
-    },
-
     applyPaceSummaryResetCountdown(paceSummary, applyPaceSummary) {
       if (!applyPaceSummary || !paceSummary?.resetCountdownOverride) {
         return;
@@ -144,7 +65,8 @@
       resetCountdownDisplaysZero,
       staleWindow,
       timePercent,
-      paceAtMs,
+      heldZeroStateKey,
+      renderAtMs,
       windowData,
       windowKey,
       windows,
@@ -153,7 +75,7 @@
         windowData,
         timePercent,
         staleWindow,
-        this.alternatePaceRatioSummary(windows, windowKey, paceAtMs),
+        this.alternatePaceRatioSummary(windows, windowKey, history, renderAtMs),
         {
           applySummary: applyPaceSummary,
           allowPerfectZero: PacePetsLogic.allowsPerfectZeroForWindow(
@@ -161,6 +83,7 @@
             windowKey,
             windowData,
           ),
+          heldZeroStateKey,
           resetCountdownDisplaysZero,
         },
       );
@@ -173,11 +96,14 @@
       windowData,
       windows = {},
       history,
-      { applyPaceSummary = true, paceAtMs = Date.now() } = {},
+      {
+        applyPaceSummary = true,
+        heldZeroStateKey = null,
+        renderAtMs = Date.now(),
+      } = {},
     ) {
       const spec = this.WINDOW_SPECS[windowKey];
-      const atMs = Date.now();
-      const timing = this.summaryWindowTiming(windowData, atMs, paceAtMs);
+      const timing = this.summaryWindowTiming(windowData, renderAtMs);
 
       this.elements.priorResetLabel.textContent = spec.priorResetLabel;
       this.elements.scheduledResetLabel.textContent = spec.scheduledResetLabel;
@@ -192,20 +118,26 @@
         this.elements.timeBar,
         timing.timePercent,
       );
-      this.DASHBOARD_TIME.setResetParts(this.elements, windowData, spec, atMs);
+      this.DASHBOARD_TIME.setResetParts(
+        this.elements,
+        windowData,
+        spec,
+        renderAtMs,
+      );
       this.elements.resetsIn.textContent = this.DASHBOARD_TIME.resetCountdown(
         windowData?.resetsAt,
-        atMs,
+        renderAtMs,
       );
-      this.setResetBudgetRate(windowData, atMs);
-      this.setPaceBurnoutMetrics(windowData, atMs);
+      this.setResetBudgetRate(windowData, renderAtMs);
+      this.setPaceBurnoutMetrics(windowData, renderAtMs);
       const paceSummary = this.renderSummaryWindowPace({
         applyPaceSummary,
         history,
         resetCountdownDisplaysZero: timing.resetCountdownDisplaysZero,
         staleWindow: timing.staleWindow,
-        timePercent: timing.paceTimePercent,
-        paceAtMs,
+        timePercent: timing.timePercent,
+        heldZeroStateKey,
+        renderAtMs,
         windowData,
         windowKey,
         windows,
@@ -294,21 +226,6 @@
       this.completeHistoryPresentation();
     },
 
-    isManualRefreshLeadWindow(windowKey, windowData, atMs = Date.now()) {
-      if (this.currentManualRefreshLeadWindow) {
-        return true;
-      }
-
-      const leadWindowMs = this.manualRefreshLeadWindowMs(windowKey);
-      const resetMs = this.DASHBOARD_TIME.dateMs(windowData?.resetsAt);
-      return (
-        leadWindowMs !== null &&
-        resetMs !== null &&
-        resetMs > atMs &&
-        resetMs - atMs <= leadWindowMs
-      );
-    },
-
     applyHistoryStatus(state) {
       this.dashboardStatus.setStatus(
         state.text,
@@ -332,9 +249,11 @@
     },
 
     renderHistory(history, refreshStatus = null, { refreshChart = true } = {}) {
+      const renderAtMs = Date.now();
       const latest = CodexUsageHistory.latestSample(history);
       if (!latest) {
         this.renderEmptyHistory(refreshStatus);
+        this.scheduleNextDashboardRefresh?.(renderAtMs);
         this.completeHistoryPresentation();
         return;
       }
@@ -342,10 +261,18 @@
       const windows = this.windowsForSample(latest);
       const summaryWindowKey = this.selectedSupportedWindowKey();
       const summaryWindow = windows[summaryWindowKey];
-      const paceAtMs = this.pacePresentationTimeMsForSample(
-        latest,
+      const heldZeroStates = this.updateCurrentHeldZeroStates(
+        history,
         refreshStatus,
+        windows,
+        renderAtMs,
       );
+      const heldZeroStateKey =
+        globalThis.PacePetsHeldZeroState.stateKeyForWindow(
+          heldZeroStates,
+          summaryWindowKey,
+          summaryWindow,
+        );
       this.renderWindowControls(summaryWindowKey);
       const forcedPaceStateOverrideActive =
         this.paceView.hasForcedPaceStateOverride();
@@ -354,7 +281,11 @@
         summaryWindow,
         windows,
         history,
-        { applyPaceSummary: !forcedPaceStateOverrideActive, paceAtMs },
+        {
+          applyPaceSummary: !forcedPaceStateOverrideActive,
+          heldZeroStateKey,
+          renderAtMs,
+        },
       );
       this.applyHistoryStatus(
         this.DASHBOARD_STATUS.historyCollectionStatusState({
@@ -368,6 +299,7 @@
           manualRefreshLeadWindow: this.isManualRefreshLeadWindow(
             summaryWindowKey,
             summaryWindow,
+            renderAtMs,
           ),
           summaryWindow,
           staleWindow:
@@ -376,14 +308,22 @@
       );
       if (refreshChart) {
         this.usageChartView.renderHistory({
+          atMs: renderAtMs,
           hasResetTiming: summaryState.hasResetTiming,
           history,
+          summaryWindowKey,
+          summaryWindow,
+        });
+      } else {
+        this.usageChartView.refreshHistoryLivePoint({
+          atMs: renderAtMs,
           summaryWindowKey,
           summaryWindow,
         });
       }
       this.setLatestMetadata(latest, refreshStatus);
       this.paceView.refreshForcedPaceStateOverride();
+      this.scheduleNextDashboardRefresh?.(renderAtMs);
       this.completeHistoryPresentation();
     },
   });

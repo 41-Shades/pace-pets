@@ -1,18 +1,6 @@
 (() => {
   "use strict";
 
-  const INTEGRATION_CONFIG = globalThis.CodexIntegrationConfig;
-  if (!INTEGRATION_CONFIG) {
-    throw new Error(
-      "Codex integration config must load before dashboard-chart-data.js.",
-    );
-  }
-  const USAGE_PROVIDERS = globalThis.CodexUsageProviders;
-  if (!USAGE_PROVIDERS) {
-    throw new Error(
-      "Codex usage providers must load before dashboard-chart-data.js.",
-    );
-  }
   const PACE_LOGIC = globalThis.PacePetsLogic;
   if (!PACE_LOGIC) {
     throw new Error(
@@ -31,7 +19,6 @@
     perfectLine: "rgba(20, 184, 166, 0.48)",
   };
   const PERFECT_PACE_RATIO = PACE_LOGIC.PERFECT_PACE_RATIO;
-  const SOURCE_MARKERS = USAGE_PROVIDERS.DEFAULT_USAGE_PROVIDER.sourceMarkers;
   const PACE_RATIO_CHART_MIN = 0;
   const PACE_RATIO_CHART_MAX = PACE_LOGIC.PACE_RATIO_CHART_MAX;
   const PACE_RATIO_CHART_DETAIL_STEP = 0.05;
@@ -93,27 +80,35 @@
     return PACE_LOGIC.resetWindowSamples(history, windowKey, windowData);
   }
 
-  function chartSamplesWithLivePoint(samples, windowKey, windowData) {
+  function livePaceChartPoint(latestSample, windowData, atMs) {
     const bounds = chartWindowBounds(windowData);
-    const nowMs = Date.now();
-    if (!bounds || nowMs < bounds.min || nowMs > bounds.max) {
-      return samples;
-    }
-
-    const latestSample = samples[samples.length - 1];
     const latestMs = PACE_LOGIC.dateMs(latestSample?.collectedAt);
-    if (latestMs !== null && nowMs <= latestMs) {
-      return samples;
+    if (
+      !bounds ||
+      !Number.isFinite(atMs) ||
+      atMs < bounds.min ||
+      atMs > bounds.max ||
+      latestMs === null ||
+      atMs <= latestMs
+    ) {
+      return null;
     }
 
-    return samples.concat({
-      id: `live-${windowKey}`,
-      collectedAt: new Date(nowMs).toISOString(),
-      source: SOURCE_MARKERS.dashboardLive,
-      windows: {
-        [windowKey]: windowData,
-      },
-    });
+    const paceRatio = PACE_LOGIC.paceRatioForWindow(windowData, atMs);
+    return paceRatio === null
+      ? null
+      : { live: true, paceRatio, x: atMs, y: paceRatio };
+  }
+
+  function paceChartPointsWithLivePoint(
+    historicalPoints,
+    latestSample,
+    windowData,
+    atMs,
+  ) {
+    const points = Array.isArray(historicalPoints) ? historicalPoints : [];
+    const livePoint = livePaceChartPoint(latestSample, windowData, atMs);
+    return livePoint ? points.concat(livePoint) : points.slice();
   }
 
   function paceChartPoints(samples, windowKey) {
@@ -346,13 +341,14 @@
     LOW_SAMPLE_CHART_COPY,
     PERFECT_PACE_RATIO,
     chartColors,
-    chartSamplesWithLivePoint,
     chartWindowBounds,
     formatPaceRatio,
     formatTime,
     hasCappedPacePoints,
+    livePaceChartPoint,
     paceChartDataset,
     paceChartPoints,
+    paceChartPointsWithLivePoint,
     previewPaceChartPoints,
     ratioChartBounds,
     resetWindowSamples,
