@@ -7,175 +7,11 @@
       "Pace Pets dashboard chart data must load before dashboard-chart.js.",
     );
   }
-
-  const DEFAULT_CHART_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-
-  function chartWindowRange(windowData) {
-    return (
-      CHART_DATA.chartWindowBounds(windowData) || {
-        min: Date.now() - DEFAULT_CHART_WINDOW_MS,
-        max: Date.now(),
-      }
+  const CHART_CONFIG = globalThis.PacePetsDashboardChartConfig;
+  if (!CHART_CONFIG) {
+    throw new Error(
+      "Pace Pets dashboard chart config must load before dashboard-chart.js.",
     );
-  }
-
-  function chartTooltipOptions(colors) {
-    return {
-      backgroundColor: colors.tooltipBg,
-      bodyColor: colors.tooltipText,
-      borderColor: colors.tooltipBorder,
-      borderWidth: 1,
-      caretSize: 5,
-      cornerRadius: 6,
-      displayColors: false,
-      padding: 8,
-      titleColor: colors.tooltipText,
-      bodyFont: {
-        size: 12,
-        weight: "560",
-      },
-      titleFont: {
-        size: 12,
-        weight: "600",
-      },
-      callbacks: {
-        label(context) {
-          const paceRatio = context.raw?.paceRatio ?? context.parsed.y;
-          const capped =
-            context.raw?.cappedHigh === true || context.raw?.cappedLow === true;
-          return capped
-            ? `Pace: ${CHART_DATA.formatPaceRatio(paceRatio)} (capped)`
-            : `Pace: ${CHART_DATA.formatPaceRatio(paceRatio)}`;
-        },
-        title(items) {
-          return items[0] ? CHART_DATA.formatTime(items[0].parsed.x) : "";
-        },
-      },
-    };
-  }
-
-  function xScaleOptions({ max, min }) {
-    return {
-      type: "linear",
-      min,
-      max,
-      afterBuildTicks(scale) {
-        scale.ticks = [{ value: min }, { value: max }];
-      },
-      border: {
-        display: false,
-      },
-      grid: {
-        display: false,
-      },
-      ticks: {
-        display: false,
-      },
-    };
-  }
-
-  function yGridOptions(colors) {
-    return {
-      color(context) {
-        return context.tick.value === CHART_DATA.PERFECT_PACE_RATIO
-          ? colors.perfectLine
-          : "transparent";
-      },
-      drawTicks: false,
-      lineWidth(context) {
-        return context.tick.value === CHART_DATA.PERFECT_PACE_RATIO ? 1 : 0;
-      },
-    };
-  }
-
-  function yScaleOptions(yBounds, colors) {
-    return {
-      min: yBounds.min,
-      max: yBounds.max,
-      afterBuildTicks(scale) {
-        scale.ticks = [
-          { value: yBounds.min },
-          { value: CHART_DATA.PERFECT_PACE_RATIO },
-          { value: yBounds.max },
-        ];
-      },
-      border: {
-        display: false,
-      },
-      grid: yGridOptions(colors),
-      ticks: {
-        display: false,
-      },
-    };
-  }
-
-  function usageChartConfig(points, windowData) {
-    const colors = CHART_DATA.chartColors();
-    const yBounds = CHART_DATA.ratioChartBounds(points);
-    return {
-      type: "line",
-      data: {
-        datasets: [CHART_DATA.paceChartDataset(points, colors, yBounds)],
-      },
-      options: {
-        animation: false,
-        interaction: {
-          axis: "x",
-          intersect: false,
-          mode: "nearest",
-        },
-        maintainAspectRatio: false,
-        normalized: true,
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: chartTooltipOptions(colors),
-        },
-        scales: {
-          x: xScaleOptions(chartWindowRange(windowData)),
-          y: yScaleOptions(yBounds, colors),
-        },
-      },
-    };
-  }
-
-  function emptyUsageChartConfig(windowData) {
-    const colors = CHART_DATA.chartColors();
-    const yBounds = CHART_DATA.ratioChartBounds([]);
-    return {
-      type: "line",
-      data: {
-        datasets: [
-          {
-            ...CHART_DATA.paceChartDataset([], colors, yBounds),
-            data: [],
-          },
-        ],
-      },
-      options: {
-        animation: false,
-        interaction: {
-          axis: "x",
-          intersect: false,
-          mode: "nearest",
-        },
-        maintainAspectRatio: false,
-        normalized: true,
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            enabled: false,
-          },
-        },
-        scales: {
-          x: xScaleOptions(chartWindowRange(windowData)),
-          y: yScaleOptions(yBounds, colors),
-        },
-      },
-    };
   }
 
   class UsageChartRenderer {
@@ -184,6 +20,7 @@
       this.chartFrame = chartFrame;
       this.chartState = chartState;
       this.windowSpecs = windowSpecs;
+      this.historyContext = null;
       this.usageChart = null;
     }
 
@@ -208,7 +45,10 @@
       this.usageChart = null;
     }
 
-    setEmpty(message) {
+    setEmpty(message, { preserveHistoryContext = false } = {}) {
+      if (!preserveHistoryContext) {
+        this.historyContext = null;
+      }
       this.destroy();
       this.chartFrame.classList.add("empty");
       this.chartFrame.classList.remove("empty-data");
@@ -254,7 +94,8 @@
       this.usageChart.update();
     }
 
-    renderEmptyData({ windowData = null, windowKey }) {
+    renderEmptyData({ atMs = Date.now(), windowData = null, windowKey }) {
+      this.historyContext = null;
       const spec = this.windowSpecs[windowKey];
       if (!globalThis.Chart) {
         this.setEmpty("Chart.js did not load from the extension asset.");
@@ -269,10 +110,15 @@
         `${spec.chartSampleLabel} pace ratio across active reset window with no data`,
       );
       this.chartState.hidden = true;
-      this.updateChart(emptyUsageChartConfig(windowData));
+      this.updateChart(CHART_CONFIG.emptyUsageChartConfig(windowData, atMs));
     }
 
-    renderPoints(points, windowKey, windowData, { preview = false } = {}) {
+    renderPoints(
+      points,
+      windowKey,
+      windowData,
+      { atMs = Date.now(), preview = false } = {},
+    ) {
       const spec = this.windowSpecs[windowKey];
       if (!globalThis.Chart) {
         this.setEmpty("Chart.js did not load from the extension asset.");
@@ -285,7 +131,7 @@
       }
 
       this.showChartCanvas(spec, preview);
-      const config = usageChartConfig(points, windowData);
+      const config = CHART_CONFIG.usageChartConfig(points, windowData, atMs);
       const yBounds = config.options.scales.y;
       const hasCappedPoints = CHART_DATA.hasCappedPacePoints(points, yBounds);
       this.chartCanvas.setAttribute(
@@ -295,46 +141,30 @@
       this.updateChart(config);
     }
 
-    render(samples, windowKey, windowData) {
-      this.renderPoints(
-        CHART_DATA.paceChartPoints(samples, windowKey),
-        windowKey,
-        windowData,
-      );
-    }
-
     renderPreview({
       atMs = Date.now(),
       paceRatio,
       summaryWindowKey,
       windowData,
     }) {
+      this.historyContext = null;
       const points = CHART_DATA.previewPaceChartPoints(paceRatio, windowData, {
         atMs,
       });
       this.renderPoints(points, summaryWindowKey, windowData, {
+        atMs,
         preview: true,
       });
     }
 
     renderHistory({
+      atMs = Date.now(),
       hasResetTiming,
       history,
       summaryWindow,
       summaryWindowKey,
     }) {
       const chartSpec = this.windowSpecs[summaryWindowKey];
-      const samples = CHART_DATA.resetWindowSamples(
-        history,
-        summaryWindowKey,
-        summaryWindow,
-      );
-      const chartSamples = CHART_DATA.chartSamplesWithLivePoint(
-        samples,
-        summaryWindowKey,
-        summaryWindow,
-      );
-
       if (!summaryWindow) {
         this.setEmpty(`Waiting for ${chartSpec.chartSampleLabel} usage.`);
         return;
@@ -347,12 +177,82 @@
         return;
       }
 
-      if (chartSamples.length < 2) {
-        this.setEmpty(CHART_DATA.LOW_SAMPLE_CHART_COPY);
+      const samples = CHART_DATA.resetWindowSamples(
+        history,
+        summaryWindowKey,
+        summaryWindow,
+      );
+      const historicalPoints = CHART_DATA.paceChartPoints(
+        samples,
+        summaryWindowKey,
+      );
+      this.historyContext = {
+        historicalPoints,
+        latestSample: samples[samples.length - 1] || null,
+        summaryWindow,
+        summaryWindowKey,
+      };
+      const points = this.historyPointsAt(atMs);
+      if (points.length < 2) {
+        this.setEmpty(CHART_DATA.LOW_SAMPLE_CHART_COPY, {
+          preserveHistoryContext: true,
+        });
         return;
       }
 
-      this.render(chartSamples, summaryWindowKey, summaryWindow);
+      this.renderPoints(points, summaryWindowKey, summaryWindow, { atMs });
+    }
+
+    historyPointsAt(atMs) {
+      const context = this.historyContext;
+      return context
+        ? CHART_DATA.paceChartPointsWithLivePoint(
+            context.historicalPoints,
+            context.latestSample,
+            context.summaryWindow,
+            atMs,
+          )
+        : [];
+    }
+
+    refreshHistoryLivePoint({ atMs, summaryWindow, summaryWindowKey }) {
+      const context = this.historyContext;
+      if (
+        !context ||
+        context.summaryWindowKey !== summaryWindowKey ||
+        context.summaryWindow?.resetsAt !== summaryWindow?.resetsAt
+      ) {
+        return false;
+      }
+
+      const points = this.historyPointsAt(atMs);
+      if (points.length < 2) {
+        this.setEmpty(CHART_DATA.LOW_SAMPLE_CHART_COPY, {
+          preserveHistoryContext: true,
+        });
+        return false;
+      }
+
+      this.usageChart = this.usageChart || this.registeredUsageChart();
+      if (!this.usageChart) {
+        this.renderPoints(points, summaryWindowKey, summaryWindow, { atMs });
+        return true;
+      }
+
+      const config = CHART_CONFIG.usageChartConfig(points, summaryWindow, atMs);
+      const yBounds = config.options.scales.y;
+      this.usageChart.data.datasets = config.data.datasets;
+      this.usageChart.options.scales.y = yBounds;
+      this.chartCanvas.setAttribute(
+        "aria-label",
+        this.chartAriaLabel(
+          this.windowSpecs[summaryWindowKey],
+          false,
+          CHART_DATA.hasCappedPacePoints(points, yBounds),
+        ),
+      );
+      this.usageChart.update("none");
+      return true;
     }
   }
 
@@ -362,6 +262,7 @@
       renderEmptyData: renderer.renderEmptyData.bind(renderer),
       renderHistory: renderer.renderHistory.bind(renderer),
       renderPreview: renderer.renderPreview.bind(renderer),
+      refreshHistoryLivePoint: renderer.refreshHistoryLivePoint.bind(renderer),
       setEmpty: renderer.setEmpty.bind(renderer),
     });
   }

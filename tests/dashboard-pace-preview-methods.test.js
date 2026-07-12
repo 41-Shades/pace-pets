@@ -122,6 +122,29 @@ function splatPreviewController() {
 }
 
 describe("Dashboard forced pace previews", () => {
+  it("uses canonical percent text while preserving fractional bar width", () => {
+    const Controller = globalThis.PacePetsDashboardPaceController;
+    const controller = new Controller({ elements: controllerElements() });
+
+    controller.setPercent(
+      controller.elements.timePercent,
+      controller.elements.timeBar,
+      "50.6",
+    );
+    expect(controller.elements.timePercent.textContent).toBe("51%");
+    expect(controller.elements.timeBar.style.width).toBe("50.6%");
+
+    controller.setPercent(
+      controller.elements.timePercent,
+      controller.elements.timeBar,
+      "",
+    );
+    expect(controller.elements.timePercent.textContent).toBe("--");
+    expect(controller.elements.timeBar.style.width).toBe("0%");
+  });
+});
+
+describe("Dashboard forced state rendering", () => {
   it("makes forced Splat preview time available before replaying entry effects", () => {
     const Controller = globalThis.PacePetsDashboardPaceController;
     const data = globalThis.PacePetsDashboardPaceData;

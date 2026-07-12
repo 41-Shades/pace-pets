@@ -17,6 +17,12 @@
   if (!PERSISTED_TEXT) {
     throw new Error("Codex persisted text must load before refresh-status.js.");
   }
+  const HELD_ZERO_STATE = root.PacePetsHeldZeroState;
+  if (!HELD_ZERO_STATE) {
+    throw new Error(
+      "Held zero-state contract must load before refresh-status.js.",
+    );
+  }
 
   const REFRESH_STATUS_STORAGE_KEY = "codexUsageRefreshStatus";
   const INITIAL_MESSAGE = "Waiting for first refresh.";
@@ -61,11 +67,6 @@
     return Number.isFinite(paceRatio) && paceRatio >= 0 ? paceRatio : null;
   }
 
-  function normalizedSampleId(value) {
-    const sampleId = safeText(value);
-    return sampleId || null;
-  }
-
   function initialState() {
     return {
       ok: false,
@@ -76,8 +77,7 @@
       windows: null,
       badgeWindowKey: null,
       badgePaceRatio: null,
-      pacePresentationAt: null,
-      pacePresentationSampleId: null,
+      heldZeroStates: {},
       sampleCount: 0,
       stored: null,
     };
@@ -86,9 +86,8 @@
   function successState({
     badgePaceRatio = null,
     badgeWindowKey = null,
+    heldZeroStates = {},
     refreshedAt,
-    pacePresentationAt = refreshedAt,
-    pacePresentationSampleId = null,
     sampleCount = 0,
     stored = false,
     windows = null,
@@ -102,14 +101,16 @@
       windows,
       badgeWindowKey,
       badgePaceRatio,
-      pacePresentationAt,
-      pacePresentationSampleId,
+      heldZeroStates: HELD_ZERO_STATE.normalizeHeldZeroStates(heldZeroStates),
       sampleCount,
       stored,
     };
   }
 
-  function failureState(error, refreshedAt = new Date().toISOString()) {
+  function failureState(
+    error,
+    { heldZeroStates = {}, refreshedAt = new Date().toISOString() } = {},
+  ) {
     return {
       ok: false,
       message: safeFailureMessage(error),
@@ -119,8 +120,7 @@
       windows: null,
       badgeWindowKey: null,
       badgePaceRatio: null,
-      pacePresentationAt: null,
-      pacePresentationSampleId: null,
+      heldZeroStates: HELD_ZERO_STATE.normalizeHeldZeroStates(heldZeroStates),
       sampleCount: 0,
       stored: null,
     };
@@ -149,35 +149,19 @@
         ? normalizedBadgeWindowKey(value.badgeWindowKey)
         : null,
       badgePaceRatio: ok ? normalizedPaceRatio(value.badgePaceRatio) : null,
-      pacePresentationAt: ok ? isoDate(value.pacePresentationAt) : null,
-      pacePresentationSampleId: ok
-        ? normalizedSampleId(value.pacePresentationSampleId)
-        : null,
+      heldZeroStates: HELD_ZERO_STATE.normalizeHeldZeroStates(
+        value.heldZeroStates,
+      ),
       sampleCount: normalizeSampleCount(value.sampleCount),
       stored: normalizedStored(value.stored),
     };
   }
 
-  function pacePresentationAt(normalized, presentation) {
-    return (
-      presentation?.pacePresentationAt ||
-      normalized.pacePresentationAt ||
-      normalized.refreshedAt
-    );
-  }
-
-  function pacePresentationSampleId(normalized, presentation) {
-    return (
-      presentation?.pacePresentationSampleId ||
-      normalized.pacePresentationSampleId
-    );
-  }
-
-  function pacePresentationSampleCount(normalized, presentation) {
+  function presentationSampleCount(normalized, presentation) {
     return presentation?.sampleCount ?? normalized.sampleCount;
   }
 
-  function statusWithPacePresentation(refreshStatus, presentation) {
+  function statusWithBadgePresentation(refreshStatus, presentation) {
     const normalized = normalizeRefreshStatus(refreshStatus);
     if (!normalized || normalized.ok !== true) {
       return null;
@@ -187,12 +171,8 @@
       ...normalized,
       badgePaceRatio: presentation?.badgePaceRatio,
       badgeWindowKey: presentation?.badgeWindowKey,
-      pacePresentationAt: pacePresentationAt(normalized, presentation),
-      pacePresentationSampleId: pacePresentationSampleId(
-        normalized,
-        presentation,
-      ),
-      sampleCount: pacePresentationSampleCount(normalized, presentation),
+      heldZeroStates: presentation?.heldZeroStates || normalized.heldZeroStates,
+      sampleCount: presentationSampleCount(normalized, presentation),
     });
   }
 
@@ -207,7 +187,7 @@
     normalizeRefreshStatus,
     safeFailureMessage,
     safeText,
-    statusWithPacePresentation,
+    statusWithBadgePresentation,
     successState,
   });
 })(globalThis);

@@ -1,7 +1,6 @@
 (() => {
   "use strict";
 
-  const DASHBOARD_STATUS_REFRESH_INTERVAL_MS = 60 * 1000;
   const AUDIO_PRELOAD_FAILURE_WARNING =
     "Could not preload dashboard transition audio.";
   const INITIAL_AUDIO_PREPARATION_FAILURE_WARNING =
@@ -32,8 +31,11 @@
       this.STATUS_TEXT = this.DASHBOARD_STATUS.STATUS_TEXT;
       this.WINDOW_SPECS = this.USAGE_WINDOWS.WINDOW_SPECS;
       this.currentHistory = null;
+      this.currentHeldZeroStates = {};
       this.currentRefreshStatus = null;
       this.dashboardPresentationAuthoritative = true;
+      this.dashboardRefreshGeneration = 0;
+      this.dashboardRefreshTimer = null;
       this.dashboardStateMutationInProgress = false;
       this.currentCheckerboardRevealWhiteTransparent = false;
       this.currentBrakeIntensityPreview = null;
@@ -345,11 +347,7 @@
 
     start() {
       this.bindEvents();
-      window.setInterval(() => {
-        this.refreshDashboardTimeSensitiveViews().catch((error) =>
-          this.renderHistoryLoadFailure(error),
-        );
-      }, DASHBOARD_STATUS_REFRESH_INTERVAL_MS);
+      this.scheduleNextDashboardRefresh();
       this.loadInitialDashboard().catch((error) =>
         this.renderHistoryLoadFailure(error),
       );

@@ -60,14 +60,14 @@
     }
 
     setPercent(element, bar, value) {
-      if (value === null || value === undefined || !Number.isFinite(value)) {
+      const bounded = PacePetsLogic.boundedPercent(value);
+      if (bounded === null) {
         element.textContent = "--";
         bar.style.width = "0%";
         return;
       }
 
-      const bounded = Math.max(0, Math.min(100, value));
-      element.textContent = `${Math.round(bounded)}%`;
+      element.textContent = PacePetsLogic.formatDisplayPercent(bounded);
       bar.style.width = `${bounded}%`;
     }
 

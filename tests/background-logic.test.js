@@ -187,7 +187,83 @@ describe("PacePetsBackgroundLogic badge selection", () => {
   });
 });
 
+describe("PacePetsBackgroundLogic display-scale attention", () => {
+  it("enters attention mode only when the displayed ratio is below 0.55", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const atMs = Date.parse("2026-05-25T12:00:00.000Z");
+    const windowData = (remainingPercent) => ({
+      remainingPercent,
+      resetsAt: "2026-05-25T12:30:00.000Z",
+      windowMinutes: 300,
+    });
+    const badgeDisplay = (fiveHourRemainingPercent) =>
+      logic.badgeDisplayForWindows({
+        atMs,
+        forcedBadgeState: null,
+        history: { samples: [] },
+        preferredWindowKey: "weekly",
+        windows: {
+          fiveHour: windowData(fiveHourRemainingPercent),
+          weekly: windowData(10),
+        },
+      });
+
+    const roundedBoundary = badgeDisplay(5.49);
+    expect(roundedBoundary.badgeText).toBe("1.00");
+    expect(roundedBoundary.windowKey).toBe("weekly");
+
+    const displayedCritical = badgeDisplay(5.44);
+    expect(displayedCritical.badgeText).toBe("5h");
+    expect(displayedCritical.badgePaceRatio).toBeCloseTo(0.544);
+    expect(displayedCritical.windowKey).toBe("fiveHour");
+  });
+});
+
 describe("PacePetsBackgroundLogic special badge states", () => {
+  it("derives held-state candidates from real windows, not badge previews", () => {
+    const logic = globalThis.PacePetsBackgroundLogic;
+    const atMs = Date.parse("2026-05-25T12:00:00.000Z");
+    const windows = {
+      fiveHour: {
+        remainingPercent: 0,
+        resetsAt: "2026-05-25T12:02:00.000Z",
+        windowMinutes: 300,
+      },
+    };
+
+    const criticalDisplay = logic.badgeDisplayForWindows({
+      atMs,
+      criticalBadgeWindow: true,
+      forcedBadgeState: null,
+      history: { samples: [] },
+      preferredWindowKey: "weekly",
+      windows,
+    });
+    expect(criticalDisplay.badgeText).toBe("5h");
+    expect(criticalDisplay.presentedStateKeysByWindow).toEqual({
+      fiveHour: "splat",
+    });
+
+    const forcedDisplay = logic.badgeDisplayForWindows({
+      atMs,
+      forcedBadgeState: {
+        badgeColor: "#000000",
+        badgeText: "X",
+        paceRatio: 9,
+        state: { title: "Forced" },
+      },
+      history: { samples: [] },
+      preferredWindowKey: "fiveHour",
+      windows,
+    });
+    expect(forcedDisplay.badgeText).toBe("X");
+    expect(forcedDisplay.presentedStateKeysByWindow).toEqual({
+      fiveHour: "splat",
+    });
+  });
+});
+
+describe("PacePetsBackgroundLogic special badge rendering", () => {
   it("keeps an expired reset window muted when its pace ratio is unavailable", () => {
     const logic = globalThis.PacePetsBackgroundLogic;
     const states = globalThis.PacePetsLogic.PACE_STATES;

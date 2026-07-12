@@ -5,15 +5,19 @@ import { installExtensionRuntimeHooks } from "./helpers/extension-runtime.js";
 installExtensionRuntimeHooks();
 
 describe("CodexRefreshStatus states", () => {
-  it("builds observable refresh success and failure states", () => {
+  it("builds an observable refresh success", () => {
     const status = globalThis.CodexRefreshStatus;
 
     expect(
       status.successState({
         badgePaceRatio: 0.75,
         badgeWindowKey: "weekly",
-        pacePresentationAt: "2026-05-25T12:00:30.000Z",
-        pacePresentationSampleId: "sample-1",
+        heldZeroStates: {
+          weekly: {
+            resetsAt: "2026-05-25T13:00:00.000Z",
+            stateKey: "splat",
+          },
+        },
         refreshedAt: "2026-05-25T12:00:00.000Z",
         sampleCount: 3,
         stored: true,
@@ -27,12 +31,21 @@ describe("CodexRefreshStatus states", () => {
       refreshedAt: "2026-05-25T12:00:00.000Z",
       badgeWindowKey: "weekly",
       badgePaceRatio: 0.75,
-      pacePresentationAt: "2026-05-25T12:00:30.000Z",
-      pacePresentationSampleId: "sample-1",
+      heldZeroStates: {
+        weekly: {
+          resetsAt: "2026-05-25T13:00:00.000Z",
+          stateKey: "splat",
+        },
+      },
       sampleCount: 3,
       stored: true,
     });
+  });
+});
 
+describe("CodexRefreshStatus failure state", () => {
+  it("builds an observable failure while preserving semantic holds", () => {
+    const status = globalThis.CodexRefreshStatus;
     const failure = status.failureState(
       {
         message:
@@ -40,7 +53,15 @@ describe("CodexRefreshStatus states", () => {
         authFailure: true,
         statusCode: 401,
       },
-      "2026-05-25T12:00:00.000Z",
+      {
+        heldZeroStates: {
+          weekly: {
+            resetsAt: "2026-05-25T13:00:00.000Z",
+            stateKey: "singularity",
+          },
+        },
+        refreshedAt: "2026-05-25T12:00:00.000Z",
+      },
     );
 
     expect(failure).toMatchObject({
@@ -51,8 +72,12 @@ describe("CodexRefreshStatus states", () => {
       windows: null,
       badgeWindowKey: null,
       badgePaceRatio: null,
-      pacePresentationAt: null,
-      pacePresentationSampleId: null,
+      heldZeroStates: {
+        weekly: {
+          resetsAt: "2026-05-25T13:00:00.000Z",
+          stateKey: "singularity",
+        },
+      },
       sampleCount: 0,
       stored: null,
     });
@@ -60,7 +85,9 @@ describe("CodexRefreshStatus states", () => {
     expect(failure.message).not.toContain("second-secret");
     expect(failure.message).toContain("[redacted]");
   });
+});
 
+describe("CodexRefreshStatus normalization", () => {
   it("normalizes persisted refresh status shape", () => {
     expect(
       globalThis.CodexRefreshStatus.normalizeRefreshStatus({
@@ -71,8 +98,12 @@ describe("CodexRefreshStatus states", () => {
         refreshedAt: "2026-05-25T11:59:00.000Z",
         badgeWindowKey: "fiveHour",
         badgePaceRatio: "1.25",
-        pacePresentationAt: "2026-05-25T12:00:00.000Z",
-        pacePresentationSampleId: "sample-2",
+        heldZeroStates: {
+          weekly: {
+            resetsAt: "2026-05-25T13:00:00.000Z",
+            stateKey: "invalid",
+          },
+        },
         sampleCount: "3",
         stored: false,
       }),
@@ -84,20 +115,19 @@ describe("CodexRefreshStatus states", () => {
       refreshedAt: "2026-05-25T11:59:00.000Z",
       badgeWindowKey: null,
       badgePaceRatio: null,
-      pacePresentationAt: null,
-      pacePresentationSampleId: null,
+      heldZeroStates: {},
       sampleCount: 3,
       stored: false,
     });
   });
 });
 
-describe("CodexRefreshStatus pace presentation", () => {
-  it("normalizes successful badge presentation metadata", () => {
+describe("CodexRefreshStatus badge presentation", () => {
+  it("normalizes successful badge and held-state metadata", () => {
     const status = globalThis.CodexRefreshStatus;
 
     expect(
-      status.statusWithPacePresentation(
+      status.statusWithBadgePresentation(
         {
           ok: true,
           message: status.SUCCESS_STORED_MESSAGE,
@@ -108,8 +138,12 @@ describe("CodexRefreshStatus pace presentation", () => {
         {
           badgePaceRatio: "1.0625",
           badgeWindowKey: "weekly",
-          pacePresentationAt: "2026-05-25T12:01:00.000Z",
-          pacePresentationSampleId: "sample-1",
+          heldZeroStates: {
+            fiveHour: {
+              resetsAt: "2026-05-25T17:00:00.000Z",
+              stateKey: "perfectZero",
+            },
+          },
           sampleCount: 2,
         },
       ),
@@ -117,22 +151,40 @@ describe("CodexRefreshStatus pace presentation", () => {
       ok: true,
       badgePaceRatio: 1.0625,
       badgeWindowKey: "weekly",
-      pacePresentationAt: "2026-05-25T12:01:00.000Z",
-      pacePresentationSampleId: "sample-1",
+      heldZeroStates: {
+        fiveHour: {
+          resetsAt: "2026-05-25T17:00:00.000Z",
+          stateKey: "perfectZero",
+        },
+      },
       sampleCount: 2,
       stored: true,
     });
 
     expect(
-      status.statusWithPacePresentation(
+      status.statusWithBadgePresentation(
         {
           ok: false,
           message: "failed",
           refreshedAt: "2026-05-25T12:00:00.000Z",
         },
-        { pacePresentationAt: "2026-05-25T12:01:00.000Z" },
+        { heldZeroStates: {} },
       ),
     ).toBeNull();
+  });
+
+  it("drops legacy presentation timestamps instead of retaining two paths", () => {
+    const normalized = globalThis.CodexRefreshStatus.normalizeRefreshStatus({
+      message: "Stored usage history locally.",
+      ok: true,
+      pacePresentationAt: "2026-05-25T12:01:00.000Z",
+      pacePresentationSampleId: "sample-1",
+      refreshedAt: "2026-05-25T12:00:00.000Z",
+    });
+
+    expect(normalized.heldZeroStates).toEqual({});
+    expect(normalized).not.toHaveProperty("pacePresentationAt");
+    expect(normalized).not.toHaveProperty("pacePresentationSampleId");
   });
 });
 

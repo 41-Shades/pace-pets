@@ -216,26 +216,17 @@
       windowKey,
       windowData,
     );
-    const controlledPresentation =
-      PACE_LOGIC.controlledPacePresentationForWindow(windowData, {
-        allowPerfectZero,
-        atMs,
-      });
-    const paceRatio = PACE_LOGIC.paceRatioForWindow(windowData, atMs);
-    const state =
-      controlledPresentation?.state ||
-      PACE_LOGIC.paceStatePresentationForRatio(paceRatio);
-    const badgePaceRatio = controlledPresentation
-      ? controlledPresentation.displayRatio
-      : paceRatio;
+    const presentation = PACE_LOGIC.pacePresentationForWindow(windowData, {
+      allowPerfectZero,
+      atMs,
+    });
+    const { displayRatio: badgePaceRatio, paceRatio, state } = presentation;
     const label = BADGE_WINDOW_LABELS[windowKey] || "";
     const ratioBadgeText = PACE_LOGIC.badgeTextForPaceRatio(badgePaceRatio);
     const isAttentionBadge = isAttentionBadgeStateKey(state.key);
 
     return {
-      badgeColor: controlledPresentation
-        ? state.badgeColor
-        : PACE_LOGIC.badgeColorForPaceRatio(paceRatio),
+      badgeColor: state.badgeColor,
       badgePaceRatio,
       badgeText: isAttentionBadge ? label : ratioBadgeText,
       isAttentionBadge,
@@ -256,6 +247,17 @@
   ) {
     return badgeWindowKeys(windows, preferredWindowKey).map((windowKey) =>
       badgeCandidateForWindow(windows, history, windowKey, atMs),
+    );
+  }
+
+  function presentedStateKeysForWindows(windows, history, atMs) {
+    return Object.fromEntries(
+      USAGE_WINDOWS.WINDOW_KEYS.filter((windowKey) => windows?.[windowKey]).map(
+        (windowKey) => [
+          windowKey,
+          badgeCandidateForWindow(windows, history, windowKey, atMs).stateKey,
+        ],
+      ),
     );
   }
 
@@ -342,11 +344,19 @@
       preferredWindowKey,
       atMs,
     );
-    return badgeDisplayForSelection({
+    const display = badgeDisplayForSelection({
       ...prioritizedBadgeSelection(badgeCandidates, preferredWindowKey),
       forcedBadgeState: criticalBadgeWindow ? null : forcedBadgeState,
       preferredWindowKey,
     });
+    return {
+      ...display,
+      presentedStateKeysByWindow: presentedStateKeysForWindows(
+        windows,
+        history,
+        atMs,
+      ),
+    };
   }
 
   root.PacePetsBackgroundLogic = {

@@ -114,7 +114,8 @@
     return {
       badgePaceRatio: badgeDisplay.badgePaceRatio,
       paceRatio: badgeDisplay.paceRatio,
-      pacePresentationAt: new Date(atMs).toISOString(),
+      presentedAtMs: atMs,
+      presentedStateKeysByWindow: badgeDisplay.presentedStateKeysByWindow,
       windowKey: badgeDisplay.windowKey,
     };
   }

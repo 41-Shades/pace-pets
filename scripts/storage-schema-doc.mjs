@@ -19,6 +19,7 @@ const storageContractSources = Object.freeze([
   "collector/extension/integration-config.js",
   "collector/extension/usage-windows.js",
   "collector/extension/usage-values.js",
+  "collector/extension/held-zero-state.js",
   "collector/extension/persisted-text.js",
   "collector/extension/usage-integration-adapters.js",
   "collector/extension/usage-providers.js",
@@ -121,10 +122,6 @@ function refreshStatusExample({ historyStore, usageSample }) {
   const refreshedAt = new Date(
     Date.parse(usageSample.updatedAt) + 5 * 60 * 1000,
   ).toISOString();
-  const pacePresentationAt = new Date(
-    Date.parse(refreshedAt) + 60 * 1000,
-  ).toISOString();
-
   return historyStore.normalizeRefreshStatus({
     ok: true,
     message: "Usage unchanged; history already current.",
@@ -133,8 +130,12 @@ function refreshStatusExample({ historyStore, usageSample }) {
     refreshedAt,
     badgeWindowKey: "weekly",
     badgePaceRatio: 1.06,
-    pacePresentationAt,
-    pacePresentationSampleId: usageSample.updatedAt,
+    heldZeroStates: {
+      weekly: {
+        resetsAt: usageSample.windows.weekly.resetsAt,
+        stateKey: "singularity",
+      },
+    },
     sampleCount: 1,
     stored: false,
   });

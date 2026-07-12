@@ -2,7 +2,6 @@
   "use strict";
 
   const PERFECT_PACE_RATIO = 1;
-  const MS_PER_MINUTE = 60 * 1000;
   const PACE_RATIO_DISPLAY_MAX = 100;
   const PACE_RATIO_CHART_MIN = 0;
   const PACE_RATIO_CHART_MAX = 50;
@@ -57,187 +56,9 @@
     return bounded === null ? null : Math.round(bounded);
   }
 
-  function isPerfectSyncPercentPair(remainingPercent, timePercent) {
-    const displayRemainingPercent = roundedDisplayPercent(remainingPercent);
-    const displayTimePercent = roundedDisplayPercent(timePercent);
-    return (
-      displayRemainingPercent !== null &&
-      displayTimePercent !== null &&
-      displayRemainingPercent === displayTimePercent
-    );
-  }
-
-  function isPerfectZeroPercentPair(remainingPercent, timePercent) {
-    return (
-      isPerfectSyncPercentPair(remainingPercent, timePercent) &&
-      roundedDisplayPercent(remainingPercent) === 0
-    );
-  }
-
-  function isPerfectHundredPercentPair(remainingPercent, timePercent) {
-    return (
-      isPerfectSyncPercentPair(remainingPercent, timePercent) &&
-      roundedDisplayPercent(remainingPercent) === 100
-    );
-  }
-
-  function isUsageAbsoluteZero(remainingPercent) {
-    const numericRemainingPercent =
-      remainingPercent === null ||
-      remainingPercent === undefined ||
-      remainingPercent === ""
-        ? null
-        : Number(remainingPercent);
-    return numericRemainingPercent === 0;
-  }
-
-  function isUsageAbsoluteZeroBeforeFinalTimeBand(
-    remainingPercent,
-    timePercent,
-  ) {
-    const displayTimePercent = roundedDisplayPercent(timePercent);
-    return isUsageAbsoluteZero(remainingPercent) && displayTimePercent !== null
-      ? displayTimePercent > 0
-      : false;
-  }
-
-  function preservesSplatForBlockedPerfectZero(
-    remainingPercent,
-    timePercent,
-    allowPerfectZero,
-  ) {
-    return (
-      !allowPerfectZero &&
-      isUsageAbsoluteZero(remainingPercent) &&
-      isPerfectZeroPercentPair(remainingPercent, timePercent)
-    );
-  }
-
-  function controlledPaceDisplayRatio(state) {
-    return state.key === PACE_STATES.perfectZero.key ||
-      state.key === PACE_STATES.singularity.key ||
-      state.key === PACE_STATES.splat.key
-      ? 0
-      : PERFECT_PACE_RATIO;
-  }
-
-  function splatPacePresentationForValues(
-    remainingPercent,
-    timePercent,
-    allowPerfectZero,
-  ) {
-    const shouldShowSplat =
-      isUsageAbsoluteZeroBeforeFinalTimeBand(remainingPercent, timePercent) ||
-      preservesSplatForBlockedPerfectZero(
-        remainingPercent,
-        timePercent,
-        allowPerfectZero,
-      );
-    return shouldShowSplat
-      ? {
-          displayRatio: controlledPaceDisplayRatio(PACE_STATES.splat),
-          paceRatio: paceRatioForValues(remainingPercent, timePercent),
-          state: PACE_STATES.splat,
-        }
-      : null;
-  }
-
-  function perfectSyncStateForValues(
-    remainingPercent,
-    timePercent,
-    allowPerfectZero,
-  ) {
-    const perfectZero = isPerfectZeroPercentPair(remainingPercent, timePercent);
-    if (perfectZero) {
-      return allowPerfectZero ? PACE_STATES.perfectZero : null;
-    }
-    if (!isPerfectSyncPercentPair(remainingPercent, timePercent)) {
-      return null;
-    }
-    return isPerfectHundredPercentPair(remainingPercent, timePercent)
-      ? PACE_STATES.bigBang
-      : PACE_STATES.sync;
-  }
-
-  function controlledPacePresentationForValues(
-    remainingPercent,
-    timePercent,
-    { allowPerfectZero = true } = {},
-  ) {
-    const splatPresentation = splatPacePresentationForValues(
-      remainingPercent,
-      timePercent,
-      allowPerfectZero,
-    );
-    if (splatPresentation) {
-      return splatPresentation;
-    }
-
-    const state = perfectSyncStateForValues(
-      remainingPercent,
-      timePercent,
-      allowPerfectZero,
-    );
-    if (!state) {
-      return null;
-    }
-
-    return {
-      displayRatio: controlledPaceDisplayRatio(state),
-      paceRatio: paceRatioForValues(remainingPercent, timePercent),
-      state,
-    };
-  }
-
-  function resetCountdownDisplaysZero(value, atMs = Date.now()) {
-    const resetMs = dateMs(value);
-    if (resetMs === null) {
-      return false;
-    }
-
-    const remainingMs = resetMs - atMs;
-    return remainingMs > 0 && Math.floor(remainingMs / MS_PER_MINUTE) === 0;
-  }
-
-  function shouldPromoteSingularityPresentation(
-    windowData,
-    controlledPresentation,
-    atMs,
-  ) {
-    return (
-      controlledPresentation?.state.key === PACE_STATES.perfectZero.key &&
-      resetCountdownDisplaysZero(windowData?.resetsAt, atMs)
-    );
-  }
-
-  function singularityPacePresentation(controlledPresentation) {
-    return {
-      ...controlledPresentation,
-      displayRatio: controlledPaceDisplayRatio(PACE_STATES.singularity),
-      state: PACE_STATES.singularity,
-    };
-  }
-
-  function controlledPacePresentationForWindow(
-    windowData,
-    { allowPerfectZero = true, atMs = Date.now() } = {},
-  ) {
-    if (isResetWindowStale(windowData, atMs)) {
-      return null;
-    }
-
-    const controlledPresentation = controlledPacePresentationForValues(
-      windowData?.remainingPercent,
-      timeRemainingPercentAt(windowData, atMs),
-      { allowPerfectZero },
-    );
-    return shouldPromoteSingularityPresentation(
-      windowData,
-      controlledPresentation,
-      atMs,
-    )
-      ? singularityPacePresentation(controlledPresentation)
-      : controlledPresentation;
+  function formatDisplayPercent(value) {
+    const rounded = roundedDisplayPercent(value);
+    return rounded === null ? "--" : `${rounded}%`;
   }
 
   function isResetWindowStale(windowData, atMs = Date.now()) {
@@ -264,6 +85,13 @@
     return Number.isFinite(numericValue) ? numericValue : null;
   }
 
+  function displayScalePaceRatio(value) {
+    const numericValue = finitePaceRatio(value);
+    return numericValue === null
+      ? null
+      : Number(Math.max(0, numericValue).toFixed(2));
+  }
+
   function formatPaceRatioValue(
     value,
     {
@@ -285,7 +113,7 @@
       return `<0.01${suffix}`;
     }
 
-    return `${boundedValue.toFixed(2)}${suffix}`;
+    return `${displayScalePaceRatio(boundedValue).toFixed(2)}${suffix}`;
   }
 
   function badgeTextForPaceRatio(paceRatio) {
@@ -296,34 +124,30 @@
   }
 
   function paceStateForRatio(paceRatio) {
-    const numericValue = finitePaceRatio(paceRatio);
-    if (numericValue === null) {
+    const displayRatio = displayScalePaceRatio(paceRatio);
+    if (displayRatio === null) {
       return PACE_STATES.muted;
     }
 
-    if (numericValue < 0.55) {
+    if (displayRatio < 0.55) {
       return PACE_STATES.criticalBehind;
     }
-    if (numericValue < 0.75) {
+    if (displayRatio < 0.75) {
       return PACE_STATES.wellBehind;
     }
-    if (numericValue < 0.9) {
+    if (displayRatio < 0.9) {
       return PACE_STATES.behind;
     }
-    if (numericValue <= 1.1) {
+    if (displayRatio <= 1.1) {
       return PACE_STATES.on;
     }
-    if (numericValue <= 1.25) {
+    if (displayRatio <= 1.25) {
       return PACE_STATES.ahead;
     }
-    if (numericValue <= 1.55) {
+    if (displayRatio <= 1.55) {
       return PACE_STATES.strongAhead;
     }
     return PACE_STATES.wellAhead;
-  }
-
-  function paceStatePresentationForRatio(paceRatio) {
-    return paceStateForRatio(paceRatio);
   }
 
   function paceStateForClassName(className) {
@@ -331,7 +155,7 @@
   }
 
   function badgeColorForPaceRatio(paceRatio, colors = DEFAULT_BADGE_COLORS) {
-    const state = paceStatePresentationForRatio(paceRatio);
+    const state = paceStateForRatio(paceRatio);
     return colors[state.key] || colors.muted;
   }
 
@@ -363,24 +187,16 @@
     badgeTextForPaceRatio,
     boundedPercent,
     chartPaceRatio,
-    controlledPaceDisplayRatio,
-    controlledPacePresentationForValues,
-    controlledPacePresentationForWindow,
     dateMs,
     elapsedWindowPercentAt,
     finitePaceRatio,
+    formatDisplayPercent,
     formatPaceRatioValue,
-    isPerfectSyncPercentPair,
-    isPerfectHundredPercentPair,
-    isPerfectZeroPercentPair,
-    isUsageAbsoluteZeroBeforeFinalTimeBand,
     isResetWindowStale,
     paceStateForClassName,
-    paceStatePresentationForRatio,
     paceStateForRatio,
     paceRatioForValues,
     paceRatioForWindow,
-    resetCountdownDisplaysZero,
     roundedDisplayPercent,
     timeRemainingPercent,
     timeRemainingPercentAt,

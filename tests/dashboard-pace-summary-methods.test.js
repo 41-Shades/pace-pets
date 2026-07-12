@@ -43,7 +43,7 @@ describe("PacePetsDashboardPaceController blocked zero summary", () => {
 
     expect(summary).toMatchObject({
       level: globalThis.PacePetsLogic.PACE_STATES.splat.className,
-      paceRatioDisplayOverride: 0,
+      paceRatioForDisplay: 0,
       title: "Splat!",
     });
   });
@@ -53,6 +53,7 @@ describe("PacePetsDashboardPaceController blocked zero summary", () => {
     const summary = controller.paceSummaryModel({
       allowPerfectZero: false,
       comparisonPaceRatio: null,
+      heldZeroStateKey: "splat",
       remainingPercent: 0,
       resetCountdownDisplaysZero: false,
       staleWindow: true,
@@ -63,7 +64,7 @@ describe("PacePetsDashboardPaceController blocked zero summary", () => {
     expect(summary).toMatchObject({
       heldZeroState: true,
       level: globalThis.PacePetsLogic.PACE_STATES.splat.className,
-      paceRatioDisplayOverride: 0,
+      paceRatioForDisplay: 0,
       title: "Splat!",
     });
   });
@@ -73,6 +74,7 @@ describe("PacePetsDashboardPaceController blocked zero summary", () => {
     const summary = controller.paceSummaryModel({
       allowPerfectZero: true,
       comparisonPaceRatio: null,
+      heldZeroStateKey: "perfectZero",
       remainingPercent: 0.4,
       resetCountdownDisplaysZero: false,
       staleWindow: true,
@@ -83,7 +85,7 @@ describe("PacePetsDashboardPaceController blocked zero summary", () => {
     expect(summary).toMatchObject({
       heldZeroState: true,
       level: globalThis.PacePetsLogic.PACE_STATES.perfectZero.className,
-      paceRatioDisplayOverride: 0,
+      paceRatioForDisplay: 0,
       title: "Perfect zero",
     });
   });
@@ -93,6 +95,7 @@ describe("PacePetsDashboardPaceController blocked zero summary", () => {
     const summary = controller.paceSummaryModel({
       allowPerfectZero: true,
       comparisonPaceRatio: null,
+      heldZeroStateKey: "singularity",
       remainingPercent: 0.4,
       resetCountdownDisplaysZero: true,
       staleWindow: true,
@@ -103,7 +106,7 @@ describe("PacePetsDashboardPaceController blocked zero summary", () => {
     expect(summary).toMatchObject({
       heldZeroState: true,
       level: globalThis.PacePetsLogic.PACE_STATES.singularity.className,
-      paceRatioDisplayOverride: 0,
+      paceRatioForDisplay: 0,
       resetCountdownOverride: "0d 0h 0m",
       title: "Singularity",
     });
@@ -130,7 +133,25 @@ describe("PacePetsDashboardPaceController stale zero fallback", () => {
     expect(summary.heldZeroState).toBeUndefined();
   });
 
-  it("keeps fractional display-zero usage on the blocked fallback", () => {
+  it("does not reconstruct a stale zero state without an explicit hold", () => {
+    const controller = createController();
+    const summary = controller.paceSummaryModel({
+      allowPerfectZero: true,
+      comparisonPaceRatio: null,
+      remainingPercent: 0,
+      resetCountdownDisplaysZero: true,
+      staleWindow: true,
+      timePercent: 0,
+    });
+
+    expect(summary).toMatchObject({
+      level: globalThis.PacePetsLogic.PACE_STATES.nothingness.className,
+      title: "Nothingness",
+    });
+    expect(summary.heldZeroState).toBeUndefined();
+  });
+
+  it("keeps fractional display-zero usage in Splat when perfect zero is blocked", () => {
     const controller = createController();
     const summary = controller.paceSummaryModel({
       allowPerfectZero: false,
@@ -143,8 +164,9 @@ describe("PacePetsDashboardPaceController stale zero fallback", () => {
     });
 
     expect(summary).toMatchObject({
-      level: globalThis.PacePetsLogic.PACE_STATES.criticalBehind.className,
-      title: "Brake hard!",
+      level: globalThis.PacePetsLogic.PACE_STATES.splat.className,
+      paceRatioForDisplay: 0,
+      title: "Splat!",
     });
   });
 });

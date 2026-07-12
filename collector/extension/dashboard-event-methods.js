@@ -281,6 +281,7 @@
 
     async handleVisibilityChange() {
       if (document.hidden) {
+        this.clearDashboardRefreshTimer?.();
         this.appTooltips.hide();
         this.paceView.pauseHiddenDocumentMotionEffects?.();
         return;
@@ -290,8 +291,8 @@
         await this.refreshDashboardTimeSensitiveViews();
       } catch (error) {
         this.renderHistoryLoadFailure(error);
-        return;
       }
+      this.scheduleNextDashboardRefresh?.();
     },
 
     bindEvents() {
