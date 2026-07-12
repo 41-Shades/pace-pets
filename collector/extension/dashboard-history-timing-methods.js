@@ -57,10 +57,12 @@
     },
 
     updateCurrentHeldZeroStates(history, refreshStatus, windows, atMs) {
-      const previous = globalThis.PacePetsHeldZeroState.mergeHeldZeroStates(
-        this.currentHeldZeroStates,
-        refreshStatus?.heldZeroStates,
-      );
+      const previous =
+        globalThis.PacePetsHeldZeroState.mergeHeldZeroStatesForWindows(
+          windows,
+          this.currentHeldZeroStates,
+          refreshStatus?.heldZeroStates,
+        );
       this.currentHeldZeroStates =
         globalThis.PacePetsHeldZeroState.nextHeldZeroStates(
           previous,

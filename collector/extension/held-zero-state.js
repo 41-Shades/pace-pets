@@ -50,17 +50,23 @@
     return entry && resetsAt === entry.resetsAt ? entry.stateKey : null;
   }
 
-  function mergeHeldZeroStates(...values) {
+  function mergeHeldZeroStatesForWindows(windows, ...values) {
     const merged = {};
-    for (const value of values) {
-      const normalized = normalizeHeldZeroStates(value);
-      for (const [windowKey, candidate] of Object.entries(normalized)) {
+    const normalizedValues = values.map(normalizeHeldZeroStates);
+    for (const windowKey of USAGE_WINDOWS.WINDOW_KEYS) {
+      const resetsAt = USAGE_VALUES.isoDate(windows?.[windowKey]?.resetsAt);
+      if (!resetsAt) {
+        continue;
+      }
+
+      for (const normalized of normalizedValues) {
+        const candidate = normalized[windowKey];
         const current = merged[windowKey];
         if (
-          !current ||
-          current.resetsAt !== candidate.resetsAt ||
-          STATE_PRECEDENCE[candidate.stateKey] >=
-            STATE_PRECEDENCE[current.stateKey]
+          candidate?.resetsAt === resetsAt &&
+          (!current ||
+            STATE_PRECEDENCE[candidate.stateKey] >=
+              STATE_PRECEDENCE[current.stateKey])
         ) {
           merged[windowKey] = candidate;
         }
@@ -112,7 +118,7 @@
   root.PacePetsHeldZeroState = Object.freeze({
     HELD_ZERO_STATE_KEYS,
     isHeldZeroStateKey,
-    mergeHeldZeroStates,
+    mergeHeldZeroStatesForWindows,
     nextHeldZeroStates,
     normalizeHeldZeroStates,
     stateKeyForWindow,

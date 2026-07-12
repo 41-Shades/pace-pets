@@ -132,7 +132,14 @@ describe("PacePetsDashboardApp history presentation time", () => {
 
     const stale = app.updateCurrentHeldZeroStates(
       history,
-      null,
+      {
+        heldZeroStates: {
+          weekly: {
+            resetsAt: "2026-05-24T12:01:00.000Z",
+            stateKey: "splat",
+          },
+        },
+      },
       { weekly: windowData },
       Date.parse("2026-05-25T12:02:00.000Z"),
     );

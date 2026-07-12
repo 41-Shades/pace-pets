@@ -76,21 +76,43 @@ describe("PacePetsHeldZeroState", () => {
       ),
     ).toEqual({});
   });
+});
 
-  it("merges same-reset holds by semantic terminal precedence", () => {
+describe("PacePetsHeldZeroState merging", () => {
+  it("merges current-window holds by semantic terminal precedence", () => {
     const contract = globalThis.PacePetsHeldZeroState;
     const resetsAt = "2026-05-25T12:01:00.000Z";
+    const windows = { weekly: { resetsAt } };
     expect(
-      contract.mergeHeldZeroStates(
+      contract.mergeHeldZeroStatesForWindows(
+        windows,
         { weekly: { resetsAt, stateKey: "perfectZero" } },
         { weekly: { resetsAt, stateKey: "singularity" } },
       ),
     ).toEqual({ weekly: { resetsAt, stateKey: "singularity" } });
     expect(
-      contract.mergeHeldZeroStates(
+      contract.mergeHeldZeroStatesForWindows(
+        windows,
         { weekly: { resetsAt, stateKey: "singularity" } },
         { weekly: { resetsAt, stateKey: "splat" } },
       ),
     ).toEqual({ weekly: { resetsAt, stateKey: "splat" } });
+  });
+
+  it("ignores persisted holds from a different reset identity", () => {
+    const contract = globalThis.PacePetsHeldZeroState;
+    const resetsAt = "2026-05-25T12:01:00.000Z";
+    expect(
+      contract.mergeHeldZeroStatesForWindows(
+        { weekly: { resetsAt } },
+        { weekly: { resetsAt, stateKey: "singularity" } },
+        {
+          weekly: {
+            resetsAt: "2026-05-24T12:01:00.000Z",
+            stateKey: "splat",
+          },
+        },
+      ),
+    ).toEqual({ weekly: { resetsAt, stateKey: "singularity" } });
   });
 });
