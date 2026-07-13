@@ -20,6 +20,7 @@ collector/extension/themes/default/
     ease-up.png
     slow-down-shopping-cart.png
     brake-hard.png
+    big-bang.png
     perfect-sync.png
     perfect-zero.png
     06-slow-down-splat-transparent.png
@@ -56,9 +57,11 @@ The toolbar icon is the first post-install impression, so replacement app icons
 should crop around the essential mascot shape and stay readable at 16x16
 without depending on decorative marks or excess transparent padding.
 
-Pace icons must be PNGs with a transparent background. The dashboard reads their
-state mapping from
-`collector/extension/themes/default/asset-manifest.js`.
+Pace icons must be PNGs with a transparent background. The exact state and
+variant filenames are owned by
+`collector/extension/themes/default/asset-manifest.js`; treat its
+`PACE_ICON_FILES_BY_STATE` and `PACE_ICON_VARIANT_FILES` maps as the source of
+truth.
 Effect assets are also PNGs with transparent backgrounds and are listed in the
 same asset manifest.
 
@@ -85,8 +88,13 @@ After replacing icons, reload the unpacked extension from
 
 If you keep the default filenames, no code changes are needed.
 
-If you rename pace icon files, update `PACE_ICON_FILES_BY_STATE` in
+If you rename a state icon, update `PACE_ICON_FILES_BY_STATE` in
 `collector/extension/themes/default/asset-manifest.js`.
+
+If you rename a dashboard-only icon variant, update
+`PACE_ICON_VARIANT_FILES` in the same asset manifest. The current variants are
+`perfect-zero-glow.png` for `perfectZeroGlow` and
+`06-slow-down-free-fall-transparent.png` for `splatFreeFall`.
 
 If you rename app icon files, update `APP_ICON_FILES_BY_SIZE` in
 `collector/extension/themes/default/asset-manifest.js` and keep

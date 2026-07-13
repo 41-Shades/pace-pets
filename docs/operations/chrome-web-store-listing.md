@@ -18,7 +18,7 @@ Store item ID: `dgemeohjkjclceamjacmfneodafbcbdk`.
 
 ## Short Description
 
-A playful Codex pace companion for usage, reset timing, and toolbar status.
+Tracks sanitized Codex usage history locally in your browser.
 
 ## Overview
 

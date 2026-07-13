@@ -30,11 +30,12 @@ icon to choose whether the badge normally shows the 7d or 5h view. A
 `Brake hard!` window temporarily takes over the badge with its `7d` or `5h`
 label until the critical pace clears.
 
-If the toolbar badge shows `!`, confirm that Chrome is signed in to ChatGPT.
-When the dashboard shows a missing sign-in, failed check, stale check,
-first-run waiting state, or a reset window nearing its end, a small refresh
-control appears beside the status dot so you can check again without waiting
-for the next five-minute refresh. Manual checks are cooldown-limited.
+If the toolbar badge shows `!`, the latest usage refresh failed; it is not a
+pace state. Open the dashboard and use its safe collection-status detail as the
+canonical diagnostic. Confirm that ChatGPT is signed in in the same Chrome
+profile and that Pace Pets has ChatGPT site access, then use `Check now` to
+retry. A successful refresh restores the normal pace badge. A failed refresh
+preserves prior local usage history, and manual checks are cooldown-limited.
 
 ## Custom icons
 

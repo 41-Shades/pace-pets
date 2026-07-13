@@ -95,14 +95,29 @@ Keep version tags and GitHub Releases in sync. Every pushed `v<version>` tag for
 a packaged release must have a matching GitHub Release created from that exact
 tag, and the newest shipped version must be marked Latest.
 
-When publishing a release:
+Use this canonical end-to-end sequence for a packaged release:
 
-1. Push the `v<version>` tag to GitHub.
-2. Create the matching GitHub Release from that existing tag.
-3. Use generated release notes with the previous release tag as the start tag.
-4. Attach package artifacts to the GitHub Release when the release includes a
-   distributable zip.
-5. Confirm GitHub shows the intended newest shipped version as Latest.
+1. Finish the release changes, align the package, lockfile, and manifest
+   versions, and commit the public source with a clean working tree.
+2. Create the local `v<version>` tag on that exact release commit. Do not push
+   the tag yet.
+3. Run the repository's full release gate with `./scripts/chks`.
+4. Run `npm run package:extension` from the clean, locally tagged commit.
+5. Inspect the generated zip, checksum, and release metadata. Confirm the
+   metadata records the intended commit, exact `v<version>` tag, and
+   `workingTreeClean: true`, and use the generated checksum to verify the zip.
+6. Push the release commit and `v<version>` tag to GitHub.
+7. Create the matching GitHub Release from that existing tag, use generated
+   release notes with the previous release tag as the start tag, and attach the
+   inspected package artifacts.
+8. Submit the same inspected zip to the Chrome Web Store or other distribution
+   channel.
+9. Confirm GitHub shows the intended newest shipped version as Latest and that
+   the published store version matches the release.
+
+Do not rebuild the distributable after pushing the tag. If the source, tag, or
+artifact must change, correct the release state and repeat the package and
+inspection steps before publishing.
 
 ## Public Source Guardrails
 
