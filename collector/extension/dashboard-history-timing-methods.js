@@ -11,8 +11,13 @@
   Object.assign(App.prototype, {
     alternatePaceRatioSummary(windows, activeKey, history, atMs = Date.now()) {
       const comparisonKey = this.USAGE_WINDOWS.alternateWindowKey(activeKey);
-      if (!comparisonKey || !windows[comparisonKey]) {
+      if (!comparisonKey) {
         return null;
+      }
+
+      const label = `${this.WINDOW_SPECS[comparisonKey].badge}:`;
+      if (!windows[comparisonKey]) {
+        return { className: "", label, value: "--" };
       }
 
       const presentation = PacePetsLogic.pacePresentationForWindow(
@@ -26,7 +31,6 @@
           atMs,
         },
       );
-      const label = `${this.WINDOW_SPECS[comparisonKey].badge}:`;
       if (presentation.displayRatio === null) {
         return { className: "", label, value: "--" };
       }

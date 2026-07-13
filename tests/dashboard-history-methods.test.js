@@ -103,6 +103,22 @@ function configureSummaryApp(app, { timeRemainingPercent }) {
   return app;
 }
 
+describe("PacePetsDashboardApp alternate pace presentation", () => {
+  it("keeps the five-hour placeholder visible when weekly is selected", () => {
+    const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
+    app.USAGE_WINDOWS = globalThis.CodexUsageWindows;
+    app.WINDOW_SPECS = globalThis.CodexUsageWindows.WINDOW_SPECS;
+
+    expect(
+      app.alternatePaceRatioSummary({}, "weekly", { samples: [] }),
+    ).toEqual({
+      className: "",
+      label: "5h:",
+      value: "--",
+    });
+  });
+});
+
 describe("PacePetsDashboardApp history presentation time", () => {
   it("preserves the current semantic zero state across its reset boundary", () => {
     const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
