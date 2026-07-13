@@ -28,8 +28,9 @@ The Singularity transition is the dashboard-only cinematic effect for the rare
 ## User Experience
 
 The Singularity transition fades into the shared space backdrop over 2 seconds,
-fades dashboard chrome in over 6 seconds, then starts the selected supermassive
-black-hole approach. As glints start falling inward, the dashboard chrome
+holds on blank space for 2 seconds, fades dashboard chrome in over 6 seconds,
+then starts the selected supermassive black-hole approach. As glints start
+falling inward, the dashboard chrome
 pressure-ripples and its real containers begin one continuous split, orbital
 pull, 3D depth recession, and distortion toward the black hole. CSS
 perspective gives the live DOM plane depth, so pieces begin moving backward
@@ -72,8 +73,9 @@ Current sequence target:
 
 1. Prior dashboard state fades out.
 2. Singularity space backdrop fades in.
-3. Dashboard chrome stays hidden until the space fade completes.
-4. Dashboard chrome fades back in.
+3. Dashboard chrome stays hidden for a 2-second blank-space hold after the space
+   fade completes.
+4. Dashboard chrome fades back in over 6 seconds.
 5. A distant black-hole point appears in the background.
 6. The accretion disk spins, brightens, and grows toward the foreground.
 7. Disk turbulence, photon-ring instability, jet flicker, glint stretch, and
@@ -138,9 +140,10 @@ Singularity.
 4. Choose `Singularity`.
 5. If the dashboard tab was hidden, switch to the dashboard tab.
 
-Expected timing: Singularity fades into space over 2 seconds, the dashboard
-chrome fades in over 6 seconds, then the black-hole approach builds for about
-7.6 seconds. A whole-dashboard jitter starts when the black-hole approach
+Expected timing: Singularity fades into space over 2 seconds, holds on blank
+space for 2 seconds, fades the dashboard chrome in over 6 seconds, then the
+black-hole approach builds for about 7.6 seconds. A whole-dashboard jitter
+starts when the black-hole approach
 begins and ramps until chrome collapse starts around the glint suction point.
 The chrome-collapse pressure then begins, and main-panel containers plus
 state-rail items immediately split, orbit inward, recede into CSS perspective,
@@ -193,7 +196,7 @@ The dashboard starts the transition directly from
 dashboard page
   -> playSingularityTransition()
   -> SingularityTransitionRenderer.create({ ... })
-  -> renderer leaves the space backdrop visible
+  -> renderer fades into the space backdrop and holds it alone for 2 seconds
   -> renderer fades dashboard chrome in
   -> renderer starts the WebGL black-hole approach scene
   -> renderer starts live chrome container split/orbit during black-hole approach
@@ -210,8 +213,9 @@ or `desktopCapture` for this effect.
 
 - `collector/extension/dashboard-singularity-transition-renderer.js`: canonical
   Singularity transition renderer. It fades into the normal Singularity
-  page/backdrop over 2 seconds, fades dashboard chrome in over 6 seconds, and
-  starts the black-hole approach scene, pre-collapse jitter ramp, chrome
+  page/backdrop over 2 seconds, holds on blank space for 2 seconds, fades
+  dashboard chrome in over 6 seconds, and starts the black-hole approach scene,
+  pre-collapse jitter ramp, chrome
   collapse, continuous horizon/descent phase, terminal whiteout, and shared
   checkerboard dashboard reveal.
 - `collector/extension/dashboard-checkerboard-reveal.js`: shared dashboard

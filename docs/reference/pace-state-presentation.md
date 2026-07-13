@@ -385,6 +385,14 @@ the running wobble while updating intensity; reduced-motion settings skip debris
 launches. Local dev controls can force Brake hard at exact preview ratios
 `0.55`, `0.45`, `0.35`, `0.25`, `0.15`, `0.05`, and `0.00`.
 
+When dashboard audio is enabled and ready, each extreme canvas burst also plays
+the bounded `brakeExtreme` effects timeline. Its single packaged burst clip runs
+for 3.75 seconds at 0.85 volume with a 750ms final fade. The dashboard preloads
+the timeline with the other transition audio, and leaving Brake hard, disabling
+motion, or otherwise clearing the debris presentation stops the audio with the
+same owned cleanup path. A muted or gesture-blocked dashboard still runs the
+visual burst without sound.
+
 The `sync` / Perfect Sync state keeps its existing gentle status-icon float and
 adds a dashboard-only yellow sunburst on the page background layer behind the
 main panel. The canvas renderer in
@@ -464,16 +472,13 @@ The forced developer override can also render perfect and imperfect context
 states outside the regular pace levels.
 
 The `bigBang` state runs a dashboard-only transition when the dashboard enters
-that state from any other state. The transition immediately hides dashboard
-chrome, plays a full-viewport generated canvas scene with a small bright
-opening flash inside billowing vapor and dust plumes, then follows with a more
-violent broken shock-front burst. It throws only sparks, specks, dust, and stars
-outward, lets the blast take over the viewport, then shrinks the remaining
-energy back into the center as if receding into the distance. The resulting Big
-Bang star field thins into residual matter while the shared full-page space
-backdrop is prepared underneath the opaque Big Bang canvases. The canvases then
-fade away over that real backdrop while the dashboard chrome stays hidden; the
-dashboard fades in later, after the shared space backdrop is already established.
+that state from any other state. The active transition immediately hides
+dashboard chrome, uses a generated 2D Canvas cover for the dark hold, seed, and
+opening ignition, then layers a WebGL ray/bloom expansion over it. The shared
+full-page space backdrop establishes underneath those temporary layers before
+the Canvas and WebGL presentation fade away and dashboard chrome returns. See
+`docs/reference/big-bang-transition.md` for the canonical layer ownership and
+timing contract.
 Same-state refreshes do not replay the transition. Local dev controls expose a
 Video Capture section with a one-shot `Replay Big Bang` action that restarts
 the presentation only when the dashboard is already on Big Bang. If Big Bang is
