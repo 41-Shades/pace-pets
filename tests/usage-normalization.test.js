@@ -12,6 +12,7 @@ describe("CodexWeeklyUsage provider normalization", () => {
         primary: {
           remaining_percent: 42,
           reset_after_seconds: 60 * 60,
+          limit_window_seconds: 5 * 60 * 60,
         },
       },
     };
@@ -310,56 +311,72 @@ describe("CodexWeeklyUsage.normalizeWhamUsage fallbacks", () => {
 });
 
 describe("CodexWeeklyUsage.normalizeWhamUsage duration handling", () => {
-  it("does not treat durationless primary usage as a weekly window", () => {
-    const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
-      subscription: {
-        primary: {
-          remaining_percent: 42,
-          reset_after_seconds: 60 * 60,
-        },
-      },
-    });
-
-    expect(usage.windows.fiveHour).toMatchObject({
-      remainingPercent: 42,
-      resetsAt: "2026-05-25T13:00:00.000Z",
-      windowMinutes: 300,
-    });
-    expect(usage.windows).not.toHaveProperty("weekly");
-  });
-
-  it("does not treat unrelated durationless usage as a weekly window", () => {
-    const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
-      unrelated: {
-        quota: {
-          remaining_percent: 99,
-          reset_after_seconds: 60 * 30,
-        },
-      },
-      subscription: {
-        primary: {
-          remaining_percent: 42,
-          reset_after_seconds: 60 * 60,
-        },
-      },
-    });
-
-    expect(usage.windows.fiveHour).toMatchObject({
-      remainingPercent: 42,
-      resetsAt: "2026-05-25T13:00:00.000Z",
-      windowMinutes: 300,
-    });
-    expect(usage.windows).not.toHaveProperty("weekly");
-  });
-
-  it("rejects canonical windows with mismatched duration metadata", () => {
+  it("rejects durationless primary usage instead of guessing its window", () => {
     expect(() =>
       globalThis.CodexWeeklyUsage.normalizeWhamUsage({
         subscription: {
           primary: {
             remaining_percent: 42,
             reset_after_seconds: 60 * 60,
-            limit_window_seconds: 7 * 24 * 60 * 60,
+          },
+        },
+      }),
+    ).toThrow("ChatGPT usage response changed; Pace Pets needs an update.");
+  });
+
+  it("classifies a primary window as weekly from its reported duration", () => {
+    const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
+      rate_limit: {
+        primary_window: {
+          used_percent: 10,
+          reset_at: "2026-07-20T00:48:40.000Z",
+          window_duration_mins: 7 * 24 * 60,
+        },
+      },
+    });
+
+    expect(usage.windows.weekly).toMatchObject({
+      remainingPercent: 90,
+      resetsAt: "2026-07-20T00:48:40.000Z",
+      windowMinutes: 10080,
+    });
+    expect(usage.windows).not.toHaveProperty("fiveHour");
+  });
+
+  it("classifies inverted primary and secondary labels by duration", () => {
+    const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
+      subscription: {
+        primary: {
+          remaining_percent: 80,
+          reset_at: "2026-07-20T00:48:40.000Z",
+          limit_window_seconds: 7 * 24 * 60 * 60,
+        },
+        secondary: {
+          remaining_percent: 60,
+          reset_at: "2026-07-13T15:00:00.000Z",
+          limit_window_seconds: 5 * 60 * 60,
+        },
+      },
+    });
+
+    expect(usage.windows.weekly).toMatchObject({
+      remainingPercent: 80,
+      windowMinutes: 10080,
+    });
+    expect(usage.windows.fiveHour).toMatchObject({
+      remainingPercent: 60,
+      windowMinutes: 300,
+    });
+  });
+
+  it("rejects canonical windows with unsupported duration metadata", () => {
+    expect(() =>
+      globalThis.CodexWeeklyUsage.normalizeWhamUsage({
+        subscription: {
+          primary: {
+            remaining_percent: 42,
+            reset_after_seconds: 60 * 60,
+            limit_window_seconds: 60 * 60,
           },
         },
       }),

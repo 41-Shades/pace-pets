@@ -4,7 +4,7 @@ Scope: whole repo.
 
 ## Subagents
 
-- Use subagents for independent work that improves speed or quality.
+- Proactively use up to 10 subagents for independent work that can improve speed or quality.
 - Keep ownership distinct; the root agent integrates and verifies.
 
 - If `.maintainer/agent-notes.md` exists, read it first. It is ignored and may
@@ -34,6 +34,7 @@ Scope: whole repo.
 - Follow `docs/guides/testing.md`. Use `npm run shape` for targeted source
   shape validation while developing; run broad checks/preflight only when
   explicitly requested in the current thread.
+- Full validation: `./scripts/chks`.
 - Use browser verification only for diagnosis or browser-rendered changes, not routine confirmation.
 - Prefer runtime logs, extension storage evidence, and static checks over
   screenshot-only verification.

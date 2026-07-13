@@ -334,17 +334,18 @@ const normalizedPrimaryUsage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
     primary: {
       remaining_percent: 42,
       reset_after_seconds: 60 * 60,
+      limit_window_seconds: 5 * 60 * 60,
     },
   },
 });
 assert(
   !normalizedPrimaryUsage.windows.weekly,
-  "Durationless primary usage must not populate the weekly window.",
+  "Five-hour primary usage must not populate the weekly window.",
 );
 assert(
   normalizedPrimaryUsage.windows.fiveHour?.windowMinutes ===
     usageWindows.WINDOW_SPECS.fiveHour.durationMinutes,
-  "Durationless primary usage must populate only the five-hour window.",
+  "Five-hour primary usage must populate only the five-hour window.",
 );
 
 console.log("Smoke checks passed.");

@@ -147,25 +147,31 @@
     };
   }
 
+  function windowSpecForDuration(durationMinutes) {
+    return (
+      Object.values(WINDOW_SPECS).find(
+        (spec) => spec.durationMinutes === durationMinutes,
+      ) || null
+    );
+  }
+
   function normalizeRawWindow(windowData, adapter, observedAtMs) {
     if (!windowData || typeof windowData !== "object") {
       return null;
     }
 
-    const spec = WINDOW_SPECS[adapter.windowKey];
     const remainingPercent = remainingPercentFrom(windowData, adapter);
     const resetMs = resetMsFrom(windowData, adapter, observedAtMs);
     const durationMinutes = durationMinutesFrom(windowData, adapter);
-    if (
-      !spec ||
-      remainingPercent === null ||
-      resetMs === null ||
-      (durationMinutes !== null && durationMinutes !== spec.durationMinutes)
-    ) {
+    const spec = windowSpecForDuration(durationMinutes);
+    if (!spec || remainingPercent === null || resetMs === null) {
       return null;
     }
 
-    return normalizedWindow({ remainingPercent, resetMs }, spec);
+    return {
+      window: normalizedWindow({ remainingPercent, resetMs }, spec),
+      windowKey: spec.key,
+    };
   }
 
   function collectRawWindowCandidates(
@@ -204,26 +210,26 @@
   function chooseMatchingCandidate(
     candidates,
     adapter,
-    usedCandidates,
+    selectionState,
     observedAtMs,
   ) {
     for (const candidate of candidates) {
       if (
-        usedCandidates.has(candidate) ||
+        selectionState.usedCandidates.has(candidate) ||
         !windowPathMatches(candidate, adapter)
       ) {
         continue;
       }
 
-      const normalized = normalizeRawWindow(
+      const classified = normalizeRawWindow(
         candidate.rawWindow,
         adapter,
         observedAtMs,
       );
-      if (normalized) {
+      if (classified && !selectionState.windows[classified.windowKey]) {
         return {
           candidate,
-          normalized,
+          ...classified,
         };
       }
     }
@@ -255,21 +261,18 @@
       adapter.candidateMaxDepth,
     );
     const usedCandidates = new Set();
+    const selectionState = { usedCandidates, windows };
 
     for (const windowAdapter of candidateWindowAdapters(adapter)) {
-      if (windows[windowAdapter.windowKey]) {
-        continue;
-      }
-
       const selected = chooseMatchingCandidate(
         candidates,
         windowAdapter,
-        usedCandidates,
+        selectionState,
         observedAtMs,
       );
       if (selected) {
         usedCandidates.add(selected.candidate);
-        windows[windowAdapter.windowKey] = selected.normalized;
+        windows[selected.windowKey] = selected.window;
       }
     }
   }
@@ -283,13 +286,13 @@
     const observedAtMs = Date.now();
 
     for (const windowAdapter of adapter.windows) {
-      const normalized = normalizeRawWindow(
+      const classified = normalizeRawWindow(
         firstValueAtPaths(rawUsage, windowAdapter.rawPaths),
         windowAdapter,
         observedAtMs,
       );
-      if (normalized) {
-        windows[windowAdapter.windowKey] = normalized;
+      if (classified && !windows[classified.windowKey]) {
+        windows[classified.windowKey] = classified.window;
       }
     }
 

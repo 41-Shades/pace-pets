@@ -48,11 +48,8 @@
     return heading;
   }
 
-  function shouldHideStateRail(controller, activeKey) {
-    return (
-      controller.getCurrentRailHidden?.() === true ||
-      activeKey === DATA.PACE_STATES.nothingness.key
-    );
+  function shouldHideStateRail(controller) {
+    return controller.getCurrentRailHidden?.() === true;
   }
 
   function setStateRailHidden(controller, hidden) {
@@ -203,7 +200,7 @@
         return;
       }
 
-      const railHidden = shouldHideStateRail(this, activeKey);
+      const railHidden = shouldHideStateRail(this);
       setStateRailHidden(this, railHidden);
       if (railHidden) {
         return;

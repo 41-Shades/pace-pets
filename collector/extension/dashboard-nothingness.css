@@ -51,7 +51,23 @@ body.has-nothingness-page-background .chart-frame.empty-data canvas {
   opacity: 0.26;
 }
 
-body.has-nothingness-page-background .usage-panel::after {
+body.has-nothingness-page-background .state-rail {
+  isolation: isolate;
+  position: relative;
+}
+
+body.has-nothingness-page-background
+  .state-rail
+  .state-chip.pace-nothingness.is-active {
+  --pace-color: rgb(248 250 252 / 72%);
+
+  background: rgb(248 250 252 / 3%);
+  border-color: rgb(249 115 22 / 42%);
+  border-left-color: rgb(249 115 22 / 74%);
+}
+
+body.has-nothingness-page-background .usage-panel::after,
+body.has-nothingness-page-background .state-rail::after {
   animation: nothingness-pulse 12s ease-in-out infinite;
   background: #000000;
   border-radius: inherit;
@@ -65,7 +81,10 @@ body.has-nothingness-page-background .usage-panel::after {
 
 html[data-motion="off"]
   body.has-nothingness-page-background
-  .usage-panel::after {
+  .usage-panel::after,
+html[data-motion="off"]
+  body.has-nothingness-page-background
+  .state-rail::after {
   animation: none;
   opacity: 0;
 }
@@ -231,30 +250,30 @@ body.has-nothingness-page-background .metric-title,
 body.has-nothingness-page-background .reset-date-value,
 body.has-nothingness-page-background #prior-reset-time,
 body.has-nothingness-page-background #scheduled-reset-time {
-  color: rgb(248 250 252 / 44%);
+  color: rgb(248 250 252 / 60%);
 }
 
 body.has-nothingness-page-background .reset-label,
 body.has-nothingness-page-background .reset-details dt,
 body.has-nothingness-page-background .pace-burnout-line,
 body.has-nothingness-page-background .reset-note {
-  color: rgb(148 163 184 / 34%);
+  color: rgb(148 163 184 / 50%);
 }
 
 body.has-nothingness-page-background .metric-value,
 body.has-nothingness-page-background #resets-in {
-  color: rgb(248 250 252 / 48%);
+  color: rgb(248 250 252 / 64%);
 }
 
 body.has-nothingness-page-background .metric-icon,
 body.has-nothingness-page-background .reset-label-icon {
-  color: rgb(20 184 166 / 30%);
+  color: rgb(20 184 166 / 42%);
 }
 
 body.has-nothingness-page-background .collection-meta,
 body.has-nothingness-page-background #collection-status-label,
 body.has-nothingness-page-background .last-collected {
-  color: rgb(148 163 184 / 46%);
+  color: rgb(148 163 184 / 60%);
 }
 
 body.has-nothingness-page-background .collection-pulse.live {
@@ -264,7 +283,7 @@ body.has-nothingness-page-background .collection-pulse.live {
 }
 
 body.has-nothingness-page-background .brand-title p {
-  opacity: 0.5;
+  opacity: 0.68;
 }
 
 body.has-nothingness-page-background .chart-panel {
@@ -286,7 +305,7 @@ body.has-nothingness-page-background .reset-progress {
   }
 
   50% {
-    opacity: 0.4;
+    opacity: 0.08;
   }
 }
 

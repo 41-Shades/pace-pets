@@ -186,8 +186,11 @@ presentation can keep Splat visible after the reset boundary until a new usage
 reading arrives.
 
 Nothingness is the user-facing imperfect state for interim dashboard card
-presentations where no rail threshold state should be shown. It has no icon
-asset; the dashboard and rail render only a faint icon-slot outline.
+presentations where no usable pace ratio exists. It has no icon asset; the
+dashboard and rail render only a faint icon-slot outline. The rail remains
+visible and highlights Nothingness unless it is explicitly hidden through the
+local developer controls. In Nothingness, the rail retains its normal catalog
+palette beneath the same synchronized black pulse used by the main panel.
 
 | State                       | Surface                     | Rule                                                                                         | Presentation                                                      |
 | --------------------------- | --------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
