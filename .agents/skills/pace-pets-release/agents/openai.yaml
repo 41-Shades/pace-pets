@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pace Pets Release"
+  short_description: "Ship Pace Pets through GitHub and Chrome Web Store"
+  default_prompt: "Use $pace-pets-release to publish the current reviewed Pace Pets package release."
