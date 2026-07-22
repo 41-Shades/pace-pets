@@ -2,9 +2,12 @@
 
 Status: operations reference.
 
-This document stores the preferred public Chrome Web Store listing copy for
-Pace Pets. Treat this as the canonical source for store-facing product copy,
-privacy posture, affiliation language, and source-risk wording.
+This document mirrors the approved public copy in the Chrome Web Store
+Developer Dashboard. Treat the dashboard as the operational source of truth
+for store-facing product copy and keep this public mirror aligned before a
+release. When the maintainer intentionally edits the dashboard, update this
+document through the normal public docs workflow without bumping the extension
+version.
 
 Keep this copy aligned with `collector/extension/manifest.json`, `README.md`,
 `PRIVACY.md`, `SECURITY.md`, and the dashboard info panel. Store-console-only
@@ -22,11 +25,10 @@ Tracks sanitized Codex usage history locally in your browser.
 
 ## Overview
 
-Pace Pets is a playful Chrome extension for keeping an eye on your Codex usage
-while you work.
+Pace Pets helps manage Codex usage, with fun, animations, and utility.
 
-See remaining usage, pace status, reset timing, and a toolbar badge at a glance,
-with a little animation and personality built in.
+See remaining usage, pace status, reset timing, and an extension toolbar badge
+at a glance, with a little personality.
 
 Your usage history stays local to your browser. Pace Pets has no server, no
 telemetry, no account sync, and does not read your chats, page contents,

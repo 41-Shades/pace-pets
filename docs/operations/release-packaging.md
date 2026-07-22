@@ -14,11 +14,11 @@ Canonical listing URL:
 
 Store item ID: `dgemeohjkjclceamjacmfneodafbcbdk`.
 
-Preferred store-facing copy is tracked in
-[Chrome Web Store Listing Copy](chrome-web-store-listing.md). Keep store
-console text aligned with that document, and keep the document aligned with the
-manifest, README, privacy policy, security policy, storage schema, and
-dashboard info panel.
+Approved store-facing copy from the Chrome Web Store Developer Dashboard is
+mirrored in [Chrome Web Store Listing Copy](chrome-web-store-listing.md). Treat
+the dashboard as the operational source and keep the public mirror aligned
+before release. Keep both aligned with the manifest, README, privacy policy,
+security policy, storage schema, and dashboard info panel.
 
 Use the canonical slug URL in public docs and release notes. Do not use Chrome
 share URLs with tracking query parameters such as `utm_source=item-share-cb`.
