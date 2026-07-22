@@ -69,7 +69,7 @@
   }
 
   function normalizeBadgeWindowKey(value) {
-    return USAGE_WINDOWS.normalizeWindowKey(value);
+    return USAGE_WINDOWS.normalizeSelectableWindowKey(value);
   }
 
   function selectedBadgeWindowKeyFromItems(items, storageKey) {

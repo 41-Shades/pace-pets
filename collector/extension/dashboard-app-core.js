@@ -163,7 +163,7 @@
     }
 
     normalizedWindowKey(value) {
-      return this.USAGE_WINDOWS.normalizeWindowKey(value);
+      return this.USAGE_WINDOWS.normalizeSelectableWindowKey(value);
     }
 
     readSessionWindowKey() {
@@ -214,7 +214,7 @@
     }
 
     selectedSupportedWindowKey() {
-      if (this.USAGE_WINDOWS.isSupportedWindowKey(this.selectedWindowKey)) {
+      if (this.USAGE_WINDOWS.isSelectableWindowKey(this.selectedWindowKey)) {
         return this.selectedWindowKey;
       }
 
@@ -224,25 +224,37 @@
 
     renderWindowControls(activeKey) {
       const nextKey = this.USAGE_WINDOWS.alternateWindowKey(activeKey);
-      this.elements.windowToggle.disabled = !nextKey;
-      this.elements.windowToggle.dataset.nextWindowKey = nextKey || "";
+      const nextSelectable = this.USAGE_WINDOWS.isSelectableWindowKey(nextKey);
+      const unavailableReason = nextKey
+        ? this.WINDOW_SPECS[nextKey].unavailableReason
+        : null;
+      this.elements.windowToggle.disabled = false;
+      this.elements.windowToggle.dataset.nextWindowKey = nextSelectable
+        ? nextKey
+        : "";
+      this.elements.windowToggle.setAttribute(
+        "aria-disabled",
+        String(!nextSelectable),
+      );
       this.appTooltips.setText(
         this.elements.windowToggle,
-        nextKey ? "Toggle time window (T)" : "",
+        nextSelectable ? "Toggle time window (T)" : unavailableReason || "",
       );
       this.elements.windowToggle.setAttribute(
         "aria-label",
-        nextKey
+        nextSelectable
           ? `Usage window ${this.WINDOW_SPECS[activeKey].badge}. Switch to ${this.WINDOW_SPECS[nextKey].badge}.`
-          : `Usage window ${this.WINDOW_SPECS[activeKey].badge}.`,
+          : `Usage window ${this.WINDOW_SPECS[activeKey].badge}. ${unavailableReason || "No alternate window available."}`,
       );
 
       this.elements.windowOptions.forEach((option) => {
         const windowKey = option.dataset.windowKey;
         const active = windowKey === activeKey;
+        const selectable = this.USAGE_WINDOWS.isSelectableWindowKey(windowKey);
         option.classList.toggle("active", active);
-        option.classList.remove("unavailable");
+        option.classList.toggle("unavailable", !selectable);
         option.setAttribute("aria-current", active ? "true" : "false");
+        option.setAttribute("aria-disabled", String(!selectable));
       });
     }
 
@@ -278,8 +290,8 @@
     toggleUsageWindow() {
       const windowKey = this.elements.windowToggle.dataset.nextWindowKey;
       if (
-        !this.USAGE_WINDOWS.isSupportedWindowKey(windowKey) ||
-        this.elements.windowToggle.disabled
+        !this.USAGE_WINDOWS.isSelectableWindowKey(windowKey) ||
+        this.elements.windowToggle.getAttribute("aria-disabled") === "true"
       ) {
         return false;
       }

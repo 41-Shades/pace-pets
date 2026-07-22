@@ -18,7 +18,7 @@ function toggleElement() {
 }
 
 function createControls() {
-  const infoMotionToggle = toggleElement();
+  const motionToggle = toggleElement();
   const themeToggle = toggleElement();
   const onMotionPreferenceChanged = vi.fn();
   const refreshThemeSensitiveViews = vi.fn();
@@ -26,13 +26,13 @@ function createControls() {
   const controls = globalThis.PacePetsDashboardShellControls.createController({
     appTooltips: { setText: setTooltipText },
     earlyReset: {},
-    elements: { infoMotionToggle, themeToggle },
+    elements: { motionToggle, themeToggle },
     onMotionPreferenceChanged,
     refreshThemeSensitiveViews,
   });
   return {
     controls,
-    infoMotionToggle,
+    motionToggle,
     onMotionPreferenceChanged,
     refreshThemeSensitiveViews,
     setTooltipText,
@@ -77,7 +77,7 @@ beforeEach(() => {
 
 describe("PacePetsDashboardShellControls preference sync", () => {
   it("applies motion storage changes from another dashboard", () => {
-    const { infoMotionToggle, onMotionPreferenceChanged, setTooltipText } =
+    const { motionToggle, onMotionPreferenceChanged, setTooltipText } =
       createControls();
 
     storageListeners.get("storage")({
@@ -86,12 +86,12 @@ describe("PacePetsDashboardShellControls preference sync", () => {
     });
 
     expect(globalThis.document.documentElement.dataset.motion).toBe("off");
-    expect(infoMotionToggle.attributes.get("aria-pressed")).toBe("false");
-    expect(infoMotionToggle.attributes.get("aria-label")).toBe(
+    expect(motionToggle.attributes.get("aria-pressed")).toBe("false");
+    expect(motionToggle.attributes.get("aria-label")).toBe(
       "Turn motion effects on",
     );
     expect(setTooltipText).toHaveBeenLastCalledWith(
-      infoMotionToggle,
+      motionToggle,
       "Turn motion effects on",
     );
     expect(onMotionPreferenceChanged).toHaveBeenCalledWith("off");

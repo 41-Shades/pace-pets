@@ -32,7 +32,7 @@ Source install:
 3. Click Load unpacked.
 4. Select `collector/extension`.
 5. Click the Pace Pets toolbar icon to open the dashboard.
-6. Use the dashboard refresh control to grant ChatGPT site access and run the first usage check. Right-click the toolbar icon to choose whether the badge shows the 7d or 5h view.
+6. Use the dashboard refresh control to grant ChatGPT site access and run the first usage check. Right-click the toolbar icon to choose an available badge view. The upstream usage provider has temporarily paused the 5h view, so Pace Pets keeps it visible but unavailable.
 
 To update a source install after pulling or downloading new repo contents, reload the unpacked extension from `chrome://extensions`.
 
@@ -44,7 +44,7 @@ Stored samples contain only normalized safe usage fields: collection timestamps,
 
 Pace Pets does not inject code into ChatGPT pages or read ChatGPT chats or page contents. Chrome may describe the optional ChatGPT site access as permission to read and change site data, but Pace Pets uses that access only for background requests to ChatGPT session and usage endpoints. The rare Singularity dashboard transition uses generated WebGL/canvas layers plus live dashboard DOM geometry and does not capture, store, or upload screenshots. The extension does not request browser tab or screen capture permissions.
 
-The selected badge window is stored locally for the toolbar badge and badge-view context menu. Dashboard pages keep their selected usage window in page-scoped `sessionStorage`, so multiple open dashboards can inspect different windows independently. The toolbar badge can temporarily show the critical window as an attention override without changing either dashboard pages or the stored badge default. Dashboard theme and motion preferences stay in extension-page `localStorage`.
+The selected available badge window is stored locally for the toolbar badge and badge-view context menu. Dashboard pages keep their selected usage window in page-scoped `sessionStorage`, so multiple open dashboards can inspect different windows independently. The toolbar badge can temporarily show the critical window as an attention override without changing either dashboard pages or the stored badge default. Dashboard theme and motion preferences stay in extension-page `localStorage`.
 
 `data/usage.sample.json` is a safe fixture used by static checks and docs. Do not publish generated local usage exports such as `data/usage.json`.
 

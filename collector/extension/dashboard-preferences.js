@@ -20,7 +20,7 @@
     Object.freeze({
       key: DASHBOARD_WINDOW_SESSION_KEY,
       scope: SESSION_STORAGE_SCOPE,
-      values: "supported usage-window keys",
+      values: "selectable usage-window keys",
     }),
     Object.freeze({
       key: THEME_STORAGE_KEY,
@@ -62,7 +62,7 @@
     try {
       const windowKey = storage.getItem(DASHBOARD_WINDOW_SESSION_KEY);
       return readResult(
-        USAGE_WINDOWS.isSupportedWindowKey(windowKey) ? windowKey : null,
+        USAGE_WINDOWS.isSelectableWindowKey(windowKey) ? windowKey : null,
       );
     } catch (error) {
       return readResult(null, error);
@@ -73,7 +73,7 @@
     windowKey,
     storage = sessionStorageSurface(),
   ) {
-    if (!USAGE_WINDOWS.isSupportedWindowKey(windowKey)) {
+    if (!USAGE_WINDOWS.isSelectableWindowKey(windowKey)) {
       return writeResult(false);
     }
 

@@ -75,21 +75,6 @@
     var(--info-panel-muted) 70%,
     var(--info-panel-accent)
   );
-  --info-panel-control-bg: color-mix(
-    in srgb,
-    var(--info-panel-track) 72%,
-    var(--info-panel-surface)
-  );
-  --info-panel-control-hover: color-mix(
-    in srgb,
-    var(--info-panel-track) 78%,
-    var(--info-panel-surface)
-  );
-  --info-panel-control-selected-bg: color-mix(
-    in srgb,
-    var(--info-panel-surface) 86%,
-    var(--info-panel-track)
-  );
   --info-panel-action-bg: color-mix(
     in srgb,
     var(--info-panel-track) 42%,
@@ -143,9 +128,9 @@ body,
 .metric-bar,
 .reset-progress-dot,
 .reset-progress-fill,
+.motion-toggle,
 .audio-toggle,
 .info-toggle,
-.info-panel-motion-toggle,
 .info-close {
   transition:
     background-color 180ms ease,
