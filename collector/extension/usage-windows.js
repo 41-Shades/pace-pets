@@ -30,6 +30,9 @@
       resetValueFormat: "dateTime",
       priorResetLabel: "Last reset",
       scheduledResetLabel: "Next reset",
+      temporarilyUnavailable: true,
+      unavailableReason:
+        "5h temporarily unavailable — paused by the usage provider.",
     }),
   });
 
@@ -45,6 +48,17 @@
 
   function normalizeWindowKey(value) {
     return isSupportedWindowKey(value) ? value : DEFAULT_WINDOW_KEY;
+  }
+
+  function isSelectableWindowKey(value) {
+    return (
+      isSupportedWindowKey(value) &&
+      WINDOW_SPECS[value].temporarilyUnavailable !== true
+    );
+  }
+
+  function normalizeSelectableWindowKey(value) {
+    return isSelectableWindowKey(value) ? value : DEFAULT_WINDOW_KEY;
   }
 
   function windowSpec(value) {
@@ -78,7 +92,9 @@
     WINDOW_SPECS,
     alternateWindowKey,
     firstAvailableWindowKey,
+    isSelectableWindowKey,
     isSupportedWindowKey,
+    normalizeSelectableWindowKey,
     normalizeWindowKey,
     windowSpec,
   });

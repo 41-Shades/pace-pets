@@ -25,11 +25,11 @@
           this.elements.themeToggle,
         );
       });
-      this.elements.infoMotionToggle.addEventListener("click", (event) => {
+      this.elements.motionToggle.addEventListener("click", (event) => {
         this.shellControls.toggleMotion();
         this.appTooltips.releasePointerClickFocus(
           event,
-          this.elements.infoMotionToggle,
+          this.elements.motionToggle,
         );
       });
       this.elements.audioToggle.addEventListener("click", (event) => {

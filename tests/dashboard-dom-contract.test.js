@@ -28,10 +28,10 @@ describe("PacePetsDashboardDom", () => {
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-volume-rail");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("clear-data-button");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("dynamic-favicon");
-    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("info-motion-toggle");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain(
       "manual-refresh-button",
     );
+    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("motion-toggle");
     expect(new Set(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).size).toBe(
       dom.REQUIRED_DASHBOARD_ELEMENT_IDS.length,
     );
@@ -74,9 +74,7 @@ describe("PacePetsDashboardDom", () => {
     expect(elements.earlyResetPopoverText).toEqual({
       selector: "#early-reset-popover .early-reset-popover-text",
     });
-    expect(elements.infoMotionToggle).toEqual({
-      selector: "#info-motion-toggle",
-    });
+    expect(elements.motionToggle).toEqual({ selector: "#motion-toggle" });
     expect(elements.windowOptions).toEqual([
       {
         selector: dom.WINDOW_OPTION_SELECTOR,

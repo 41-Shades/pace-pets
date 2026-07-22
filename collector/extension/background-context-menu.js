@@ -39,7 +39,7 @@
     }
 
     const windowKey = menuItemId.slice(BADGE_CONTEXT_MENU_ID_PREFIX.length);
-    return USAGE_WINDOWS.isSupportedWindowKey(windowKey) ? windowKey : null;
+    return USAGE_WINDOWS.isSelectableWindowKey(windowKey) ? windowKey : null;
   }
 
   function contextMenusAvailable() {
@@ -90,11 +90,16 @@
       type: "separator",
     });
     for (const windowKey of USAGE_WINDOWS.WINDOW_KEYS) {
+      const spec = USAGE_WINDOWS.WINDOW_SPECS[windowKey];
+      const selectable = USAGE_WINDOWS.isSelectableWindowKey(windowKey);
       await createContextMenu({
-        checked: windowKey === selectedWindowKey,
+        checked: selectable && windowKey === selectedWindowKey,
         contexts: BADGE_CONTEXT_MENU_CONTEXTS,
+        enabled: selectable,
         id: badgeContextMenuId(windowKey),
-        title: `${USAGE_WINDOWS.WINDOW_SPECS[windowKey].badge} badge`,
+        title: selectable
+          ? `${spec.badge} badge`
+          : `${spec.badge} badge (temporarily unavailable)`,
         type: "radio",
       });
     }

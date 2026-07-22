@@ -44,7 +44,7 @@ describe("PacePetsDashboardPreferences metadata", () => {
       {
         key: "pace-pets-dashboard-window",
         scope: "sessionStorage",
-        values: "supported usage-window keys",
+        values: "selectable usage-window keys",
       },
       {
         key: "codex-usage-theme",
@@ -67,7 +67,7 @@ describe("PacePetsDashboardPreferences storage", () => {
 
     expect(preferences.readDashboardWindowPreference(storage)).toEqual({
       error: null,
-      value: "fiveHour",
+      value: null,
     });
     expect(
       preferences.storeDashboardWindowPreference("weekly", storage),

@@ -26,8 +26,9 @@ manual check to grant ChatGPT site access. After access is granted, the
 extension refreshes every five minutes, and every minute while a supported
 window is at `2%` usage remaining or less, displays `0%` time remaining, or has
 just ended so end-of-window transitions land promptly. Right-click the toolbar
-icon to choose whether the badge normally shows the 7d or 5h view. A
-`Brake hard!` window temporarily takes over the badge with its `7d` or `5h`
+icon to choose an available badge view. The upstream usage provider has
+temporarily paused the 5h view, so Pace Pets keeps it visible but unavailable.
+A `Brake hard!` window temporarily takes over the badge with its `7d` or `5h`
 label until the critical pace clears.
 
 If the toolbar badge shows `!`, the latest usage refresh failed; it is not a

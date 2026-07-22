@@ -144,7 +144,7 @@
     }
 
     motionToggleElements() {
-      return [this.elements.infoMotionToggle].filter(Boolean);
+      return [this.elements.motionToggle].filter(Boolean);
     }
 
     updateMotionToggle(motion) {

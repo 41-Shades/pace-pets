@@ -98,46 +98,6 @@
     );
   }
 
-  function motionToggle(documentRef) {
-    return element(
-      documentRef,
-      "button",
-      {
-        "aria-label": "Turn motion effects off",
-        "aria-pressed": "true",
-        class: "info-panel-motion-toggle",
-        "data-tooltip": "Turn motion effects off",
-        id: "info-motion-toggle",
-        type: "button",
-      },
-      [
-        element(documentRef, "span", { class: "info-panel-motion-option on" }, [
-          "On",
-        ]),
-        element(
-          documentRef,
-          "span",
-          { class: "info-panel-motion-option off" },
-          ["Off"],
-        ),
-      ],
-    );
-  }
-
-  function infoPanelControlRow(documentRef) {
-    return element(documentRef, "div", { class: "info-panel-control-row" }, [
-      element(documentRef, "div", { class: "info-panel-control-group" }, [
-        element(documentRef, "span", { class: "info-panel-motion-control" }, [
-          element(documentRef, "span", { class: "info-panel-control-label" }, [
-            "Motion effects",
-          ]),
-          motionToggle(documentRef),
-        ]),
-        clearDataButton(documentRef),
-      ]),
-    ]);
-  }
-
   function infoPanelContent(documentRef) {
     return element(documentRef, "div", { class: "info-panel-content" }, [
       element(
@@ -146,9 +106,9 @@
         { class: "info-panel-grid" },
         INFO_ITEMS.map((item) => infoItem(documentRef, item)),
       ),
-      infoPanelControlRow(documentRef),
       element(documentRef, "div", { class: "info-panel-meta-row" }, [
         metaLinks(documentRef),
+        clearDataButton(documentRef),
       ]),
     ]);
   }
@@ -206,12 +166,12 @@
       return;
     }
 
-    const usagePanel = documentRef.querySelector(".usage-panel");
-    if (!usagePanel) {
-      throw new Error("Dashboard usage panel must exist before info template.");
+    const shell = documentRef.querySelector(".shell");
+    if (!shell) {
+      throw new Error("Dashboard shell must exist before info template.");
     }
 
-    usagePanel.append(infoOverlay(documentRef));
+    shell.append(infoOverlay(documentRef));
   }
 
   attachInfoOverlay(document);
