@@ -32,9 +32,9 @@
 
 #resets-in {
   display: block;
-  font-size: 2.15rem;
+  font-size: 1.95rem;
   font-weight: 820;
-  line-height: 1;
+  line-height: 1.1;
   white-space: nowrap;
 }
 
@@ -102,10 +102,10 @@
 
 #pace-burnout-in {
   color: inherit;
-  font-size: inherit;
-  font-weight: 650;
+  font-size: 0.94rem;
+  font-weight: 700;
   letter-spacing: inherit;
-  line-height: inherit;
+  line-height: 0.96;
 }
 
 .reset-note {
