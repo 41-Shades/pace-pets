@@ -208,6 +208,24 @@
       });
     },
 
+    bindPermissionEvents() {
+      const refreshChatGptAccess = (permissions) => {
+        if (
+          !permissions?.origins?.includes(
+            this.USAGE_PERMISSIONS.CHATGPT_HOST_PERMISSION,
+          )
+        ) {
+          return;
+        }
+
+        this.loadDashboard({ refreshWindowSelection: false }).catch((error) =>
+          this.renderHistoryLoadFailure(error),
+        );
+      };
+      chrome.permissions.onAdded.addListener(refreshChatGptAccess);
+      chrome.permissions.onRemoved.addListener(refreshChatGptAccess);
+    },
+
     syncAudioPreferenceChange(changes, areaName) {
       const preference =
         this.AUDIO_PREFERENCES.audioPreferenceFromStorageChange(
@@ -301,6 +319,7 @@
       this.bindTooltipEvents();
       this.bindDocumentEvents();
       this.bindStorageEvents();
+      this.bindPermissionEvents();
       this.bindWindowEvents();
     },
   });
