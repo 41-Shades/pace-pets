@@ -23,20 +23,16 @@ uniform float u_seed;
 uniform float u_time;
 
 const float PI = 3.141592653589793;
-
 float clampUnit(float value) {
   return clamp(value, 0.0, 1.0);
 }
-
 float easeOutCubic(float value) {
   float p = clampUnit(value);
   return 1.0 - pow(1.0 - p, 3.0);
 }
-
 float hash(vec2 point) {
   return fract(sin(dot(point + u_seed, vec2(127.1, 311.7))) * 43758.5453123);
 }
-
 float noise(vec2 point) {
   vec2 cell = floor(point);
   vec2 local = fract(point);
@@ -47,7 +43,6 @@ float noise(vec2 point) {
   float d = hash(cell + vec2(1.0, 1.0));
   return mix(mix(a, b, eased.x), mix(c, d, eased.x), eased.y);
 }
-
 float fbm(vec2 point) {
   float value = 0.0;
   float amplitude = 0.5;
@@ -59,25 +54,20 @@ float fbm(vec2 point) {
   }
   return value;
 }
-
 float ridge(float value) {
   return 1.0 - abs(value * 2.0 - 1.0);
 }
-
 float gaussian(float value, float width) {
   float boundedWidth = max(width, 0.0001);
   float shaped = value / boundedWidth;
   return exp(-shaped * shaped);
 }
-
 float seedHash(float salt) {
   return fract(sin((u_seed + salt) * 437.31) * 24634.6345);
 }
-
 float angularDelta(float angle, float target) {
   return abs(atan(sin(angle - target), cos(angle - target)));
 }
-
 float pulseWindow(
   float localSeconds,
   float start,
@@ -88,7 +78,6 @@ float pulseWindow(
   return smoothstep(start, start + attack, localSeconds) *
     (1.0 - smoothstep(start + attack + hold, start + attack + hold + release, localSeconds));
 }
-
 vec3 spectralColor(float angle, float radius, float grain) {
   vec3 blue = vec3(0.18, 0.42, 1.0);
   vec3 cyan = vec3(0.48, 0.9, 1.0);
@@ -102,11 +91,9 @@ vec3 spectralColor(float angle, float radius, float grain) {
   color = mix(color, gold, warmBand * 0.58);
   return mix(color, mix(blue, cyan, grain), blueBand * 0.68);
 }
-
 vec3 temperatureShift(vec3 color, float bias, float strength) {
   return mix(color, color * mix(vec3(0.76, 0.9, 1.18), vec3(1.18, 0.96, 0.74), bias), strength);
 }
-
 float matterStar(vec2 grid, vec2 cell, float reveal, float fade) {
   float seed = hash(cell);
   float active = step(0.962, seed);
@@ -119,7 +106,6 @@ float matterStar(vec2 grid, vec2 cell, float reveal, float fade) {
   float twinkle = 0.72 + 0.28 * sin(u_time * 3.8 + seed * 19.0);
   return active * exp(-dot(delta, delta) * size) * twinkle * reveal * fade;
 }
-
 float matterField(vec2 fromCenter, float localSeconds) {
   float reveal = smoothstep(5.0, 8.2, localSeconds);
   float lateSparse = mix(1.0, 0.24, smoothstep(7.2, 10.1, localSeconds));
@@ -135,7 +121,6 @@ float matterField(vec2 fromCenter, float localSeconds) {
   }
   return stars;
 }
-
 float crackRayEvent(
   float angle,
   float radius,
@@ -176,7 +161,6 @@ float crackRayEvent(
     smoothstep(0.08, 0.62, ridge(fbm(vec2(radius * 36.0 - age * 28.0, angle * 7.0))));
   return (trunk * 1.1 + forks * forkGate * 0.5 + sparks * 0.18) * broken * gaps * radialGate * pulse * intensity;
 }
-
 float volleyRayEvent(
   float angle,
   float radius,
@@ -199,7 +183,6 @@ float volleyRayEvent(
     pow(max(0.0, sin(radius * 86.0 - age * 52.0 + rayAngle * 11.0) * 0.5 - 0.12), 2.0);
   return line * (0.78 + beads) * radialGate * pulse * intensity;
 }
-
 float crackRayBurst(float angle, float radius, float localSeconds) {
   float joltAngle = -0.4 + hash(vec2(91.0, 4.0)) * 0.8;
   float cracks =
@@ -238,7 +221,6 @@ float crackRayBurst(float angle, float radius, float localSeconds) {
   float fade = 1.0 - smoothstep(2.18, 2.72, localSeconds);
   return (cracks + cascade * crescendo + speedComb * mix(0.98, 1.34, density)) * fade;
 }
-
 float hardRayBurst(float angle, float radius, float localSeconds) {
   float ignite =
     smoothstep(1.86, 2.28, localSeconds) *
@@ -263,7 +245,6 @@ float hardRayBurst(float angle, float radius, float localSeconds) {
   );
   return (thickLane * 1.42 + midLane * 0.72 + hairline * 0.56) * segment * reachGate * ignite * asymmetricGate;
 }
-
 float beamCell(vec2 grid, vec2 cell, float burst) {
   float seed = hash(cell);
   float active = step(0.48, seed);
@@ -275,7 +256,6 @@ float beamCell(vec2 grid, vec2 cell, float burst) {
   float radial = gaussian(grid.y - radialCenter, radialWidth);
   return active * angular * mix(0.34, 0.94, radial) * mix(0.42, 1.18, burst);
 }
-
 float radialBeamField(float angle, float radius, float localSeconds, float burst) {
   float radialGate =
     smoothstep(0.035, 0.22, radius) *
@@ -310,6 +290,7 @@ float broadRayVeil(float angle, float radius, float localSeconds, float burst) {
 
 void main() {
   float localSeconds = u_localMs * 0.001;
+  if (localSeconds >= 10.35) { gl_FragColor = vec4(0.0); return; }
   vec2 uv = gl_FragCoord.xy / u_resolution.xy;
   vec2 space = uv * 2.0 - 1.0;
   space.x *= u_resolution.x / u_resolution.y;
@@ -324,8 +305,12 @@ void main() {
   float angle = atan(fromCenter.y, fromCenter.x);
 
   float attack = smoothstep(0.0, 0.34, localSeconds);
-  float crackBurst = crackRayBurst(angle, radius, localSeconds);
-  float rayBurst = hardRayBurst(angle, radius, localSeconds);
+  float crackBurst = 0.0;
+  if (localSeconds > 0.04 && localSeconds < 2.72)
+    crackBurst = crackRayBurst(angle, radius, localSeconds);
+  float rayBurst = 0.0;
+  if (localSeconds > 1.86 && localSeconds < 4.55)
+    rayBurst = hardRayBurst(angle, radius, localSeconds);
   float burst = easeOutCubic((localSeconds - 2.0) / 4.0);
   float reach = mix(0.14, 2.55, easeOutCubic((localSeconds - 2.0) / 4.7));
   float reached = 1.0 - smoothstep(reach, reach + 0.36, radius);
@@ -343,34 +328,49 @@ void main() {
   ) - 0.5;
   vec2 tornSpace = space + warpA * (0.22 + burst * 0.28);
   float grain = fbm(tornSpace * 3.2 - direction * localSeconds * 0.45);
-  float fine = fbm(tornSpace * 12.0 + direction * localSeconds * 1.6);
   float reachEnergy = reached * impact * plasmaFade;
-  float beams = radialBeamField(angle, radius, localSeconds, burst) * reachEnergy;
-  float veil = broadRayVeil(angle, radius, localSeconds, burst) * reachEnergy;
-  float shockFront = leadingFront * impact * (1.0 - smoothstep(4.9, 7.1, localSeconds));
-  float core =
-    gaussian(radius, mix(0.055, 0.44, smoothstep(0.0, 4.1, localSeconds))) *
-    (1.0 - smoothstep(4.9, 7.55, localSeconds)) *
-    2.55;
-  float whiteBloom =
-    gaussian(radius, mix(0.16, 0.84, burst)) *
-    smoothstep(2.05, 3.02, localSeconds) *
-    (1.0 - smoothstep(5.1, 7.3, localSeconds)) *
-    0.92;
+  float beams = 0.0, veil = 0.0, filaments = 0.0;
   float filamentRange =
     smoothstep(0.04, 0.2, radius) *
     (1.0 - smoothstep(2.0, 2.75, radius));
-  float filaments =
-    pow(max(0.0, ridge(fine) - 0.18), 2.0) *
-    filamentRange *
-    (0.28 + burst * 1.42) *
-    reachEnergy;
-  float residue =
-    pow(max(0.0, fbm(tornSpace * 8.0 + localSeconds * 0.18) - 0.42), 2.1) *
-    smoothstep(2.6, 5.8, localSeconds) *
-    (1.0 - smoothstep(7.0, 9.4, localSeconds)) *
-    filamentRange;
-  float matter = matterField(fromCenter, localSeconds);
+  if (localSeconds > 1.85 && localSeconds < 9.05) {
+    beams = radialBeamField(angle, radius, localSeconds, burst) * reachEnergy;
+    veil = broadRayVeil(angle, radius, localSeconds, burst) * reachEnergy;
+    float fine = fbm(tornSpace * 12.0 + direction * localSeconds * 1.6);
+    filaments =
+      pow(max(0.0, ridge(fine) - 0.18), 2.0) *
+      filamentRange *
+      (0.28 + burst * 1.42) *
+      reachEnergy;
+  }
+  float shockFront = 0.0;
+  if (localSeconds > 1.85 && localSeconds < 7.1)
+    shockFront = leadingFront * impact *
+      (1.0 - smoothstep(4.9, 7.1, localSeconds));
+  float core = 0.0;
+  if (localSeconds < 7.55)
+    core =
+      gaussian(radius, mix(0.055, 0.44, smoothstep(0.0, 4.1, localSeconds))) *
+      (1.0 - smoothstep(4.9, 7.55, localSeconds)) *
+      2.55;
+  float whiteBloom = 0.0;
+  if (localSeconds > 2.05 && localSeconds < 7.3)
+    whiteBloom =
+      gaussian(radius, mix(0.16, 0.84, burst)) *
+      smoothstep(2.05, 3.02, localSeconds) *
+      (1.0 - smoothstep(5.1, 7.3, localSeconds)) *
+      0.92;
+  float residue = 0.0;
+  if (localSeconds > 2.6 && localSeconds < 9.4) {
+    residue =
+      pow(max(0.0, fbm(tornSpace * 8.0 + localSeconds * 0.18) - 0.42), 2.1) *
+      smoothstep(2.6, 5.8, localSeconds) *
+      (1.0 - smoothstep(7.0, 9.4, localSeconds)) *
+      filamentRange;
+  }
+  float matter = 0.0;
+  if (localSeconds > 5.0 && localSeconds < 10.35)
+    matter = matterField(fromCenter, localSeconds);
   float temperatureBias = seedHash(23.7);
 
   vec3 plasma = temperatureShift(spectralColor(angle, radius, grain), temperatureBias, 0.34);

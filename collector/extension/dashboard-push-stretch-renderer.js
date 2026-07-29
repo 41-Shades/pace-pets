@@ -1,6 +1,13 @@
 ((root) => {
   "use strict";
 
+  const CanvasLayout = root.PacePetsDashboardPushCanvasLayout;
+  if (!CanvasLayout) {
+    throw new Error(
+      "Pace push canvas layout must load before stretch renderer.",
+    );
+  }
+
   const AXIS_ANGLE_RAD = (-52 * Math.PI) / 180;
   const AXIS_LENGTH = 0.69;
   const IMAGE_OUTSET = 0.03;
@@ -9,6 +16,11 @@
   const MESH_ROWS = 28;
   const PULSE_DURATION_MS = 2150;
   const ROOT = Object.freeze({ x: 0.2, y: 0.84 });
+  const IMAGE_RECT = Object.freeze({
+    size: (1 + IMAGE_OUTSET * 2) / (1 + LAYER_OUTSET * 2),
+    x: (LAYER_OUTSET - IMAGE_OUTSET) / (1 + LAYER_OUTSET * 2),
+    y: (LAYER_OUTSET - IMAGE_OUTSET) / (1 + LAYER_OUTSET * 2),
+  });
   const NORMAL_AXIS_DELTA = Object.freeze({
     x: Math.cos(AXIS_ANGLE_RAD) * AXIS_LENGTH,
     y: Math.sin(AXIS_ANGLE_RAD) * AXIS_LENGTH,
@@ -91,7 +103,7 @@
     geometry: createAttachedGeometry(RARE_AXIS_DELTA),
     keyframes: ATTACHED_KEYFRAMES,
   });
-  const VERTEX_SHADER_SOURCE = `
+  const VERTEX_SHADER = `
     attribute vec2 a_position;
     attribute vec2 a_texCoord;
     varying vec2 v_texCoord;
@@ -100,7 +112,7 @@
       v_texCoord = a_texCoord;
     }
   `;
-  const FRAGMENT_SHADER_SOURCE = `
+  const FRAGMENT_SHADER = `
     precision mediump float;
     uniform sampler2D u_texture;
     varying vec2 v_texCoord;
@@ -108,15 +120,6 @@
       gl_FragColor = texture2D(u_texture, v_texCoord);
     }
   `;
-
-  function imageRect() {
-    const layerSize = 1 + LAYER_OUTSET * 2;
-    return {
-      size: (1 + IMAGE_OUTSET * 2) / layerSize,
-      x: (LAYER_OUTSET - IMAGE_OUTSET) / layerSize,
-      y: (LAYER_OUTSET - IMAGE_OUTSET) / layerSize,
-    };
-  }
 
   function clamp(value, min = 0, max = 1) {
     return Math.max(min, Math.min(max, value));
@@ -146,71 +149,72 @@
     return activeProgress ** profile.exponent;
   }
 
-  function transformScaleLayerPoint(rect, profile, amount, x, y) {
+  function transformScaleLayerPoint(rect, profile, amount, point, result) {
     const { axis, perp, progressLength } = profile.geometry;
-    const root = {
-      x: rect.x + ROOT.x * rect.size,
-      y: rect.y + ROOT.y * rect.size,
-    };
-    const dx = x - root.x;
-    const dy = y - root.y;
+    const rootX = rect.x + ROOT.x * rect.size;
+    const rootY = rect.y + ROOT.y * rect.size;
+    const dx = point.x - rootX;
+    const dy = point.y - rootY;
     const along = dx * axis.x + dy * axis.y;
     const across = dx * perp.x + dy * perp.y;
     const progress = clamp(along / (progressLength * rect.size));
     const strength = strengthForProgress(progress, profile) * amount;
     const stretchedAlong = along * (1 + profile.axisScale * strength);
     const stretchedAcross = across * (1 + profile.perpScale * strength);
-    return {
-      x: root.x + axis.x * stretchedAlong + perp.x * stretchedAcross,
-      y: root.y + axis.y * stretchedAlong + perp.y * stretchedAcross,
-    };
+    result.x = rootX + axis.x * stretchedAlong + perp.x * stretchedAcross;
+    result.y = rootY + axis.y * stretchedAlong + perp.y * stretchedAcross;
+    return result;
   }
 
-  function transformLineAttachedLayerPoint(rect, profile, amount, x, y) {
+  function transformLineAttachedLayerPoint(
+    rect,
+    profile,
+    amount,
+    point,
+    result,
+  ) {
     const geometry = profile.geometry;
-    const root = {
-      x: rect.x + ROOT.x * rect.size,
-      y: rect.y + ROOT.y * rect.size,
-    };
-    const dx = x - root.x;
-    const dy = y - root.y;
+    const rootX = rect.x + ROOT.x * rect.size;
+    const rootY = rect.y + ROOT.y * rect.size;
+    const dx = point.x - rootX;
+    const dy = point.y - rootY;
     const along = dx * geometry.sourceAxis.x + dy * geometry.sourceAxis.y;
     const across = dx * geometry.sourcePerp.x + dy * geometry.sourcePerp.y;
     const progress = clamp(along / (geometry.sourceLength * rect.size));
     const strength = strengthForProgress(progress, profile) * amount;
     const targetAlong = along * (geometry.targetLength / geometry.sourceLength);
     const targetAcross = across * (1 + geometry.coneWidthGrowth * progress);
-    const target = {
-      x:
-        root.x +
-        geometry.targetAxis.x * targetAlong +
-        geometry.targetPerp.x * targetAcross,
-      y:
-        root.y +
-        geometry.targetAxis.y * targetAlong +
-        geometry.targetPerp.y * targetAcross,
-    };
-    return {
-      x: interpolate(x, target.x, strength),
-      y: interpolate(y, target.y, strength),
-    };
+    const targetX =
+      rootX +
+      geometry.targetAxis.x * targetAlong +
+      geometry.targetPerp.x * targetAcross;
+    const targetY =
+      rootY +
+      geometry.targetAxis.y * targetAlong +
+      geometry.targetPerp.y * targetAcross;
+    result.x = interpolate(point.x, targetX, strength);
+    result.y = interpolate(point.y, targetY, strength);
+    return result;
   }
 
-  function transformLayerPoint(rect, profile, amount, x, y) {
+  function transformLayerPoint(rect, profile, amount, point, result = {}) {
     if (profile.geometry.mode === "attached") {
-      return transformLineAttachedLayerPoint(rect, profile, amount, x, y);
+      return transformLineAttachedLayerPoint(
+        rect,
+        profile,
+        amount,
+        point,
+        result,
+      );
     }
-    return transformScaleLayerPoint(rect, profile, amount, x, y);
+    return transformScaleLayerPoint(rect, profile, amount, point, result);
   }
 
-  function transformImagePoint(rect, profile, amount, point) {
-    return transformLayerPoint(
-      rect,
-      profile,
-      amount,
-      rect.x + point.x * rect.size,
-      rect.y + point.y * rect.size,
-    );
+  function transformImagePoint(rect, profile, amount, point, result) {
+    const output = result || {};
+    output.x = rect.x + point.x * rect.size;
+    output.y = rect.y + point.y * rect.size;
+    return transformLayerPoint(rect, profile, amount, output, output);
   }
 
   function compileShader(gl, type, source) {
@@ -225,25 +229,17 @@
   }
 
   function createProgram(gl) {
-    const vertexShader = compileShader(
-      gl,
-      gl.VERTEX_SHADER,
-      VERTEX_SHADER_SOURCE,
-    );
-    const fragmentShader = compileShader(
-      gl,
-      gl.FRAGMENT_SHADER,
-      FRAGMENT_SHADER_SOURCE,
-    );
-    if (!vertexShader || !fragmentShader) {
+    const vertex = compileShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER);
+    const fragment = compileShader(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER);
+    if (!vertex || !fragment) {
       return null;
     }
     const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
     gl.linkProgram(program);
-    gl.deleteShader(vertexShader);
-    gl.deleteShader(fragmentShader);
+    gl.deleteShader(vertex);
+    gl.deleteShader(fragment);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       gl.deleteProgram(program);
       return null;
@@ -252,7 +248,7 @@
   }
 
   function createMesh() {
-    const rect = imageRect();
+    const rect = IMAGE_RECT;
     const vertexCount = (MESH_COLUMNS + 1) * (MESH_ROWS + 1);
     const base = new Float32Array(vertexCount * 2);
     const positions = new Float32Array(vertexCount * 2);
@@ -289,6 +285,10 @@
     return {
       base,
       indices: new Uint16Array(indices),
+      lastAmount: null,
+      lastProfile: null,
+      next: { x: 0, y: 0 },
+      point: { x: 0, y: 0 },
       positions,
       rect,
       texCoords,
@@ -296,17 +296,21 @@
   }
 
   function updateMesh(mesh, profile, amount) {
+    if (amount === 0 && mesh.lastAmount === 0 && mesh.lastProfile === profile) {
+      return false;
+    }
+    const next = mesh.next;
+    const point = mesh.point;
     for (let index = 0; index < mesh.base.length; index += 2) {
-      const next = transformLayerPoint(
-        mesh.rect,
-        profile,
-        amount,
-        mesh.base[index],
-        mesh.base[index + 1],
-      );
+      point.x = mesh.base[index];
+      point.y = mesh.base[index + 1];
+      transformLayerPoint(mesh.rect, profile, amount, point, next);
       mesh.positions[index] = next.x * 2 - 1;
       mesh.positions[index + 1] = 1 - next.y * 2;
     }
+    mesh.lastAmount = amount;
+    mesh.lastProfile = profile;
+    return true;
   }
 
   function createRenderer(canvas, image) {
@@ -326,6 +330,7 @@
     const texCoordBuffer = gl.createBuffer();
     const indexBuffer = gl.createBuffer();
     const texture = gl.createTexture();
+    const layout = CanvasLayout.create(canvas);
     gl.useProgram(program);
     gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, mesh.texCoords, gl.STATIC_DRAW);
@@ -343,6 +348,12 @@
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     const positionLocation = gl.getAttribLocation(program, "a_position");
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.positions.byteLength, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.clearColor(0, 0, 0, 0);
+
     return {
       destroy() {
         gl.deleteBuffer(positionBuffer);
@@ -354,27 +365,20 @@
       imageUnit() {
         return mesh.rect.size;
       },
-      pointFor(profile, amount, point) {
-        return transformImagePoint(mesh.rect, profile, amount, point);
+      invalidateLayout() {
+        layout.invalidate();
+      },
+      pointFor(profile, amount, point, result) {
+        return transformImagePoint(mesh.rect, profile, amount, point, result);
       },
       render(profile, amount) {
-        const rect = canvas.getBoundingClientRect();
-        const pixelRatio = window.devicePixelRatio || 1;
-        const width = Math.max(1, Math.round(rect.width * pixelRatio));
-        const height = Math.max(1, Math.round(rect.height * pixelRatio));
-        if (canvas.width !== width || canvas.height !== height) {
-          canvas.width = width;
-          canvas.height = height;
-        }
-        updateMesh(mesh, profile, amount);
-        gl.viewport(0, 0, width, height);
-        gl.clearColor(0, 0, 0, 0);
+        const dimensions = layout.current();
+        gl.viewport(0, 0, dimensions.width, dimensions.height);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.useProgram(program);
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, mesh.positions, gl.DYNAMIC_DRAW);
-        gl.enableVertexAttribArray(positionLocation);
-        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+        if (updateMesh(mesh, profile, amount)) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.bufferSubData(gl.ARRAY_BUFFER, 0, mesh.positions);
+        }
         gl.drawElements(
           gl.TRIANGLES,
           mesh.indices.length,

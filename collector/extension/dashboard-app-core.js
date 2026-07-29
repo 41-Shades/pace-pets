@@ -31,6 +31,7 @@
       this.STATUS_TEXT = this.DASHBOARD_STATUS.STATUS_TEXT;
       this.WINDOW_SPECS = this.USAGE_WINDOWS.WINDOW_SPECS;
       this.currentHistory = null;
+      this.currentHasChatGptAccess = null;
       this.currentHeldZeroStates = {};
       this.currentRefreshStatus = null;
       this.dashboardPresentationAuthoritative = true;

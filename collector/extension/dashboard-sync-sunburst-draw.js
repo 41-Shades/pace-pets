@@ -2,6 +2,7 @@
   "use strict";
 
   const CORE_FINAL_OPACITY = 0.8;
+  const CORE_FINAL_RADIUS_SCALE = 0.42;
   const TWO_PI = Math.PI * 2;
 
   function clamp(value, min = 0, max = 1) {
@@ -16,20 +17,14 @@
     return from + (to - from) * amount;
   }
 
-  function pointFor(origin, angle, radius) {
-    return {
-      x: origin.x + Math.cos(angle) * radius,
-      y: origin.y + Math.sin(angle) * radius,
-    };
-  }
-
   function rgba({ hue, saturation }, lightness, alpha) {
     return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
   }
 
   function drawCore(context, frame) {
     const coreProgress = smooth(clamp(frame.progress / 0.74));
-    const radius = frame.radius * mix(0.06, 0.42, coreProgress);
+    const radius =
+      frame.radius * mix(0.06, CORE_FINAL_RADIUS_SCALE, coreProgress);
     const opacity = smooth(clamp(frame.progress / 0.62)) * CORE_FINAL_OPACITY;
     const gradient = context.createRadialGradient(
       frame.origin.x,
@@ -75,40 +70,18 @@
     }
 
     const innerRadius = frame.radius * 0.03 * rayProgress;
-    const lengthMultiplier = frame.rayLengthMultipliers?.get(ray) ?? 1;
     const outerRadius =
-      frame.radius * ray.length * lengthMultiplier * rayProgress;
-    const innerWidth = ray.width * ray.innerWidth;
-    const leftInner = pointFor(
-      frame.origin,
-      ray.angle - innerWidth,
-      innerRadius,
-    );
-    const rightInner = pointFor(
-      frame.origin,
-      ray.angle + innerWidth,
-      innerRadius,
-    );
-    const leftOuter = pointFor(
-      frame.origin,
-      ray.angle - ray.width,
-      outerRadius,
-    );
-    const rightOuter = pointFor(
-      frame.origin,
-      ray.angle + ray.width,
-      outerRadius,
-    );
-    const tip = pointFor(frame.origin, ray.angle, outerRadius);
-    const gradient = context.createLinearGradient(
-      frame.origin.x,
-      frame.origin.y,
-      tip.x,
-      tip.y,
-    );
-    const opacityMultiplier = frame.rayOpacityMultipliers?.get(ray) ?? 1;
+      frame.radius * ray.length * frame.rayLengthMultiplier * rayProgress;
+    const { x: originX, y: originY } = frame.origin;
+    const geometry = ray.geometry;
+    const tipX = originX + geometry.tip.x * outerRadius;
+    const tipY = originY + geometry.tip.y * outerRadius;
+    const gradient = context.createLinearGradient(originX, originY, tipX, tipY);
     const opacity =
-      frame.opacity * ray.alpha * opacityMultiplier * smooth(rayProgress);
+      frame.opacity *
+      ray.alpha *
+      frame.rayOpacityMultiplier *
+      smooth(rayProgress);
 
     gradient.addColorStop(0, rgba(ray, 99, 0));
     gradient.addColorStop(
@@ -118,20 +91,38 @@
     gradient.addColorStop(0.62, rgba(ray, ray.bodyLightness, opacity));
     gradient.addColorStop(1, rgba(ray, ray.tipLightness, 0));
 
-    context.save();
-    context.filter = ray.blur > 0 ? `blur(${ray.blur}px)` : "none";
     context.fillStyle = gradient;
     context.beginPath();
-    context.moveTo(leftInner.x, leftInner.y);
-    context.lineTo(leftOuter.x, leftOuter.y);
-    context.lineTo(rightOuter.x, rightOuter.y);
-    context.lineTo(rightInner.x, rightInner.y);
+    context.moveTo(
+      originX + geometry.leftInner.x * innerRadius,
+      originY + geometry.leftInner.y * innerRadius,
+    );
+    context.lineTo(
+      originX + geometry.leftOuter.x * outerRadius,
+      originY + geometry.leftOuter.y * outerRadius,
+    );
+    context.lineTo(
+      originX + geometry.rightOuter.x * outerRadius,
+      originY + geometry.rightOuter.y * outerRadius,
+    );
+    context.lineTo(
+      originX + geometry.rightInner.x * innerRadius,
+      originY + geometry.rightInner.y * innerRadius,
+    );
     context.closePath();
+    if (ray.blur <= 0) {
+      context.fill();
+      return;
+    }
+
+    context.save();
+    context.filter = `blur(${ray.blur}px)`;
     context.fill();
     context.restore();
   }
 
   root.PacePetsDashboardSyncSunburstDraw = Object.freeze({
+    CORE_FINAL_RADIUS_SCALE,
     drawCore,
     drawRay,
   });

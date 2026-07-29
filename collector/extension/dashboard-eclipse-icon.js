@@ -15,6 +15,7 @@
   const RAY_COUNT = 118;
   const GLINT_COUNT = 3;
   const TWO_PI = Math.PI * 2;
+  const CENTER = CANVAS_CSS_SIZE / 2;
 
   function seededRandom(seed) {
     let value = seed >>> 0;
@@ -31,20 +32,13 @@
     return min + random() * (max - min);
   }
 
-  function pointAt(center, radius, angle) {
-    return {
-      x: center + Math.cos(angle) * radius,
-      y: center + Math.sin(angle) * radius,
-    };
-  }
-
   function createRay(random) {
     const angle = randomInRange(random, 0, TWO_PI);
     const favoredPlume =
       Math.abs(Math.atan2(Math.sin(angle + 2.1), Math.cos(angle + 2.1))) <
         0.52 ||
       Math.abs(Math.atan2(Math.sin(angle - 0.8), Math.cos(angle - 0.8))) < 0.48;
-    return {
+    const ray = {
       angle,
       alpha: randomInRange(random, 0.035, favoredPlume ? 0.16 : 0.1),
       curve: randomInRange(random, -0.9, 0.9),
@@ -56,6 +50,20 @@
       phase: randomInRange(random, 0, TWO_PI),
       speed: randomInRange(random, 0.22, 0.62),
       width: randomInRange(random, 0.28, favoredPlume ? 0.9 : 0.58),
+    };
+    const angleCosine = Math.cos(ray.angle);
+    const angleSine = Math.sin(ray.angle);
+    const middleAngle = ray.angle + ray.curve * 0.025;
+    const middleRadius = MOON_RADIUS + ray.length * 0.52;
+
+    return {
+      ...ray,
+      angleCosine,
+      angleSine,
+      middleX: CENTER + Math.cos(middleAngle) * middleRadius,
+      middleY: CENTER + Math.sin(middleAngle) * middleRadius,
+      startX: CENTER + angleCosine * (MOON_RADIUS * 0.92),
+      startY: CENTER + angleSine * (MOON_RADIUS * 0.92),
     };
   }
 
@@ -95,6 +103,7 @@
       this.context = null;
       this.frameId = null;
       this.icon = themeToggle?.querySelector(".theme-toggle-icon") || null;
+      this.staticPaint = null;
       this.scheduleFrame = (nowMs) => {
         this.draw(nowMs);
         this.frameId = window.requestAnimationFrame(this.scheduleFrame);
@@ -145,11 +154,16 @@
 
       this.canvas.width = size;
       this.canvas.height = size;
+      this.staticPaint = null;
       return true;
     }
 
-    drawBaseGlow(ctx, center) {
-      const gradient = ctx.createRadialGradient(
+    staticPaintFor(ctx, center) {
+      if (this.staticPaint) {
+        return this.staticPaint;
+      }
+
+      const baseGlow = ctx.createRadialGradient(
         center,
         center,
         MOON_RADIUS * 0.65,
@@ -157,12 +171,28 @@
         center,
         OUTER_RADIUS,
       );
-      gradient.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-      gradient.addColorStop(0.34, "rgba(255, 255, 255, 0.62)");
-      gradient.addColorStop(0.62, "rgba(255, 255, 255, 0.22)");
-      gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+      baseGlow.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+      baseGlow.addColorStop(0.34, "rgba(255, 255, 255, 0.62)");
+      baseGlow.addColorStop(0.62, "rgba(255, 255, 255, 0.22)");
+      baseGlow.addColorStop(1, "rgba(255, 255, 255, 0)");
 
-      ctx.fillStyle = gradient;
+      const moon = ctx.createRadialGradient(
+        center - 1.2,
+        center - 1.2,
+        0,
+        center,
+        center,
+        MOON_RADIUS,
+      );
+      moon.addColorStop(0, "#040712");
+      moon.addColorStop(1, "#01030a");
+
+      this.staticPaint = Object.freeze({ baseGlow, moon });
+      return this.staticPaint;
+    }
+
+    drawBaseGlow(ctx, center, paint) {
+      ctx.fillStyle = paint;
       ctx.beginPath();
       ctx.arc(center, center, OUTER_RADIUS, 0, TWO_PI);
       ctx.fill();
@@ -204,48 +234,29 @@
       ctx.save();
       ctx.filter = "blur(0.28px)";
       ctx.lineCap = "round";
+      ctx.strokeStyle = "#ffffff";
 
-      this.rays.forEach((ray) => {
+      for (const ray of this.rays) {
         const shimmer =
           0.76 + Math.sin(timeSeconds * ray.speed + ray.phase) * 0.24;
-        const start = pointAt(center, MOON_RADIUS * 0.92, ray.angle);
-        const end = pointAt(
-          center,
-          MOON_RADIUS + ray.length * shimmer,
-          ray.angle,
-        );
-        const middle = pointAt(
-          center,
-          MOON_RADIUS + ray.length * 0.52,
-          ray.angle + ray.curve * 0.025,
-        );
+        const endRadius = MOON_RADIUS + ray.length * shimmer;
+        const endX = center + ray.angleCosine * endRadius;
+        const endY = center + ray.angleSine * endRadius;
 
         ctx.globalAlpha = ray.alpha * shimmer;
         ctx.lineWidth = ray.width;
-        ctx.strokeStyle = "#ffffff";
         ctx.beginPath();
-        ctx.moveTo(start.x, start.y);
-        ctx.quadraticCurveTo(middle.x, middle.y, end.x, end.y);
+        ctx.moveTo(ray.startX, ray.startY);
+        ctx.quadraticCurveTo(ray.middleX, ray.middleY, endX, endY);
         ctx.stroke();
-      });
+      }
 
       ctx.restore();
       ctx.globalAlpha = 1;
     }
 
-    drawMoon(ctx, center) {
-      const gradient = ctx.createRadialGradient(
-        center - 1.2,
-        center - 1.2,
-        0,
-        center,
-        center,
-        MOON_RADIUS,
-      );
-      gradient.addColorStop(0, "#040712");
-      gradient.addColorStop(1, "#01030a");
-
-      ctx.fillStyle = gradient;
+    drawMoon(ctx, center, paint) {
+      ctx.fillStyle = paint;
       ctx.beginPath();
       ctx.arc(center, center, MOON_RADIUS, 0, TWO_PI);
       ctx.fill();
@@ -291,12 +302,13 @@
       ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       ctx.clearRect(0, 0, CANVAS_CSS_SIZE, CANVAS_CSS_SIZE);
 
-      const center = CANVAS_CSS_SIZE / 2;
+      const center = CENTER;
       const timeSeconds = (nowMs - this.startedAtMs) / 1000;
-      this.drawBaseGlow(ctx, center);
+      const staticPaint = this.staticPaintFor(ctx, center);
+      this.drawBaseGlow(ctx, center, staticPaint.baseGlow);
       this.drawPlumes(ctx, center, timeSeconds);
       this.drawRays(ctx, center, timeSeconds);
-      this.drawMoon(ctx, center);
+      this.drawMoon(ctx, center, staticPaint.moon);
       this.drawGlints(ctx, center, timeSeconds);
     }
 

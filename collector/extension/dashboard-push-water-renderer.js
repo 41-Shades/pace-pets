@@ -1,10 +1,11 @@
 ((root) => {
   "use strict";
 
+  const CanvasLayout = root.PacePetsDashboardPushCanvasLayout;
   const PushTank = root.PacePetsDashboardPushTank;
-  if (!PushTank) {
+  if (!CanvasLayout || !PushTank) {
     throw new Error(
-      "Pace push tank renderer must load before dashboard-push-water-renderer.js.",
+      "Pace push canvas layout and tank renderer must load before dashboard-push-water-renderer.js.",
     );
   }
 
@@ -17,52 +18,55 @@
     return Math.max(min, Math.min(max, value));
   }
 
-  function resizeCanvas(canvas) {
-    const rect = canvas.getBoundingClientRect();
-    const pixelRatio = window.devicePixelRatio || 1;
-    const width = Math.max(1, Math.round(rect.width * pixelRatio));
-    const height = Math.max(1, Math.round(rect.height * pixelRatio));
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
-    return { height, width };
-  }
-
-  function waveY({ amplitude, phase, top, width, x }) {
-    const progress = width <= 0 ? 0 : x / width;
+  function waveY(frame, x) {
+    const progress = frame.width <= 0 ? 0 : x / frame.width;
     return (
-      top +
-      Math.sin(progress * Math.PI * 5.2 + phase) * amplitude +
-      Math.sin(progress * Math.PI * 2.4 - phase * 0.7) * amplitude * 0.34
+      frame.top +
+      Math.sin(progress * Math.PI * 5.2 + frame.phase) * frame.amplitude +
+      Math.sin(progress * Math.PI * 2.4 - frame.phase * 0.7) *
+        frame.amplitude *
+        0.34
     );
   }
 
-  function createWaterPath(context, frame) {
-    context.beginPath();
-    context.moveTo(0, waveY({ ...frame, x: 0 }));
-    for (let x = WAVE_STEP; x < frame.width; x += WAVE_STEP) {
-      context.lineTo(x, waveY({ ...frame, x }));
+  function createWaveSamples(width) {
+    const x = [0];
+    for (let nextX = WAVE_STEP; nextX < width; nextX += WAVE_STEP) {
+      x.push(nextX);
     }
-    context.lineTo(frame.width, waveY({ ...frame, x: frame.width }));
+    x.push(width);
+    return { x, y: new Float64Array(x.length) };
+  }
+
+  function sampleWave(frame, wave) {
+    for (let index = 0; index < wave.x.length; index += 1) {
+      wave.y[index] = waveY(frame, wave.x[index]);
+    }
+  }
+
+  function traceWave(context, wave) {
+    context.beginPath();
+    context.moveTo(wave.x[0], wave.y[0]);
+    for (let index = 1; index < wave.x.length; index += 1) {
+      context.lineTo(wave.x[index], wave.y[index]);
+    }
+  }
+
+  function createWaterPath(context, frame, wave) {
+    traceWave(context, wave);
     context.lineTo(frame.width, frame.height);
     context.lineTo(0, frame.height);
     context.closePath();
   }
 
-  function drawWaveLine(context, frame) {
-    context.beginPath();
-    context.moveTo(0, waveY({ ...frame, x: 0 }));
-    for (let x = WAVE_STEP; x < frame.width; x += WAVE_STEP) {
-      context.lineTo(x, waveY({ ...frame, x }));
-    }
-    context.lineTo(frame.width, waveY({ ...frame, x: frame.width }));
+  function drawWaveLine(context, frame, wave) {
+    traceWave(context, wave);
     context.strokeStyle = `rgb(226 246 255 / ${0.34 + frame.ripple * 0.2})`;
     context.lineWidth = Math.max(1, frame.height * 0.012);
     context.stroke();
   }
 
-  function drawWaterFill(context, frame) {
+  function drawWaterFill(context, frame, wave) {
     const gradient = context.createLinearGradient(
       0,
       frame.top,
@@ -71,7 +75,7 @@
     );
     gradient.addColorStop(0, `rgb(82 176 245 / ${0.24 + frame.ripple * 0.12})`);
     gradient.addColorStop(1, `rgb(24 92 219 / ${0.2 + frame.ripple * 0.08})`);
-    createWaterPath(context, frame);
+    createWaterPath(context, frame, wave);
     context.fillStyle = gradient;
     context.fill();
   }
@@ -82,17 +86,39 @@
       return null;
     }
     const state = {
+      frame: {
+        amplitude: 0,
+        deltaSeconds: 0,
+        height: 0,
+        maxFill: false,
+        phase: 0,
+        ripple: 0,
+        stage: 0,
+        top: 0,
+        width: 0,
+      },
       lastTimestamp: null,
       level: BASE_LEVEL,
       ripple: 0,
+      wave: null,
     };
     const tankRenderer = PushTank.createRenderer();
+    const layout = CanvasLayout.create(canvas);
+    let dimensions = null;
+
     return {
       currentLevel({ maxFill = false } = {}) {
         return maxFill ? MAX_LEVEL : state.level;
       },
+      invalidateLayout() {
+        layout.invalidate();
+      },
       render(sweatLoad, timestamp, { maxFill = false } = {}) {
-        const dimensions = resizeCanvas(canvas);
+        const nextDimensions = layout.current();
+        if (dimensions !== nextDimensions) {
+          dimensions = nextDimensions;
+          state.wave = createWaveSamples(dimensions.width);
+        }
         const previousTimestamp = state.lastTimestamp ?? timestamp;
         state.lastTimestamp = timestamp;
         const deltaSeconds = Math.min(
@@ -113,25 +139,25 @@
           return;
         }
         const waterHeight = dimensions.height * state.level;
-        const frame = {
-          amplitude: 1.1 + state.ripple * 3.2,
-          deltaSeconds,
-          height: dimensions.height,
-          maxFill,
-          phase: timestamp / 470,
-          ripple: state.ripple,
-          stage: state.level / MAX_LEVEL,
-          top: dimensions.height - waterHeight,
-          width: dimensions.width,
-        };
-        drawWaterFill(context, frame);
+        const frame = state.frame;
+        frame.amplitude = 1.1 + state.ripple * 3.2;
+        frame.deltaSeconds = deltaSeconds;
+        frame.height = dimensions.height;
+        frame.maxFill = maxFill;
+        frame.phase = timestamp / 470;
+        frame.ripple = state.ripple;
+        frame.stage = state.level / MAX_LEVEL;
+        frame.top = dimensions.height - waterHeight;
+        frame.width = dimensions.width;
+        sampleWave(frame, state.wave);
+        drawWaterFill(context, frame, state.wave);
         context.save();
-        createWaterPath(context, frame);
+        createWaterPath(context, frame, state.wave);
         context.clip();
         tankRenderer.renderSubmerged(context, frame, timestamp);
         context.restore();
         tankRenderer.renderSurface(context, frame, timestamp);
-        drawWaveLine(context, frame);
+        drawWaveLine(context, frame, state.wave);
       },
     };
   }

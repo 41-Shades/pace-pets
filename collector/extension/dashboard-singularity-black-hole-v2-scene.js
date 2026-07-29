@@ -28,7 +28,7 @@
     };
   }
 
-  function configureCanvas(canvas, gl) {
+  function configureCanvas(canvas, gl, resources) {
     const { width, height } = viewportSize();
     const pixelRatio = Math.max(
       1,
@@ -42,6 +42,8 @@
       canvas.height = pixelHeight;
       gl.viewport(0, 0, pixelWidth, pixelHeight);
     }
+
+    gl.uniform2f(resources.resolutionUniform, pixelWidth, pixelHeight);
 
     return { height, pixelHeight, pixelWidth, width };
   }
@@ -222,7 +224,7 @@
 
       const mountPoint = document.querySelector(".shell") || document.body;
       mountPoint.append(this.canvas);
-      this.size = configureCanvas(this.canvas, this.gl);
+      this.configureCanvas();
       return true;
     }
 
@@ -230,7 +232,24 @@
       this.resources = createResources(this.gl);
       this.gl.disable(this.gl.DEPTH_TEST);
       this.gl.disable(this.gl.CULL_FACE);
-      this.gl.clearColor(0, 0, 0, 0);
+      this.gl.disable(this.gl.BLEND);
+      this.gl.disable(this.gl.SCISSOR_TEST);
+      this.gl.colorMask(true, true, true, true);
+      this.gl.useProgram(this.resources.program);
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.resources.quadBuffer);
+      this.gl.enableVertexAttribArray(this.resources.positionAttribute);
+      this.gl.vertexAttribPointer(
+        this.resources.positionAttribute,
+        2,
+        this.gl.FLOAT,
+        false,
+        0,
+        0,
+      );
+    }
+
+    configureCanvas() {
+      this.size = configureCanvas(this.canvas, this.gl, this.resources);
     }
 
     requestFrame() {
@@ -258,7 +277,6 @@
         return;
       }
 
-      this.size = configureCanvas(this.canvas, this.gl);
       const elapsedMs = Math.max(0, frameTimeMs - this.startedAtMs);
       this.drawFrame(elapsedMs);
       if (elapsedMs >= APPROACH_DURATION_MS) {
@@ -270,23 +288,6 @@
     drawFrame(elapsedMs) {
       const gl = this.gl;
       const progress = elapsedMs / APPROACH_DURATION_MS;
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.useProgram(this.resources.program);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.resources.quadBuffer);
-      gl.enableVertexAttribArray(this.resources.positionAttribute);
-      gl.vertexAttribPointer(
-        this.resources.positionAttribute,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0,
-      );
-      gl.uniform2f(
-        this.resources.resolutionUniform,
-        this.size.pixelWidth,
-        this.size.pixelHeight,
-      );
       gl.uniform1f(this.resources.progressUniform, progress);
       gl.uniform1f(this.resources.timeUniform, elapsedMs / 1000);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -297,7 +298,7 @@
         return;
       }
 
-      this.size = configureCanvas(this.canvas, this.gl);
+      this.configureCanvas();
     }
 
     handleVisibilityChange() {
@@ -325,7 +326,7 @@
         this.canvas.getContext("experimental-webgl", WEBGL_CONTEXT_OPTIONS);
       try {
         this.initializeGl();
-        this.size = configureCanvas(this.canvas, this.gl);
+        this.configureCanvas();
         this.requestFrame();
       } catch (error) {
         console.warn(

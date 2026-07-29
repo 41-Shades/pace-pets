@@ -154,6 +154,16 @@ function expectDashboardInfrastructureRuntimeDependencyEdges(runtime) {
     "./dashboard-dev-preview-broker.js",
   ]);
   for (const target of [
+    "./dashboard-push-stretch-renderer.js",
+    "./dashboard-push-sweat-renderer.js",
+    "./dashboard-push-water-renderer.js",
+  ]) {
+    expect(runtime.DASHBOARD_ONLY_RUNTIME_DEPENDENCY_EDGES).toContainEqual([
+      "./dashboard-push-canvas-layout.js",
+      target,
+    ]);
+  }
+  for (const target of [
     "./dashboard-pace-wobble-methods.js",
     "./dashboard-push-stretch-methods.js",
     "./dashboard-checkerboard-reveal-methods.js",

@@ -65,6 +65,14 @@
     return backgroundGradient;
   }
 
+  function drawBackdrop(context, scene, sceneState) {
+    const { width, height } = sceneState;
+    context.beginPath();
+    drawSceneFramePath(context, scene.frame, width, height);
+    context.fillStyle = createBackgroundGradient(context, scene, width, height);
+    context.fill();
+  }
+
   function drawPlanetDiscPath(context, half, xRatio = 0.74, yRatio = 0.76) {
     context.beginPath();
     context.ellipse(0, 0, half * xRatio, half * yRatio, 0, 0, Math.PI * 2);
@@ -337,17 +345,18 @@
     context.restore();
   }
 
-  function drawFrame(context, scene, sceneState, elapsedMs) {
+  function drawFrame(context, scene, sceneState, elapsedMs, backdropLayer) {
     const { width, height } = sceneState;
     const { frame } = scene;
     context.clearRect(0, 0, width, height);
+    context.save();
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.drawImage(backdropLayer, 0, 0);
+    context.restore();
 
     context.save();
     context.beginPath();
     drawSceneFramePath(context, frame, width, height);
-
-    context.fillStyle = createBackgroundGradient(context, scene, width, height);
-    context.fill();
     context.clip();
 
     for (const star of sceneState.stars) {
@@ -381,6 +390,7 @@
   }
 
   root.PacePetsPerfectZeroSpaceDraw = Object.freeze({
+    drawBackdrop,
     drawFrame,
   });
 })(globalThis);

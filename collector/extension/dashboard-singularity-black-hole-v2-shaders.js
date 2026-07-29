@@ -95,6 +95,9 @@ float glintFromCell(vec2 grid, vec2 cell, float violence) {
 }
 
 float infallGlints(vec2 fromCenter, float radius, float progress) {
+  if (progress <= 0.46) {
+    return 0.0;
+  }
   float localRadius = length(fromCenter) / max(radius, 0.0001);
   float visibleBand =
     smoothstep(1.46, 1.9, localRadius) *
@@ -264,41 +267,36 @@ void main() {
     (1.0 - smoothstep(radius * 1.25, radius * 4.5, distanceFromCenter)) *
     approachMask *
     (0.05 + gravityPulse * 0.15 + gravityShock * 0.18);
-
-  float normalizedY = fromCenter.y / max(radius, 0.0001);
-  float jetWobble =
-    sin(normalizedY * 4.1 + u_time * mix(1.7, 4.6, violence)) *
-    radius *
-    mix(0.025, 0.064, violence);
-  float jetCore = lineGlow(
-    fromCenter.x + jetWobble,
-    radius * mix(0.052, 0.038, violence)
-  );
-  float jetSheath = lineGlow(
-    fromCenter.x - jetWobble * 0.45,
-    radius * mix(0.18, 0.26, violence)
-  );
-  float jetReach = smoothstep(radius * 0.82, radius * 3.9, abs(fromCenter.y));
-  float jetFade =
-    1.0 - smoothstep(radius * 5.2, radius * 6.3, abs(fromCenter.y));
-  float jetNoise =
-    0.62 +
-    0.38 *
-      noise(vec2(
-        normalizedY * mix(2.3, 5.8, violence) +
-          u_time * mix(0.45, 1.7, violence),
-        fromCenter.x / max(radius, 0.0001) * mix(8.0, 15.0, violence)
-      ));
-  float jetFlicker = 1.0 + violence * (0.24 + surge * 0.42);
-  float jetAsymmetry = mix(
-    0.54,
-    1.0,
-    smoothstep(-0.4, 1.0, fromCenter.y / max(radius * 4.2, 0.0001))
-  );
-  float jetMask = jetReach * jetFade * smoothstep(0.42, 0.82, progress);
-  float jetCoreLight = jetCore * jetMask * jetNoise * jetAsymmetry * jetFlicker;
-  float jetSheathLight = jetSheath * jetMask * jetNoise * jetAsymmetry * jetFlicker;
-
+  float jetCoreLight = 0.0, jetSheathLight = 0.0;
+  if (progress > 0.42) {
+    float normalizedY = fromCenter.y / max(radius, 0.0001);
+    float jetWobble =
+      sin(normalizedY * 4.1 + u_time * mix(1.7, 4.6, violence)) *
+      radius *
+      mix(0.025, 0.064, violence);
+    float jetCore = lineGlow(fromCenter.x + jetWobble, radius * mix(0.052, 0.038, violence));
+    float jetSheath = lineGlow(fromCenter.x - jetWobble * 0.45, radius * mix(0.18, 0.26, violence));
+    float jetReach = smoothstep(radius * 0.82, radius * 3.9, abs(fromCenter.y));
+    float jetFade =
+      1.0 - smoothstep(radius * 5.2, radius * 6.3, abs(fromCenter.y));
+    float jetNoise =
+      0.62 +
+      0.38 *
+        noise(vec2(
+          normalizedY * mix(2.3, 5.8, violence) +
+            u_time * mix(0.45, 1.7, violence),
+          fromCenter.x / max(radius, 0.0001) * mix(8.0, 15.0, violence)
+        ));
+    float jetFlicker = 1.0 + violence * (0.24 + surge * 0.42);
+    float jetAsymmetry = mix(
+      0.54,
+      1.0,
+      smoothstep(-0.4, 1.0, fromCenter.y / max(radius * 4.2, 0.0001))
+    );
+    float jetMask = jetReach * jetFade * smoothstep(0.42, 0.82, progress);
+    jetCoreLight = jetCore * jetMask * jetNoise * jetAsymmetry * jetFlicker;
+    jetSheathLight = jetSheath * jetMask * jetNoise * jetAsymmetry * jetFlicker;
+  }
   float glints = infallGlints(fromCenter, radius, progress);
   vec3 glintColor = mix(
     vec3(0.68, 0.9, 1.0),
@@ -314,7 +312,6 @@ void main() {
     vec3(1.0, 0.54, 0.28),
     warmTail
   );
-
   vec3 color = vec3(0.0);
   color += vec3(0.08, 0.28, 0.78) * glow;
   color += vec3(0.3, 0.65, 1.0) * lens;
@@ -331,41 +328,43 @@ void main() {
   color += vec3(0.9, 0.97, 1.0) * sideFlare;
   color += glintColor * glints;
   color = mix(color, vec3(0.0), gravityVeil);
-
-  float tunnelAngle = atan(fromCenter.y, fromCenter.x);
-  float tunnelRadius = max(distanceFromCenter / mix(1.0, 5.6, plunge), 0.001);
-  float tunnelTravel =
-    descent * 5.8 + plunge * 10.0 +
-    u_time * mix(0.1, 0.52, max(descent, plunge)) +
-    1.0 / (tunnelRadius + 0.025) * mix(0.1, 0.9, max(descent, plunge));
-  float tunnelTwist = tunnelAngle / TAU + tunnelTravel * mix(0.08, 0.42, max(descent, plunge));
-  float radialGrid = lineGlow(
-    fract(tunnelTravel * mix(1.8, 4.8, descent)) - 0.5,
-    mix(0.13, 0.026, descent)
-  );
-  float angularGrid = lineGlow(
-    fract(tunnelTwist * mix(14.0, 36.0, descent) + u_time * 0.05) - 0.5,
-    mix(0.16, 0.024, descent)
-  );
-  float tunnelMask =
-    crossing *
-    (1.0 - smoothstep(1.85, 2.72, tunnelRadius + descent * 0.5));
-  float streamers =
-    pow(max(0.0, sin(tunnelTwist * TAU * 3.0 - tunnelTravel * 1.5)), 4.0) *
-    tunnelMask *
-    descent;
-  float tunnel = (radialGrid * 0.36 + angularGrid * 0.46) * tunnelMask;
-  vec3 tunnelColor = mix(
-    vec3(0.14, 0.52, 1.0),
-    vec3(1.0, 0.62, 0.36),
-    smoothstep(-0.2, 0.9, sin(tunnelTwist * TAU + tunnelTravel))
-  );
-  float finalPoint =
-    exp(-dot(fromCenter, fromCenter) * mix(mix(72.0, 260.0, singularity), 8.0, plunge)) *
-    smoothstep(2.55, 3.18, rawProgress);
-  float whiteout = smoothstep(3.38, 3.92, rawProgress);
-  float whiteBloom = exp(-dot(fromCenter, fromCenter) * mix(38.0, 0.7, whiteout)) * whiteout;
-
+  float streamers = 0.0, tunnel = 0.0;
+  vec3 tunnelColor = vec3(0.0);
+  if (rawProgress > 1.82) {
+    float tunnelAngle = atan(fromCenter.y, fromCenter.x);
+    float tunnelRadius = max(distanceFromCenter / mix(1.0, 5.6, plunge), 0.001);
+    float tunnelTravel =
+      descent * 5.8 + plunge * 10.0 +
+      u_time * mix(0.1, 0.52, max(descent, plunge)) +
+      1.0 / (tunnelRadius + 0.025) * mix(0.1, 0.9, max(descent, plunge));
+    float tunnelTwist = tunnelAngle / TAU + tunnelTravel * mix(0.08, 0.42, max(descent, plunge));
+    float radialGrid = lineGlow(fract(tunnelTravel * mix(1.8, 4.8, descent)) - 0.5, mix(0.13, 0.026, descent));
+    float angularGrid = lineGlow(fract(tunnelTwist * mix(14.0, 36.0, descent) + u_time * 0.05) - 0.5, mix(0.16, 0.024, descent));
+    float tunnelMask =
+      crossing *
+      (1.0 - smoothstep(1.85, 2.72, tunnelRadius + descent * 0.5));
+    streamers =
+      pow(max(0.0, sin(tunnelTwist * TAU * 3.0 - tunnelTravel * 1.5)), 4.0) *
+      tunnelMask *
+      descent;
+    tunnel = (radialGrid * 0.36 + angularGrid * 0.46) * tunnelMask;
+    tunnelColor = mix(
+      vec3(0.14, 0.52, 1.0),
+      vec3(1.0, 0.62, 0.36),
+      smoothstep(-0.2, 0.9, sin(tunnelTwist * TAU + tunnelTravel))
+    );
+  }
+  float finalPoint = 0.0;
+  if (rawProgress > 2.55) {
+    finalPoint =
+      exp(-dot(fromCenter, fromCenter) * mix(mix(72.0, 260.0, singularity), 8.0, plunge)) *
+      smoothstep(2.55, 3.18, rawProgress);
+  }
+  float whiteout = 0.0, whiteBloom = 0.0;
+  if (rawProgress > 3.38) {
+    whiteout = smoothstep(3.38, 3.92, rawProgress);
+    whiteBloom = exp(-dot(fromCenter, fromCenter) * mix(38.0, 0.7, whiteout)) * whiteout;
+  }
   color = mix(color, vec3(0.0), horizon * (1.0 - crossing * 0.92) * (1.0 - plunge));
   color += tunnelColor * (tunnel + streamers * 0.34) * (1.0 - singularity * 0.66) * (1.0 - whiteout * 0.62);
   color = mix(color, vec3(0.0), singularity * 0.58);

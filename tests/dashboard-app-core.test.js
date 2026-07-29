@@ -343,12 +343,14 @@ describe("PacePetsDashboardApp state commits", () => {
     app.applyDashboardState({
       dashboardWindowKey: "fiveHour",
       developerOptions,
+      hasChatGptAccess: false,
       history: { samples: [] },
       refreshStatus: null,
       refreshWindowSelection: true,
     });
 
     expect(app.selectedWindowKey).toBe("fiveHour");
+    expect(app.currentHasChatGptAccess).toBe(false);
     expect(app.storeSessionWindowKey).toHaveBeenCalledWith("fiveHour");
   });
 });

@@ -51,9 +51,12 @@
     }
 
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    return changed
-      ? FACTORY.createSceneState(width, height, seed)
-      : currentState;
+    return {
+      changed,
+      sceneState: changed
+        ? FACTORY.createSceneState(width, height, seed)
+        : currentState,
+    };
   }
 
   function drawDarkFrame(context, sceneState) {
@@ -78,6 +81,7 @@
       this.completionTimer = null;
       this.context = null;
       this.done = null;
+      this.holdTimer = null;
       this.motionDisabled = motionDisabled;
       this.onSettled = onSettled;
       this.onSpaceBackgroundRevealStart = onSpaceBackgroundRevealStart;
@@ -90,6 +94,7 @@
       this.stopped = false;
       this.webglCanvas = null;
       this.webglRenderer = null;
+      this.handleResize = this.handleResize.bind(this);
       this.render = this.render.bind(this);
     }
 
@@ -118,13 +123,15 @@
         this.finish(false);
         return this.done;
       }
-      this.sceneState = configureCanvas(
+      const canvasConfiguration = configureCanvas(
         this.canvas,
         this.context,
         this.sceneState,
         this.seed,
       );
+      this.sceneState = canvasConfiguration.sceneState;
       drawDarkFrame(this.context, this.sceneState);
+      root.addEventListener("resize", this.handleResize);
       this.animationFrame = root.requestAnimationFrame(this.render);
       return this.done;
     }
@@ -178,26 +185,63 @@
         TOTAL_DURATION_MS,
         frameTimeMs - this.startedAtMs,
       );
-      this.sceneState = configureCanvas(
+      const canvasConfiguration = configureCanvas(
         this.canvas,
         this.context,
         this.sceneState,
         this.seed,
       );
+      this.sceneState = canvasConfiguration.sceneState;
 
-      return totalElapsedMs - PRE_BANG_HOLD_MS;
+      return {
+        canvasChanged: canvasConfiguration.changed,
+        elapsedMs: totalElapsedMs - PRE_BANG_HOLD_MS,
+      };
     }
 
     requestNextFrame() {
       this.animationFrame = root.requestAnimationFrame(this.render);
     }
 
-    drawPreBangHold() {
-      drawDarkFrame(this.context, this.sceneState);
+    scheduleBangStart(elapsedMs) {
+      if (this.holdTimer !== null) {
+        return;
+      }
+
+      this.holdTimer = root.setTimeout(
+        () => {
+          this.holdTimer = null;
+          root.removeEventListener("resize", this.handleResize);
+          this.requestNextFrame();
+        },
+        Math.max(0, -elapsedMs),
+      );
+    }
+
+    handleResize() {
+      if (!this.canRenderFrame()) {
+        return;
+      }
+
+      const canvasConfiguration = configureCanvas(
+        this.canvas,
+        this.context,
+        this.sceneState,
+        this.seed,
+      );
+      this.sceneState = canvasConfiguration.sceneState;
+      if (canvasConfiguration.changed) {
+        drawDarkFrame(this.context, this.sceneState);
+      }
+    }
+
+    drawPreBangHold(canvasChanged) {
+      if (canvasChanged) {
+        drawDarkFrame(this.context, this.sceneState);
+      }
     }
 
     drawActiveFrame(elapsedMs) {
-      DRAW.drawFrame(this.context, this.sceneState, elapsedMs);
       const coverOpacity = fadeOutOpacity(
         elapsedMs,
         CANVAS_COVER_FADE_AT_MS,
@@ -208,6 +252,9 @@
         SPACE_REVEAL_AT_MS,
         CANVAS_FADE_DURATION_MS,
       );
+      if (coverOpacity > 0) {
+        DRAW.drawFrame(this.context, this.sceneState, elapsedMs);
+      }
       this.webglRenderer?.render(elapsedMs, transitionOpacity);
 
       if (elapsedMs >= CANVAS_COVER_FADE_AT_MS) {
@@ -244,10 +291,10 @@
         return;
       }
 
-      const elapsedMs = this.prepareFrame(frameTimeMs);
+      const { canvasChanged, elapsedMs } = this.prepareFrame(frameTimeMs);
       if (elapsedMs < 0) {
-        this.drawPreBangHold();
-        this.requestNextFrame();
+        this.drawPreBangHold(canvasChanged);
+        this.scheduleBangStart(elapsedMs);
         return;
       }
 
@@ -295,6 +342,11 @@
         root.clearTimeout(this.completionTimer);
       }
       this.completionTimer = null;
+      if (this.holdTimer !== null) {
+        root.clearTimeout(this.holdTimer);
+      }
+      this.holdTimer = null;
+      root.removeEventListener("resize", this.handleResize);
       this.stopCanvas();
       this.resolveDone?.(completed);
       this.resolveDone = null;

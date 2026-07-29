@@ -94,6 +94,24 @@
     };
   }
 
+  function direction(angle) {
+    return Object.freeze({
+      x: Math.cos(angle),
+      y: Math.sin(angle),
+    });
+  }
+
+  function rayGeometry(angle, width, innerWidthScale) {
+    const innerWidth = width * innerWidthScale;
+    return Object.freeze({
+      leftInner: direction(angle - innerWidth),
+      leftOuter: direction(angle - width),
+      rightInner: direction(angle + innerWidth),
+      rightOuter: direction(angle + width),
+      tip: direction(angle),
+    });
+  }
+
   function rayTone() {
     return {
       bodyLightness: randomBetween(62, 78),
@@ -105,21 +123,31 @@
   function rayProfile(index, rayCount, angleOffset) {
     const kind = rayKind(index);
     const tone = rayTone();
+    const alpha = rayAlpha(kind);
+    const angle =
+      (index / rayCount) * TWO_PI + angleOffset + randomBetween(-0.08, 0.08);
+    const blur = kind.isBroad ? randomBetween(2, 6) : 0;
+    const delay = randomBetween(0, 0.3);
+    const duration = rayDuration(kind);
+    const hue = randomBetween(45, 56);
+    const innerWidthScale = kind.isSpike ? 0.12 : 0.24;
+    const layer = rayLayer(kind);
+    const length = rayLength(kind);
+    const lengthMotion = rayLengthMotion(kind);
+    const saturation = randomBetween(76, 100);
+    const width = rayWidth(kind);
     return Object.freeze({
-      alpha: rayAlpha(kind),
-      angle:
-        (index / rayCount) * TWO_PI + angleOffset + randomBetween(-0.08, 0.08),
-      blur: kind.isBroad ? randomBetween(2, 6) : 0,
-      delay: randomBetween(0, 0.3),
-      duration: rayDuration(kind),
-      hue: randomBetween(45, 56),
+      alpha,
+      blur,
+      delay,
+      duration,
+      geometry: rayGeometry(angle, width, innerWidthScale),
+      hue,
       ...tone,
-      innerWidth: kind.isSpike ? 0.12 : 0.24,
-      layer: rayLayer(kind),
-      length: rayLength(kind),
-      ...rayLengthMotion(kind),
-      saturation: randomBetween(76, 100),
-      width: rayWidth(kind),
+      layer,
+      length,
+      ...lengthMotion,
+      saturation,
     });
   }
 
@@ -171,22 +199,17 @@
     );
   }
 
-  function lengthMultipliers(timestamp, rays, finishedAtMs) {
+  function lengthMultiplier(timestamp, ray, finishedAtMs) {
     const progress = lengthMotionProgress(timestamp, finishedAtMs);
     if (progress <= 0) {
-      return null;
+      return 1;
     }
-
-    const multipliers = new WeakMap();
-    for (const ray of rays) {
-      multipliers.set(ray, mix(1, rayLengthScale(timestamp, ray), progress));
-    }
-    return multipliers;
+    return mix(1, rayLengthScale(timestamp, ray), progress);
   }
 
   root.PacePetsDashboardSyncSunburstRays = Object.freeze({
     create,
     createReplacement,
-    lengthMultipliers,
+    lengthMultiplier,
   });
 })(globalThis);

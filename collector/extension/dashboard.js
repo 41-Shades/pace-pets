@@ -77,6 +77,10 @@
       "PacePetsDashboardShellControls",
       "Pace Pets dashboard shell controls",
     ),
+    USAGE_PERMISSIONS: requiredGlobal(
+      "PacePetsUsagePermissions",
+      "Pace Pets usage permissions",
+    ),
     USAGE_WINDOWS: requiredGlobal(
       "CodexUsageWindows",
       "Codex usage window contract",

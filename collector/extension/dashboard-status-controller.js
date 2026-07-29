@@ -63,6 +63,7 @@
       this.manualRefreshFeedback = null;
       this.manualRefreshFeedbackTimer = null;
       this.lastCollectedUpdateFeedbackTimer = null;
+      this.manualRefreshLabel = STATUS_LOGIC.MANUAL_REFRESH_DEFAULT_LABEL;
     }
 
     setCollectionStatusLabel(text, mode) {
@@ -107,7 +108,7 @@
         )}s`;
       }
 
-      return STATUS_LOGIC.MANUAL_REFRESH_DEFAULT_LABEL;
+      return this.manualRefreshLabel;
     }
 
     scheduleManualRefreshCooldownTimer() {
@@ -138,6 +139,7 @@
       button.hidden = !this.manualRefreshAvailable;
       button.setAttribute("aria-disabled", String(disabled));
       button.setAttribute("aria-label", tooltipText);
+      button.textContent = this.manualRefreshLabel;
       this.appTooltips.setText(button, tooltipText);
 
       if (this.manualRefreshAvailable && remainingMs > 0) {
@@ -187,13 +189,17 @@
       mode = "ok",
       title = STATUS_LOGIC.COLLECTION_STATUS_TITLE,
       detail = "",
-      { manualRefresh = false } = {},
+      {
+        manualRefresh = false,
+        manualRefreshLabel = STATUS_LOGIC.MANUAL_REFRESH_DEFAULT_LABEL,
+      } = {},
     ) {
       this.collectionStatusText = text;
       this.collectionStatusMode = mode;
       this.collectionStatusTitle = title;
       this.collectionStatusDetail = detail;
       this.manualRefreshAvailable = manualRefresh;
+      this.manualRefreshLabel = manualRefreshLabel;
       this.renderCollectionStatus();
     }
 
@@ -329,7 +335,12 @@
         "error",
         STATUS_LOGIC.COLLECTION_STATUS_TITLE,
         error?.message || "Could not request a usage check.",
-        { manualRefresh: true },
+        {
+          manualRefresh: true,
+          manualRefreshLabel: error?.permissionDenied
+            ? STATUS_LOGIC.MANUAL_ACCESS_ACTION_LABEL
+            : STATUS_LOGIC.MANUAL_REFRESH_DEFAULT_LABEL,
+        },
       );
       this.showManualRefreshFailure(null, error);
       this.completeHistoryPresentation?.();
@@ -347,6 +358,7 @@
         return;
       }
 
+      this.manualRefreshLabel = STATUS_LOGIC.MANUAL_REFRESH_DEFAULT_LABEL;
       this.startManualRefreshAttempt();
 
       try {

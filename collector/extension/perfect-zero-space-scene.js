@@ -2,10 +2,11 @@
   "use strict";
 
   const DATA = root.PacePetsPerfectZeroSpaceData;
+  const BACKDROP = root.PacePetsPerfectZeroSpaceBackdrop;
   const DRAW = root.PacePetsPerfectZeroSpaceDraw;
   const FACTORY = root.PacePetsPerfectZeroSpaceFactory;
   const MOTION = root.PacePetsPerfectZeroSpaceMotion;
-  if (!DATA || !DRAW || !FACTORY || !MOTION) {
+  if (!DATA || !BACKDROP || !DRAW || !FACTORY || !MOTION) {
     throw new Error(
       "Perfect-zero scene helpers must load before perfect-zero-space-scene.js.",
     );
@@ -52,9 +53,14 @@
     }
 
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    return changed
-      ? FACTORY.createSceneState(scene, width, height)
-      : currentState;
+    return {
+      pixelHeight,
+      pixelRatio,
+      pixelWidth,
+      sceneState: changed
+        ? FACTORY.createSceneState(scene, width, height)
+        : currentState,
+    };
   }
 
   function motionPreferenceEnabled() {
@@ -77,11 +83,14 @@
       this.canvas = canvas;
       this.container = container;
       this.context = context;
+      this.canvasState = null;
       this.elapsedMs = 0;
       this.isStopped = false;
       this.lastFrameAtMs = null;
       this.scene = scene;
       this.sceneState = null;
+      this.backdropLayer = null;
+      this.handleResize = this.handleResize.bind(this);
       this.handleMotionPreferenceChange =
         this.handleMotionPreferenceChange.bind(this);
       this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
@@ -96,14 +105,50 @@
     }
 
     drawStaticFrame() {
-      this.sceneState = configureCanvas(
+      this.configureSceneIfNeeded();
+      DRAW.drawFrame(
+        this.context,
+        this.scene,
+        this.sceneState,
+        this.elapsedMs,
+        this.backdropLayer,
+      );
+    }
+
+    effectivePixelRatio() {
+      return Math.max(
+        1,
+        Math.min(root.devicePixelRatio || 1, this.scene.maxPixelRatio),
+      );
+    }
+
+    canvasConfigurationIsCurrent() {
+      return (
+        this.canvasState &&
+        this.canvasState.pixelRatio === this.effectivePixelRatio() &&
+        this.canvas.width === this.canvasState.pixelWidth &&
+        this.canvas.height === this.canvasState.pixelHeight
+      );
+    }
+
+    configureSceneIfNeeded() {
+      if (this.sceneState && this.canvasConfigurationIsCurrent()) {
+        return;
+      }
+
+      this.canvasState = configureCanvas(
         this.container,
         this.canvas,
         this.context,
         this.sceneState,
         this.scene,
       );
-      DRAW.drawFrame(this.context, this.scene, this.sceneState, this.elapsedMs);
+      this.sceneState = this.canvasState.sceneState;
+      this.backdropLayer = BACKDROP.create(
+        this.scene,
+        this.sceneState,
+        this.canvasState.pixelRatio,
+      );
     }
 
     cancelAnimationFrameIfNeeded() {
@@ -128,13 +173,7 @@
 
     renderFrame(frameTimeMs) {
       this.animationFrameId = null;
-      this.sceneState = configureCanvas(
-        this.container,
-        this.canvas,
-        this.context,
-        this.sceneState,
-        this.scene,
-      );
+      this.configureSceneIfNeeded();
 
       const deltaMs =
         this.lastFrameAtMs === null ? 0 : frameTimeMs - this.lastFrameAtMs;
@@ -146,7 +185,13 @@
         deltaMs,
         this.elapsedMs,
       );
-      DRAW.drawFrame(this.context, this.scene, this.sceneState, this.elapsedMs);
+      DRAW.drawFrame(
+        this.context,
+        this.scene,
+        this.sceneState,
+        this.elapsedMs,
+        this.backdropLayer,
+      );
       this.requestNextFrame();
     }
 
@@ -174,6 +219,8 @@
       }
 
       this.sceneState = null;
+      this.canvasState = null;
+      this.backdropLayer = null;
       this.drawStaticFrame();
     }
 
@@ -183,7 +230,7 @@
         return;
       }
 
-      root.addEventListener("resize", this.handleMotionPreferenceChange);
+      root.addEventListener("resize", this.handleResize);
     }
 
     start() {
@@ -200,9 +247,10 @@
     stop() {
       this.isStopped = true;
       this.cancelAnimationFrameIfNeeded();
+      this.backdropLayer = null;
       this.removeMotionPreferenceListener();
       this.resizeObserver?.disconnect();
-      root.removeEventListener("resize", this.handleMotionPreferenceChange);
+      root.removeEventListener("resize", this.handleResize);
       root.document.removeEventListener(
         "visibilitychange",
         this.handleVisibilityChange,
