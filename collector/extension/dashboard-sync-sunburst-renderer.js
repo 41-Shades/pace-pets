@@ -3,8 +3,10 @@
 
   const BODY_CLASS = "has-sync-sunburst-page-background";
   const CANVAS_CLASS = "sync-sunburst-page-background";
+  const CORE_CACHE = root.PacePetsDashboardSyncSunburstCoreCache;
   const DASHBOARD_PREFERENCES = root.PacePetsDashboardPreferences;
   const DRAW = root.PacePetsDashboardSyncSunburstDraw;
+  const LAYOUT = root.PacePetsDashboardSyncSunburstLayout;
   const RAYS = root.PacePetsDashboardSyncSunburstRays;
   const TURNOVER = root.PacePetsDashboardSyncSunburstTurnover;
   if (!DASHBOARD_PREFERENCES) {
@@ -15,6 +17,11 @@
   if (!DRAW) {
     throw new Error(
       "Pace sync sunburst draw helpers must load before dashboard-sync-sunburst-renderer.js.",
+    );
+  }
+  if (!LAYOUT || !CORE_CACHE) {
+    throw new Error(
+      "Pace sync sunburst layout and core cache must load before dashboard-sync-sunburst-renderer.js.",
     );
   }
   if (!RAYS) {
@@ -30,11 +37,9 @@
 
   const FINISHED_PROGRESS = 1;
   const GROW_DURATION_MS = 30000;
-  const MAX_PIXEL_RATIO = 2;
   const PANEL_BG_END_OPACITY = 0;
   const PANEL_FADE_DELAY = 0.12;
   const PANEL_BG_START_OPACITY = 1;
-  const PANEL_SELECTOR = ".usage-panel";
   const RAY_FINAL_OPACITY = 0.64;
   const RAY_TURNOVER_FRAME_DELAY_MS = 33;
 
@@ -72,76 +77,11 @@
     return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
-  function viewportSize(canvas) {
-    const rect = canvas.getBoundingClientRect();
-    return {
-      height: Math.max(1, Math.round(rect.height || root.innerHeight || 1)),
-      width: Math.max(1, Math.round(rect.width || root.innerWidth || 1)),
-    };
-  }
-
-  function configureCanvas(canvas, context) {
-    const size = viewportSize(canvas);
-    const pixelRatio = Math.max(
-      1,
-      Math.min(root.devicePixelRatio || 1, MAX_PIXEL_RATIO),
-    );
-    const pixelWidth = Math.round(size.width * pixelRatio);
-    const pixelHeight = Math.round(size.height * pixelRatio);
-    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-      canvas.width = pixelWidth;
-      canvas.height = pixelHeight;
-    }
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    return size;
-  }
-
-  function sunburstRadius({ width }) {
-    const panelRect = root.document
-      .querySelector(PANEL_SELECTOR)
-      ?.getBoundingClientRect();
-    const panelWidth = panelRect?.width || Math.min(width * 0.76, 820);
-    const minDiameter = Math.min(600, width * 0.92);
-    const maxDiameter = Math.min(1020, width * 1.18);
-    return clamp(panelWidth * 1.18, minDiameter, maxDiameter) / 2;
-  }
-
   function finishedAtMsFor(currentFinishedAtMs, isFinishedFrame, timestamp) {
     if (isFinishedFrame && currentFinishedAtMs === null) {
       return timestamp;
     }
     return currentFinishedAtMs;
-  }
-
-  function rayLengthMultipliersFor({
-    finishedAtMs,
-    isFinishedFrame,
-    motionEnabled,
-    rays,
-    timestamp,
-  }) {
-    if (!isFinishedFrame || !motionEnabled) {
-      return null;
-    }
-    return RAYS.lengthMultipliers(timestamp, rays, finishedAtMs);
-  }
-
-  function rayOpacityMultipliersFor({
-    activeProgress,
-    motionEnabled,
-    rayTurnover,
-    rays,
-    timestamp,
-  }) {
-    if (activeProgress < 0.5 || !motionEnabled) {
-      return null;
-    }
-    return rayTurnover.opacities(
-      timestamp,
-      rays,
-      RAYS.createReplacement,
-      activeProgress,
-    );
   }
 
   class SyncSunburstScene {
@@ -161,14 +101,26 @@
       this.animationFrameId = null;
       this.canvas = canvas;
       this.context = context;
+      this.coreCache = CORE_CACHE.create();
       this.finished = initiallyFinished;
       this.finishedAtMs = initiallyFinished
         ? initialStartTimeMs + GROW_DURATION_MS
         : null;
       this.origin = origin;
+      this.layout = LAYOUT.create(canvas, context);
+      this.lastPanelBackgroundOpacity = null;
+      this.lastUiGlowOpacity = null;
       this.rayTurnover = TURNOVER.create();
       this.rayTurnoverTimerId = null;
       this.rays = RAYS.create();
+      this.frame = {
+        opacity: 0,
+        origin,
+        progress: 0,
+        radius: 0,
+        rayLengthMultiplier: 1,
+        rayOpacityMultiplier: 1,
+      };
       this.removeMotionPreferenceListener = () => {};
       this.startTimeMs = initialStartTimeMs;
       this.stopped = false;
@@ -190,8 +142,43 @@
         : clamp((timestamp - this.startTimeMs) / GROW_DURATION_MS);
     }
 
+    setUiStyle(activeProgress) {
+      const panelOpacity = String(panelBackgroundOpacity(activeProgress));
+      if (panelOpacity !== this.lastPanelBackgroundOpacity) {
+        root.document.body.style.setProperty(
+          "--sync-sunburst-panel-bg-opacity",
+          panelOpacity,
+        );
+        this.lastPanelBackgroundOpacity = panelOpacity;
+      }
+      const glowOpacity = String(panelFadeFor(activeProgress));
+      if (glowOpacity !== this.lastUiGlowOpacity) {
+        root.document.body.style.setProperty(
+          "--sync-sunburst-ui-glow-opacity",
+          glowOpacity,
+        );
+        this.lastUiGlowOpacity = glowOpacity;
+      }
+    }
+
+    updateFrame(activeProgress, layout) {
+      this.frame.opacity = visibilityFor(activeProgress) * RAY_FINAL_OPACITY;
+      this.frame.origin = this.origin;
+      this.frame.progress = activeProgress;
+      this.frame.radius = layout.radius;
+      return this.frame;
+    }
+
+    drawCore(frame, layout, isFinishedFrame) {
+      if (isFinishedFrame && this.coreCache) {
+        this.coreCache.draw(this.context, frame, layout.pixelRatio);
+        return;
+      }
+      DRAW.drawCore(this.context, frame);
+    }
+
     draw(progress, timestamp = root.performance.now()) {
-      const size = configureCanvas(this.canvas, this.context);
+      const layout = this.layout.current();
       const activeProgress =
         progress === null ? this.progressAt(timestamp) : progress;
       const isFinishedFrame = activeProgress >= FINISHED_PROGRESS;
@@ -201,41 +188,27 @@
         isFinishedFrame,
         timestamp,
       );
-      const uiProgress = panelFadeFor(activeProgress);
-      this.context.clearRect(0, 0, size.width, size.height);
-      root.document.body.style.setProperty(
-        "--sync-sunburst-panel-bg-opacity",
-        String(panelBackgroundOpacity(activeProgress)),
-      );
-      root.document.body.style.setProperty(
-        "--sync-sunburst-ui-glow-opacity",
-        String(uiProgress),
-      );
-      const frame = {
-        opacity: visibilityFor(activeProgress) * RAY_FINAL_OPACITY,
-        origin: this.origin,
-        progress: activeProgress,
-        radius: sunburstRadius(size),
-        rayLengthMultipliers: rayLengthMultipliersFor({
-          finishedAtMs: this.finishedAtMs,
-          isFinishedFrame,
-          motionEnabled,
-          rays: this.rays,
-          timestamp,
-        }),
-        rayOpacityMultipliers: rayOpacityMultipliersFor({
-          activeProgress,
-          motionEnabled,
-          rayTurnover: this.rayTurnover,
-          rays: this.rays,
-          timestamp,
-        }),
-        timestamp,
-      };
+      this.context.clearRect(0, 0, layout.width, layout.height);
+      this.setUiStyle(activeProgress);
+      const frame = this.updateFrame(activeProgress, layout);
+      const animateRayLengths = isFinishedFrame && motionEnabled;
+      const opacityMultipliers =
+        activeProgress < 0.5 || !motionEnabled
+          ? null
+          : this.rayTurnover.opacities(
+              timestamp,
+              this.rays,
+              RAYS.createReplacement,
+              activeProgress,
+            );
       for (const ray of this.rays) {
+        frame.rayLengthMultiplier = animateRayLengths
+          ? RAYS.lengthMultiplier(timestamp, ray, this.finishedAtMs)
+          : 1;
+        frame.rayOpacityMultiplier = opacityMultipliers?.get(ray) ?? 1;
         DRAW.drawRay(this.context, frame, ray);
       }
-      DRAW.drawCore(this.context, frame);
+      this.drawCore(frame, layout, isFinishedFrame);
       this.finished = isFinishedFrame;
     }
 
@@ -277,6 +250,8 @@
     }
 
     handleResize() {
+      this.layout.invalidate();
+      this.coreCache?.invalidate();
       this.draw(this.finished ? FINISHED_PROGRESS : null);
     }
 
@@ -335,6 +310,8 @@
       root.document.body.style.removeProperty(
         "--sync-sunburst-ui-glow-opacity",
       );
+      this.coreCache?.clear();
+      this.layout.invalidate();
       this.canvas.remove();
     }
   }

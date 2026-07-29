@@ -22,19 +22,26 @@
     },
 
     async readDashboardState({ refreshWindowSelection = true } = {}) {
-      const [history, refreshStatus, dashboardWindowKey, developerOptions] =
-        await Promise.all([
-          CodexUsageHistory.readHistory(),
-          CodexUsageHistory.readRefreshStatus(),
-          refreshWindowSelection
-            ? this.readDashboardWindowKey()
-            : Promise.resolve(null),
-          this.readDeveloperOptions(),
-        ]);
+      const [
+        history,
+        refreshStatus,
+        dashboardWindowKey,
+        developerOptions,
+        hasChatGptAccess,
+      ] = await Promise.all([
+        CodexUsageHistory.readHistory(),
+        CodexUsageHistory.readRefreshStatus(),
+        refreshWindowSelection
+          ? this.readDashboardWindowKey()
+          : Promise.resolve(null),
+        this.readDeveloperOptions(),
+        this.USAGE_PERMISSIONS.hasChatGptHostPermission(),
+      ]);
 
       return Object.freeze({
         dashboardWindowKey,
         developerOptions,
+        hasChatGptAccess,
         history,
         refreshStatus,
         refreshWindowSelection,
@@ -44,6 +51,7 @@
     applyDashboardState({
       dashboardWindowKey,
       developerOptions,
+      hasChatGptAccess,
       history,
       refreshStatus,
       refreshWindowSelection,
@@ -52,6 +60,7 @@
         this.selectedWindowKey = dashboardWindowKey;
         this.storeSessionWindowKey(dashboardWindowKey);
       }
+      this.currentHasChatGptAccess = hasChatGptAccess;
       this.currentCheckerboardRevealWhiteTransparent =
         developerOptions.checkerboardRevealWhiteTransparent;
       this.currentBrakeIntensityPreview =

@@ -155,6 +155,7 @@
       const spec = this.WINDOW_SPECS[windowKey];
       const state = this.DASHBOARD_STATUS.emptyHistoryCollectionState({
         formatClockTime: this.DASHBOARD_TIME.formatClockTime,
+        hasChatGptAccess: this.currentHasChatGptAccess,
         refreshStatus,
       });
       this.applyHistoryStatus(state.status);
@@ -232,7 +233,10 @@
         state.mode,
         this.COLLECTION_STATUS_TITLE,
         state.detail,
-        { manualRefresh: state.manualRefresh === true },
+        {
+          manualRefresh: state.manualRefresh === true,
+          manualRefreshLabel: state.manualRefreshLabel,
+        },
       );
     },
 
@@ -290,6 +294,7 @@
       this.applyHistoryStatus(
         this.DASHBOARD_STATUS.historyCollectionStatusState({
           formatClockTime: this.DASHBOARD_TIME.formatClockTime,
+          hasChatGptAccess: this.currentHasChatGptAccess,
           refreshStatus,
           latest,
           hasAnySupportedWindow: this.USAGE_WINDOWS.WINDOW_KEYS.some(

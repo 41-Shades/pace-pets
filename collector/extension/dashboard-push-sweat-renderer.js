@@ -1,11 +1,12 @@
 ((root) => {
   "use strict";
 
+  const CanvasLayout = root.PacePetsDashboardPushCanvasLayout;
   const PushStretch = root.PacePetsDashboardPushStretch;
   const SweatVariation = root.PacePetsDashboardPushSweatVariation;
-  if (!PushStretch || !SweatVariation) {
+  if (!CanvasLayout || !PushStretch || !SweatVariation) {
     throw new Error(
-      "Pace push stretch and sweat variation renderers must load before dashboard-push-sweat-renderer.js.",
+      "Pace push canvas layout, stretch, and sweat variation renderers must load before dashboard-push-sweat-renderer.js.",
     );
   }
 
@@ -175,40 +176,31 @@
   }
 
   function releasedTrackState(frame, track) {
+    const cached = frame.releasedTracks.get(track);
+    if (cached?.profile === frame.profile) {
+      return cached;
+    }
     const launchAmount = PushStretch.pulseAmount(frame.profile, track.start);
-    return {
+    const released = {
       origin: frame.iconRenderer.pointFor(
         frame.profile,
         launchAmount,
         track.emitter,
       ),
+      profile: frame.profile,
       sizeBoost: sizeBoost(frame.sizeBoost, launchAmount),
       unit: frame.iconRenderer.imageUnit(),
     };
+    frame.releasedTracks.set(track, released);
+    return released;
   }
 
-  function resizeCanvas(canvas) {
-    const rect = canvas.getBoundingClientRect();
-    const pixelRatio = window.devicePixelRatio || 1;
-    const width = Math.max(1, Math.round(rect.width * pixelRatio));
-    const height = Math.max(1, Math.round(rect.height * pixelRatio));
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
-    return { height, width };
-  }
-
-  function landingY(canvas, groundElement, dimensions, waterLevel) {
-    const canvasRect = canvas.getBoundingClientRect();
-    if (!groundElement || canvasRect.height <= 0) {
-      return dimensions.height;
-    }
-    const groundRect = groundElement.getBoundingClientRect();
-    const pixelRatio = dimensions.height / canvasRect.height;
-    const bottom = (groundRect.bottom - canvasRect.top) * pixelRatio;
-    const waterDepth = groundRect.height * pixelRatio * clamp(waterLevel);
-    return clamp(bottom - waterDepth, 0, dimensions.height);
+  function landingY(layout, waterLevel) {
+    return clamp(
+      layout.relativeBottom - layout.relativeHeight * clamp(waterLevel),
+      0,
+      layout.height,
+    );
   }
 
   function drawDrop(context, drop) {
@@ -282,13 +274,12 @@
       released.sizeBoost *
       released.unit *
       Math.min(frame.dimensions.width, frame.dimensions.height);
-    drawDrop(context, {
-      angle: dropAngle(track, progress),
-      opacity,
-      size: size * (0.88 + arc * 0.2),
-      x,
-      y,
-    });
+    frame.drop.angle = dropAngle(track, progress);
+    frame.drop.opacity = opacity;
+    frame.drop.size = size * (0.88 + arc * 0.2);
+    frame.drop.x = x;
+    frame.drop.y = y;
+    drawDrop(context, frame.drop);
     return opacity * track.size * released.sizeBoost;
   }
 
@@ -324,7 +315,24 @@
       return null;
     }
     const trackCaches = createTrackCaches();
+    const frame = {
+      allowPhaseWrap: false,
+      amount: 0,
+      dimensions: null,
+      drop: { angle: 0, opacity: 0, size: 0, x: 0, y: 0 },
+      groundY: 0,
+      iconRenderer: null,
+      phase: 0,
+      profile: null,
+      releasedTracks: new WeakMap(),
+      sizeBoost: 0,
+    };
+    const layout = CanvasLayout.create(canvas, groundElement);
+
     return {
+      invalidateLayout() {
+        layout.invalidate();
+      },
       render({
         cycleIndex,
         iconRenderer,
@@ -337,25 +345,20 @@
         pulseLevel,
         waterLevel = 0,
       }) {
-        const dimensions = resizeCanvas(canvas);
-        const frame = {
-          amount,
-          dimensions,
-          groundY: landingY(canvas, groundElement, dimensions, waterLevel),
-          iconRenderer,
-          phase,
-          profile,
-          allowPhaseWrap: true,
-        };
+        const activeLayout = layout.current();
+        const dimensions = activeLayout;
+        frame.amount = amount;
+        frame.dimensions = dimensions;
+        frame.groundY = landingY(activeLayout, waterLevel);
+        frame.iconRenderer = iconRenderer;
+        frame.phase = phase;
+        frame.profile = profile;
         const currentConfig = configForLevel(pulseLevel);
-        const currentFrame = {
-          ...frame,
-          allowPhaseWrap: false,
-          sizeBoost: currentConfig.sizeBoost,
-        };
+        frame.allowPhaseWrap = false;
+        frame.sizeBoost = currentConfig.sizeBoost;
         context.clearRect(0, 0, dimensions.width, dimensions.height);
         const currentTracks = trackCaches[pulseLevel].forCycle(cycleIndex);
-        let sweatLoad = drawTracks(context, currentFrame, currentTracks);
+        let sweatLoad = drawTracks(context, frame, currentTracks);
         const previousConfig = configForLevel(previousPulseLevel);
         const previousTrackCache = trackCaches[previousPulseLevel];
         const previousTracks =
@@ -371,14 +374,12 @@
               previousTracks,
             )
         ) {
+          frame.allowPhaseWrap = true;
+          frame.profile = previousProfile || PushStretch.NORMAL_PROFILE;
+          frame.sizeBoost = previousConfig.sizeBoost;
           sweatLoad += drawTracks(
             context,
-            {
-              ...frame,
-              allowPhaseWrap: true,
-              profile: previousProfile || PushStretch.NORMAL_PROFILE,
-              sizeBoost: previousConfig.sizeBoost,
-            },
+            frame,
             previousTracks,
             (track) => phase <= completionPhaseForTrack(track),
           );

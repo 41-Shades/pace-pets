@@ -73,6 +73,7 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  vi.clearAllMocks();
   const context = fakeContext();
   const body = fakeBody();
   globalThis.document = {
@@ -82,6 +83,8 @@ beforeEach(() => {
   globalThis.innerHeight = 600;
   globalThis.innerWidth = 800;
   globalThis.devicePixelRatio = 2;
+  globalThis.addEventListener = vi.fn();
+  globalThis.removeEventListener = vi.fn();
   globalThis.requestAnimationFrame = vi.fn(() => 1);
   globalThis.cancelAnimationFrame = vi.fn();
   globalThis.setTimeout = vi.fn(() => 1);
@@ -89,6 +92,18 @@ beforeEach(() => {
 });
 
 describe("PacePetsDashboardBigBangScene", () => {
+  function mountedRenderer() {
+    const renderer = {
+      destroy: vi.fn(),
+      mount: vi.fn(() => true),
+      render: vi.fn(),
+    };
+    globalThis.PacePetsDashboardBigBangWebglRenderer.create.mockReturnValue(
+      renderer,
+    );
+    return renderer;
+  }
+
   it("aborts instead of running a partial transition when WebGL cannot mount", async () => {
     const renderer = {
       destroy: vi.fn(),
@@ -114,5 +129,60 @@ describe("PacePetsDashboardBigBangScene", () => {
     expect(globalThis.document.body.children).toEqual([]);
     expect(onSettled).not.toHaveBeenCalled();
     expect(onSpaceBackgroundRevealStart).not.toHaveBeenCalled();
+  });
+
+  it("draws the pre-bang hold once and redraws it only after resize", () => {
+    mountedRenderer();
+    const scene = globalThis.PacePetsDashboardBigBangScene.create();
+
+    scene.play();
+    const context = globalThis.document.body.children[0].getContext("2d");
+    scene.render(0);
+
+    expect(context.fillRect).toHaveBeenCalledTimes(1);
+    expect(globalThis.requestAnimationFrame).toHaveBeenCalledOnce();
+    expect(globalThis.setTimeout).toHaveBeenCalledWith(
+      expect.any(Function),
+      2000,
+    );
+
+    globalThis.innerWidth = 900;
+    scene.handleResize();
+
+    expect(context.fillRect).toHaveBeenCalledTimes(2);
+    expect(context.fillRect).toHaveBeenLastCalledWith(0, 0, 900, 600);
+
+    const resumeAfterHold = globalThis.setTimeout.mock.calls[0][0];
+    resumeAfterHold();
+
+    expect(globalThis.requestAnimationFrame).toHaveBeenCalledTimes(2);
+    expect(globalThis.removeEventListener).toHaveBeenCalledWith(
+      "resize",
+      scene.handleResize,
+    );
+  });
+
+  it("stops hidden 2D drawing at exact zero opacity while WebGL continues", () => {
+    const renderer = mountedRenderer();
+    const scene = globalThis.PacePetsDashboardBigBangScene.create();
+
+    scene.play();
+    const canvas = globalThis.document.body.children[0];
+    scene.render(0);
+    scene.render(9599);
+
+    expect(
+      globalThis.PacePetsDashboardBigBangSceneDraw.drawFrame,
+    ).toHaveBeenCalledOnce();
+    expect(renderer.render).toHaveBeenCalledOnce();
+
+    scene.render(9600);
+    scene.render(9601);
+
+    expect(
+      globalThis.PacePetsDashboardBigBangSceneDraw.drawFrame,
+    ).toHaveBeenCalledOnce();
+    expect(renderer.render).toHaveBeenCalledTimes(3);
+    expect(canvas.style.opacity).toBe("0");
   });
 });

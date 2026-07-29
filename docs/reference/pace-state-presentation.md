@@ -416,6 +416,12 @@ rays also apply their own slow bounded length motion, so individual ray tips
 subtly extend and recede without changing the sunburst center or restarting the
 entry animation. The turnover starts lightly midway through the rise, ramps up
 near the end, and uses the full-strength turnover after the rise completes.
+The renderer caches viewport and panel geometry until resize, precomputes each
+ray's immutable direction vectors, reuses turnover opacity storage, and draws
+the completed core and bloom from a bounded raster cache. Settled frames also
+leave unchanged panel-style variables untouched. These optimizations preserve
+the ray field and animation timing while avoiding repeated layout, geometry,
+allocation, and gradient work.
 After 60 continuous seconds in Perfect Sync, the dashboard clones the status
 monk into a fixed page layer, hides the in-card icon, and launches the clone
 through a bounded-random 70-degree upward cone. The escaped monk uses the same

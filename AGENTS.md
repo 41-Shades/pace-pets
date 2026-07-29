@@ -11,7 +11,6 @@ Scope: whole repo.
   contain local maintainer preferences.
 - Pace Pets is a local-only Chrome extension. Keep
   `collector/extension/dashboard.html` as the canonical app surface.
-- Keep one canonical path. Remove obsolete paths when replacing behavior.
 - Keep one public concept per file; split by behavior/domain, not generic helpers. Prefer 150-250 lines/file, 30-70 lines/function, and complexity ≤8; hard limits are 400, 100, 10, and 5 parameters.
 - Do not add contributor/community process unless explicitly requested.
 - Do not commit private/generated artifacts: `data/usage.json`,
@@ -21,8 +20,6 @@ Scope: whole repo.
   text, raw network responses, screenshots, or account identifiers.
 - Persist only normalized safe usage fields in `chrome.storage.local`; see
   `docs/reference/storage-schema.md`.
-- Use code constants for product behavior. Do not add environment-variable
-  controls for product behavior.
 - Keep branches/PRs scoped to one clear concept. Use `codex/` branches by
   default.
 - Do not bump extension version for docs, ignore rules, release guardrails, or
@@ -31,10 +28,8 @@ Scope: whole repo.
 - Keep version tags and GitHub Releases in sync. Every pushed `v<version>` tag
   for a packaged release must have a matching GitHub Release, and the newest
   shipped version must be marked Latest.
-- Follow `docs/guides/testing.md`. Use `npm run shape` for targeted source
-  shape validation while developing; run broad checks/preflight only when
-  explicitly requested in the current thread.
-- Full validation: `./scripts/chks`.
-- Use browser verification only for diagnosis or browser-rendered changes, not routine confirmation.
-- Prefer runtime logs, extension storage evidence, and static checks over
-  screenshot-only verification.
+- Follow `docs/guides/testing.md`. The targeted source-shape command is
+  `npm run shape`; full validation is `./scripts/chks`.
+- Treat ignored `docs/plans/` files as temporary working records. After all work is resolved,
+  promote current durable facts to the appropriate guide or reference, repair inbound links, and
+  delete the completed plan; preserve plans that still contain active work or genuine blockers.

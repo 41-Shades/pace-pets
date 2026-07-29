@@ -85,7 +85,7 @@
       key: "sync",
       className: "pace-sync",
       title: "Perfect sync",
-      copy: "Time and pace are in harmony. Ascendant.",
+      copy: "Time and usage in harmony. Ascendant.",
       ratioLabel: "Usage = Time",
       badgeColor: "#0f766e",
       favicon: { bg: "#edf6f4", color: "#0f766e" },
@@ -260,6 +260,7 @@
       title: "Nothingness",
       copy: "The Void",
       copyByReason: Object.freeze({
+        accessRequired: "Grant access to escape the void.",
         checkFailed: "Check failed in this void.",
         noHistory: "No history yet in this void.",
         resetTimingMissing: "Reset timing missing in this void.",

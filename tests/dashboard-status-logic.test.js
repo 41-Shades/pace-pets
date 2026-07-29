@@ -78,6 +78,28 @@ describe("PacePetsDashboardStatus empty history", () => {
     });
   });
 
+  it("uses permission-specific Nothingness copy before the first check", () => {
+    const status = globalThis.PacePetsDashboardStatus;
+
+    expect(
+      status.emptyHistoryCollectionState({
+        formatClockTime,
+        hasChatGptAccess: false,
+      }),
+    ).toEqual({
+      chartCopy: "Grant access to begin.",
+      paceCopy: "Grant access to escape the void.",
+      paceTitle: "Nothingness",
+      status: {
+        detail: "",
+        manualRefresh: true,
+        manualRefreshLabel: "Allow & check",
+        mode: "warning",
+        text: "Access needed",
+      },
+    });
+  });
+
   it("projects empty-history failure copy and collection status together", () => {
     const status = globalThis.PacePetsDashboardStatus;
     const state = status.emptyHistoryCollectionState({
@@ -106,6 +128,27 @@ describe("PacePetsDashboardStatus empty history", () => {
     expect(state.status.detail).toContain(
       "attempt clock:2026-05-25T11:55:00.000Z",
     );
+  });
+});
+
+describe("PacePetsDashboardStatus permission state", () => {
+  it("keeps stored history while surfacing revoked access", () => {
+    const status = globalThis.PacePetsDashboardStatus;
+
+    expect(
+      status.historyCollectionStatusState({
+        hasAnySupportedWindow: true,
+        hasChatGptAccess: false,
+        hasResetTiming: true,
+        summaryWindow: {},
+      }),
+    ).toEqual({
+      detail: "",
+      manualRefresh: true,
+      manualRefreshLabel: "Allow & check",
+      mode: "warning",
+      text: "Access needed",
+    });
   });
 });
 

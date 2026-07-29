@@ -19,6 +19,7 @@
     spark: "#fb923c",
   });
   const BRAKE_EXTREME_AUDIO_TIMELINE = "brakeExtreme";
+  const shardPathCache = new Map();
 
   function randomFloatInRange(controller, [min, max]) {
     return controller.randomIntegerInRange([min * 100, max * 100]) / 100;
@@ -60,17 +61,31 @@
       profile.SPEED_RANGE_PX_PER_SECOND,
     );
     const size = randomFloatInRange(controller, profile.SIZE_RANGE_PX);
+    const delayMs = controller.randomIntegerInRange(profile.DELAY_RANGE_MS);
+    const drift = controller.randomIntegerInRange(
+      profile.DRIFT_RANGE_PX_PER_SECOND,
+    );
+    const durationMs = controller.randomIntegerInRange(
+      profile.DURATION_RANGE_MS,
+    );
+    const gravity = controller.randomIntegerInRange(
+      profile.GRAVITY_RANGE_PX_PER_SECOND_SQUARED,
+    );
+    const kind = randomKind(controller);
+    const rotation = controller.randomIntegerInRange([0, 359]);
+    const spin = controller.randomIntegerInRange(
+      profile.SPIN_RANGE_DEG_PER_SECOND,
+    );
     return {
-      delayMs: controller.randomIntegerInRange(profile.DELAY_RANGE_MS),
-      drift: controller.randomIntegerInRange(profile.DRIFT_RANGE_PX_PER_SECOND),
-      durationMs: controller.randomIntegerInRange(profile.DURATION_RANGE_MS),
-      gravity: controller.randomIntegerInRange(
-        profile.GRAVITY_RANGE_PX_PER_SECOND_SQUARED,
-      ),
-      kind: randomKind(controller),
-      rotation: controller.randomIntegerInRange([0, 359]),
+      delayMs,
+      drift,
+      durationMs,
+      gravity,
+      kind,
+      rotation,
+      shardPath: shardPath(kind, size),
       size,
-      spin: controller.randomIntegerInRange(profile.SPIN_RANGE_DEG_PER_SECOND),
+      spin,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       x:
@@ -89,29 +104,38 @@
     return Math.max(0, Math.min(fadeIn, fadeOut)) * baseOpacity;
   }
 
-  function drawShard(context, kind, size) {
-    context.fillStyle = PARTICLE_COLORS[kind] || PARTICLE_COLORS.panel;
-    context.beginPath();
+  function createShardPath(kind, size) {
+    const path = new Path2D();
     if (kind === "smoke") {
-      context.ellipse(0, 0, size * 1.7, size, 0, 0, TAU);
+      path.ellipse(0, 0, size * 1.7, size, 0, 0, TAU);
     } else if (kind === "spark") {
-      context.moveTo(0, -size * 1.8);
-      context.lineTo(size * 0.62, -size * 0.2);
-      context.lineTo(size * 1.7, 0);
-      context.lineTo(size * 0.55, size * 0.28);
-      context.lineTo(0, size * 1.8);
-      context.lineTo(-size * 0.55, size * 0.28);
-      context.lineTo(-size * 1.7, 0);
-      context.lineTo(-size * 0.62, -size * 0.2);
+      path.moveTo(0, -size * 1.8);
+      path.lineTo(size * 0.62, -size * 0.2);
+      path.lineTo(size * 1.7, 0);
+      path.lineTo(size * 0.55, size * 0.28);
+      path.lineTo(0, size * 1.8);
+      path.lineTo(-size * 0.55, size * 0.28);
+      path.lineTo(-size * 1.7, 0);
+      path.lineTo(-size * 0.62, -size * 0.2);
     } else if (kind === "fin") {
-      context.moveTo(-size * 1.2, size);
-      context.lineTo(size * 1.4, 0);
-      context.lineTo(-size * 0.4, -size * 1.25);
+      path.moveTo(-size * 1.2, size);
+      path.lineTo(size * 1.4, 0);
+      path.lineTo(-size * 0.4, -size * 1.25);
     } else {
-      context.rect(-size, -size * 0.72, size * 2, size * 1.44);
+      path.rect(-size, -size * 0.72, size * 2, size * 1.44);
     }
-    context.closePath();
-    context.fill();
+    path.closePath();
+    return path;
+  }
+
+  function shardPath(kind, size) {
+    const key = `${kind}:${size}`;
+    let path = shardPathCache.get(key);
+    if (!path) {
+      path = createShardPath(kind, size);
+      shardPathCache.set(key, path);
+    }
+    return path;
   }
 
   function drawParticle(context, particle, elapsedMs, bounds) {
@@ -143,21 +167,27 @@
     context.rotate(
       ((particle.rotation + particle.spin * seconds) * Math.PI) / 180,
     );
-    drawShard(context, particle.kind, particle.size);
+    context.fillStyle = PARTICLE_COLORS[particle.kind] || PARTICLE_COLORS.panel;
+    context.fill(particle.shardPath);
     context.restore();
     return true;
   }
 
   function renderExtremeFrame(context, particles, startedAtMs, bounds, nowMs) {
     const elapsedMs = nowMs - startedAtMs;
-    let hasActiveParticles = false;
+    let retainedParticleCount = 0;
     context.clearRect(0, 0, bounds.width, bounds.height);
-    for (const particle of particles) {
-      hasActiveParticles =
-        drawParticle(context, particle, elapsedMs, bounds) ||
-        hasActiveParticles;
+    for (let index = 0; index < particles.length; index += 1) {
+      const particle = particles[index];
+      if (drawParticle(context, particle, elapsedMs, bounds)) {
+        if (retainedParticleCount !== index) {
+          particles[retainedParticleCount] = particle;
+        }
+        retainedParticleCount += 1;
+      }
     }
-    return hasActiveParticles;
+    particles.length = retainedParticleCount;
+    return retainedParticleCount > 0;
   }
 
   function registerCanvasCleanup(state, canvas, animation) {

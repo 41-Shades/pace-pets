@@ -146,6 +146,27 @@
     };
   }
 
+  function observePushLayout({ layer, renderer, sweatRenderer, waterState }) {
+    const invalidate = () => {
+      renderer.invalidateLayout();
+      sweatRenderer?.invalidateLayout();
+      waterState?.renderer?.invalidateLayout();
+    };
+    const resizeObserver =
+      typeof globalThis.ResizeObserver === "function"
+        ? new globalThis.ResizeObserver(invalidate)
+        : null;
+    resizeObserver?.observe(layer);
+    if (waterState?.card) {
+      resizeObserver?.observe(waterState.card);
+    }
+    window.addEventListener("resize", invalidate);
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", invalidate);
+    };
+  }
+
   function motionPreferenceEnabled() {
     return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
@@ -170,6 +191,7 @@
       let animationFrameId = null;
       let unregisterRareSweatPreview = null;
       let renderer = null;
+      let stopLayoutObservation = null;
       let waterState = null;
       let sweatRenderer = null;
       const pulseState = createPushStretchPulseState();
@@ -220,6 +242,12 @@
         waterState = attachPushWaterLayer(container);
         container.classList.add("has-pace-icon-effect-push-stretch");
         container.append(layer);
+        stopLayoutObservation = observePushLayout({
+          layer,
+          renderer,
+          sweatRenderer,
+          waterState,
+        });
         animationFrameId = window.requestAnimationFrame(renderFrame);
       };
       unregisterRareSweatPreview = PREVIEW_BROKER.registerHandler(
@@ -234,6 +262,7 @@
         unregisterRareSweatPreview?.();
         image.removeEventListener("load", start);
         window.cancelAnimationFrame(animationFrameId);
+        stopLayoutObservation?.();
         renderer?.destroy();
         waterState?.card.classList.remove("has-pace-push-water");
         this.clearPushStretchEffectClasses(container);

@@ -66,6 +66,29 @@ function expectTargetScriptSourceComposition(runtime) {
   ]);
 }
 
+function expectSyncSunburstScriptSourceContent(runtime) {
+  for (const source of [
+    "./dashboard-sync-sunburst-layout.js",
+    "./dashboard-sync-sunburst-core-cache.js",
+  ]) {
+    expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(source);
+    expect(runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(source)).toBeLessThan(
+      runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+        "./dashboard-sync-sunburst-renderer.js",
+      ),
+    );
+  }
+  expect(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-sync-sunburst-draw.js",
+    ),
+  ).toBeLessThan(
+    runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
+      "./dashboard-sync-sunburst-core-cache.js",
+    ),
+  );
+}
+
 function expectDashboardScriptSourceContent(runtime) {
   for (const source of [
     "./dashboard-dom-contract.js",
@@ -144,6 +167,7 @@ function expectDashboardScriptSourceContent(runtime) {
       "./dashboard-big-bang-scene-draw.js",
     ),
   );
+  expectSyncSunburstScriptSourceContent(runtime);
   for (const source of [
     "./dashboard-singularity-black-hole-v2-scene.js",
     "./dashboard-singularity-chrome-collapse-fragments.js",

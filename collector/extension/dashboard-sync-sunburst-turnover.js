@@ -156,10 +156,13 @@
     const state = {
       activeSwaps: [],
       nextSwapAtMs: 0,
+      opacities: new Map(),
     };
 
     return Object.freeze({
       opacities(timestamp, rays, createRay, progress) {
+        const opacities = state.opacities;
+        opacities.clear();
         const intensity = intensityFor(progress);
         retireFinishedSwaps(state, timestamp, rays);
         if (intensity <= 0) {
@@ -170,7 +173,6 @@
           return null;
         }
 
-        const opacities = new WeakMap();
         for (const swap of state.activeSwaps) {
           opacities.set(swap.inRay, incomingOpacity(timestamp, swap));
           opacities.set(swap.outRay, outgoingOpacity(timestamp, swap));

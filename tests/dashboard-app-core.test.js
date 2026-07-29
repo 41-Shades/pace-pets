@@ -218,6 +218,50 @@ describe("PacePetsDashboardApp storage events", () => {
   });
 });
 
+describe("PacePetsDashboardApp permission events", () => {
+  it("reloads dashboard state when ChatGPT host access changes", async () => {
+    const originalChrome = globalThis.chrome;
+    let addedListener = null;
+    let removedListener = null;
+    globalThis.chrome = {
+      permissions: {
+        onAdded: {
+          addListener: vi.fn((listener) => {
+            addedListener = listener;
+          }),
+        },
+        onRemoved: {
+          addListener: vi.fn((listener) => {
+            removedListener = listener;
+          }),
+        },
+      },
+    };
+    const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
+    app.USAGE_PERMISSIONS = {
+      CHATGPT_HOST_PERMISSION: "https://chatgpt.com/*",
+    };
+    app.loadDashboard = vi.fn(() => Promise.resolve());
+    app.renderHistoryLoadFailure = vi.fn();
+    try {
+      app.bindPermissionEvents();
+      addedListener({ origins: ["https://example.com/*"] });
+      expect(app.loadDashboard).not.toHaveBeenCalled();
+
+      removedListener({ origins: ["https://chatgpt.com/*"] });
+      await Promise.resolve();
+
+      expect(app.loadDashboard).toHaveBeenCalledOnce();
+      expect(app.loadDashboard).toHaveBeenCalledWith({
+        refreshWindowSelection: false,
+      });
+      expect(app.renderHistoryLoadFailure).not.toHaveBeenCalled();
+    } finally {
+      globalThis.chrome = originalChrome;
+    }
+  });
+});
+
 describe("PacePetsDashboardApp visibility", () => {
   it("refreshes visible state before releasing a pending transition", async () => {
     const originalDocument = globalThis.document;
@@ -343,12 +387,14 @@ describe("PacePetsDashboardApp state commits", () => {
     app.applyDashboardState({
       dashboardWindowKey: "fiveHour",
       developerOptions,
+      hasChatGptAccess: false,
       history: { samples: [] },
       refreshStatus: null,
       refreshWindowSelection: true,
     });
 
     expect(app.selectedWindowKey).toBe("fiveHour");
+    expect(app.currentHasChatGptAccess).toBe(false);
     expect(app.storeSessionWindowKey).toHaveBeenCalledWith("fiveHour");
   });
 });

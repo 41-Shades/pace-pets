@@ -15,6 +15,7 @@
   const COLLECTION_STATUS_TITLE = "Usage collection status";
   const NOTHINGNESS_STATE = PACE_LOGIC.PACE_STATES.nothingness;
   const STATUS_TEXT = Object.freeze({
+    accessNeeded: "Access needed",
     live: "Live",
     waiting: "Waiting",
     waitingForReading: "Waiting for reading",
@@ -26,12 +27,14 @@
     "Latest check failed because ChatGPT sign-in was not found.";
   const EMPTY_HISTORY_CHART_COPY = "Waiting for local history.";
   const COLLECTION_STATUS_LABELS = Object.freeze({
+    [STATUS_TEXT.accessNeeded]: "Access needed",
     [STATUS_TEXT.checkFailed]: "Check failed",
     [STATUS_TEXT.refreshNeeded]: "Refresh needed",
     [STATUS_TEXT.signInNotFound]: "Sign-in needed",
     [STATUS_TEXT.waiting]: "Waiting",
   });
   const MANUAL_REFRESH_DEFAULT_LABEL = "Check now";
+  const MANUAL_ACCESS_ACTION_LABEL = "Allow & check";
   const MANUAL_REFRESH_COOLDOWN_PREFIX = "Again in";
   const MANUAL_REFRESH_FAILURE_VISIBLE_MS = 1800;
   const LAST_COLLECTED_UPDATE_FEEDBACK_MS = 2400;
@@ -108,15 +111,28 @@
   function collectionStatusState({
     detail = "",
     manualRefresh = false,
+    manualRefreshLabel,
     mode = "ok",
     text,
   }) {
     return {
       detail,
       manualRefresh: manualRefresh === true,
+      ...(manualRefreshLabel ? { manualRefreshLabel } : {}),
       mode,
       text,
     };
+  }
+
+  function accessRequiredCollectionStatusState(hasChatGptAccess) {
+    return hasChatGptAccess === false
+      ? collectionStatusState({
+          manualRefresh: true,
+          manualRefreshLabel: MANUAL_ACCESS_ACTION_LABEL,
+          mode: "warning",
+          text: STATUS_TEXT.accessNeeded,
+        })
+      : null;
   }
 
   function failedCollectionStatusState({
@@ -165,8 +181,20 @@
 
   function emptyHistoryCollectionState({
     formatClockTime,
+    hasChatGptAccess = true,
     refreshStatus = null,
   } = {}) {
+    const accessRequired =
+      accessRequiredCollectionStatusState(hasChatGptAccess);
+    if (accessRequired) {
+      return {
+        chartCopy: "Grant access to begin.",
+        paceCopy: NOTHINGNESS_STATE.copyByReason.accessRequired,
+        paceTitle: NOTHINGNESS_STATE.title,
+        status: accessRequired,
+      };
+    }
+
     const failedStatus = failedCollectionStatusState({
       formatClockTime,
       refreshStatus,
@@ -239,6 +267,7 @@
 
   function historyCollectionStatusState(options = {}) {
     const status = firstCollectionStatusState([
+      accessRequiredCollectionStatusState(options.hasChatGptAccess),
       failedCollectionStatusState({
         formatClockTime: options.formatClockTime,
         latest: options.latest || null,
@@ -271,6 +300,7 @@
     CHECKS_EVERY_ARIA,
     COLLECTION_STATUS_TITLE,
     LAST_COLLECTED_UPDATE_FEEDBACK_MS,
+    MANUAL_ACCESS_ACTION_LABEL,
     MANUAL_REFRESH_COOLDOWN_PREFIX,
     MANUAL_REFRESH_DEFAULT_LABEL,
     MANUAL_REFRESH_FAILURE_VISIBLE_MS,

@@ -26,7 +26,11 @@ function controllerElements() {
   };
 }
 
-function createController({ completeHistoryPresentation, loadDashboard }) {
+function createController({
+  completeHistoryPresentation,
+  elements = controllerElements(),
+  loadDashboard,
+}) {
   const context = vm.createContext({
     chrome: {
       runtime: {
@@ -42,6 +46,7 @@ function createController({ completeHistoryPresentation, loadDashboard }) {
       CHECKS_EVERY_ARIA: "Checks automatically",
       COLLECTION_STATUS_TITLE: "Collection status",
       LAST_COLLECTED_UPDATE_FEEDBACK_MS: 1000,
+      MANUAL_ACCESS_ACTION_LABEL: "Allow & check",
       MANUAL_REFRESH_COOLDOWN_PREFIX: "Available in",
       MANUAL_REFRESH_DEFAULT_LABEL: "Check now",
       MANUAL_REFRESH_FAILURE_VISIBLE_MS: 1000,
@@ -66,7 +71,7 @@ function createController({ completeHistoryPresentation, loadDashboard }) {
   const controller = context.PacePetsDashboardStatus.createController({
     appTooltips: { setText: vi.fn() },
     completeHistoryPresentation,
-    elements: controllerElements(),
+    elements,
     formatClockTime: vi.fn(),
     getCurrentHistory: () => null,
     loadDashboard,
@@ -79,6 +84,32 @@ function createController({ completeHistoryPresentation, loadDashboard }) {
 }
 
 describe("PacePetsDashboardStatus manual refresh recovery", () => {
+  it("renders the permission action label supplied by Nothingness", () => {
+    const elements = controllerElements();
+    elements.manualRefreshButton = {
+      hidden: true,
+      setAttribute: vi.fn(),
+      textContent: "",
+    };
+    const controller = createController({
+      completeHistoryPresentation: vi.fn(),
+      elements,
+      loadDashboard: vi.fn(),
+    });
+
+    controller.setStatus("Access needed", "warning", "Collection status", "", {
+      manualRefresh: true,
+      manualRefreshLabel: "Allow & check",
+    });
+
+    expect(elements.manualRefreshButton.textContent).toBe("Allow & check");
+    expect(elements.manualRefreshButton.hidden).toBe(false);
+    expect(elements.manualRefreshButton.setAttribute).toHaveBeenCalledWith(
+      "aria-label",
+      "Allow & check",
+    );
+  });
+
   it("restores presentation authority after its dashboard read fails", async () => {
     const error = new Error("Dashboard read failed.");
     const completeHistoryPresentation = vi.fn();

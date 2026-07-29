@@ -198,7 +198,6 @@
       const gl = this.gl;
       const localMs = elapsedMs - START_MS;
       this.size = configureCanvas(this.canvas, gl);
-      gl.clear(gl.COLOR_BUFFER_BIT);
       gl.useProgram(this.resources.program);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.resources.quadBuffer);
       gl.enableVertexAttribArray(this.resources.positionAttribute);
