@@ -146,7 +146,11 @@
       }
 
       const collectedMs = dateMs(normalized.collectedAt);
-      if (!Number.isFinite(collectedMs) || collectedMs < cutoffMs) {
+      if (
+        !Number.isFinite(collectedMs) ||
+        collectedMs < cutoffMs ||
+        collectedMs > nowMs
+      ) {
         continue;
       }
 
@@ -165,9 +169,9 @@
     return compacted.slice(-MAX_SAMPLES);
   }
 
-  function normalizeHistory(value) {
+  function normalizeHistory(value, nowMs = Date.now()) {
     const samples = Array.isArray(value?.samples)
-      ? pruneSamples(value.samples)
+      ? pruneSamples(value.samples, nowMs)
       : [];
     return {
       historyVersion: HISTORY_VERSION,

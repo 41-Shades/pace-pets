@@ -77,6 +77,14 @@
     refreshStatus = null,
   } = {}) {
     return USAGE_HISTORY.runUsageDataTransaction(async (usageData) => {
+      const previousStatus = await priorRefreshStatus(
+        usageData,
+        refreshStatus || lastRefreshState,
+      );
+      if (previousStatus?.ok === false && previousStatus.refreshedAt) {
+        return;
+      }
+
       const history = await usageData.readHistory();
       const sample = USAGE_HISTORY.latestSample(history);
       if (!sample) {
@@ -87,10 +95,6 @@
       const badgeState = await BADGE_PRESENTATION.updatePaceBadge(
         sample.windows,
         history,
-      );
-      const previousStatus = await priorRefreshStatus(
-        usageData,
-        refreshStatus || lastRefreshState,
       );
       const presentationState = REFRESH_STATUS.statusWithBadgePresentation(
         previousStatus,
@@ -195,9 +199,15 @@
     }
 
     const refreshPromise = USAGE_PERMISSIONS.hasChatGptHostPermission()
-      .then((hasPermission) =>
-        hasPermission ? refreshUsage(refreshGeneration) : lastRefreshState,
-      )
+      .then(async (hasPermission) => {
+        if (hasPermission) {
+          return refreshUsage(refreshGeneration);
+        }
+        if (isCurrentUsageDataGeneration(refreshGeneration)) {
+          await updatePaceBadgeFromHistory();
+        }
+        return lastRefreshState;
+      })
       .catch((error) => {
         if (!isCurrentUsageDataGeneration(refreshGeneration)) {
           return lastRefreshState;

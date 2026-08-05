@@ -101,6 +101,7 @@ MIT. See [LICENSE](LICENSE).
 - [Local Extension Runtime And Distribution Model](docs/guides/local-extension-distribution.md)
 - [Custom Icons](docs/guides/custom-icons.md)
 - [Testing Guide](docs/guides/testing.md)
+- [User Experience Map](docs/reference/user-experience-map.md)
 - [Extension Architecture](docs/reference/extension-architecture.md)
 - [Pace State Presentation](docs/reference/pace-state-presentation.md)
 - [Singularity Transition](docs/reference/singularity-transition.md)

@@ -13,11 +13,33 @@
       "Pace Pets dashboard chart config must load before dashboard-chart.js.",
     );
   }
+  const CHART_READOUT = globalThis.PacePetsDashboardChartReadout;
+  if (!CHART_READOUT) {
+    throw new Error(
+      "Pace Pets dashboard chart readout must load before dashboard-chart.js.",
+    );
+  }
 
   class UsageChartRenderer {
-    constructor({ chartCanvas, chartFrame, chartState, windowSpecs }) {
+    constructor({
+      chartCanvas,
+      chartFrame,
+      chartInspection,
+      chartInspectionTime,
+      chartInspectionValues,
+      chartState,
+      windowSpecs,
+    }) {
       this.chartCanvas = chartCanvas;
       this.chartFrame = chartFrame;
+      this.chartReadout = CHART_READOUT.createController({
+        container: chartInspection,
+        time: chartInspectionTime,
+        values: chartInspectionValues,
+      });
+      this.chartCanvas.addEventListener("mouseleave", this.chartReadout.clear);
+      this.chartCanvas.addEventListener("touchend", this.chartReadout.clear);
+      this.chartCanvas.addEventListener("touchcancel", this.chartReadout.clear);
       this.chartState = chartState;
       this.windowSpecs = windowSpecs;
       this.historyContext = null;
@@ -50,6 +72,7 @@
         this.historyContext = null;
       }
       this.destroy();
+      this.chartReadout.clear();
       this.chartFrame.classList.add("empty");
       this.chartFrame.classList.remove("empty-data");
       this.chartCanvas.hidden = true;
@@ -88,6 +111,7 @@
 
       this.usageChart.data.datasets = config.data.datasets;
       this.usageChart.options.interaction = config.options.interaction;
+      this.usageChart.options.onHover = config.options.onHover;
       this.usageChart.options.plugins = config.options.plugins;
       this.usageChart.options.scales.x = config.options.scales.x;
       this.usageChart.options.scales.y = config.options.scales.y;
@@ -96,6 +120,7 @@
 
     renderEmptyData({ atMs = Date.now(), windowData = null, windowKey }) {
       this.historyContext = null;
+      this.chartReadout.clear();
       const spec = this.windowSpecs[windowKey];
       if (!globalThis.Chart) {
         this.setEmpty("Chart.js did not load from the extension asset.");
@@ -131,7 +156,12 @@
       }
 
       this.showChartCanvas(spec, preview);
-      const config = CHART_CONFIG.usageChartConfig(points, windowData, atMs);
+      const config = CHART_CONFIG.usageChartConfig(
+        points,
+        windowData,
+        atMs,
+        this.chartReadout.show,
+      );
       const yBounds = config.options.scales.y;
       const hasCappedPoints = CHART_DATA.hasCappedPacePoints(points, yBounds);
       this.chartCanvas.setAttribute(
@@ -239,7 +269,12 @@
         return true;
       }
 
-      const config = CHART_CONFIG.usageChartConfig(points, summaryWindow, atMs);
+      const config = CHART_CONFIG.usageChartConfig(
+        points,
+        summaryWindow,
+        atMs,
+        this.chartReadout.show,
+      );
       const yBounds = config.options.scales.y;
       this.usageChart.data.datasets = config.data.datasets;
       this.usageChart.options.scales.y = yBounds;

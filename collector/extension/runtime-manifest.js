@@ -63,6 +63,7 @@
     "./dashboard-tooltips.js",
     "./dashboard-early-reset.js",
     "./dashboard-chart-data.js",
+    "./dashboard-chart-readout.js",
     "./dashboard-chart-config.js",
     "./dashboard-chart.js",
     "./dashboard-time.js",

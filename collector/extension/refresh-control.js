@@ -15,14 +15,26 @@
     "pacePetsManualRefreshCooldownUntil";
   const MANUAL_REFRESH_COOLDOWN_MS = 60 * 1000;
 
-  function manualRefreshCooldownUntilMs(value) {
+  function manualRefreshCooldownUntilMs(value, nowMs = Date.now()) {
     const valueMs =
       typeof value === "string" ? Date.parse(value) : Number(value);
-    return Number.isFinite(valueMs) ? valueMs : 0;
+    const currentMs = Number.isFinite(nowMs) ? nowMs : Date.now();
+    if (
+      !Number.isFinite(valueMs) ||
+      valueMs <= currentMs ||
+      valueMs > currentMs + MANUAL_REFRESH_COOLDOWN_MS
+    ) {
+      return 0;
+    }
+
+    return valueMs;
   }
 
-  function manualRefreshCooldownStorageValue(cooldownUntilMs) {
-    const valueMs = manualRefreshCooldownUntilMs(cooldownUntilMs);
+  function manualRefreshCooldownStorageValue(
+    cooldownUntilMs,
+    nowMs = Date.now(),
+  ) {
+    const valueMs = manualRefreshCooldownUntilMs(cooldownUntilMs, nowMs);
     if (valueMs <= 0) {
       return null;
     }
@@ -34,7 +46,7 @@
   }
 
   function cooldownRemainingMs(cooldownUntilMs, nowMs = Date.now()) {
-    const valueMs = manualRefreshCooldownUntilMs(cooldownUntilMs);
+    const valueMs = manualRefreshCooldownUntilMs(cooldownUntilMs, nowMs);
     if (!Number.isFinite(valueMs) || !Number.isFinite(nowMs)) {
       return 0;
     }

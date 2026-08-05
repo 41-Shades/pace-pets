@@ -181,6 +181,55 @@ describe("CodexUsageHistory.normalizeHistory compaction", () => {
   });
 });
 
+describe("CodexUsageHistory clock correction", () => {
+  it("repairs future samples after the system clock moves backward", async () => {
+    const storedHistory = {
+      historyVersion: 1,
+      samples: [
+        {
+          id: "current",
+          collectedAt: "2026-05-25T11:55:00.000Z",
+          windows: {
+            fiveHour: {
+              remainingPercent: 50,
+              resetsAt: "2026-05-25T15:00:00.000Z",
+              windowMinutes: 300,
+            },
+          },
+        },
+        {
+          id: "pre-correction-future",
+          collectedAt: "2026-05-25T13:00:00.000Z",
+          windows: {
+            fiveHour: {
+              remainingPercent: 40,
+              resetsAt: "2026-05-25T18:00:00.000Z",
+              windowMinutes: 300,
+            },
+          },
+        },
+      ],
+    };
+    globalThis.chrome.storage.local.get.mockImplementation((_keys, done) => {
+      done({ codexUsageHistory: storedHistory });
+    });
+    globalThis.chrome.storage.local.set.mockImplementation((_items, done) => {
+      done();
+    });
+
+    const history = await globalThis.CodexUsageHistory.readHistory();
+
+    expect(history.samples.map((sample) => sample.id)).toEqual(["current"]);
+    expect(globalThis.CodexUsageHistory.latestSample(history)?.id).toBe(
+      "current",
+    );
+    expect(globalThis.chrome.storage.local.set).toHaveBeenCalledWith(
+      { codexUsageHistory: history },
+      expect.any(Function),
+    );
+  });
+});
+
 describe("CodexUsageHistory durable storage normalization", () => {
   it("persists a pruned read once and skips the redundant repair afterward", async () => {
     const storedHistory = {

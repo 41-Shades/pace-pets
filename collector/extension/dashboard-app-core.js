@@ -91,6 +91,9 @@
       this.usageChartView = this.DASHBOARD_CHART.createRenderer({
         chartCanvas: this.elements.chartCanvas,
         chartFrame: this.elements.chartFrame,
+        chartInspection: this.elements.chartInspection,
+        chartInspectionTime: this.elements.chartInspectionTime,
+        chartInspectionValues: this.elements.chartInspectionValues,
         chartState: this.elements.chartState,
         windowSpecs: this.WINDOW_SPECS,
       });

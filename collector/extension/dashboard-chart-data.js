@@ -55,9 +55,6 @@
       perfectLine:
         cssCustomProperty("--chart-perfect-line") ||
         CHART_COLOR_FALLBACKS.perfectLine,
-      tooltipBg: cssCustomProperty("--tooltip-bg") || "#ffffff",
-      tooltipText: cssCustomProperty("--tooltip-text") || "#24313d",
-      tooltipBorder: cssCustomProperty("--tooltip-border") || "#cfd8e2",
     };
   }
 
@@ -94,10 +91,24 @@
       return null;
     }
 
-    const paceRatio = PACE_LOGIC.paceRatioForWindow(windowData, atMs);
+    const remainingPercent = PACE_LOGIC.boundedPercent(
+      windowData?.remainingPercent,
+    );
+    const timePercent = PACE_LOGIC.timeRemainingPercentAt(windowData, atMs);
+    const paceRatio = PACE_LOGIC.paceRatioForValues(
+      remainingPercent,
+      timePercent,
+    );
     return paceRatio === null
       ? null
-      : { live: true, paceRatio, x: atMs, y: paceRatio };
+      : {
+          live: true,
+          paceRatio,
+          remainingPercent,
+          timePercent,
+          x: atMs,
+          y: paceRatio,
+        };
   }
 
   function paceChartPointsWithLivePoint(
@@ -116,8 +127,10 @@
       .map((sample) => {
         const collectedMs = PACE_LOGIC.dateMs(sample.collectedAt);
         const windowData = sample.windows[windowKey];
-        const remainingPercent = Number(windowData?.remainingPercent);
-        if (collectedMs === null || !Number.isFinite(remainingPercent)) {
+        const remainingPercent = PACE_LOGIC.boundedPercent(
+          windowData?.remainingPercent,
+        );
+        if (collectedMs === null || remainingPercent === null) {
           return null;
         }
 
@@ -137,6 +150,8 @@
           x: collectedMs,
           y: paceRatio,
           paceRatio,
+          remainingPercent,
+          timePercent,
         };
       })
       .filter(Boolean);

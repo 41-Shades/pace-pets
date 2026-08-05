@@ -112,10 +112,14 @@ describe("PacePetsRefreshControl manual refresh", () => {
       null,
     );
   });
+});
 
+describe("PacePetsRefreshControl persistent manual refresh cooldown", () => {
   it("normalizes persistent manual refresh cooldown storage", () => {
     const refreshControl = globalThis.PacePetsRefreshControl;
+    const nowMs = Date.parse("2026-05-25T12:00:00.000Z");
     const cooldownUntil = "2026-05-25T12:01:00.000Z";
+    const poisonedCooldownUntil = "2026-05-25T13:00:00.000Z";
 
     expect(refreshControl.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY).toBe(
       "pacePetsManualRefreshCooldownUntil",
@@ -125,6 +129,12 @@ describe("PacePetsRefreshControl manual refresh", () => {
     );
     expect(refreshControl.manualRefreshCooldownUntilMs("not a date")).toBe(0);
     expect(
+      refreshControl.manualRefreshCooldownUntilMs(poisonedCooldownUntil, nowMs),
+    ).toBe(0);
+    expect(
+      refreshControl.cooldownRemainingMs(poisonedCooldownUntil, nowMs),
+    ).toBe(0);
+    expect(
       refreshControl.manualRefreshCooldownStorageValue(
         Date.parse(cooldownUntil),
       ),
@@ -132,5 +142,11 @@ describe("PacePetsRefreshControl manual refresh", () => {
     expect(refreshControl.manualRefreshCooldownStorageValue("not a date")).toBe(
       null,
     );
+    expect(
+      refreshControl.manualRefreshCooldownStorageValue(
+        poisonedCooldownUntil,
+        nowMs,
+      ),
+    ).toBeNull();
   });
 });
