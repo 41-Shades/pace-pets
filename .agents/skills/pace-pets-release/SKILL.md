@@ -1,90 +1,90 @@
 ---
 name: pace-pets-release
-description: Release Pace Pets from a clean reviewed pull request through GitHub and the existing Chrome Web Store item using the repository's canonical package workflow. Use when the user invokes `$pace-pets-release` or explicitly asks to ship, publish, or resume a package-only Pace Pets release without changing store copy, privacy declarations, distribution, screenshots, or promotional assets.
+description: Release Pace Pets from reviewed public source through GitHub and the existing Chrome Web Store item. Use when the user invokes `$pace-pets-release` or asks to ship, publish, or resume a package-only Pace Pets release without changing Store copy, privacy, distribution, screenshots, or promotional assets.
 ---
 
 # Pace Pets Release
 
-Ship one traceable Pace Pets package from reviewed public source. Treat a bare invocation or an explicit ship/publish request as authorization for the normal merge, version, tag, GitHub Release, Web Store upload, and automatic-on-approval submission sequence. Do not ask for duplicate confirmation when all gates pass.
+Ship one traceable package from reviewed source. A bare invocation authorizes the normal merge, version, tag, checks, GitHub Release, Web Store ZIP upload, and automatic-on-approval submission. Do not ask for duplicate confirmation when every gate passes.
 
-## Establish The Contract
+## Fixed targets
 
-- Work only in the public `41-Shades/pace-pets` repository and existing Web Store item `dgemeohjkjclceamjacmfneodafbcbdk`.
-- Read repository `AGENTS.md`, `docs/operations/release-packaging.md`, and `docs/operations/chrome-web-store-listing.md` before acting. When `.maintainer/agent-notes.md` or `.maintainer/release-ops.md` exists, read it too. Treat tracked repository instructions as canonical; local maintainer notes may add constraints but must not loosen them.
-- Fetch `origin/main` and all remote tags before resolving release state. Treat matching GitHub Releases, not the checkout's preexisting local refs, as authoritative for shipped versions.
-- Use Mac Computer Use targeting `com.google.Chrome` for every Chrome Web Store dashboard read and action. Do not initialize Chrome browser automation for `chrome.google.com` Developer Dashboard pages.
-- Treat the dashboard description as the operational source of truth. Require `docs/operations/chrome-web-store-listing.md` to mirror its approved copy before release; preserve privacy, distribution, support, test-instruction, screenshot, and promotional-asset fields.
-- Upload only the generated extension ZIP to the Web Store. Attach the ZIP, release JSON, and SHA-256 file to the matching GitHub Release.
-- Select automatic publication after approval. If the user explicitly requests staged/deferred publishing, honor that instead and report that a later manual publish action remains.
-- Make the workflow resumable. Inspect existing PR, tag, release, package, and Web Store state before new-release gates or mutations. When a matching release is pending, approved, or published, jump to section 6; reuse only when provenance matches exactly.
+- Repository: `41-Shades/pace-pets`
+- Publisher: `41 Shades`
+- Item ID: `dgemeohjkjclceamjacmfneodafbcbdk`
+- Item dashboard: `https://chrome.google.com/u/1/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit`
+- Package page: `https://chrome.google.com/u/1/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit/package`
+- Store listing: `https://chrome.google.com/u/1/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit/listing`
 
-## Stop Conditions
+Use Mac Computer Use targeting `com.google.Chrome` for every Web Store read and action. Navigate directly to these URLs; do not use the dashboard hamburger menu or browser automation.
 
-Stop and report the exact blocker without broadening scope when any of these is true:
+## Read first
 
-- The repository identity, target store item, or release scope is ambiguous. A clean fetched `main` ahead of the latest shipped tag is valid release source and does not require one active PR.
-- The working tree contains unrelated changes, local `main` cannot fast-forward, or reviewed source differs from the intended release source.
-- PR checks or the release gate substantively fail. Retry the unchanged command with required access when failure is solely a sandbox, filesystem-permission, registry, or network restriction; never bypass a failing check or change product code merely to force a release through.
-- Package, lockfile, and manifest versions disagree; the Store version is newer than public source; or an existing target tag or GitHub Release points elsewhere.
-- When initiating a new release, the commits since the prior shipped tag contain no package-affecting extension change beyond version files. Stop with “nothing to release” instead of manufacturing a package update; do not apply this condition while resuming a matching release or submission.
-- Packaged permissions, privacy behavior, listing claims, or user-visible surfaces require Store metadata or image changes.
-- The Web Store has a concrete pending package, privacy, distribution, test-instruction, or asset change that cannot be proven to belong to this release. Do not treat the dashboard's generic Draft section or “This draft is unpublished” label alone as evidence of a pending change.
-- The package metadata, checksum, file list, exact tag, commit, or clean-tree evidence does not match.
-- Chrome is not signed into the correct publisher, the dashboard reports blocking warnings, or submission would affect a different item.
+Read `AGENTS.md`, `docs/operations/release-packaging.md`, and `docs/operations/chrome-web-store-listing.md`. Also read `.maintainer/agent-notes.md` and `.maintainer/release-ops.md` when present. Repository instructions are canonical; local notes may tighten them.
 
-Do not delete or move published tags or releases automatically. Do not create a replacement Store item, rebuild after publishing the tag, change permissions, or edit listing fields under this skill.
+## Stop conditions
 
-## 1. Resolve And Merge The Reviewed PR
+Stop and report the exact blocker when:
 
-1. Confirm the checkout is the Pace Pets repository and the tree is clean.
-2. If the active branch has an open PR, confirm its base is `main` and its changes match the package release the user requested. Wait for required checks, then merge with the repository's normal merge method only when green; do not delete local branches as part of the release.
-3. If the active-branch PR is already merged, continue without recreating or modifying it.
-4. If the checkout is already on clean `main`, use fetched `origin/main` as the reviewed release source when it is ahead of the latest shipped tag. Collect the merged PRs since that tag for provenance and release notes; do not require one intended PR.
-5. Fetch `origin/main` and all remote tags, switch to local `main`, and fast-forward it to `origin/main`. Confirm any just-merged PR commit is contained in `HEAD` and the tree remains clean.
-6. Resolve the prior shipped tag from the latest matching GitHub Release and require that annotated tag to exist remotely. If no matching shipped Release and tag pair exists, stop because first-release bootstrapping is outside this existing-item workflow. For a new release, compare the release source with that tag. Require a runtime, packaged asset, permission, or other release-content change beyond the canonical version files; docs, release guardrails, listing copy, and version-only changes do not justify a Store package. Skip this content-change gate when resuming a matching release or submission.
-7. Read the dashboard description with Mac Computer Use and compare it with `docs/operations/chrome-web-store-listing.md`. If an intentional dashboard edit is not mirrored, create a scoped docs-only branch and PR that copies the dashboard text exactly, run the targeted release lint, merge after green checks, and fast-forward `main` again. Do not bump the extension version or edit the dashboard from repository text.
+- The repository, publisher, item ID, release scope, or intended source is ambiguous.
+- The tree has unrelated changes, `main` cannot fast-forward, reviewed source differs, or required checks fail.
+- Package, lockfile, and manifest versions disagree; Store is newer; or a target tag/Release points elsewhere.
+- No packaged extension change exists since the latest shipped tag. Docs, guardrails, listing copy, and version-only changes are not a release.
+- Package metadata, checksum, tag, commit, clean-tree evidence, permissions, or listing claims do not match.
+- Store metadata or assets require changes, a different draft/submission exists, a blocking warning appears, or Chrome is signed into the wrong publisher.
 
-## 2. Resolve The Version
+Never bypass checks, rebuild after pushing the tag, replace the Store item, move published tags, edit Store fields, or upload anything except the generated ZIP.
 
-1. Read the published version from the existing item's Package or Status page in the signed-in dashboard.
-2. Read and compare the versions in `package.json`, `package-lock.json` (root and package entry), and `collector/extension/manifest.json`.
-3. If the aligned source version is greater than the published Store version, use it as the target version. Skipped unshipped version numbers do not need synthetic tags or releases.
-4. If the aligned source version equals the Store version and section 1 confirmed package-affecting changes, create a scoped `codex/prepare-<next-version>-release` branch for the smallest next patch version. Update only the required version entries in the three canonical files, commit, push, open a release-bump PR, wait for green checks, merge it, and fast-forward local `main` again. If no package-affecting changes exist, stop with “nothing to release.”
-5. If the Store version is greater than source, stop; public-source and release provenance must be reconciled first.
-6. Confirm no conflicting local tag, remote tag, or GitHub Release exists for `v<version>`. Resume an existing release only when its tag, commit, and artifacts match the intended release exactly.
+## Release steps
 
-## 3. Tag, Gate, And Package
+### 1. Resolve reviewed source
 
-1. Create the annotated local `v<version>` tag on the exact clean release commit. Do not push it yet.
-2. Run the full repository release gate with `./scripts/chks`. Invocation of this skill is the user's explicit authorization for the broad release gate.
-3. Run `npm run package:extension` once from that clean, locally tagged commit.
-4. Inspect the generated files under `dist/`:
-   - `pace-pets-chrome-extension-v<version>.zip`
-   - `pace-pets-chrome-extension-v<version>.release.json`
-   - `pace-pets-chrome-extension-v<version>.zip.sha256`
-5. Verify the checksum from the directory containing the ZIP. Inspect the ZIP file list and release JSON.
-6. Require the intended version, exact commit, `gitTag: "v<version>"`, `workingTreeClean: true`, matching filename, matching SHA-256, and the repository's expected allowlisted extension contents.
+1. Fetch `origin/main` and all tags. Confirm the clean checkout is Pace Pets.
+2. If the active branch has an open PR, require base `main`, matching scope, and green required checks; merge with the repository's normal method. If already merged, continue.
+3. Switch to `main`, fast-forward to `origin/main`, and verify the intended merge is contained in clean `HEAD`.
+4. Resolve the prior shipped version from the latest matching GitHub Release and remote annotated tag. Collect merged PRs since that tag for provenance and notes.
+5. Compare the dashboard description with `docs/operations/chrome-web-store-listing.md`. If an intentional dashboard description is not mirrored, fix the mirror in a separate docs-only PR before releasing. Do not edit the dashboard from repository text.
 
-## 4. Publish The GitHub Release
+### 2. Resolve version
 
-1. Push the release tag only after artifact inspection succeeds. Push the release commit first only if the version-bump merge has not already made it reachable from `origin/main`.
-2. Create the matching GitHub Release from the existing tag, generate notes from the prior shipped tag, attach all three inspected artifacts, and mark the new shipped release Latest.
-3. Verify the remote annotated tag resolves to the release commit, the new release is Latest, and all three uploaded artifact names, sizes, and available digests match the inspected local files. Record the release URL and ZIP checksum. Do not regenerate the artifacts after this point.
+1. Read the published Store version from the direct Package page.
+2. Require matching versions in `package.json`, root and package entries of `package-lock.json`, and `collector/extension/manifest.json`.
+3. Use the aligned source version when it is higher than Store. Skipped unshipped numbers need no synthetic releases.
+4. When source equals Store and packaged changes exist, make the smallest patch bump in those canonical files through a scoped PR, merge it, and fast-forward `main`.
+5. Stop if Store is higher. Resume an existing target only when tag, commit, Release, artifacts, and Store state match exactly.
 
-## 5. Submit The Existing Web Store Item
+### 3. Tag, check, and package
 
-1. Use Mac Computer Use with Google Chrome and navigate directly to the existing item's exact dashboard URL. Confirm publisher `41 Shades` and item ID `dgemeohjkjclceamjacmfneodafbcbdk`; reconfirm both after any Chrome profile, window, or tab-context change.
-2. Inspect Status, Package, Store Listing, and their actual field values before upload. Inspect Privacy, Distribution, and Test instructions only when permissions, data handling, distribution, access requirements, or reviewer setup changed; also inspect them when a dashboard warning or concrete draft divergence requires investigation. A generic Draft section is normal and is not a blocker. Accept an intentional saved or unsaved description when it matches the repository mirror exactly. If Save draft is enabled and the description is the only changed field, save it and verify the saved value; stop on a different draft package, active submission, or any other field divergence.
-3. Open Package and upload the exact inspected `.zip`; never upload the release JSON or checksum file.
-4. Confirm the dashboard recognizes the intended higher manifest version and that the package introduces no unexpected permission or policy warning.
-5. Do not edit Store Listing fields. Apart from saving an exact mirrored description under step 2, do not resave or change Privacy, Distribution, Test instructions, support metadata, screenshots, tiles, or video fields.
-6. Reconfirm the publisher, item ID, and draft version immediately before submission. Submit for review with automatic publication after approval enabled. If the user requested deferred publishing, disable automatic publication instead.
-7. Confirm the resulting item state is pending review or the platform's equivalent. Do not claim it is published while review remains pending.
+1. Create annotated local tag `v<version>` on exact clean `HEAD`; do not push yet.
+2. Run `./scripts/chks`. Invoking this skill authorizes the full release gate.
+3. Run `npm run package:extension` exactly once.
+4. Inspect:
+   - `dist/pace-pets-chrome-extension-v<version>.zip`
+   - `dist/pace-pets-chrome-extension-v<version>.release.json`
+   - `dist/pace-pets-chrome-extension-v<version>.zip.sha256`
+5. Verify ZIP checksum and allowlisted contents. Require exact version, commit, `gitTag`, clean-tree flag, filename, and SHA-256 in the release JSON.
 
-## 6. Resume And Report
+### 4. Publish GitHub Release
 
-- On a repeated invocation, inspect state first. Do not duplicate a merge, tag, GitHub Release, upload, or submission.
-- If review is pending, report that state and the submitted version without resubmitting. State that post-publication verification remains and ask the user to invoke the skill again after Google's approval notice.
-- If approved and automatic publishing was selected, confirm the published Store version when available. If rejected, report Google's reason and stop; remediation is a separate scoped task.
-- After publication, verify a Store-installed copy without disturbing an unpacked developer installation: confirm only the expected permissions, open the dashboard from the toolbar icon, exercise the badge-view context menu, and inspect extension-local storage for only the normalized safe fields documented in `docs/reference/storage-schema.md`. Do not disable, replace, or uninstall an unpacked copy; ask which Chrome profile to use if no separate Store-installed test copy is available. Do not retain or log storage contents. Stop and report any unexpected permission, behavior, or stored field.
-- Report the active or just-merged PR when one exists; otherwise report the merged PR range since the prior shipped tag. Also report the release commit, version, tag, checks, artifact SHA-256, GitHub Release URL, Web Store item, submission mode, and current Store status.
+1. Push the tag only after inspection succeeds.
+2. Create the GitHub Release from that tag, generate notes from the prior shipped tag, attach all three artifacts, and mark it Latest.
+3. Verify remote tag commit, Latest status, artifact names, sizes, and available digests. Record the Release URL and ZIP SHA-256. Do not regenerate artifacts.
+
+### 5. Upload and submit the Store package
+
+1. Open the direct Package page. Confirm publisher `41 Shades`, item ID, published version, and expected permissions.
+2. Click `Upload new package` → `Select file` and choose only `pace-pets-chrome-extension-v<version>.zip`. Never choose the `.release.json`, `.zip.sha256`, an older ZIP, or a CRX.
+3. Wait for processing, then confirm Draft shows the target version and unchanged expected permissions. Stop on any warning or divergence.
+4. Open the direct Store listing URL. Do not change or resave any field.
+5. Reconfirm publisher, item ID, and draft version. Click `Submit for review`.
+6. Keep `Publish "Pace Pets" automatically after it has passed review` checked, unless the user explicitly requested staged publishing. Click `Submit For Review`.
+7. Require the success confirmation, dismiss it, and verify `Status: Pending review` or the platform equivalent. Do not claim publication while review remains pending.
+
+## Resume and report
+
+Inspect state before mutating. Never duplicate a merge, tag, Release, upload, or submission.
+
+- If pending, report the submitted version and ask the user to invoke the skill after Google's approval notice.
+- If approved with automatic publication, confirm the published Store version. If rejected, report Google's reason and stop.
+- After publication, verify a separate Store-installed copy without disturbing an unpacked developer installation: expected permissions, dashboard launch, badge-view context menu, and only normalized safe fields from `docs/reference/storage-schema.md` in extension-local storage. Do not retain or log storage contents.
+- Report PR provenance, release commit, version/tag, checks, ZIP SHA-256, GitHub Release URL, Store item, publication mode, and current Store status.
