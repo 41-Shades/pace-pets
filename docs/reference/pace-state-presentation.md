@@ -596,8 +596,12 @@ timestamp metadata is discarded rather than retained as a second state path.
 
 The chart clamps plotted pace values to `0..50` through
 `PacePetsLogic.chartPaceRatio()`. `dashboard.js` narrows the visible y-axis for
-normal ranges, expands high ranges in coarser steps, and marks capped tooltip
-values when raw pace is outside the plotted bounds. Historical points remain
+normal ranges and expands high ranges in coarser steps. Hovering or touching
+the chart shows the nearest reading with its timestamp at the chart card's
+upper-right edge and its values along the lower edge; the readout stays hidden
+when the chart is not being inspected. Real historical and live readings
+include usage remaining, time remaining, and pace; synthetic preview or
+crossing points show only pace rather than inventing percentages. Historical points remain
 anchored to their collection timestamps. Full and cached renders use the same
 dashboard render timestamp for one synthetic live endpoint; cached refreshes
 replace that endpoint, crossings, cap metadata, and y bounds without recreating

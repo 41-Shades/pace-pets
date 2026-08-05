@@ -237,6 +237,7 @@
   height: var(--dashboard-card-height);
   min-width: 0;
   padding: 16px var(--dashboard-card-padding-x);
+  position: relative;
 }
 
 .panel-title {
@@ -248,6 +249,41 @@
 
 .panel-title h2 {
   margin: 0;
+}
+
+.chart-inspection {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.chart-inspection[hidden] {
+  display: none;
+}
+
+#chart-inspection-time,
+#chart-inspection-values {
+  line-height: 1.1;
+  position: absolute;
+  right: var(--dashboard-card-padding-x);
+  text-align: right;
+  white-space: nowrap;
+}
+
+#chart-inspection-time {
+  color: var(--subhead);
+  font-size: 0.62rem;
+  font-weight: 560;
+  top: 16px;
+}
+
+#chart-inspection-values {
+  bottom: 7px;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 680;
+  letter-spacing: -0.01em;
 }
 
 .chart-frame {

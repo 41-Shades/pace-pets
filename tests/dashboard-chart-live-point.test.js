@@ -21,6 +21,7 @@ const originalGetComputedStyle = globalThis.getComputedStyle;
 
 beforeAll(async () => {
   await importExtensionScript("collector/extension/dashboard-chart-data.js");
+  await importExtensionScript("collector/extension/dashboard-chart-readout.js");
   await importExtensionScript("collector/extension/dashboard-chart-config.js");
   await importExtensionScript("collector/extension/dashboard-chart.js");
 });
@@ -30,6 +31,26 @@ function windowData() {
     remainingPercent: 50,
     resetsAt: "2026-05-25T13:00:00.000Z",
     windowMinutes: 300,
+  };
+}
+
+function chartElements() {
+  const chartListeners = {};
+  return {
+    chartCanvas: {
+      addEventListener: vi.fn((eventName, listener) => {
+        chartListeners[eventName] = listener;
+      }),
+      getContext: vi.fn(() => ({})),
+      hidden: false,
+      setAttribute: vi.fn(),
+    },
+    chartFrame: { classList: { add: vi.fn(), remove: vi.fn() } },
+    chartInspection: { hidden: true },
+    chartInspectionTime: { textContent: "" },
+    chartInspectionValues: { textContent: "" },
+    chartListeners,
+    chartState: { hidden: false, textContent: "" },
   };
 }
 
@@ -51,6 +72,8 @@ describe("PacePetsDashboardChartData live endpoint", () => {
     expect(points[1]).toMatchObject({
       live: true,
       paceRatio: 2.5,
+      remainingPercent: 50,
+      timePercent: 20,
       x: atMs,
       y: 2.5,
     });
@@ -65,6 +88,34 @@ describe("PacePetsDashboardChartData live endpoint", () => {
         Date.parse("2026-05-25T13:00:00.001Z"),
       ),
     ).toBeNull();
+  });
+
+  it("formats real readings with percents and previews without invented data", () => {
+    const readout = globalThis.PacePetsDashboardChartReadout;
+    const reading = readout.pointReadout({
+      paceRatio: 1.3,
+      remainingPercent: 48.4,
+      timePercent: 37.4,
+      x: Date.parse("2026-05-25T12:00:00.000Z"),
+      y: 1.3,
+    });
+    const preview = readout.pointReadout({
+      paceRatio: 1.3,
+      preview: true,
+      x: Date.parse("2026-05-25T12:00:00.000Z"),
+      y: 1.3,
+    });
+
+    expect(reading?.values).toBe("Usage 48% · Time 37% · Pace 1.30x");
+    expect(preview?.values).toBe("Pace 1.30x");
+    expect(
+      readout.pointReadout({
+        cappedHigh: true,
+        paceRatio: 52,
+        x: Date.parse("2026-05-25T12:00:00.000Z"),
+        y: 50,
+      })?.values,
+    ).toBe("Pace 52.00x (capped)");
   });
 });
 
@@ -97,21 +148,17 @@ describe("PacePetsDashboardChart live endpoint refresh", () => {
   });
 
   it("replaces one live point in place and leaves previews authoritative", () => {
-    const chartCanvas = {
-      getContext: vi.fn(() => ({})),
-      hidden: false,
-      setAttribute: vi.fn(),
-    };
-    const chartFrame = {
-      classList: { add: vi.fn(), remove: vi.fn() },
-    };
-    const chartState = { hidden: false, textContent: "" };
+    const elements = chartElements();
     const renderer = globalThis.PacePetsDashboardChart.createRenderer({
-      chartCanvas,
-      chartFrame,
-      chartState,
+      ...elements,
       windowSpecs: { weekly: { chartSampleLabel: "7-day" } },
     });
+    const {
+      chartInspection,
+      chartInspectionTime,
+      chartInspectionValues,
+      chartListeners,
+    } = elements;
     const summaryWindow = windowData();
     const history = {
       samples: [
@@ -135,6 +182,20 @@ describe("PacePetsDashboardChart live endpoint refresh", () => {
     expect(chart.data.datasets[0].data.filter((point) => point.live)).toEqual([
       expect.objectContaining({ x: firstAtMs }),
     ]);
+    expect(chart.options.plugins.tooltip.enabled).toBe(false);
+    expect(chartInspection.hidden).toBe(true);
+    expect(chartInspectionTime.textContent).toBe("");
+    expect(chartInspectionValues.textContent).toBe("");
+
+    chart.options.onHover(null, [{ datasetIndex: 0, index: 0 }], chart);
+    expect(chartInspection.hidden).toBe(false);
+    expect(chartInspectionValues.textContent).toBe(
+      "Usage 50% · Time 23% · Pace 2.14x",
+    );
+    chartListeners.mouseleave();
+    expect(chartInspection.hidden).toBe(true);
+    expect(chartInspectionTime.textContent).toBe("");
+    expect(chartInspectionValues.textContent).toBe("");
 
     const nextAtMs = firstAtMs + 60_000;
     expect(

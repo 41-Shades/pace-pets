@@ -19,31 +19,13 @@
     );
   }
 
-  function chartTooltipOptions(colors) {
-    return {
-      backgroundColor: colors.tooltipBg,
-      bodyColor: colors.tooltipText,
-      borderColor: colors.tooltipBorder,
-      borderWidth: 1,
-      caretSize: 5,
-      cornerRadius: 6,
-      displayColors: false,
-      padding: 8,
-      titleColor: colors.tooltipText,
-      bodyFont: { size: 12, weight: "560" },
-      titleFont: { size: 12, weight: "600" },
-      callbacks: {
-        label(context) {
-          const paceRatio = context.raw?.paceRatio ?? context.parsed.y;
-          const capped =
-            context.raw?.cappedHigh === true || context.raw?.cappedLow === true;
-          const suffix = capped ? " (capped)" : "";
-          return `Pace: ${CHART_DATA.formatPaceRatio(paceRatio)}${suffix}`;
-        },
-        title(items) {
-          return items[0] ? CHART_DATA.formatTime(items[0].parsed.x) : "";
-        },
-      },
+  function chartInspectionHandler(onInspectPoint) {
+    return (_event, activeElements, chart) => {
+      const active = activeElements[0];
+      const point = active
+        ? chart.data.datasets[active.datasetIndex]?.data[active.index]
+        : null;
+      onInspectPoint(point || null);
     };
   }
 
@@ -102,11 +84,19 @@
     };
   }
 
-  function usageChartConfig(points, windowData, atMs = Date.now()) {
+  function usageChartConfig(
+    points,
+    windowData,
+    atMs = Date.now(),
+    onInspectPoint = null,
+  ) {
     const colors = CHART_DATA.chartColors();
     const yBounds = CHART_DATA.ratioChartBounds(points);
     const options = baseOptions(windowData, colors, yBounds, atMs);
-    options.plugins.tooltip = chartTooltipOptions(colors);
+    options.plugins.tooltip = { enabled: false };
+    if (typeof onInspectPoint === "function") {
+      options.onHover = chartInspectionHandler(onInspectPoint);
+    }
     return {
       type: "line",
       data: {

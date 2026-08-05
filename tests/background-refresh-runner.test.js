@@ -93,6 +93,97 @@ beforeEach(async () => {
   weeklyUsage.normalizeUsageWithProvider.mockReturnValue({ windows: {} });
 });
 
+describe("PacePetsBackgroundRefreshRunner badge presentation", () => {
+  it("preserves a persisted failure badge during history presentation", async () => {
+    const history = { samples: [{ id: "stored" }] };
+    usageData.readRefreshStatus.mockResolvedValue({
+      message: "Refresh failed.",
+      ok: false,
+      refreshedAt: "2026-05-25T12:00:00.000Z",
+    });
+    usageData.readHistory.mockResolvedValue(history);
+    usageHistory.latestSample.mockReturnValue(history.samples[0]);
+
+    await refreshRunner.updatePaceBadgeFromHistory({ clearWhenEmpty: true });
+
+    expect(usageData.readRefreshStatus).toHaveBeenCalledOnce();
+    expect(usageData.readHistory).not.toHaveBeenCalled();
+    expect(badgePresentation.updatePaceBadge).not.toHaveBeenCalled();
+    expect(badgePresentation.updateEmptyBadge).not.toHaveBeenCalled();
+    expect(usageData.writeRefreshStatus).not.toHaveBeenCalled();
+  });
+
+  it("recomputes the badge from local history without host permission", async () => {
+    const sample = {
+      id: "stored",
+      windows: {
+        weekly: {
+          remainingPercent: 2,
+          resetsAt: "2026-05-25T12:10:00.000Z",
+          windowMinutes: 10080,
+        },
+      },
+    };
+    const history = { samples: [sample] };
+    usagePermissions.hasChatGptHostPermission.mockResolvedValue(false);
+    usageData.readRefreshStatus.mockResolvedValue({
+      message: "Stored usage history locally.",
+      ok: true,
+      refreshedAt: "2026-05-25T11:59:00.000Z",
+    });
+    usageData.readHistory.mockResolvedValue(history);
+    usageHistory.latestSample.mockReturnValue(sample);
+    badgePresentation.updatePaceBadge.mockResolvedValue({
+      badgePaceRatio: 0.5,
+      presentedAtMs: Date.parse("2026-05-25T12:00:00.000Z"),
+      presentedStateKeysByWindow: { weekly: "criticalBehind" },
+      windowKey: "weekly",
+    });
+
+    const state = await refreshRunner.runScheduledRefresh();
+
+    expect(state).toMatchObject({ ok: true });
+    expect(usageSource.fetchUsageWithProvider).not.toHaveBeenCalled();
+    expect(usageData.appendUsageSnapshot).not.toHaveBeenCalled();
+    expect(badgePresentation.updatePaceBadge).toHaveBeenCalledWith(
+      sample.windows,
+      history,
+    );
+    expect(usageData.writeRefreshStatus).toHaveBeenCalledWith(
+      expect.objectContaining({
+        badgePaceRatio: 0.5,
+        badgeWindowKey: "weekly",
+        ok: true,
+      }),
+    );
+  });
+});
+
+describe("PacePetsBackgroundRefreshRunner manual cooldown", () => {
+  it("allows refresh when clock correction poisons the stored deadline", async () => {
+    vi.setSystemTime(new Date("2026-05-25T11:58:00.000Z"));
+    const storageKey =
+      globalThis.PacePetsRefreshControl.MANUAL_REFRESH_COOLDOWN_STORAGE_KEY;
+    chrome.storage.local.get.mockImplementation((_key, done) => {
+      done({ [storageKey]: "2026-05-25T13:00:00.000Z" });
+    });
+    chrome.storage.local.set.mockImplementation((_items, done) => done());
+    usageSource.fetchUsageWithProvider.mockRejectedValue(
+      new Error("Expected refresh failure."),
+    );
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await refreshRunner.runManualRefresh();
+
+    expect(usageSource.fetchUsageWithProvider).toHaveBeenCalledOnce();
+    expect(chrome.storage.local.set).toHaveBeenCalledWith(
+      { [storageKey]: "2026-05-25T11:59:00.000Z" },
+      expect.any(Function),
+    );
+    warn.mockRestore();
+  });
+});
+
 describe("PacePetsBackgroundRefreshRunner usage-data lifecycle", () => {
   it("prevents a deferred pre-clear refresh from restoring history or status", async () => {
     const rawUsage = deferredPromise();

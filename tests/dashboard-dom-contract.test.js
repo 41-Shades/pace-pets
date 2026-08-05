@@ -27,6 +27,7 @@ describe("PacePetsDashboardDom", () => {
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-volume-panel");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("audio-volume-rail");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("clear-data-button");
+    expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("chart-inspection");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain("dynamic-favicon");
     expect(dom.REQUIRED_DASHBOARD_ELEMENT_IDS).toContain(
       "manual-refresh-button",
