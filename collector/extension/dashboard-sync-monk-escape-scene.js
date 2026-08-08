@@ -1,17 +1,16 @@
 (() => {
   "use strict";
 
-  const BOUNCE = globalThis.PacePetsBouncingBoxMotion;
   const DASHBOARD_PREFERENCES = globalThis.PacePetsDashboardPreferences;
-  if (!BOUNCE || !DASHBOARD_PREFERENCES) {
+  const MOTION = globalThis.PacePetsDashboardSyncMonkEscapeMotion;
+  if (!DASHBOARD_PREFERENCES || !MOTION) {
     throw new Error(
-      "Bouncing-box motion and preferences must load before dashboard-sync-monk-escape-scene.js.",
+      "Sync monk motion and preferences must load before dashboard-sync-monk-escape-scene.js.",
     );
   }
 
   const BODY_CLASS = "has-sync-monk-escape";
   const CONE_HALF_ANGLE_RADIANS = (35 * Math.PI) / 180;
-  const FRAME_DELTA_LIMIT_MS = 64;
   const SPEED_MAX_PX_PER_SECOND = 30;
   const SPEED_MIN_PX_PER_SECOND = 18;
   const UPWARD_ANGLE_RADIANS = -Math.PI / 2;
@@ -20,8 +19,8 @@
     return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
-  function randomBetween(min, max) {
-    return min + Math.random() * (max - min);
+  function randomBetween(minimum, maximum) {
+    return minimum + Math.random() * (maximum - minimum);
   }
 
   function viewportSize() {
@@ -62,20 +61,25 @@
     };
   }
 
+  function axisTransform(axis, position) {
+    return axis === "x"
+      ? `translate3d(${position}px, 0, 0)`
+      : `translate3d(0, ${position}px, 0)`;
+  }
+
   class SyncMonkEscapeScene {
     constructor(container, onStop) {
+      this.axisMotions = [];
       this.body = null;
       this.container = container;
-      this.frameId = null;
       this.isStopped = false;
-      this.lastFrameAtMs = null;
       this.layer = null;
       this.onStop = onStop;
+      this.verticalLayer = null;
       this.handleMotionPreferenceChange =
         this.handleMotionPreferenceChange.bind(this);
       this.handleResize = this.handleResize.bind(this);
       this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
-      this.renderFrame = this.renderFrame.bind(this);
       this.removeMotionPreferenceListener = () => {};
     }
 
@@ -87,12 +91,15 @@
       }
 
       const layer = document.createElement("span");
+      const verticalLayer = document.createElement("span");
       layer.className = "sync-monk-escape";
       layer.setAttribute("aria-hidden", "true");
       layer.style.color = globalThis.getComputedStyle(source).color;
       layer.style.height = `${rect.height}px`;
       layer.style.width = `${rect.width}px`;
-      layer.append(cloneIcon(source));
+      verticalLayer.className = "sync-monk-escape-y";
+      verticalLayer.append(cloneIcon(source));
+      layer.append(verticalLayer);
       this.body = {
         height: rect.height,
         width: rect.width,
@@ -100,59 +107,89 @@
         y: rect.top,
         ...launchVelocity(),
       };
+      this.verticalLayer = verticalLayer;
       return layer;
     }
 
-    cancelFrame() {
-      if (this.frameId !== null) {
-        globalThis.cancelAnimationFrame(this.frameId);
-        this.frameId = null;
-      }
+    createAxisMotion(axis, element, position, velocity, maximum) {
+      const track = MOTION.createAxisTrack({ maximum, position, velocity });
+      element.style.transform = axisTransform(axis, track.position);
+      const animation = track.moving
+        ? element.animate(
+            track.keyframes.map((keyframe) => ({
+              offset: keyframe.offset,
+              transform: axisTransform(axis, keyframe.position),
+            })),
+            {
+              duration: track.durationMs,
+              easing: "linear",
+              fill: "both",
+              iterations: Infinity,
+            },
+          )
+        : null;
+      return { animation, axis, element, track };
     }
 
-    renderPosition() {
-      if (!this.layer || !this.body) {
-        return;
+    startMotion(body) {
+      const size = viewportSize();
+      this.axisMotions = [
+        this.createAxisMotion(
+          "x",
+          this.layer,
+          body.x,
+          body.vx,
+          Math.max(0, size.width - body.width),
+        ),
+        this.createAxisMotion(
+          "y",
+          this.verticalLayer,
+          body.y,
+          body.vy,
+          Math.max(0, size.height - body.height),
+        ),
+      ];
+      const timelineTime = document.timeline?.currentTime;
+      for (const motion of this.axisMotions) {
+        if (motion.animation && Number.isFinite(timelineTime)) {
+          motion.animation.startTime = timelineTime;
+        }
       }
-
-      this.layer.style.transform = `translate3d(${this.body.x}px, ${this.body.y}px, 0)`;
+      this.updatePlayback();
     }
 
-    requestFrame() {
-      if (
-        this.isStopped ||
-        this.frameId !== null ||
-        !motionPreferenceEnabled() ||
-        document.hidden
-      ) {
-        return;
-      }
-
-      this.frameId = globalThis.requestAnimationFrame(this.renderFrame);
+    currentBody() {
+      const [xMotion, yMotion] = this.axisMotions;
+      const x = MOTION.stateAt(
+        xMotion.track,
+        Number(xMotion.animation?.currentTime ?? 0),
+      );
+      const y = MOTION.stateAt(
+        yMotion.track,
+        Number(yMotion.animation?.currentTime ?? 0),
+      );
+      return {
+        height: this.body.height,
+        width: this.body.width,
+        vx: x.velocity,
+        vy: y.velocity,
+        x: x.position,
+        y: y.position,
+      };
     }
 
-    renderFrame(frameTimeMs) {
-      this.frameId = null;
-      if (this.isStopped || !this.body) {
-        return;
+    cancelMotion() {
+      for (const motion of this.axisMotions) {
+        motion.animation?.cancel();
       }
+      this.axisMotions = [];
+    }
 
-      const deltaMs =
-        this.lastFrameAtMs === null ? 0 : frameTimeMs - this.lastFrameAtMs;
-      this.lastFrameAtMs = frameTimeMs;
-      const deltaSeconds =
-        Math.max(0, Math.min(deltaMs, FRAME_DELTA_LIMIT_MS)) / 1000;
-      if (deltaSeconds > 0) {
-        const size = viewportSize();
-        BOUNCE.updateBouncingBox(
-          this.body,
-          size.width,
-          size.height,
-          deltaSeconds,
-        );
+    updatePlayback() {
+      const method = document.hidden ? "pause" : "play";
+      for (const motion of this.axisMotions) {
+        motion.animation?.[method]();
       }
-      this.renderPosition();
-      this.requestFrame();
     }
 
     handleMotionPreferenceChange() {
@@ -162,19 +199,18 @@
     }
 
     handleResize() {
-      if (this.isStopped || !this.body) {
+      if (this.isStopped || this.axisMotions.length !== 2) {
         return;
       }
 
-      const size = viewportSize();
-      BOUNCE.containBouncingBox(this.body, size.width, size.height);
-      this.renderPosition();
+      const body = this.currentBody();
+      this.cancelMotion();
+      this.body = body;
+      this.startMotion(body);
     }
 
     handleVisibilityChange() {
-      this.cancelFrame();
-      this.lastFrameAtMs = null;
-      this.requestFrame();
+      this.updatePlayback();
     }
 
     start() {
@@ -188,6 +224,7 @@
       }
 
       document.body.append(this.layer);
+      this.startMotion(this.body);
       document.body.classList.add(BODY_CLASS);
       this.removeMotionPreferenceListener =
         DASHBOARD_PREFERENCES.addMotionPreferenceChangeListener(
@@ -198,8 +235,6 @@
         this.handleVisibilityChange,
       );
       globalThis.addEventListener("resize", this.handleResize);
-      this.renderPosition();
-      this.requestFrame();
       return this;
     }
 
@@ -209,7 +244,7 @@
       }
 
       this.isStopped = true;
-      this.cancelFrame();
+      this.cancelMotion();
       this.removeMotionPreferenceListener();
       document.removeEventListener(
         "visibilitychange",

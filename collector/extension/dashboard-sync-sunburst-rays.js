@@ -2,19 +2,13 @@
   "use strict";
 
   const INITIAL_EXTRA_RAY_COUNT = 30;
+  const MAX_BLUR_PX = 6;
+  const MAX_EXTENT_SCALE = 1.1 * 1.08;
   const LENGTH_MOTION_MAX_SCALE = 1.08;
   const LENGTH_MOTION_MIN_SCALE = 0.93;
   const LENGTH_MOTION_RAMP_MS = 4200;
   const RAY_COUNT = 42;
   const TWO_PI = Math.PI * 2;
-
-  function clamp(value, min = 0, max = 1) {
-    return Math.max(min, Math.min(max, value));
-  }
-
-  function smooth(value) {
-    return value * value * (3 - 2 * value);
-  }
 
   function mix(from, to, amount) {
     return from + (to - from) * amount;
@@ -94,24 +88,6 @@
     };
   }
 
-  function direction(angle) {
-    return Object.freeze({
-      x: Math.cos(angle),
-      y: Math.sin(angle),
-    });
-  }
-
-  function rayGeometry(angle, width, innerWidthScale) {
-    const innerWidth = width * innerWidthScale;
-    return Object.freeze({
-      leftInner: direction(angle - innerWidth),
-      leftOuter: direction(angle - width),
-      rightInner: direction(angle + innerWidth),
-      rightOuter: direction(angle + width),
-      tip: direction(angle),
-    });
-  }
-
   function rayTone() {
     return {
       bodyLightness: randomBetween(62, 78),
@@ -138,16 +114,18 @@
     const width = rayWidth(kind);
     return Object.freeze({
       alpha,
+      angle,
       blur,
       delay,
       duration,
-      geometry: rayGeometry(angle, width, innerWidthScale),
       hue,
+      innerWidthScale,
       ...tone,
       layer,
       length,
       ...lengthMotion,
       saturation,
+      width,
     });
   }
 
@@ -174,42 +152,13 @@
     );
   }
 
-  function lengthMotionProgress(timestamp, finishedAtMs) {
-    if (finishedAtMs === null) {
-      return 0;
-    }
-    return smooth(clamp((timestamp - finishedAtMs) / LENGTH_MOTION_RAMP_MS));
-  }
-
-  function rayLengthScale(timestamp, ray) {
-    const primary =
-      Math.sin(
-        (timestamp / ray.lengthMotionDurationMs) * TWO_PI +
-          ray.lengthMotionPhase,
-      ) * 0.72;
-    const secondary =
-      Math.sin(
-        (timestamp / ray.lengthMotionSecondaryDurationMs) * TWO_PI +
-          ray.lengthMotionSecondaryPhase,
-      ) * 0.28;
-    return clamp(
-      1 + (primary + secondary) * ray.lengthMotionAmplitude,
-      LENGTH_MOTION_MIN_SCALE,
-      LENGTH_MOTION_MAX_SCALE,
-    );
-  }
-
-  function lengthMultiplier(timestamp, ray, finishedAtMs) {
-    const progress = lengthMotionProgress(timestamp, finishedAtMs);
-    if (progress <= 0) {
-      return 1;
-    }
-    return mix(1, rayLengthScale(timestamp, ray), progress);
-  }
-
   root.PacePetsDashboardSyncSunburstRays = Object.freeze({
+    LENGTH_MOTION_MAX_SCALE,
+    LENGTH_MOTION_MIN_SCALE,
+    LENGTH_MOTION_RAMP_MS,
+    MAX_BLUR_PX,
+    MAX_EXTENT_SCALE,
     create,
     createReplacement,
-    lengthMultiplier,
   });
 })(globalThis);

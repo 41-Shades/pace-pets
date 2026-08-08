@@ -3,45 +3,30 @@
 
   const BODY_CLASS = "has-sync-sunburst-page-background";
   const CANVAS_CLASS = "sync-sunburst-page-background";
-  const CORE_CACHE = root.PacePetsDashboardSyncSunburstCoreCache;
+  const CORE = root.PacePetsDashboardSyncSunburstCore;
   const DASHBOARD_PREFERENCES = root.PacePetsDashboardPreferences;
-  const DRAW = root.PacePetsDashboardSyncSunburstDraw;
   const LAYOUT = root.PacePetsDashboardSyncSunburstLayout;
   const RAYS = root.PacePetsDashboardSyncSunburstRays;
   const TURNOVER = root.PacePetsDashboardSyncSunburstTurnover;
-  if (!DASHBOARD_PREFERENCES) {
+  const WEBGL = root.PacePetsDashboardSyncSunburstWebglRenderer;
+  if (
+    !CORE ||
+    !DASHBOARD_PREFERENCES ||
+    !LAYOUT ||
+    !RAYS ||
+    !TURNOVER ||
+    !WEBGL
+  ) {
     throw new Error(
-      "Pace dashboard preferences must load before dashboard-sync-sunburst-renderer.js.",
-    );
-  }
-  if (!DRAW) {
-    throw new Error(
-      "Pace sync sunburst draw helpers must load before dashboard-sync-sunburst-renderer.js.",
-    );
-  }
-  if (!LAYOUT || !CORE_CACHE) {
-    throw new Error(
-      "Pace sync sunburst layout and core cache must load before dashboard-sync-sunburst-renderer.js.",
-    );
-  }
-  if (!RAYS) {
-    throw new Error(
-      "Pace sync sunburst ray helpers must load before dashboard-sync-sunburst-renderer.js.",
-    );
-  }
-  if (!TURNOVER) {
-    throw new Error(
-      "Pace sync sunburst turnover helpers must load before dashboard-sync-sunburst-renderer.js.",
+      "Sync sunburst core, preferences, layout, rays, turnover, and WebGL must load before its scene.",
     );
   }
 
   const FINISHED_PROGRESS = 1;
   const GROW_DURATION_MS = 30000;
-  const PANEL_BG_END_OPACITY = 0;
   const PANEL_FADE_DELAY = 0.12;
-  const PANEL_BG_START_OPACITY = 1;
   const RAY_FINAL_OPACITY = 0.64;
-  const RAY_TURNOVER_FRAME_DELAY_MS = 33;
+  const SETTLED_FRAME_DELAY_MS = 33;
 
   function clamp(value, min = 0, max = 1) {
     return Math.max(min, Math.min(max, value));
@@ -49,10 +34,6 @@
 
   function smooth(value) {
     return value * value * (3 - 2 * value);
-  }
-
-  function mix(from, to, amount) {
-    return from + (to - from) * amount;
   }
 
   function visibilityFor(progress) {
@@ -65,74 +46,54 @@
     );
   }
 
-  function panelBackgroundOpacity(progress) {
-    return mix(
-      PANEL_BG_START_OPACITY,
-      PANEL_BG_END_OPACITY,
-      panelFadeFor(progress),
-    );
-  }
-
   function motionPreferenceEnabled() {
     return DASHBOARD_PREFERENCES.motionPreferenceEnabled();
   }
 
-  function finishedAtMsFor(currentFinishedAtMs, isFinishedFrame, timestamp) {
-    if (isFinishedFrame && currentFinishedAtMs === null) {
-      return timestamp;
-    }
-    return currentFinishedAtMs;
+  function sameOrigin(first, second) {
+    return first?.x === second.x && first?.y === second.y;
   }
 
   class SyncSunburstScene {
-    constructor(
-      canvas,
-      context,
-      origin,
-      { startedAtMs = null, startComplete = false } = {},
-    ) {
+    constructor(canvas, origin, options) {
       const now = root.performance.now();
-      const initialStartTimeMs = startComplete
-        ? now - GROW_DURATION_MS
-        : startedAtMs;
-      const initiallyFinished =
-        startComplete ||
-        (startedAtMs !== null && now - startedAtMs >= GROW_DURATION_MS);
+      const startedAtMs = options.startedAtMs;
+      const startComplete = options.startComplete === true;
       this.animationFrameId = null;
       this.canvas = canvas;
-      this.context = context;
-      this.coreCache = CORE_CACHE.create();
-      this.finished = initiallyFinished;
-      this.finishedAtMs = initiallyFinished
-        ? initialStartTimeMs + GROW_DURATION_MS
+      this.core = null;
+      this.finished =
+        startComplete ||
+        (startedAtMs !== null && now - startedAtMs >= GROW_DURATION_MS);
+      this.finishedAtMs = this.finished
+        ? (startedAtMs ?? now) + GROW_DURATION_MS
         : null;
-      this.origin = origin;
-      this.layout = LAYOUT.create(canvas, context);
-      this.lastPanelBackgroundOpacity = null;
-      this.lastUiGlowOpacity = null;
-      this.rayTurnover = TURNOVER.create();
-      this.rayTurnoverTimerId = null;
-      this.rays = RAYS.create();
       this.frame = {
+        finishedAtMs: this.finishedAtMs,
         opacity: 0,
-        origin,
         progress: 0,
         radius: 0,
-        rayLengthMultiplier: 1,
-        rayOpacityMultiplier: 1,
+        timestamp: now,
       };
+      this.lastLayout = null;
+      this.lastOrigin = null;
+      this.lastPanelOpacity = null;
+      this.lastUiGlowOpacity = null;
+      this.layout = LAYOUT.create();
+      this.origin = origin;
+      this.rays = RAYS.create();
       this.removeMotionPreferenceListener = () => {};
-      this.startTimeMs = initialStartTimeMs;
+      this.startTimeMs = startComplete ? now - GROW_DURATION_MS : startedAtMs;
       this.stopped = false;
+      this.turnover = TURNOVER.create();
+      this.turnoverTimerId = null;
+      this.webgl = null;
+      this.handleContextLost = this.handleContextLost.bind(this);
+      this.handleContextRestored = this.handleContextRestored.bind(this);
       this.handleMotionChange = this.handleMotionChange.bind(this);
       this.handleResize = this.handleResize.bind(this);
       this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
       this.renderFrame = this.renderFrame.bind(this);
-    }
-
-    updateOrigin(origin) {
-      this.origin = origin;
-      this.draw(this.finished ? FINISHED_PROGRESS : null);
     }
 
     progressAt(timestamp) {
@@ -142,16 +103,21 @@
         : clamp((timestamp - this.startTimeMs) / GROW_DURATION_MS);
     }
 
-    setUiStyle(activeProgress) {
-      const panelOpacity = String(panelBackgroundOpacity(activeProgress));
-      if (panelOpacity !== this.lastPanelBackgroundOpacity) {
+    updateOrigin(origin) {
+      this.origin = origin;
+      this.draw(this.finished ? FINISHED_PROGRESS : null);
+    }
+
+    setUiStyle(progress) {
+      const panelOpacity = String(1 - panelFadeFor(progress));
+      if (panelOpacity !== this.lastPanelOpacity) {
         root.document.body.style.setProperty(
           "--sync-sunburst-panel-bg-opacity",
           panelOpacity,
         );
-        this.lastPanelBackgroundOpacity = panelOpacity;
+        this.lastPanelOpacity = panelOpacity;
       }
-      const glowOpacity = String(panelFadeFor(activeProgress));
+      const glowOpacity = String(panelFadeFor(progress));
       if (glowOpacity !== this.lastUiGlowOpacity) {
         root.document.body.style.setProperty(
           "--sync-sunburst-ui-glow-opacity",
@@ -161,55 +127,51 @@
       }
     }
 
-    updateFrame(activeProgress, layout) {
-      this.frame.opacity = visibilityFor(activeProgress) * RAY_FINAL_OPACITY;
-      this.frame.origin = this.origin;
-      this.frame.progress = activeProgress;
+    updateLayout(layout) {
+      if (
+        layout === this.lastLayout &&
+        sameOrigin(this.origin, this.lastOrigin)
+      ) {
+        return;
+      }
+      this.webgl.resize(layout, this.origin);
+      this.core.resize(this.origin, layout.radius, layout.pixelRatio);
+      this.lastLayout = layout;
+      this.lastOrigin = { ...this.origin };
+    }
+
+    updateFrame(progress, timestamp, layout) {
+      if (progress >= FINISHED_PROGRESS && this.finishedAtMs === null) {
+        this.finishedAtMs = timestamp;
+      }
+      this.frame.finishedAtMs = this.finishedAtMs;
+      this.frame.opacity = visibilityFor(progress) * RAY_FINAL_OPACITY;
+      this.frame.progress = progress;
       this.frame.radius = layout.radius;
+      this.frame.timestamp = timestamp;
       return this.frame;
     }
 
-    drawCore(frame, layout, isFinishedFrame) {
-      if (isFinishedFrame && this.coreCache) {
-        this.coreCache.draw(this.context, frame, layout.pixelRatio);
+    draw(progress, timestamp = root.performance.now()) {
+      if (!this.webgl || this.stopped) {
         return;
       }
-      DRAW.drawCore(this.context, frame);
-    }
-
-    draw(progress, timestamp = root.performance.now()) {
       const layout = this.layout.current();
       const activeProgress =
         progress === null ? this.progressAt(timestamp) : progress;
-      const isFinishedFrame = activeProgress >= FINISHED_PROGRESS;
-      const motionEnabled = motionPreferenceEnabled();
-      this.finishedAtMs = finishedAtMsFor(
-        this.finishedAtMs,
-        isFinishedFrame,
-        timestamp,
-      );
-      this.context.clearRect(0, 0, layout.width, layout.height);
       this.setUiStyle(activeProgress);
-      const frame = this.updateFrame(activeProgress, layout);
-      const animateRayLengths = isFinishedFrame && motionEnabled;
-      const opacityMultipliers =
-        activeProgress < 0.5 || !motionEnabled
-          ? null
-          : this.rayTurnover.opacities(
-              timestamp,
-              this.rays,
-              RAYS.createReplacement,
-              activeProgress,
-            );
-      for (const ray of this.rays) {
-        frame.rayLengthMultiplier = animateRayLengths
-          ? RAYS.lengthMultiplier(timestamp, ray, this.finishedAtMs)
-          : 1;
-        frame.rayOpacityMultiplier = opacityMultipliers?.get(ray) ?? 1;
-        DRAW.drawRay(this.context, frame, ray);
+      this.updateLayout(layout);
+      const raysChanged = this.turnover.update(
+        timestamp,
+        this.rays,
+        RAYS.createReplacement,
+        activeProgress,
+      );
+      if (raysChanged) {
+        this.webgl.uploadRays(this.rays, this.turnover);
       }
-      this.drawCore(frame, layout, isFinishedFrame);
-      this.finished = isFinishedFrame;
+      this.webgl.render(this.updateFrame(activeProgress, timestamp, layout));
+      this.finished = activeProgress >= FINISHED_PROGRESS;
     }
 
     renderFrame(timestamp) {
@@ -217,10 +179,10 @@
       if (this.stopped) {
         return;
       }
-      const progress = this.finished
-        ? FINISHED_PROGRESS
-        : this.progressAt(timestamp);
-      this.draw(progress, timestamp);
+      this.draw(
+        this.finished ? FINISHED_PROGRESS : this.progressAt(timestamp),
+        timestamp,
+      );
       this.requestFrame();
     }
 
@@ -228,9 +190,10 @@
       if (
         this.stopped ||
         this.animationFrameId !== null ||
-        this.rayTurnoverTimerId !== null ||
+        this.turnoverTimerId !== null ||
         root.document.hidden ||
-        !motionPreferenceEnabled()
+        !motionPreferenceEnabled() ||
+        !this.webgl
       ) {
         return;
       }
@@ -238,40 +201,83 @@
         this.animationFrameId = root.requestAnimationFrame(this.renderFrame);
         return;
       }
-      this.rayTurnoverTimerId = root.setTimeout(() => {
-        this.rayTurnoverTimerId = null;
+      this.turnoverTimerId = root.setTimeout(() => {
+        this.turnoverTimerId = null;
         this.animationFrameId = root.requestAnimationFrame(this.renderFrame);
-      }, RAY_TURNOVER_FRAME_DELAY_MS);
+      }, SETTLED_FRAME_DELAY_MS);
+    }
+
+    cancelFrame() {
+      if (this.animationFrameId !== null) {
+        root.cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+      }
+      root.clearTimeout(this.turnoverTimerId);
+      this.turnoverTimerId = null;
+    }
+
+    setPresentationVisible(visible) {
+      this.canvas.hidden = !visible;
+      this.core?.setVisible(visible);
+      root.document.body.classList.toggle(BODY_CLASS, visible);
+    }
+
+    handleContextLost() {
+      this.cancelFrame();
+      this.setPresentationVisible(false);
+    }
+
+    handleContextRestored() {
+      if (this.stopped) {
+        return;
+      }
+      this.setPresentationVisible(true);
+      this.layout.invalidate();
+      this.lastLayout = null;
+      this.draw(this.finished ? FINISHED_PROGRESS : null);
+      this.requestFrame();
     }
 
     handleMotionChange() {
+      if (!motionPreferenceEnabled()) {
+        this.cancelFrame();
+        this.core.finish();
+      }
       this.draw(motionPreferenceEnabled() ? null : FINISHED_PROGRESS);
       this.requestFrame();
     }
 
     handleResize() {
       this.layout.invalidate();
-      this.coreCache?.invalidate();
+      this.lastLayout = null;
       this.draw(this.finished ? FINISHED_PROGRESS : null);
     }
 
     handleVisibilityChange() {
       if (root.document.hidden) {
-        if (this.animationFrameId !== null) {
-          root.cancelAnimationFrame(this.animationFrameId);
-          this.animationFrameId = null;
-        }
-        root.clearTimeout(this.rayTurnoverTimerId);
-        this.rayTurnoverTimerId = null;
+        this.cancelFrame();
         return;
       }
       this.requestFrame();
     }
 
     start() {
-      root.document.body.classList.add(BODY_CLASS);
+      this.webgl = WEBGL.create(this.canvas, {
+        onContextLost: this.handleContextLost,
+        onContextRestored: this.handleContextRestored,
+        onRestoreFailed: () => this.stop(),
+      });
+      if (!this.webgl) {
+        return null;
+      }
+      this.core = CORE.create(this.startTimeMs, motionPreferenceEnabled());
+      if (!this.core) {
+        this.webgl.destroy();
+        this.webgl = null;
+        return null;
+      }
+      this.setPresentationVisible(true);
       root.document.body.prepend(this.canvas);
-      const now = root.performance.now();
       this.removeMotionPreferenceListener =
         DASHBOARD_PREFERENCES.addMotionPreferenceChangeListener(
           this.handleMotionChange,
@@ -281,6 +287,8 @@
         this.handleVisibilityChange,
       );
       root.addEventListener("resize", this.handleResize);
+      this.webgl.uploadRays(this.rays, this.turnover);
+      const now = root.performance.now();
       this.draw(
         this.finished || !motionPreferenceEnabled()
           ? FINISHED_PROGRESS
@@ -292,40 +300,37 @@
     }
 
     stop() {
-      this.stopped = true;
-      if (this.animationFrameId !== null) {
-        root.cancelAnimationFrame(this.animationFrameId);
+      if (this.stopped) {
+        return;
       }
-      root.clearTimeout(this.rayTurnoverTimerId);
+      this.stopped = true;
+      this.cancelFrame();
       this.removeMotionPreferenceListener();
       root.removeEventListener("resize", this.handleResize);
       root.document.removeEventListener(
         "visibilitychange",
         this.handleVisibilityChange,
       );
-      root.document.body.classList.remove(BODY_CLASS);
+      this.setPresentationVisible(false);
       root.document.body.style.removeProperty(
         "--sync-sunburst-panel-bg-opacity",
       );
       root.document.body.style.removeProperty(
         "--sync-sunburst-ui-glow-opacity",
       );
-      this.coreCache?.clear();
-      this.layout.invalidate();
+      this.core?.destroy();
+      this.webgl?.destroy();
       this.canvas.remove();
+      this.core = null;
+      this.webgl = null;
     }
   }
 
-  function create(origin, options) {
+  function create(origin, options = {}) {
     const canvas = root.document.createElement("canvas");
     canvas.className = CANVAS_CLASS;
     canvas.setAttribute("aria-hidden", "true");
-    const context = canvas.getContext("2d");
-    if (!context) {
-      return null;
-    }
-
-    return new SyncSunburstScene(canvas, context, origin, options).start();
+    return new SyncSunburstScene(canvas, origin, options).start();
   }
 
   root.PacePetsDashboardSyncSunburst = Object.freeze({ create });
