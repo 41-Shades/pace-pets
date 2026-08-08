@@ -1,6 +1,7 @@
 ((root) => {
   "use strict";
 
+  const EDGE_FEATHER_PX = 0.75;
   const VERTEX_SHADER_SOURCE = `
     precision highp float;
 
@@ -82,7 +83,8 @@
         isOuter
       );
       float baseCross = radius * sin(halfAngle);
-      float blurOutset = a_timing.z * 3.0;
+      float edgeFeather = max(a_timing.z, ${EDGE_FEATHER_PX});
+      float blurOutset = edgeFeather * 3.0;
       float along = radius * cos(halfAngle);
       float cross = side * (baseCross + blurOutset);
       float cosine = cos(a_geometry.x);
@@ -148,7 +150,7 @@
 
     void main() {
       float distanceFromEdge = abs(v_cross) - v_baseHalfWidth;
-      float feather = max(v_blur, 0.75);
+      float feather = max(v_blur, ${EDGE_FEATHER_PX});
       float coverage = 1.0 - smoothstep(-feather, feather * 2.5, distanceFromEdge);
       gl_FragColor = gradientColor(clamp(v_gradientT, 0.0, 1.0)) * coverage;
     }

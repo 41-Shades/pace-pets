@@ -59,6 +59,9 @@
       const now = root.performance.now();
       const startedAtMs = options.startedAtMs;
       const startComplete = options.startComplete === true;
+      const initialStartTimeMs = startComplete
+        ? now - GROW_DURATION_MS
+        : startedAtMs;
       this.animationFrameId = null;
       this.canvas = canvas;
       this.core = null;
@@ -66,7 +69,7 @@
         startComplete ||
         (startedAtMs !== null && now - startedAtMs >= GROW_DURATION_MS);
       this.finishedAtMs = this.finished
-        ? (startedAtMs ?? now) + GROW_DURATION_MS
+        ? (initialStartTimeMs ?? now) + GROW_DURATION_MS
         : null;
       this.frame = {
         finishedAtMs: this.finishedAtMs,
@@ -83,7 +86,7 @@
       this.origin = origin;
       this.rays = RAYS.create();
       this.removeMotionPreferenceListener = () => {};
-      this.startTimeMs = startComplete ? now - GROW_DURATION_MS : startedAtMs;
+      this.startTimeMs = initialStartTimeMs;
       this.stopped = false;
       this.turnover = TURNOVER.create();
       this.turnoverTimerId = null;

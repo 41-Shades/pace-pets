@@ -259,15 +259,16 @@ describe("Perfect Sync scene presentation lifecycle", () => {
   it("hides every retained layer while the WebGL context is lost", () => {
     const { callbacks, canvas, classList, core, scene, webgl } =
       createSceneLifecycleHarness();
-
     expect(scene).not.toBeNull();
     expect(canvas.hidden).toBe(false);
+    expect(webgl.render).toHaveBeenCalledWith(
+      expect.objectContaining({ finishedAtMs: 31_000 }),
+    );
     expect(core.setVisible).toHaveBeenLastCalledWith(true);
     expect(classList.toggle).toHaveBeenLastCalledWith(
       "has-sync-sunburst-page-background",
       true,
     );
-
     callbacks.onContextLost();
     expect(canvas.hidden).toBe(true);
     expect(core.setVisible).toHaveBeenLastCalledWith(false);
@@ -275,7 +276,6 @@ describe("Perfect Sync scene presentation lifecycle", () => {
       "has-sync-sunburst-page-background",
       false,
     );
-
     callbacks.onContextRestored();
     expect(canvas.hidden).toBe(false);
     expect(core.setVisible).toHaveBeenLastCalledWith(true);
