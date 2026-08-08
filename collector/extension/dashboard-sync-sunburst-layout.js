@@ -45,9 +45,7 @@
   }
 
   class SyncSunburstLayout {
-    constructor(canvas, context) {
-      this.canvas = canvas;
-      this.context = context;
+    constructor() {
       this.snapshot = null;
     }
 
@@ -56,29 +54,10 @@
     }
 
     refresh(signature) {
-      const rect = this.canvas.getBoundingClientRect();
-      const height = Math.max(1, Math.round(rect.height || signature.height));
-      const width = Math.max(1, Math.round(rect.width || signature.width));
-      const pixelWidth = Math.round(width * signature.pixelRatio);
-      const pixelHeight = Math.round(height * signature.pixelRatio);
-      if (
-        this.canvas.width !== pixelWidth ||
-        this.canvas.height !== pixelHeight
-      ) {
-        this.canvas.width = pixelWidth;
-        this.canvas.height = pixelHeight;
-      }
-      this.context.setTransform(
-        signature.pixelRatio,
-        0,
-        0,
-        signature.pixelRatio,
-        0,
-        0,
-      );
+      const { height, pixelRatio, width } = signature;
       this.snapshot = {
         height,
-        pixelRatio: signature.pixelRatio,
+        pixelRatio,
         radius: sunburstRadius(width),
         signature,
         width,
@@ -94,8 +73,8 @@
     }
   }
 
-  function create(canvas, context) {
-    return new SyncSunburstLayout(canvas, context);
+  function create() {
+    return new SyncSunburstLayout();
   }
 
   root.PacePetsDashboardSyncSunburstLayout = Object.freeze({ create });

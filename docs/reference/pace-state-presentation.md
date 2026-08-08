@@ -395,7 +395,7 @@ visual burst without sound.
 
 The `sync` / Perfect Sync state keeps its existing gentle status-icon float and
 adds a dashboard-only yellow sunburst on the page background layer behind the
-main panel. The canvas renderer in
+main panel. The retained WebGL renderer in
 `collector/extension/dashboard-sync-sunburst-renderer.js` centers the sunburst
 near the status icon position and slowly grows it from a point to a panel-scale
 glow over a single 30-second entry animation. Each new sunburst gets a fresh
@@ -416,18 +416,24 @@ rays also apply their own slow bounded length motion, so individual ray tips
 subtly extend and recede without changing the sunburst center or restarting the
 entry animation. The turnover starts lightly midway through the rise, ramps up
 near the end, and uses the full-strength turnover after the rise completes.
-The renderer caches viewport and panel geometry until resize, precomputes each
-ray's immutable direction vectors, reuses turnover opacity storage, and draws
-the completed core and bloom from a bounded raster cache. Settled frames also
-leave unchanged panel-style variables untouched. These optimizations preserve
-the ray field and animation timing while avoiding repeated layout, geometry,
-allocation, and gradient work.
+The renderer keeps the ray field as a bounded, low-power WebGL mesh around the
+visible burst rather than rerasterizing a full-viewport Canvas 2D scene. Static
+ray profiles upload once; ordinary frames update only animation uniforms, and
+turnover uploads occur only when ray membership changes. The shader retains the
+existing four-stop color gradients, softened broad-ray edges, length motion,
+fade curves, draw order, and 30-second timing. The center glow and bloom use
+retained canvases rasterized from the original gradient stops only when their
+size changes, while viewport and panel geometry remain cached until resize.
+Settled frames also leave unchanged panel-style variables untouched.
 After 60 continuous seconds in Perfect Sync, the dashboard clones the status
 monk into a fixed page layer, hides the in-card icon, and launches the clone
 through a bounded-random 70-degree upward cone. The escaped monk uses the same
-mirrored viewport wall-bounce motion as the Perfect Zero planets. Leaving Sync
-tears down the clone and resets the 60-second entry clock. Reduced-motion
-settings skip the escape.
+mirrored viewport wall-bounce trajectory as the Perfect Zero planets. Nested
+compositor transform tracks own its independent horizontal and vertical motion,
+so the constant-speed path and wall collisions do not require per-frame
+JavaScript. The hidden in-card float pauses at its captured launch position.
+Leaving Sync tears down the clone and resets the 60-second entry clock.
+Reduced-motion settings skip the escape.
 
 The `strongAhead` / Push harder state uses a dashboard-only WebGL canvas mesh
 effect in `collector/extension/dashboard-push-stretch-methods.js` and

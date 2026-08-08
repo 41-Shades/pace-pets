@@ -1,12 +1,23 @@
 .sync-sunburst-page-background {
   display: block;
-  height: 100vh;
-  height: 100dvh;
-  inset: 0;
   pointer-events: none;
   position: fixed;
-  width: 100vw;
   z-index: 0;
+}
+
+.sync-sunburst-core-glow,
+.sync-sunburst-core-bloom {
+  display: block;
+  pointer-events: none;
+  position: fixed;
+  transform-origin: center;
+  z-index: 0;
+}
+
+.sync-sunburst-page-background[hidden],
+.sync-sunburst-core-glow[hidden],
+.sync-sunburst-core-bloom[hidden] {
+  display: none;
 }
 
 .sync-monk-escape {
@@ -21,6 +32,14 @@
   z-index: 3;
 }
 
+.sync-monk-escape-y {
+  display: block;
+  height: 100%;
+  transform: translate3d(0, -200vh, 0);
+  width: 100%;
+  will-change: transform;
+}
+
 body.has-sync-sunburst-page-background {
   --sync-sunburst-panel-bg: 255 255 255;
   --sync-sunburst-sync-card-bg: 238 251 248;
@@ -31,15 +50,15 @@ html[data-theme="dark"] body.has-sync-sunburst-page-background {
   --sync-sunburst-sync-card-bg: 23 52 50;
 }
 
-.sync-monk-escape > img,
-.sync-monk-escape > svg {
+.sync-monk-escape-y > img,
+.sync-monk-escape-y > svg {
   display: block;
   height: 100%;
   object-fit: contain;
   width: 100%;
 }
 
-.sync-monk-escape > svg {
+.sync-monk-escape-y > svg {
   fill: none;
   stroke: currentcolor;
   stroke-linecap: round;
@@ -55,6 +74,11 @@ body.has-sync-monk-escape .pace-card.pace-sync .pace-icon > img,
 body.has-sync-monk-escape .pace-card.pace-sync .pace-icon > svg {
   opacity: 0;
   transition: opacity 180ms ease-out;
+}
+
+body.has-sync-monk-escape .pace-card.pace-sync .pace-icon {
+  animation-play-state: paused;
+  will-change: auto;
 }
 
 body.has-sync-sunburst-page-background .usage-panel {

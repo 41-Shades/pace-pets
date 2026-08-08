@@ -84,6 +84,7 @@
   }
 
   function retireFinishedSwaps(state, timestamp, rays) {
+    let changed = false;
     for (let index = state.activeSwaps.length - 1; index >= 0; index -= 1) {
       const swap = state.activeSwaps[index];
       if (timestamp - swap.startedAtMs < swap.durationMs) {
@@ -93,12 +94,15 @@
       const rayIndex = rays.indexOf(swap.outRay);
       if (rayIndex !== -1) {
         rays.splice(rayIndex, 1);
+        changed = true;
       }
       state.activeSwaps.splice(index, 1);
     }
+    return changed;
   }
 
   function emitDueSwaps(state, timestamp, rays, createRay, intensity) {
+    let changed = false;
     if (state.nextSwapAtMs === 0) {
       state.nextSwapAtMs = nextSwapAt(timestamp, intensity);
     }
@@ -123,64 +127,53 @@
       state.activeSwaps.push(swap);
       state.nextSwapAtMs = nextSwapAt(timestamp, intensity);
       swapPasses += 1;
+      changed = true;
     }
-  }
-
-  function fadeProgress(timestamp, swap) {
-    return smooth(clamp((timestamp - swap.startedAtMs) / swap.durationMs));
-  }
-
-  function incomingOpacity(timestamp, swap) {
-    return smooth(
-      clamp(
-        (timestamp - swap.startedAtMs) /
-          swap.durationMs /
-          INCOMING_FADE_PORTION,
-      ),
-    );
-  }
-
-  function outgoingOpacity(timestamp, swap) {
-    return (
-      1 -
-      smooth(
-        clamp(
-          (fadeProgress(timestamp, swap) - OUTGOING_FADE_DELAY) /
-            (1 - OUTGOING_FADE_DELAY),
-        ),
-      )
-    );
+    return changed;
   }
 
   function create() {
     const state = {
       activeSwaps: [],
       nextSwapAtMs: 0,
-      opacities: new Map(),
     };
 
     return Object.freeze({
-      opacities(timestamp, rays, createRay, progress) {
-        const opacities = state.opacities;
-        opacities.clear();
-        const intensity = intensityFor(progress);
-        retireFinishedSwaps(state, timestamp, rays);
-        if (intensity <= 0) {
-          return null;
-        }
-        emitDueSwaps(state, timestamp, rays, createRay, intensity);
-        if (state.activeSwaps.length === 0) {
-          return null;
-        }
-
+      fadeState(ray) {
         for (const swap of state.activeSwaps) {
-          opacities.set(swap.inRay, incomingOpacity(timestamp, swap));
-          opacities.set(swap.outRay, outgoingOpacity(timestamp, swap));
+          if (swap.inRay === ray) {
+            return Object.freeze({
+              durationMs: swap.durationMs,
+              mode: 1,
+              startedAtMs: swap.startedAtMs,
+            });
+          }
+          if (swap.outRay === ray) {
+            return Object.freeze({
+              durationMs: swap.durationMs,
+              mode: -1,
+              startedAtMs: swap.startedAtMs,
+            });
+          }
         }
-        return opacities;
+        return null;
+      },
+      update(timestamp, rays, createRay, progress) {
+        const intensity = intensityFor(progress);
+        let changed = retireFinishedSwaps(state, timestamp, rays);
+        if (intensity <= 0) {
+          return changed;
+        }
+        changed =
+          emitDueSwaps(state, timestamp, rays, createRay, intensity) || changed;
+        return changed;
       },
     });
   }
 
-  root.PacePetsDashboardSyncSunburstTurnover = Object.freeze({ create });
+  root.PacePetsDashboardSyncSunburstTurnover = Object.freeze({
+    INCOMING_FADE_PORTION,
+    OUTGOING_FADE_DELAY,
+    create,
+  });
 })(globalThis);

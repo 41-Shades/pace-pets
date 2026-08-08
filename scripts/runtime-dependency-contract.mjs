@@ -175,6 +175,13 @@ function dashboardFoundationDependencyEdges() {
     dashboardFileEdge("push-tank-renderer", "push-water-renderer"),
     dashboardFileEdge("push-water-renderer", "push-stretch-methods"),
     dashboardFileEdge("sync-sunburst-rays", "sync-sunburst-renderer"),
+    dashboardFileEdge("sync-sunburst-rays", "sync-sunburst-webgl-renderer"),
+    dashboardFileEdge("sync-sunburst-shaders", "sync-sunburst-webgl-renderer"),
+    dashboardFileEdge("sync-sunburst-layout", "sync-sunburst-renderer"),
+    dashboardFileEdge("sync-sunburst-turnover", "sync-sunburst-renderer"),
+    dashboardFileEdge("sync-sunburst-webgl-renderer", "sync-sunburst-renderer"),
+    dashboardFileEdge("sync-sunburst-core", "sync-sunburst-renderer"),
+    dashboardFileEdge("sync-monk-escape-motion", "sync-monk-escape-scene"),
   ];
 }
 

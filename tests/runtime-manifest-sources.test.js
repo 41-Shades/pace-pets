@@ -69,7 +69,9 @@ function expectTargetScriptSourceComposition(runtime) {
 function expectSyncSunburstScriptSourceContent(runtime) {
   for (const source of [
     "./dashboard-sync-sunburst-layout.js",
-    "./dashboard-sync-sunburst-core-cache.js",
+    "./dashboard-sync-sunburst-shaders.js",
+    "./dashboard-sync-sunburst-webgl-renderer.js",
+    "./dashboard-sync-sunburst-core.js",
   ]) {
     expect(runtime.DASHBOARD_SCRIPT_SOURCES).toContain(source);
     expect(runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(source)).toBeLessThan(
@@ -80,12 +82,18 @@ function expectSyncSunburstScriptSourceContent(runtime) {
   }
   expect(
     runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./dashboard-sync-sunburst-draw.js",
+      "./dashboard-sync-sunburst-shaders.js",
     ),
   ).toBeLessThan(
     runtime.DASHBOARD_SCRIPT_SOURCES.indexOf(
-      "./dashboard-sync-sunburst-core-cache.js",
+      "./dashboard-sync-sunburst-webgl-renderer.js",
     ),
+  );
+  expect(runtime.DASHBOARD_SCRIPT_SOURCES).not.toContain(
+    "./dashboard-sync-sunburst-draw.js",
+  );
+  expect(runtime.DASHBOARD_SCRIPT_SOURCES).not.toContain(
+    "./dashboard-sync-sunburst-core-cache.js",
   );
 }
 
