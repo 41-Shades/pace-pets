@@ -23,19 +23,86 @@ function drawingContext() {
     beginPath: vi.fn(),
     clearRect: vi.fn(),
     clip: vi.fn(),
+    closePath: vi.fn(),
     drawImage: vi.fn(),
     fill: vi.fn(),
+    lineTo: vi.fn(),
+    moveTo: vi.fn(),
+    quadraticCurveTo: vi.fn(),
     rect: vi.fn(),
     restore: vi.fn(),
     save: vi.fn(),
     setTransform: vi.fn(),
+    stroke: vi.fn(),
   };
+}
+
+function fullBleedScene() {
+  return {
+    background: "#020617",
+    frame: { edgeGlow: null, type: "fullBleed" },
+    gradient: {
+      centerXRatio: 0.5,
+      centerYRatio: 0.5,
+      innerColor: "#111827",
+      middleColor: null,
+      middleStop: 0.7,
+      outerColor: "#020617",
+      outerXRatio: 0.5,
+      outerYRatio: 0.5,
+      radiusRatio: 0.6,
+    },
+  };
+}
+
+function expectDirtyFrameEvidence({
+  backdropCanvas,
+  backdropContext,
+  backdropLayer,
+  sceneState,
+  targetContext,
+  updateStarSparkle,
+}) {
+  expect(backdropCanvas).toMatchObject({ height: 101, width: 126 });
+  expect(backdropContext.createRadialGradient).toHaveBeenCalledOnce();
+  expect(backdropContext.arc).toHaveBeenCalledOnce();
+  expect(targetContext.drawImage).toHaveBeenCalledTimes(4);
+  expect(targetContext.drawImage).toHaveBeenLastCalledWith(
+    backdropLayer,
+    94,
+    24,
+    12,
+    12,
+    94,
+    24,
+    12,
+    12,
+  );
+  expect(targetContext.clearRect).toHaveBeenNthCalledWith(1, 0, 0, 126, 101);
+  expect(targetContext.clearRect).toHaveBeenNthCalledWith(2, 19, 24, 12, 12);
+  expect(targetContext.clearRect).toHaveBeenNthCalledWith(3, 94, 24, 12, 12);
+  expect(targetContext.clearRect).toHaveBeenNthCalledWith(4, 94, 24, 12, 12);
+  expect(targetContext.arc).toHaveBeenCalledTimes(3);
+  expect(updateStarSparkle.mock.calls.map(([star]) => star)).toEqual([
+    sceneState.stars[1],
+    sceneState.stars[1],
+    sceneState.stars[1],
+  ]);
 }
 
 describe("Perfect Zero space rendering", () => {
   it("measures layout only when resize or DPR invalidates the scene", () => {
     const backdrop = { create: vi.fn(() => ({})) };
-    const draw = { drawFrame: vi.fn() };
+    const drawPreviousFrames = [];
+    const draw = {
+      createWorkspace: vi.fn(() => ({})),
+      drawFrame: vi.fn((_context, _scene, _state, _elapsed, options) => {
+        drawPreviousFrames.push(options.previousFrame);
+        return {
+          dynamicRegions: options.previousFrame ? [{ left: 1 }] : [],
+        };
+      }),
+    };
     const createSceneState = vi.fn((_scene, width, height) => ({
       height,
       width,
@@ -88,6 +155,8 @@ describe("Perfect Zero space rendering", () => {
     expect(containerRect).toHaveBeenCalledOnce();
     expect(createSceneState).toHaveBeenCalledOnce();
     expect(backdrop.create).toHaveBeenCalledOnce();
+    expect(drawPreviousFrames[0]).toBeNull();
+    expect(drawPreviousFrames[1]).toEqual({ dynamicRegions: [] });
 
     script.devicePixelRatio = 1;
     scene.renderFrame(48);
@@ -96,6 +165,7 @@ describe("Perfect Zero space rendering", () => {
     expect(containerRect).toHaveBeenCalledTimes(2);
     expect(createSceneState).toHaveBeenCalledTimes(2);
     expect(backdrop.create).toHaveBeenCalledTimes(2);
+    expect(drawPreviousFrames[3]).toBeNull();
 
     scene.handleResize();
 
@@ -103,11 +173,77 @@ describe("Perfect Zero space rendering", () => {
     expect(containerRect).toHaveBeenCalledTimes(3);
     expect(createSceneState).toHaveBeenCalledTimes(3);
     expect(backdrop.create).toHaveBeenCalledTimes(3);
+    expect(drawPreviousFrames[4]).toBeNull();
+
+    scene.stop();
+    scene.drawStaticFrame();
+
+    expect(canvas).toMatchObject({ height: 0, width: 0 });
+    expect(createSceneState).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("Perfect Zero star progress", () => {
+  it("writes into caller-owned frame storage", () => {
+    const script = loadScript("perfect-zero-space-motion.js", {
+      PacePetsBouncingBoxMotion: { updateBouncingBox: vi.fn() },
+      PacePetsPerfectZeroSpaceFactory: {
+        cometDelayMs: vi.fn(),
+        createComet: vi.fn(),
+        sparkleDelayMs: vi.fn(),
+      },
+    });
+    const star = {
+      baseOpacity: 0.4,
+      sparkleMode: "regular",
+      sparkleStartedAtMs: null,
+    };
+    const result = {};
+
+    expect(
+      script.PacePetsPerfectZeroSpaceMotion.starProgress(star, 0, result),
+    ).toBe(result);
+    expect(result).toEqual({ opacity: 0.4, scale: 1 });
+
+    star.sparkleStartedAtMs = 0;
+    expect(
+      script.PacePetsPerfectZeroSpaceMotion.starProgress(star, 350, result),
+    ).toBe(result);
+    expect(result.opacity).toBeCloseTo(0.24);
+    expect(result.scale).toBe(1);
+  });
+});
+
+describe("Perfect Zero dirty region workspace", () => {
+  it("preserves merge order while reusing output storage", () => {
+    const frame = loadScript(
+      "perfect-zero-space-frame.js",
+    ).PacePetsPerfectZeroSpaceFrame;
+    const workspace = frame.createWorkspace();
+    const first = [
+      { bottom: 2, left: 0, right: 2, top: 0 },
+      { bottom: 12, left: 10, right: 12, top: 10 },
+    ];
+    const second = [
+      { bottom: 3, left: 1, right: 3, top: 1 },
+      { bottom: 22, left: 20, right: 22, top: 20 },
+    ];
+
+    const firstOutput = frame.mergedRegions(first, workspace, second);
+    expect(firstOutput).toEqual([
+      { bottom: 12, left: 10, right: 12, top: 10 },
+      { bottom: 3, left: 0, right: 3, top: 0 },
+      { bottom: 22, left: 20, right: 22, top: 20 },
+    ]);
+
+    const secondOutput = frame.mergedRegions(second, workspace);
+    expect(secondOutput).toBe(firstOutput);
+    expect(secondOutput).toEqual(second);
   });
 });
 
 describe("Perfect Zero space backdrop layer", () => {
-  it("rasterizes only the backdrop and retains original star order", () => {
+  it("retains static stars and restores only dirty pixels on ordinary frames", () => {
     const backdropContext = drawingContext();
     backdropContext.createRadialGradient = vi.fn(() => ({
       addColorStop: vi.fn(),
@@ -118,28 +254,22 @@ describe("Perfect Zero space backdrop layer", () => {
       width: 0,
     };
     const updateStarSparkle = vi.fn();
+    const starProgressResults = [];
+    const frameScript = loadScript("perfect-zero-space-frame.js");
     const drawScript = loadScript("perfect-zero-space-draw.js", {
       PacePetsPerfectZeroSpaceData: {},
+      PacePetsPerfectZeroSpaceFrame: frameScript.PacePetsPerfectZeroSpaceFrame,
       PacePetsPerfectZeroSpaceMotion: {
-        starProgress: (star) => ({ opacity: star.baseOpacity, scale: 1 }),
+        starProgress: (star, _elapsedMs, result) => {
+          starProgressResults.push(result);
+          result.opacity = star.baseOpacity;
+          result.scale = 1;
+          return result;
+        },
         updateStarSparkle,
       },
     });
-    const scene = {
-      background: "#020617",
-      frame: { edgeGlow: null, type: "fullBleed" },
-      gradient: {
-        centerXRatio: 0.5,
-        centerYRatio: 0.5,
-        innerColor: "#111827",
-        middleColor: null,
-        middleStop: 0.7,
-        outerColor: "#020617",
-        outerXRatio: 0.5,
-        outerYRatio: 0.5,
-        radiusRatio: 0.6,
-      },
-    };
+    const scene = fullBleedScene();
     const sceneState = {
       comet: null,
       height: 81,
@@ -162,36 +292,50 @@ describe("Perfect Zero space backdrop layer", () => {
         sceneState,
         1.25,
       );
-    drawScript.PacePetsPerfectZeroSpaceDraw.drawFrame(
+    const workspace = drawScript.PacePetsPerfectZeroSpaceDraw.createWorkspace();
+    const firstFrame = drawScript.PacePetsPerfectZeroSpaceDraw.drawFrame(
       targetContext,
       scene,
       sceneState,
       100,
-      backdropLayer,
+      { backdropLayer, pixelRatio: 1.25, previousFrame: null, workspace },
     );
-    drawScript.PacePetsPerfectZeroSpaceDraw.drawFrame(
+    sceneState.stars[1].x = 80;
+    const secondFrame = drawScript.PacePetsPerfectZeroSpaceDraw.drawFrame(
       targetContext,
       scene,
       sceneState,
       116,
-      backdropLayer,
+      {
+        backdropLayer,
+        pixelRatio: 1.25,
+        previousFrame: firstFrame,
+        workspace,
+      },
+    );
+    const thirdFrame = drawScript.PacePetsPerfectZeroSpaceDraw.drawFrame(
+      targetContext,
+      scene,
+      sceneState,
+      132,
+      {
+        backdropLayer,
+        pixelRatio: 1.25,
+        previousFrame: secondFrame,
+        workspace,
+      },
     );
 
-    expect(backdropCanvas).toMatchObject({ height: 101, width: 126 });
-    expect(backdropContext.createRadialGradient).toHaveBeenCalledOnce();
-    expect(backdropContext.arc).not.toHaveBeenCalled();
-    expect(targetContext.drawImage).toHaveBeenCalledTimes(2);
-    expect(targetContext.drawImage).toHaveBeenLastCalledWith(
+    expectDirtyFrameEvidence({
+      backdropCanvas,
+      backdropContext,
       backdropLayer,
-      0,
-      0,
-    );
-    expect(targetContext.arc).toHaveBeenCalledTimes(4);
-    expect(updateStarSparkle.mock.calls.map(([star]) => star)).toEqual([
-      sceneState.stars[0],
-      sceneState.stars[1],
-      sceneState.stars[0],
-      sceneState.stars[1],
-    ]);
+      sceneState,
+      targetContext,
+      updateStarSparkle,
+    });
+    expect(secondFrame).not.toBe(firstFrame);
+    expect(thirdFrame).toBe(firstFrame);
+    expect(new Set(starProgressResults).size).toBe(1);
   });
 });

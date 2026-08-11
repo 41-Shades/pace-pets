@@ -2,75 +2,24 @@
   "use strict";
 
   const DATA = root.PacePetsPerfectZeroSpaceData;
+  const FRAME = root.PacePetsPerfectZeroSpaceFrame;
   const MOTION = root.PacePetsPerfectZeroSpaceMotion;
-  if (!DATA || !MOTION) {
+  if (!DATA || !FRAME || !MOTION) {
     throw new Error(
-      "Perfect-zero scene data and motion helpers must load before perfect-zero-space-draw.js.",
+      "Perfect-zero scene data, frame, and motion helpers must load before perfect-zero-space-draw.js.",
     );
   }
   const { starProgress, updateStarSparkle } = MOTION;
 
-  function drawRoundedRectPath(context, rect) {
-    const { height, radius, width, x, y } = rect;
-    const cornerRadius = Math.min(radius, width / 2, height / 2);
-    context.beginPath();
-    context.moveTo(x + cornerRadius, y);
-    context.lineTo(x + width - cornerRadius, y);
-    context.quadraticCurveTo(x + width, y, x + width, y + cornerRadius);
-    context.lineTo(x + width, y + height - cornerRadius);
-    context.quadraticCurveTo(
-      x + width,
-      y + height,
-      x + width - cornerRadius,
-      y + height,
-    );
-    context.lineTo(x + cornerRadius, y + height);
-    context.quadraticCurveTo(x, y + height, x, y + height - cornerRadius);
-    context.lineTo(x, y + cornerRadius);
-    context.quadraticCurveTo(x, y, x + cornerRadius, y);
-    context.closePath();
-  }
-
-  function drawSceneFramePath(context, frame, width, height) {
-    if (frame.type === "fullBleed") {
-      context.rect(0, 0, width, height);
-      return;
-    }
-
-    drawRoundedRectPath(context, {
-      height: height * frame.heightRatio,
-      radius: Math.min(width, height) * frame.radiusRatio,
-      width: width * frame.widthRatio,
-      x: width * frame.insetXRatio,
-      y: height * frame.insetYRatio,
-    });
-  }
-
-  function createBackgroundGradient(context, scene, width, height) {
-    const gradient = scene.gradient;
-    const backgroundGradient = context.createRadialGradient(
-      width * gradient.centerXRatio,
-      height * gradient.centerYRatio,
-      0,
-      width * gradient.outerXRatio,
-      height * gradient.outerYRatio,
-      Math.max(width, height) * gradient.radiusRatio,
-    );
-    backgroundGradient.addColorStop(0, gradient.innerColor);
-    backgroundGradient.addColorStop(
-      gradient.middleStop,
-      gradient.middleColor || scene.background,
-    );
-    backgroundGradient.addColorStop(1, gradient.outerColor);
-    return backgroundGradient;
-  }
-
-  function drawBackdrop(context, scene, sceneState) {
-    const { width, height } = sceneState;
-    context.beginPath();
-    drawSceneFramePath(context, scene.frame, width, height);
-    context.fillStyle = createBackgroundGradient(context, scene, width, height);
-    context.fill();
+  function createWorkspace() {
+    const fullFrameRegion = { bottom: 0, left: 0, right: 0, top: 0 };
+    return {
+      frame: FRAME.createWorkspace(),
+      fullFrameRegion,
+      fullFrameRegions: [fullFrameRegion],
+      starPool: [],
+      stars: [],
+    };
   }
 
   function drawPlanetDiscPath(context, half, xRatio = 0.74, yRatio = 0.76) {
@@ -345,52 +294,88 @@
     context.restore();
   }
 
-  function drawFrame(context, scene, sceneState, elapsedMs, backdropLayer) {
-    const { width, height } = sceneState;
-    const { frame } = scene;
-    context.clearRect(0, 0, width, height);
-    context.save();
-    context.setTransform(1, 0, 0, 1, 0, 0);
-    context.drawImage(backdropLayer, 0, 0);
-    context.restore();
-
-    context.save();
-    context.beginPath();
-    drawSceneFramePath(context, frame, width, height);
-    context.clip();
-
+  function currentStars(sceneState, elapsedMs, workspace) {
+    const stars = workspace.stars;
+    stars.length = 0;
+    let starIndex = 0;
     for (const star of sceneState.stars) {
+      if (!star.sparkleEnabled) {
+        continue;
+      }
       updateStarSparkle(star, elapsedMs);
-      const { opacity, scale } = starProgress(star, elapsedMs);
+      workspace.starPool[starIndex] ||= {
+        progress: { opacity: 0, scale: 1 },
+        star: null,
+      };
+      const entry = workspace.starPool[starIndex];
+      entry.star = star;
+      starProgress(star, elapsedMs, entry.progress);
+      stars.push(entry);
+      starIndex += 1;
+    }
+    return stars;
+  }
+
+  function drawDynamicFrame(context, sceneState, elapsedMs, stars) {
+    for (const { progress, star } of stars) {
       context.beginPath();
-      context.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-      context.arc(star.x, star.y, star.size * scale, 0, Math.PI * 2);
+      context.fillStyle = `rgba(255, 255, 255, ${progress.opacity})`;
+      context.arc(star.x, star.y, star.size * progress.scale, 0, Math.PI * 2);
       context.fill();
     }
 
     drawComet(context, sceneState.comet, elapsedMs);
-
     for (const shape of sceneState.shapes) {
       drawShape(context, shape);
     }
+  }
 
-    context.restore();
+  function drawFrame(context, scene, sceneState, elapsedMs, frameOptions) {
+    const { backdropLayer, pixelRatio, previousFrame, workspace } =
+      frameOptions;
+    const stars = currentStars(sceneState, elapsedMs, workspace);
+    const currentFrame = FRAME.dynamicFrame(
+      sceneState,
+      stars,
+      elapsedMs,
+      frameOptions,
+    );
+    const currentRegions = currentFrame.dynamicRegions;
+    const fullFrame = !previousFrame;
+    let dirtyRegions;
+    if (fullFrame) {
+      workspace.fullFrameRegion.bottom = backdropLayer.height;
+      workspace.fullFrameRegion.left = 0;
+      workspace.fullFrameRegion.right = backdropLayer.width;
+      workspace.fullFrameRegion.top = 0;
+      dirtyRegions = workspace.fullFrameRegions;
+    } else {
+      dirtyRegions = FRAME.mergedRegions(
+        previousFrame.dynamicRegions,
+        workspace.frame,
+        currentRegions,
+      );
+    }
 
-    if (!frame.edgeGlow) {
-      return;
+    FRAME.restoreBackdrop(context, backdropLayer, dirtyRegions, fullFrame);
+    if (dirtyRegions.length === 0) {
+      return currentFrame;
     }
 
     context.save();
-    context.beginPath();
-    drawSceneFramePath(context, frame, width, height);
-    context.strokeStyle = frame.edgeGlow;
-    context.lineWidth = 1;
-    context.stroke();
+    FRAME.clipRegions(context, dirtyRegions, pixelRatio);
+    context.save();
+    FRAME.clipScene(context, scene, sceneState);
+    drawDynamicFrame(context, sceneState, elapsedMs, stars);
     context.restore();
+    FRAME.drawEdgeGlow(context, scene, sceneState);
+    context.restore();
+    return currentFrame;
   }
 
   root.PacePetsPerfectZeroSpaceDraw = Object.freeze({
-    drawBackdrop,
+    createWorkspace,
+    drawBackdrop: FRAME.drawBackdrop,
     drawFrame,
   });
 })(globalThis);

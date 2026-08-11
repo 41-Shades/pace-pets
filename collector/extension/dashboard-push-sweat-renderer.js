@@ -1,12 +1,13 @@
 ((root) => {
   "use strict";
 
-  const CanvasLayout = root.PacePetsDashboardPushCanvasLayout;
   const PushStretch = root.PacePetsDashboardPushStretch;
+  const SweatData = root.PacePetsDashboardPushSweatData;
+  const SweatSurface = root.PacePetsDashboardPushSweatSurface;
   const SweatVariation = root.PacePetsDashboardPushSweatVariation;
-  if (!CanvasLayout || !PushStretch || !SweatVariation) {
+  if (!PushStretch || !SweatData || !SweatSurface || !SweatVariation) {
     throw new Error(
-      "Pace push canvas layout, stretch, and sweat variation renderers must load before dashboard-push-sweat-renderer.js.",
+      "Pace push stretch, sweat data, surface, and variation must load before dashboard-push-sweat-renderer.js.",
     );
   }
 
@@ -14,108 +15,7 @@
   const DROP_STROKE = "#243044";
   const DROP_DESCENT_ANGLE = 0;
   const DROP_LAUNCH_TURN = -Math.PI;
-  const EXTREME_VARIATION = Object.freeze({
-    angle: 0.13,
-    lift: 0.16,
-    size: 0.12,
-    spin: 0.04,
-    start: 0.045,
-    sway: 0.012,
-    travel: 0.05,
-  });
-  const NORMAL_VARIATION = Object.freeze({
-    angle: 0.09,
-    lift: 0.08,
-    size: 0.13,
-    spin: 0.025,
-    start: 0.035,
-    sway: 0.012,
-    travel: 0.14,
-  });
-  const SWEAT_ORIGIN = Object.freeze({ x: 0.69, y: 0.18 });
-
-  function track([
-    angle,
-    duration,
-    fallY,
-    lift,
-    opacity,
-    size,
-    spin,
-    start,
-    sway,
-    travelX,
-  ]) {
-    return Object.freeze({
-      angle,
-      duration,
-      emitter: SWEAT_ORIGIN,
-      fallY,
-      lift,
-      opacity,
-      size,
-      spin,
-      start,
-      sway,
-      travelX,
-    });
-  }
-
-  const NORMAL_TRACKS = Object.freeze(
-    [
-      [0.88, 0.72, 0.18, 0.3, 0.9, 0.048, 0.05, 0.2, 0.032, 0.92],
-      [1.02, 0.7, 0.2, 0.28, 0.86, 0.043, -0.04, 0.3, 0.044, 1.02],
-      [0.78, 0.66, 0.22, 0.32, 0.82, 0.04, 0.04, 0.4, 0.038, 1],
-      [1.12, 0.6, 0.2, 0.24, 0.72, 0.035, -0.03, 0.5, 0.036, 1.16],
-      [0.94, 0.58, 0.24, 0.26, 0.68, 0.032, 0.03, 0.6, 0.034, 1.06],
-    ].map(track),
-  );
-  const EXTREME_TRACKS = Object.freeze(
-    [
-      [0.76, 0.96, 0.34, 0.66, 0.94, 0.052, 0.06, 0.12, 0.026, 1.08],
-      [1.18, 0.92, 0.2, 0.34, 0.9, 0.049, -0.08, 0.16, 0.074, 1.96],
-      [0.84, 0.9, 0.32, 0.54, 0.88, 0.046, 0.04, 0.2, 0.03, 1.06],
-      [1.04, 0.8, 0.18, 0.24, 0.78, 0.038, -0.05, 0.24, 0.05, 1.5],
-      [1.3, 0.84, 0.22, 0.4, 0.82, 0.041, -0.06, 0.28, 0.068, 2.08],
-      [0.68, 0.92, 0.38, 0.64, 0.8, 0.037, 0.04, 0.32, 0.022, 1.04],
-      [1.1, 0.8, 0.2, 0.3, 0.76, 0.034, -0.04, 0.36, 0.06, 1.68],
-      [0.9, 0.76, 0.32, 0.46, 0.74, 0.033, 0.03, 0.4, 0.034, 1.24],
-      [1.38, 0.72, 0.16, 0.22, 0.7, 0.031, -0.03, 0.44, 0.074, 2.16],
-      [0.78, 0.78, 0.42, 0.58, 0.72, 0.034, 0.04, 0.48, 0.028, 1.2],
-      [1.22, 0.68, 0.22, 0.28, 0.68, 0.029, -0.04, 0.52, 0.062, 1.82],
-      [1, 0.66, 0.34, 0.38, 0.64, 0.028, 0.03, 0.56, 0.04, 1.34],
-      [1.42, 0.62, 0.18, 0.2, 0.6, 0.026, -0.02, 0.6, 0.07, 2.2],
-      [0.72, 0.64, 0.46, 0.52, 0.58, 0.027, 0.02, 0.64, 0.026, 1.12],
-      [1.16, 0.58, 0.28, 0.28, 0.54, 0.025, -0.02, 0.68, 0.048, 1.54],
-      [0.88, 0.54, 0.38, 0.34, 0.5, 0.024, 0.02, 0.72, 0.028, 1.1],
-    ].map(track),
-  );
-  const LEVEL_CONFIGS = Object.freeze({
-    extreme: Object.freeze({
-      countRange: Object.freeze([4, 6]),
-      salt: 0x7f4a7c15,
-      sizeBoost: 0.58,
-      sourceTracks: EXTREME_TRACKS,
-      trailPhase: 0.34,
-      variation: EXTREME_VARIATION,
-    }),
-    normal: Object.freeze({
-      countRange: Object.freeze([1, 3]),
-      salt: 0x9e3779b9,
-      sizeBoost: 0.32,
-      sourceTracks: NORMAL_TRACKS,
-      trailPhase: 0.24,
-      variation: NORMAL_VARIATION,
-    }),
-    rare: Object.freeze({
-      countRange: Object.freeze([75, 125]),
-      salt: 0x85ebca6b,
-      sizeBoost: 0.95,
-      sourceTracks: EXTREME_TRACKS,
-      trailPhase: 0.44,
-      variation: EXTREME_VARIATION,
-    }),
-  });
+  const { LEVEL_CONFIGS } = SweatData;
 
   function clamp(value, min = 0, max = 1) {
     return Math.max(min, Math.min(max, value));
@@ -141,14 +41,7 @@
         ? phase + 1
         : phase;
     const progress = (adjustedPhase - track.start) / track.duration;
-    if (progress < 0 || progress > 1) {
-      return null;
-    }
-    return progress;
-  }
-
-  function configForLevel(level) {
-    return LEVEL_CONFIGS[level] || LEVEL_CONFIGS.normal;
+    return progress < 0 || progress > 1 ? null : progress;
   }
 
   function completionPhaseForTrack(track) {
@@ -168,7 +61,10 @@
     if (previousLevel === "rare" && currentLevel !== "rare") {
       return completionPhase;
     }
-    return Math.max(configForLevel(previousLevel).trailPhase, completionPhase);
+    return Math.max(
+      SweatData.configForLevel(previousLevel).trailPhase,
+      completionPhase,
+    );
   }
 
   function sizeBoost(maxBoost, amount) {
@@ -244,52 +140,55 @@
     context.restore();
   }
 
-  function drawTrack(context, frame, track) {
-    const progress = trackProgress(track, frame.phase, frame.allowPhaseWrap);
-    if (progress === null) {
-      return 0;
-    }
+  function positionDrop(frame, track, progress) {
     const released = releasedTrackState(frame, track);
     const eased = smooth(progress);
     const arc = Math.sin(progress * Math.PI);
     const sway = Math.sin(progress * Math.PI * 2) * track.sway;
-    const unitPixels = released.unit * frame.dimensions.height;
-    const originY = released.origin.y * frame.dimensions.height;
-    const x =
-      (released.origin.x + (track.travelX * eased + sway) * released.unit) *
-      frame.dimensions.width;
+    const { dimensions } = frame;
+    const unitPixels =
+      released.unit * Math.min(dimensions.unitX, dimensions.unitY);
+    const originY =
+      (released.origin.y - dimensions.worldTop) * dimensions.unitY;
     const fallProgress = mix(
       progress * progress,
       smooth(progress),
       track.fallY,
     );
-    const y =
+    frame.drop.angle = dropAngle(track, progress);
+    frame.drop.opacity =
+      track.opacity * clamp(progress / 0.12) * clamp((1 - progress) / 0.04);
+    frame.drop.size =
+      track.size * released.sizeBoost * unitPixels * (0.88 + arc * 0.2);
+    frame.drop.x =
+      (released.origin.x +
+        (track.travelX * eased + sway) * released.unit -
+        dimensions.worldLeft) *
+      dimensions.unitX;
+    frame.drop.y =
       originY +
       (frame.groundY - originY) * fallProgress -
       track.lift * arc * unitPixels;
-    const opacity =
-      track.opacity * clamp(progress / 0.12) * clamp((1 - progress) / 0.04);
-    const size =
-      track.size *
-      released.sizeBoost *
-      released.unit *
-      Math.min(frame.dimensions.width, frame.dimensions.height);
-    frame.drop.angle = dropAngle(track, progress);
-    frame.drop.opacity = opacity;
-    frame.drop.size = size * (0.88 + arc * 0.2);
-    frame.drop.x = x;
-    frame.drop.y = y;
+    return released;
+  }
+
+  function drawTrack(context, frame, track) {
+    const progress = trackProgress(track, frame.phase, frame.allowPhaseWrap);
+    if (progress === null) {
+      return 0;
+    }
+    const released = positionDrop(frame, track, progress);
+    frame.surface.includeDrop(frame.drop);
     drawDrop(context, frame.drop);
-    return opacity * track.size * released.sizeBoost;
+    return frame.drop.opacity * track.size * released.sizeBoost;
   }
 
   function drawTracks(context, frame, tracks, shouldDrawTrack = null) {
     let sweatLoad = 0;
     for (const track of tracks) {
-      if (shouldDrawTrack && !shouldDrawTrack(track)) {
-        continue;
+      if (!shouldDrawTrack || shouldDrawTrack(track)) {
+        sweatLoad += drawTrack(context, frame, track);
       }
-      sweatLoad += drawTrack(context, frame, track);
     }
     return sweatLoad;
   }
@@ -315,9 +214,13 @@
       return null;
     }
     const trackCaches = createTrackCaches();
+    const surface = SweatSurface.create(
+      canvas,
+      groundElement,
+      SweatData.SURFACE_BOUNDS,
+    );
     const frame = {
       allowPhaseWrap: false,
-      amount: 0,
       dimensions: null,
       drop: { angle: 0, opacity: 0, size: 0, x: 0, y: 0 },
       groundY: 0,
@@ -326,18 +229,17 @@
       profile: null,
       releasedTracks: new WeakMap(),
       sizeBoost: 0,
+      surface,
     };
-    const layout = CanvasLayout.create(canvas, groundElement);
 
     return {
       invalidateLayout() {
-        layout.invalidate();
+        surface.invalidate();
       },
       render({
         cycleIndex,
         iconRenderer,
         profile,
-        amount,
         phase,
         previousCycleIndex,
         previousProfile,
@@ -345,21 +247,19 @@
         pulseLevel,
         waterLevel = 0,
       }) {
-        const activeLayout = layout.current();
-        const dimensions = activeLayout;
-        frame.amount = amount;
+        const dimensions = surface.current();
         frame.dimensions = dimensions;
-        frame.groundY = landingY(activeLayout, waterLevel);
+        frame.groundY = landingY(dimensions, waterLevel);
         frame.iconRenderer = iconRenderer;
         frame.phase = phase;
         frame.profile = profile;
-        const currentConfig = configForLevel(pulseLevel);
+        const currentConfig = SweatData.configForLevel(pulseLevel);
         frame.allowPhaseWrap = false;
         frame.sizeBoost = currentConfig.sizeBoost;
-        context.clearRect(0, 0, dimensions.width, dimensions.height);
+        surface.beginFrame(context, dimensions);
         const currentTracks = trackCaches[pulseLevel].forCycle(cycleIndex);
         let sweatLoad = drawTracks(context, frame, currentTracks);
-        const previousConfig = configForLevel(previousPulseLevel);
+        const previousConfig = SweatData.configForLevel(previousPulseLevel);
         const previousTrackCache = trackCaches[previousPulseLevel];
         const previousTracks =
           previousCycleIndex >= 0 && previousTrackCache
@@ -384,6 +284,7 @@
             (track) => phase <= completionPhaseForTrack(track),
           );
         }
+        surface.finishFrame();
         return sweatLoad;
       },
     };
