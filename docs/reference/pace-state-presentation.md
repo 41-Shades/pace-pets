@@ -440,7 +440,11 @@ effect in `collector/extension/dashboard-push-stretch-methods.js` and
 `collector/extension/dashboard-push-stretch.css`. The main status icon texture is
 warped along the lower-left-foot-to-head axis so the root stays pinned while the
 head end expands more. A matching 2D canvas layer emits small sweat beads from
-the transformed head area. Pulse levels choose seeded bead-count ranges: normal
+the transformed head area. Stretch and sweat use separate geometry-sized canvas
+surfaces instead of a shared full-envelope layer. The sweat renderer restores
+only its previous padded bead region before drawing the next frame; its bounds
+include the normal, extreme, rare, and previous-pulse carry-over paths without
+changing their coordinates. Pulse levels choose seeded bead-count ranges: normal
 uses one to three beads, extreme uses four to six, and rare uses seventy-five to
 one hundred twenty-five. Launch timing, bead size, lift, spin, and travel vary per
 pulse without frame-to-frame jitter, with larger levels using larger bead boosts
@@ -627,4 +631,9 @@ also uses the dedicated canvas scene in
 `collector/extension/perfect-zero-space-scene.js` when the main dashboard card
 enters the Perfect Zero presentation, plus the dashboard-only canvas eclipse in
 `collector/extension/dashboard-eclipse-icon.js` for the theme control while the
-Perfect Zero page background is active.
+Perfect Zero page background is active. The shared space scene retains its
+gradient and immutable stars in a backdrop layer. At the existing animation
+cadence, ordinary frames restore only padded previous/current regions for
+sparkling stars, moving planets and asteroids, and comets before replaying those
+dynamic draws in their original order. Leaving the scene releases both the
+retained backdrop and the visible canvas backing allocation.

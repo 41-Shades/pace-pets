@@ -85,6 +85,14 @@
       this.context = context;
       this.canvasState = null;
       this.elapsedMs = 0;
+      this.frameWorkspace = DRAW.createWorkspace();
+      this.frameOptions = {
+        backdropLayer: null,
+        pixelRatio: 1,
+        previousFrame: null,
+        workspace: this.frameWorkspace,
+      };
+      this.frameState = null;
       this.isStopped = false;
       this.lastFrameAtMs = null;
       this.scene = scene;
@@ -105,13 +113,23 @@
     }
 
     drawStaticFrame() {
+      if (this.isStopped) {
+        return;
+      }
       this.configureSceneIfNeeded();
-      DRAW.drawFrame(
+      this.drawCurrentFrame();
+    }
+
+    drawCurrentFrame() {
+      this.frameOptions.backdropLayer = this.backdropLayer;
+      this.frameOptions.pixelRatio = this.canvasState.pixelRatio;
+      this.frameOptions.previousFrame = this.frameState;
+      this.frameState = DRAW.drawFrame(
         this.context,
         this.scene,
         this.sceneState,
         this.elapsedMs,
-        this.backdropLayer,
+        this.frameOptions,
       );
     }
 
@@ -149,6 +167,7 @@
         this.sceneState,
         this.canvasState.pixelRatio,
       );
+      this.frameState = null;
     }
 
     cancelAnimationFrameIfNeeded() {
@@ -185,13 +204,7 @@
         deltaMs,
         this.elapsedMs,
       );
-      DRAW.drawFrame(
-        this.context,
-        this.scene,
-        this.sceneState,
-        this.elapsedMs,
-        this.backdropLayer,
-      );
+      this.drawCurrentFrame();
       this.requestNextFrame();
     }
 
@@ -221,6 +234,7 @@
       this.sceneState = null;
       this.canvasState = null;
       this.backdropLayer = null;
+      this.frameState = null;
       this.drawStaticFrame();
     }
 
@@ -247,7 +261,12 @@
     stop() {
       this.isStopped = true;
       this.cancelAnimationFrameIfNeeded();
+      this.canvas.width = 0;
+      this.canvas.height = 0;
+      this.canvasState = null;
+      this.sceneState = null;
       this.backdropLayer = null;
+      this.frameState = null;
       this.removeMotionPreferenceListener();
       this.resizeObserver?.disconnect();
       root.removeEventListener("resize", this.handleResize);

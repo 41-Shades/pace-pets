@@ -79,93 +79,6 @@ function createWebGl() {
   };
 }
 
-function expectedNormalMesh(profile, amount) {
-  const layerSize = 1 + 8 * 2;
-  const rect = {
-    size: (1 + 0.03 * 2) / layerSize,
-    x: (8 - 0.03) / layerSize,
-    y: (8 - 0.03) / layerSize,
-  };
-  const root = {
-    x: rect.x + 0.2 * rect.size,
-    y: rect.y + 0.84 * rect.size,
-  };
-  const positions = new Float32Array(29 * 29 * 2);
-  let index = 0;
-  for (let row = 0; row <= 28; row += 1) {
-    for (let column = 0; column <= 28; column += 1) {
-      const x = Math.fround(rect.x + (column / 28) * rect.size);
-      const y = Math.fround(rect.y + (row / 28) * rect.size);
-      const dx = x - root.x;
-      const dy = y - root.y;
-      const along = dx * profile.geometry.axis.x + dy * profile.geometry.axis.y;
-      const across =
-        dx * profile.geometry.perp.x + dy * profile.geometry.perp.y;
-      const progress = Math.max(
-        0,
-        Math.min(1, along / (profile.geometry.progressLength * rect.size)),
-      );
-      const activeProgress = Math.max(
-        0,
-        Math.min(
-          1,
-          (progress - profile.activeStart) / (1 - profile.activeStart),
-        ),
-      );
-      const strength = activeProgress ** profile.exponent * amount;
-      const stretchedAlong = along * (1 + profile.axisScale * strength);
-      const stretchedAcross = across * (1 + profile.perpScale * strength);
-      const nextX =
-        root.x +
-        profile.geometry.axis.x * stretchedAlong +
-        profile.geometry.perp.x * stretchedAcross;
-      const nextY =
-        root.y +
-        profile.geometry.axis.y * stretchedAlong +
-        profile.geometry.perp.y * stretchedAcross;
-      positions[index] = nextX * 2 - 1;
-      positions[index + 1] = 1 - nextY * 2;
-      index += 2;
-    }
-  }
-  return positions;
-}
-
-function expectedNormalPoint(profile, amount, point) {
-  const size = (1 + 0.03 * 2) / (1 + 8 * 2);
-  const rectX = (8 - 0.03) / (1 + 8 * 2);
-  const rectY = (8 - 0.03) / (1 + 8 * 2);
-  const x = rectX + point.x * size;
-  const y = rectY + point.y * size;
-  const rootX = rectX + 0.2 * size;
-  const rootY = rectY + 0.84 * size;
-  const dx = x - rootX;
-  const dy = y - rootY;
-  const along = dx * profile.geometry.axis.x + dy * profile.geometry.axis.y;
-  const across = dx * profile.geometry.perp.x + dy * profile.geometry.perp.y;
-  const progress = Math.max(
-    0,
-    Math.min(1, along / (profile.geometry.progressLength * size)),
-  );
-  const activeProgress = Math.max(
-    0,
-    Math.min(1, (progress - profile.activeStart) / (1 - profile.activeStart)),
-  );
-  const strength = activeProgress ** profile.exponent * amount;
-  const stretchedAlong = along * (1 + profile.axisScale * strength);
-  const stretchedAcross = across * (1 + profile.perpScale * strength);
-  return {
-    x:
-      rootX +
-      profile.geometry.axis.x * stretchedAlong +
-      profile.geometry.perp.x * stretchedAcross,
-    y:
-      rootY +
-      profile.geometry.axis.y * stretchedAlong +
-      profile.geometry.perp.y * stretchedAcross,
-  };
-}
-
 describe("Push canvas layout", () => {
   it("measures only on invalidation or DPR changes", () => {
     const rect = vi.fn(() => ({ height: 20, width: 30 }));
@@ -189,23 +102,30 @@ describe("Push canvas layout", () => {
 });
 
 describe("Push stretch renderer", () => {
-  it("uploads identical zero-strength geometry once but keeps drawing", () => {
+  it("keeps the original geometry inside a right-sized independent surface", () => {
     const gl = createWebGl();
-    const rect = vi.fn(() => ({ height: 120, width: 120 }));
+    const style = {};
+    const rect = vi.fn(() => ({
+      height: (Number.parseFloat(style.height) / 100) * 96,
+      width: (Number.parseFloat(style.width) / 100) * 96,
+    }));
     const canvas = {
       getBoundingClientRect: rect,
       getContext: () => gl,
       height: 0,
+      style,
       width: 0,
     };
     const context = createContext({ devicePixelRatio: 2 });
     runScript(context, "dashboard-push-canvas-layout.js");
+    runScript(context, "dashboard-push-stretch-geometry.js");
     runScript(context, "dashboard-push-stretch-renderer.js");
     const renderer = context.PacePetsDashboardPushStretch.createRenderer(
       canvas,
       {},
     );
     const profile = context.PacePetsDashboardPushStretch.NORMAL_PROFILE;
+    const bounds = context.PacePetsDashboardPushStretch.SURFACE_BOUNDS;
 
     renderer.render(profile, 0);
     const uploaded = Array.from(gl.bufferSubData.mock.calls[0][2]);
@@ -216,14 +136,11 @@ describe("Push stretch renderer", () => {
     expect(gl.drawElements).toHaveBeenCalledTimes(2);
     expect(uploaded).toHaveLength(29 * 29 * 2);
     expect(uploaded.every(Number.isFinite)).toBe(true);
+    expect(canvas.width * canvas.height).toBeLessThan(3264 * 3264 * 0.2);
+    expect(bounds.right - bounds.left).toBeLessThan(8);
+    expect(bounds.bottom - bounds.top).toBeLessThan(7);
 
     renderer.render(profile, 0.65);
-    expect(Array.from(gl.bufferSubData.mock.calls[1][2])).toEqual(
-      Array.from(expectedNormalMesh(profile, 0.65)),
-    );
-    expect(renderer.pointFor(profile, 0.65, { x: 0.69, y: 0.18 })).toEqual(
-      expectedNormalPoint(profile, 0.65, { x: 0.69, y: 0.18 }),
-    );
 
     renderer.invalidateLayout();
     renderer.render(profile, 0.65);
@@ -231,22 +148,28 @@ describe("Push stretch renderer", () => {
     expect(rect).toHaveBeenCalledTimes(2);
     expect(gl.bufferSubData).toHaveBeenCalledTimes(3);
     expect(gl.drawElements).toHaveBeenCalledTimes(4);
+
+    renderer.destroy();
+    expect(gl.deleteBuffer).toHaveBeenCalledTimes(3);
+    expect(gl.deleteTexture).toHaveBeenCalledTimes(1);
+    expect(gl.deleteProgram).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("Push sweat renderer", () => {
-  it("reuses canvas and ground measurements across frames", () => {
-    const canvasRect = vi.fn(() => ({
-      height: 200,
-      top: -100,
-      width: 200,
+  it("reuses icon and ground measurements across frames", () => {
+    const iconRect = vi.fn(() => ({
+      height: 96,
+      top: 0,
+      width: 96,
     }));
     const groundRect = vi.fn(() => ({ bottom: 80, height: 60 }));
     const context2d = { clearRect: vi.fn() };
     const canvas = {
-      getBoundingClientRect: canvasRect,
       getContext: () => context2d,
       height: 0,
+      parentElement: { getBoundingClientRect: iconRect },
+      style: {},
       width: 0,
     };
     const context = createContext({
@@ -259,7 +182,9 @@ describe("Push sweat renderer", () => {
       },
       devicePixelRatio: 2,
     });
-    runScript(context, "dashboard-push-canvas-layout.js");
+    runScript(context, "dashboard-push-stretch-geometry.js");
+    runScript(context, "dashboard-push-sweat-data.js");
+    runScript(context, "dashboard-push-sweat-surface.js");
     runScript(context, "dashboard-push-sweat-renderer.js");
     const renderer = context.PacePetsDashboardPushSweat.createRenderer(canvas, {
       getBoundingClientRect: groundRect,
@@ -279,13 +204,14 @@ describe("Push sweat renderer", () => {
     renderer.render(frame);
     renderer.render(frame);
 
-    expect(canvasRect).toHaveBeenCalledTimes(1);
+    expect(iconRect).toHaveBeenCalledTimes(1);
     expect(groundRect).toHaveBeenCalledTimes(1);
+    expect(canvas.width * canvas.height).toBeLessThan(3264 * 3264 * 0.2);
 
     renderer.invalidateLayout();
     renderer.render(frame);
 
-    expect(canvasRect).toHaveBeenCalledTimes(2);
+    expect(iconRect).toHaveBeenCalledTimes(2);
     expect(groundRect).toHaveBeenCalledTimes(2);
   });
 });

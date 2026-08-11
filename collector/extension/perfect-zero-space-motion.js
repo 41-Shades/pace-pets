@@ -71,9 +71,11 @@
     }
   }
 
-  function starProgress(star, elapsedMs) {
+  function starProgress(star, elapsedMs, result = {}) {
     if (star.sparkleStartedAtMs === null) {
-      return { opacity: star.baseOpacity, scale: 1 };
+      result.opacity = star.baseOpacity;
+      result.scale = 1;
+      return result;
     }
 
     const elapsedSparkleMs = elapsedMs - star.sparkleStartedAtMs;
@@ -81,41 +83,40 @@
       const peakOpacity = Math.min(star.baseOpacity * 2, 1);
       if (elapsedSparkleMs < 300) {
         const progress = elapsedSparkleMs / 300;
-        return {
-          opacity:
-            star.baseOpacity + (peakOpacity - star.baseOpacity) * progress,
-          scale: 1 + progress,
-        };
+        result.opacity =
+          star.baseOpacity + (peakOpacity - star.baseOpacity) * progress;
+        result.scale = 1 + progress;
+        return result;
       }
 
       if (elapsedSparkleMs < 500) {
-        return { opacity: peakOpacity, scale: 2 };
+        result.opacity = peakOpacity;
+        result.scale = 2;
+        return result;
       }
 
       const progress = Math.min((elapsedSparkleMs - 500) / 500, 1);
-      return {
-        opacity: peakOpacity + (star.baseOpacity - peakOpacity) * progress,
-        scale: 2 - progress,
-      };
+      result.opacity =
+        peakOpacity + (star.baseOpacity - peakOpacity) * progress;
+      result.scale = 2 - progress;
+      return result;
     }
 
     if (elapsedSparkleMs < 700) {
       const progress = elapsedSparkleMs / 700;
-      return {
-        opacity:
-          star.baseOpacity +
-          (star.baseOpacity * 0.2 - star.baseOpacity) * progress,
-        scale: 1,
-      };
+      result.opacity =
+        star.baseOpacity +
+        (star.baseOpacity * 0.2 - star.baseOpacity) * progress;
+      result.scale = 1;
+      return result;
     }
 
     const progress = Math.min((elapsedSparkleMs - 700) / 700, 1);
-    return {
-      opacity:
-        star.baseOpacity * 0.2 +
-        (star.baseOpacity - star.baseOpacity * 0.2) * progress,
-      scale: 1,
-    };
+    result.opacity =
+      star.baseOpacity * 0.2 +
+      (star.baseOpacity - star.baseOpacity * 0.2) * progress;
+    result.scale = 1;
+    return result;
   }
 
   root.PacePetsPerfectZeroSpaceMotion = Object.freeze({
