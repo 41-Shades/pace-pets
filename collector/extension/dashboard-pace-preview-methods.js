@@ -77,7 +77,7 @@
     },
 
     applyNoRatioPreviewResetTiming() {
-      const windowKey = this.selectedSupportedWindowKey();
+      const windowKey = this.selectedAvailableWindowKey();
       const spec =
         this.windowSpecs[windowKey] || this.windowSpecs[this.defaultWindowKey];
       DASHBOARD_TIME.setResetParts(this.elements, null, spec);
@@ -89,7 +89,7 @@
     },
 
     applyPreviewResetTiming(state, previewWindow) {
-      const windowKey = this.selectedSupportedWindowKey();
+      const windowKey = this.selectedAvailableWindowKey();
       const spec =
         this.windowSpecs[windowKey] || this.windowSpecs[this.defaultWindowKey];
       DASHBOARD_TIME.setResetParts(
@@ -160,7 +160,7 @@
           if (state.key === DATA.PACE_STATES.nothingness.key) {
             this.usageChartView.renderEmptyData({
               windowData: null,
-              windowKey: this.selectedSupportedWindowKey(),
+              windowKey: this.selectedAvailableWindowKey(),
             });
           } else {
             this.usageChartView.setEmpty(state.copy);

@@ -140,7 +140,7 @@
         onPaceStateChanged: (details) => this.handlePaceStateChanged?.(details),
         renderHistory: (history, refreshStatus, options) =>
           this.renderHistory(history, refreshStatus, options),
-        selectedSupportedWindowKey: () => this.selectedSupportedWindowKey(),
+        selectedAvailableWindowKey: () => this.selectedAvailableWindowKey(),
         specialTransitionAudioAllowed: () =>
           this.initialSpecialTransitionAudioAllowed,
         specialTransitionAudioReady: () =>
@@ -167,7 +167,7 @@
     }
 
     normalizedWindowKey(value) {
-      return this.USAGE_WINDOWS.normalizeSelectableWindowKey(value);
+      return this.USAGE_WINDOWS.normalizeWindowKey(value);
     }
 
     readSessionWindowKey() {
@@ -217,46 +217,52 @@
       return this.readBadgeWindowKey();
     }
 
-    selectedSupportedWindowKey() {
-      if (this.USAGE_WINDOWS.isSelectableWindowKey(this.selectedWindowKey)) {
-        return this.selectedWindowKey;
-      }
-
-      this.selectedWindowKey = this.DEFAULT_WINDOW_KEY;
-      return this.DEFAULT_WINDOW_KEY;
+    currentUsageWindows() {
+      return (
+        globalThis.CodexUsageHistory.latestSample(this.currentHistory)
+          ?.windows || {}
+      );
     }
 
-    renderWindowControls(activeKey) {
-      const nextKey = this.USAGE_WINDOWS.alternateWindowKey(activeKey);
-      const nextSelectable = this.USAGE_WINDOWS.isSelectableWindowKey(nextKey);
-      const unavailableReason = nextKey
-        ? this.WINDOW_SPECS[nextKey].unavailableReason
-        : null;
-      this.elements.windowToggle.disabled = false;
-      this.elements.windowToggle.dataset.nextWindowKey = nextSelectable
-        ? nextKey
-        : "";
+    selectedAvailableWindowKey(windows = this.currentUsageWindows()) {
+      const availableWindowKey = this.USAGE_WINDOWS.firstAvailableWindowKey(
+        windows,
+        this.selectedWindowKey,
+      );
+      if (availableWindowKey !== this.selectedWindowKey) {
+        this.selectedWindowKey = availableWindowKey;
+        this.storeSessionWindowKey(availableWindowKey);
+      }
+      return availableWindowKey;
+    }
+
+    renderWindowControls(activeKey, windows = this.currentUsageWindows()) {
+      const selectableKeys = this.USAGE_WINDOWS.selectableWindowKeys(windows);
+      const nextKey =
+        selectableKeys.find((windowKey) => windowKey !== activeKey) || null;
+      this.elements.windowToggle.disabled = !nextKey;
+      this.elements.windowToggle.dataset.nextWindowKey = nextKey || "";
       this.elements.windowToggle.setAttribute(
         "aria-disabled",
-        String(!nextSelectable),
+        String(!nextKey),
       );
       this.appTooltips.setText(
         this.elements.windowToggle,
-        nextSelectable ? "Toggle time window (T)" : unavailableReason || "",
+        nextKey ? "Toggle time window (T)" : "",
       );
       this.elements.windowToggle.setAttribute(
         "aria-label",
-        nextSelectable
+        nextKey
           ? `Usage window ${this.WINDOW_SPECS[activeKey].badge}. Switch to ${this.WINDOW_SPECS[nextKey].badge}.`
-          : `Usage window ${this.WINDOW_SPECS[activeKey].badge}. ${unavailableReason || "No alternate window available."}`,
+          : `Usage window ${this.WINDOW_SPECS[activeKey].badge}. No alternate window is available for this account.`,
       );
 
       this.elements.windowOptions.forEach((option) => {
         const windowKey = option.dataset.windowKey;
         const active = windowKey === activeKey;
-        const selectable = this.USAGE_WINDOWS.isSelectableWindowKey(windowKey);
+        const selectable = selectableKeys.includes(windowKey);
+        option.hidden = !selectable;
         option.classList.toggle("active", active);
-        option.classList.toggle("unavailable", !selectable);
         option.setAttribute("aria-current", active ? "true" : "false");
         option.setAttribute("aria-disabled", String(!selectable));
       });
@@ -294,7 +300,10 @@
     toggleUsageWindow() {
       const windowKey = this.elements.windowToggle.dataset.nextWindowKey;
       if (
-        !this.USAGE_WINDOWS.isSelectableWindowKey(windowKey) ||
+        !this.USAGE_WINDOWS.isSelectableWindowKey(
+          this.currentUsageWindows(),
+          windowKey,
+        ) ||
         this.elements.windowToggle.getAttribute("aria-disabled") === "true"
       ) {
         return false;

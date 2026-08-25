@@ -40,21 +40,8 @@
   cursor: not-allowed;
 }
 
-.window-toggle-option.unavailable {
-  color: color-mix(in srgb, var(--muted) 46%, var(--surface-mix));
-}
-
-.window-toggle-option.unavailable::after {
-  background: currentcolor;
-  border-radius: 999px;
-  content: "";
-  height: 1.25px;
-  left: 50%;
-  pointer-events: none;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(-28deg);
-  width: 23px;
+.window-toggle-option[hidden] {
+  display: none;
 }
 
 .window-toggle:focus-visible {

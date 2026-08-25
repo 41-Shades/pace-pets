@@ -30,7 +30,7 @@
     return `${BADGE_CONTEXT_MENU_ID_PREFIX}${windowKey}`;
   }
 
-  function badgeWindowKeyFromContextMenuId(menuItemId) {
+  function badgeWindowKeyFromContextMenuId(menuItemId, windows) {
     if (
       typeof menuItemId !== "string" ||
       !menuItemId.startsWith(BADGE_CONTEXT_MENU_ID_PREFIX)
@@ -39,7 +39,9 @@
     }
 
     const windowKey = menuItemId.slice(BADGE_CONTEXT_MENU_ID_PREFIX.length);
-    return USAGE_WINDOWS.isSelectableWindowKey(windowKey) ? windowKey : null;
+    return USAGE_WINDOWS.isSelectableWindowKey(windows, windowKey)
+      ? windowKey
+      : null;
   }
 
   function contextMenusAvailable() {
@@ -68,7 +70,7 @@
     });
   }
 
-  async function createBadgeContextMenus({ selectedWindowKey }) {
+  async function createBadgeContextMenus({ selectedWindowKey, windows }) {
     if (!contextMenusAvailable()) {
       return;
     }
@@ -91,28 +93,36 @@
     });
     for (const windowKey of USAGE_WINDOWS.WINDOW_KEYS) {
       const spec = USAGE_WINDOWS.WINDOW_SPECS[windowKey];
-      const selectable = USAGE_WINDOWS.isSelectableWindowKey(windowKey);
+      const selectable = USAGE_WINDOWS.isSelectableWindowKey(
+        windows,
+        windowKey,
+      );
       await createContextMenu({
         checked: selectable && windowKey === selectedWindowKey,
         contexts: BADGE_CONTEXT_MENU_CONTEXTS,
         enabled: selectable,
         id: badgeContextMenuId(windowKey),
-        title: selectable
-          ? `${spec.badge} badge`
-          : `${spec.badge} badge (temporarily unavailable)`,
+        title: `${spec.badge} badge`,
         type: "radio",
+        visible: selectable,
       });
     }
   }
 
-  async function syncBadgeContextMenuSelection(selectedWindowKey) {
+  async function syncBadgeContextMenus({ selectedWindowKey, windows }) {
     if (!contextMenusAvailable()) {
       return;
     }
 
     for (const windowKey of USAGE_WINDOWS.WINDOW_KEYS) {
+      const selectable = USAGE_WINDOWS.isSelectableWindowKey(
+        windows,
+        windowKey,
+      );
       await updateContextMenu(badgeContextMenuId(windowKey), {
-        checked: windowKey === selectedWindowKey,
+        checked: selectable && windowKey === selectedWindowKey,
+        enabled: selectable,
+        visible: selectable,
       });
     }
   }
@@ -124,6 +134,6 @@
       menuItemId === CHECK_USAGE_NOW_CONTEXT_MENU_ID,
     isOpenDashboardMenuItem: (menuItemId) =>
       menuItemId === OPEN_DASHBOARD_CONTEXT_MENU_ID,
-    syncBadgeContextMenuSelection,
+    syncBadgeContextMenus,
   });
 })(globalThis);

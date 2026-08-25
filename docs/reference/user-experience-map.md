@@ -41,5 +41,7 @@ Alternate, playful, passive, and rare experiences.
 - **See an imperfect-state effect:** Open or leave the dashboard visible → reach **Splat!** or **Nothingness** → see its matching presentation.
 - **See a perfect-state experience:** Open or leave the dashboard visible → reach **Big Bang**, **Perfect sync**, **Perfect zero**, or **Singularity** → see its matching special presentation.
 
-Unavailable usage windows remain visible where the interface needs context, but
-cannot be selected until the upstream provider makes them available again.
+Pace Pets offers only the usage windows reported by the signed-in account's
+latest successful check. A newly reported window becomes available without
+changing the current selection; a selected window that disappears falls back
+to the remaining available window.

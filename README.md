@@ -32,7 +32,7 @@ Source install:
 3. Click Load unpacked.
 4. Select `collector/extension`.
 5. Click the Pace Pets toolbar icon to open the dashboard.
-6. Use the dashboard refresh control to grant ChatGPT site access and run the first usage check. Right-click the toolbar icon to choose an available badge view. The upstream usage provider has temporarily paused the 5h view, so Pace Pets keeps it visible but unavailable.
+6. Use the dashboard refresh control to grant ChatGPT site access and run the first usage check. Pace Pets offers only the usage windows reported by the signed-in account's latest successful check; right-click the toolbar icon to choose an available badge view.
 
 To update a source install after pulling or downloading new repo contents, reload the unpacked extension from `chrome://extensions`.
 

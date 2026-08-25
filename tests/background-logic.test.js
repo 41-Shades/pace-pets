@@ -108,11 +108,6 @@ describe("PacePetsBackgroundLogic badge selection", () => {
       fiveHour: "5h",
       weekly: "7d",
     });
-    expect(usageWindows.isSelectableWindowKey("weekly")).toBe(true);
-    expect(usageWindows.isSelectableWindowKey("fiveHour")).toBe(false);
-    expect(usageWindows.WINDOW_SPECS.fiveHour.temporarilyUnavailable).toBe(
-      true,
-    );
   });
 
   it("selects badge windows from valid stored preferences and available data", () => {
@@ -127,7 +122,7 @@ describe("PacePetsBackgroundLogic badge selection", () => {
         { [storageKey]: "fiveHour" },
         storageKey,
       ),
-    ).toBe("weekly");
+    ).toBe("fiveHour");
     expect(
       logic.selectedBadgeWindowKeyFromItems(
         { [storageKey]: "unsupported" },
@@ -345,7 +340,7 @@ describe("PacePetsBackgroundLogic special badge rendering", () => {
 });
 
 describe("PacePetsBackgroundLogic attention badge ordering", () => {
-  it("falls back from an unavailable preferred badge window", () => {
+  it("honors an available preferred badge window", () => {
     const logic = globalThis.PacePetsBackgroundLogic;
     const candidates = [
       {
@@ -362,7 +357,7 @@ describe("PacePetsBackgroundLogic attention badge ordering", () => {
 
     expect(logic.prioritizedBadgeSelection(candidates, "fiveHour")).toEqual({
       attentionCandidates: [],
-      candidate: candidates[0],
+      candidate: candidates[1],
     });
   });
 

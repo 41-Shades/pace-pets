@@ -56,9 +56,13 @@
       refreshStatus,
       refreshWindowSelection,
     }) {
+      this.currentHistory = history;
       if (refreshWindowSelection) {
-        this.selectedWindowKey = dashboardWindowKey;
-        this.storeSessionWindowKey(dashboardWindowKey);
+        this.selectedWindowKey = this.USAGE_WINDOWS.firstAvailableWindowKey(
+          this.currentUsageWindows(),
+          dashboardWindowKey,
+        );
+        this.storeSessionWindowKey(this.selectedWindowKey);
       }
       this.currentHasChatGptAccess = hasChatGptAccess;
       this.currentCheckerboardRevealWhiteTransparent =
@@ -76,7 +80,6 @@
         developerOptions.splatTimeRemainingPreview;
       this.currentSprintIntensityPreview =
         developerOptions.sprintIntensityPreview;
-      this.currentHistory = history;
       this.currentRefreshStatus = refreshStatus;
       this.renderResetExhaustedPreview();
       this.paceView.renderStateRail();

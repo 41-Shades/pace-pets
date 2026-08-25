@@ -86,7 +86,7 @@
       const history = this.currentHistory;
       const latest = CodexUsageHistory.latestSample(history);
       const windows = this.windowsForSample(latest);
-      const selectedWindowKey = this.selectedSupportedWindowKey();
+      const selectedWindowKey = this.selectedAvailableWindowKey();
       const alternateWindowKey =
         this.USAGE_WINDOWS.alternateWindowKey(selectedWindowKey);
       const windowKeys = [selectedWindowKey, alternateWindowKey].filter(

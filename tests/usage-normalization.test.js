@@ -324,8 +324,9 @@ describe("CodexWeeklyUsage.normalizeWhamUsage duration handling", () => {
     ).toThrow("ChatGPT usage response changed; Pace Pets needs an update.");
   });
 
-  it("classifies a primary window as weekly from its reported duration", () => {
+  it("uses reported duration instead of plan type to detect windows", () => {
     const usage = globalThis.CodexWeeklyUsage.normalizeWhamUsage({
+      plan_type: "pro",
       rate_limit: {
         primary_window: {
           used_percent: 10,

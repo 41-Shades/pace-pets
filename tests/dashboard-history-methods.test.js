@@ -104,18 +104,14 @@ function configureSummaryApp(app, { timeRemainingPercent }) {
 }
 
 describe("PacePetsDashboardApp alternate pace presentation", () => {
-  it("keeps the five-hour placeholder visible when weekly is selected", () => {
+  it("omits an alternate pace summary when that window is unavailable", () => {
     const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
     app.USAGE_WINDOWS = globalThis.CodexUsageWindows;
     app.WINDOW_SPECS = globalThis.CodexUsageWindows.WINDOW_SPECS;
 
     expect(
       app.alternatePaceRatioSummary({}, "weekly", { samples: [] }),
-    ).toEqual({
-      className: "",
-      label: "5h:",
-      value: "--",
-    });
+    ).toBeNull();
   });
 });
 

@@ -263,5 +263,6 @@ describe("CodexUsageIntegrationAdapters", () => {
       "resetAfterSeconds",
     );
     expect(whamAdapter.windows[0].candidatePathPattern).toBeInstanceOf(RegExp);
+    expect(whamAdapter.candidatePathExclusionPattern).toBeInstanceOf(RegExp);
   });
 });
