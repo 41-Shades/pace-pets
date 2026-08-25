@@ -274,6 +274,8 @@ describe("PacePetsBackgroundRefreshRunner usage-data lifecycle", () => {
         message: "ChatGPT usage check timed out.",
       }),
     );
+    expect(usageData.appendUsageSnapshot).not.toHaveBeenCalled();
+    expect(badgePresentation.updatePaceBadge).not.toHaveBeenCalled();
     expect(badgePresentation.setBadge).toHaveBeenCalledWith(
       "!",
       "#b42318",

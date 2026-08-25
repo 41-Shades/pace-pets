@@ -30,9 +30,6 @@
       resetValueFormat: "dateTime",
       priorResetLabel: "Last reset",
       scheduledResetLabel: "Next reset",
-      temporarilyUnavailable: true,
-      unavailableReason:
-        "5h temporarily unavailable — paused by the usage provider.",
     }),
   });
 
@@ -50,15 +47,17 @@
     return isSupportedWindowKey(value) ? value : DEFAULT_WINDOW_KEY;
   }
 
-  function isSelectableWindowKey(value) {
-    return (
-      isSupportedWindowKey(value) &&
-      WINDOW_SPECS[value].temporarilyUnavailable !== true
-    );
+  function availableWindowKeys(windows) {
+    return WINDOW_KEYS.filter((windowKey) => windows?.[windowKey]);
   }
 
-  function normalizeSelectableWindowKey(value) {
-    return isSelectableWindowKey(value) ? value : DEFAULT_WINDOW_KEY;
+  function selectableWindowKeys(windows) {
+    const availableKeys = availableWindowKeys(windows);
+    return availableKeys.length > 0 ? availableKeys : [DEFAULT_WINDOW_KEY];
+  }
+
+  function isSelectableWindowKey(windows, value) {
+    return selectableWindowKeys(windows).includes(value);
   }
 
   function windowSpec(value) {
@@ -72,14 +71,12 @@
 
   function firstAvailableWindowKey(windows, preferredWindowKey) {
     const normalizedPreference = normalizeWindowKey(preferredWindowKey);
-    if (windows?.[normalizedPreference]) {
+    const selectableKeys = selectableWindowKeys(windows);
+    if (selectableKeys.includes(normalizedPreference)) {
       return normalizedPreference;
     }
 
-    return (
-      WINDOW_KEYS.find((windowKey) => windows?.[windowKey]) ||
-      normalizedPreference
-    );
+    return selectableKeys[0];
   }
 
   root.CodexUsageWindows = Object.freeze({
@@ -91,11 +88,12 @@
     WINDOW_KEYS,
     WINDOW_SPECS,
     alternateWindowKey,
+    availableWindowKeys,
     firstAvailableWindowKey,
     isSelectableWindowKey,
     isSupportedWindowKey,
-    normalizeSelectableWindowKey,
     normalizeWindowKey,
+    selectableWindowKeys,
     windowSpec,
   });
 })(globalThis);

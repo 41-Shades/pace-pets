@@ -151,7 +151,7 @@
     },
 
     renderEmptyHistory(refreshStatus = null) {
-      const windowKey = this.selectedSupportedWindowKey();
+      const windowKey = this.selectedAvailableWindowKey();
       const spec = this.WINDOW_SPECS[windowKey];
       const state = this.DASHBOARD_STATUS.emptyHistoryCollectionState({
         formatClockTime: this.DASHBOARD_TIME.formatClockTime,
@@ -192,7 +192,7 @@
     },
 
     renderHistoryLoadFailure() {
-      const windowKey = this.selectedSupportedWindowKey();
+      const windowKey = this.selectedAvailableWindowKey();
       const spec = this.WINDOW_SPECS[windowKey];
       this.dashboardStatus.setStatus(this.STATUS_TEXT.checkFailed, "error");
       this.renderWindowControls(windowKey);
@@ -263,7 +263,7 @@
       }
 
       const windows = this.windowsForSample(latest);
-      const summaryWindowKey = this.selectedSupportedWindowKey();
+      const summaryWindowKey = this.selectedAvailableWindowKey(windows);
       const summaryWindow = windows[summaryWindowKey];
       const heldZeroStates = this.updateCurrentHeldZeroStates(
         history,

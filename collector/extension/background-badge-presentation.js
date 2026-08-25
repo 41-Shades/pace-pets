@@ -58,16 +58,33 @@
     await presentBadge(text, color, title);
   }
 
-  async function selectedBadgeWindowKey() {
+  async function selectedBadgeWindowKey(windows = {}) {
     try {
       const items = await EXTENSION_STORAGE.getLocal(BADGE_WINDOW_STORAGE_KEY);
-      return BACKGROUND_LOGIC.selectedBadgeWindowKeyFromItems(
+      const rawWindowKey = items[BADGE_WINDOW_STORAGE_KEY];
+      const storedWindowKey = BACKGROUND_LOGIC.selectedBadgeWindowKeyFromItems(
         items,
         BADGE_WINDOW_STORAGE_KEY,
       );
+      const selectedWindowKey = USAGE_WINDOWS.firstAvailableWindowKey(
+        windows,
+        storedWindowKey,
+      );
+      if (
+        USAGE_WINDOWS.availableWindowKeys(windows).length > 0 &&
+        rawWindowKey !== selectedWindowKey
+      ) {
+        await EXTENSION_STORAGE.setLocal({
+          [BADGE_WINDOW_STORAGE_KEY]: selectedWindowKey,
+        });
+      }
+      return selectedWindowKey;
     } catch (error) {
-      console.warn("Could not read badge window preference:", error);
-      return BACKGROUND_LOGIC.DEFAULT_BADGE_WINDOW_KEY;
+      console.warn("Could not resolve badge window preference:", error);
+      return USAGE_WINDOWS.firstAvailableWindowKey(
+        windows,
+        BACKGROUND_LOGIC.DEFAULT_BADGE_WINDOW_KEY,
+      );
     }
   }
 
@@ -95,7 +112,7 @@
 
   async function updatePaceBadge(windows, history = null, atMs = Date.now()) {
     const developerOptions = await readDeveloperOptions();
-    const preferredWindowKey = await selectedBadgeWindowKey();
+    const preferredWindowKey = await selectedBadgeWindowKey(windows);
     const badgeDisplay = BACKGROUND_LOGIC.badgeDisplayForWindows({
       atMs,
       criticalBadgeWindow: developerOptions.criticalBadgeWindow,

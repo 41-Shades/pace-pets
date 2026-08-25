@@ -9,17 +9,41 @@ const REFRESH_RUNNER = PacePetsBackgroundRefreshRunner;
 const DEV_PREVIEW_BROKER =
   globalThis.PacePetsBackgroundDevPreviewBroker.createController();
 
-async function createBadgeContextMenus() {
-  const selectedWindowKey = await BADGE_PRESENTATION.selectedBadgeWindowKey();
-  await PacePetsBackgroundContextMenu.createBadgeContextMenus({
-    selectedWindowKey,
-  });
+async function badgeContextMenuState() {
+  const history = await CodexUsageHistory.readHistory();
+  const windows = CodexUsageHistory.latestSample(history)?.windows || {};
+  return {
+    selectedWindowKey: await BADGE_PRESENTATION.selectedBadgeWindowKey(windows),
+    windows,
+  };
 }
 
-async function syncBadgeContextMenuSelection() {
-  await PacePetsBackgroundContextMenu.syncBadgeContextMenuSelection(
-    await BADGE_PRESENTATION.selectedBadgeWindowKey(),
+async function createBadgeContextMenus() {
+  await PacePetsBackgroundContextMenu.createBadgeContextMenus(
+    await badgeContextMenuState(),
   );
+}
+
+async function syncBadgeContextMenus() {
+  await PacePetsBackgroundContextMenu.syncBadgeContextMenus(
+    await badgeContextMenuState(),
+  );
+}
+
+async function selectBadgeWindowFromContextMenu(menuItemId) {
+  const { windows } = await badgeContextMenuState();
+  const windowKey =
+    PacePetsBackgroundContextMenu.badgeWindowKeyFromContextMenuId(
+      menuItemId,
+      windows,
+    );
+  if (!windowKey) {
+    return;
+  }
+
+  await CodexExtensionStorage.setLocal({
+    [BADGE_WINDOW_STORAGE_KEY]: windowKey,
+  });
 }
 
 async function runBadgePresentationRefresh() {
@@ -89,9 +113,12 @@ function handleBadgeStorageChange({
   });
 }
 
-function syncContextMenusForStorageChange({ badgeWindowChanged }) {
-  if (badgeWindowChanged) {
-    syncBadgeContextMenuSelection().catch((error) => {
+function syncContextMenusForStorageChange({
+  badgeWindowChanged,
+  historyChanged,
+}) {
+  if (badgeWindowChanged || historyChanged) {
+    syncBadgeContextMenus().catch((error) => {
       console.warn("Codex usage badge menu sync failed:", error);
     });
   }
@@ -167,17 +194,7 @@ chrome.contextMenus?.onClicked?.addListener((info) => {
     return;
   }
 
-  const windowKey =
-    PacePetsBackgroundContextMenu.badgeWindowKeyFromContextMenuId(
-      info.menuItemId,
-    );
-  if (!windowKey) {
-    return;
-  }
-
-  CodexExtensionStorage.setLocal({
-    [BADGE_WINDOW_STORAGE_KEY]: windowKey,
-  }).catch((error) => {
+  selectBadgeWindowFromContextMenu(info.menuItemId).catch((error) => {
     console.warn("Codex usage badge window update failed:", error);
   });
 });

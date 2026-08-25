@@ -101,11 +101,11 @@
         latest?.windows && typeof latest.windows === "object"
           ? latest.windows
           : {};
-      return windows[this.selectedSupportedWindowKey()] || null;
+      return windows[this.selectedAvailableWindowKey()] || null;
     }
 
     previewWindowForState(stateKey) {
-      const windowKey = this.selectedSupportedWindowKey();
+      const windowKey = this.selectedAvailableWindowKey();
       return PREVIEW_CONTROL.forcedPreviewWindowForState(stateKey, {
         brakeIntensityPreview: this.getCurrentBrakeIntensityPreview?.(),
         durationMinutes: this.windowSpecs[windowKey]?.durationMinutes,
@@ -130,7 +130,7 @@
       this.usageChartView.renderPreview({
         atMs: previewWindow.atMs,
         paceRatio: this.previewChartPaceRatioForState(stateKey, paceRatio),
-        summaryWindowKey: this.selectedSupportedWindowKey(),
+        summaryWindowKey: this.selectedAvailableWindowKey(),
         windowData: previewWindow.windowData,
       });
     }

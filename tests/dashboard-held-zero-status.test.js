@@ -87,7 +87,7 @@ describe("PacePetsDashboardApp held zero history status", () => {
       historyCollectionStatusState: vi.fn(() => statusState),
     };
     app.USAGE_WINDOWS = { WINDOW_KEYS: ["weekly"] };
-    app.selectedSupportedWindowKey = () => "weekly";
+    app.selectedAvailableWindowKey = () => "weekly";
     app.updateCurrentHeldZeroStates = vi.fn(() => ({
       weekly: {
         resetsAt: "2026-05-25T12:01:00.000Z",

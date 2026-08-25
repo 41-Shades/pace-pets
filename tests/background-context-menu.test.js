@@ -39,10 +39,13 @@ beforeEach(() => {
 });
 
 describe("Pace Pets badge context menu", () => {
-  it("keeps the paused 5h window visible but unselectable", async () => {
+  it("hides five-hour when the latest sample does not report it", async () => {
     const contextMenu = globalThis.PacePetsBackgroundContextMenu;
 
-    await contextMenu.createBadgeContextMenus({ selectedWindowKey: "weekly" });
+    await contextMenu.createBadgeContextMenus({
+      selectedWindowKey: "weekly",
+      windows: { weekly: {} },
+    });
 
     const menuItems = globalThis.chrome.contextMenus.create.mock.calls.map(
       ([properties]) => properties,
@@ -51,11 +54,65 @@ describe("Pace Pets badge context menu", () => {
       expect.objectContaining({
         enabled: false,
         id: "badge-window:fiveHour",
-        title: "5h badge (temporarily unavailable)",
+        title: "5h badge",
+        visible: false,
       }),
     );
     expect(
-      contextMenu.badgeWindowKeyFromContextMenuId("badge-window:fiveHour"),
+      contextMenu.badgeWindowKeyFromContextMenuId("badge-window:fiveHour", {
+        weekly: {},
+      }),
     ).toBeNull();
+  });
+
+  it("offers and selects five-hour when the latest sample reports it", async () => {
+    const contextMenu = globalThis.PacePetsBackgroundContextMenu;
+    const windows = { fiveHour: {}, weekly: {} };
+
+    await contextMenu.createBadgeContextMenus({
+      selectedWindowKey: "fiveHour",
+      windows,
+    });
+
+    const menuItems = globalThis.chrome.contextMenus.create.mock.calls.map(
+      ([properties]) => properties,
+    );
+    expect(menuItems).toContainEqual(
+      expect.objectContaining({
+        checked: true,
+        enabled: true,
+        id: "badge-window:fiveHour",
+        visible: true,
+      }),
+    );
+    expect(
+      contextMenu.badgeWindowKeyFromContextMenuId(
+        "badge-window:fiveHour",
+        windows,
+      ),
+    ).toBe("fiveHour");
+  });
+
+  it("updates visibility and selection when availability changes", async () => {
+    const contextMenu = globalThis.PacePetsBackgroundContextMenu;
+
+    await contextMenu.syncBadgeContextMenus({
+      selectedWindowKey: "fiveHour",
+      windows: { fiveHour: {}, weekly: {} },
+    });
+    await contextMenu.syncBadgeContextMenus({
+      selectedWindowKey: "weekly",
+      windows: { weekly: {} },
+    });
+
+    expect(globalThis.chrome.contextMenus.update).toHaveBeenCalledWith(
+      "badge-window:fiveHour",
+      expect.objectContaining({
+        checked: false,
+        enabled: false,
+        visible: false,
+      }),
+      expect.any(Function),
+    );
   });
 });

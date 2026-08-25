@@ -30,6 +30,8 @@
     return Object.freeze({
       ...adapter,
       candidateMaxDepth: adapter.candidateMaxDepth ?? 0,
+      candidatePathExclusionPattern:
+        adapter.candidatePathExclusionPattern || null,
       candidateWindowKeyOrder: Object.freeze(
         adapter.candidateWindowKeyOrder ||
           adapter.windows.map((windowAdapter) => windowAdapter.windowKey),
@@ -95,6 +97,8 @@
   });
   const CHATGPT_WHAM_ADAPTER = usageAdapter({
     candidateMaxDepth: 6,
+    candidatePathExclusionPattern:
+      /(?:^|\.)(?:additional_rate_limits|additionalRateLimits)(?:\.|$)/i,
     candidateWindowKeyOrder: [
       USAGE_WINDOWS.WINDOW_SPECS.fiveHour.key,
       USAGE_WINDOWS.WINDOW_SPECS.weekly.key,

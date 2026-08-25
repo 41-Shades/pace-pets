@@ -260,12 +260,16 @@
       0,
       adapter.candidateMaxDepth,
     );
+    const eligibleCandidates = candidates.filter(
+      (candidate) =>
+        !adapter.candidatePathExclusionPattern?.test(candidate.path),
+    );
     const usedCandidates = new Set();
     const selectionState = { usedCandidates, windows };
 
     for (const windowAdapter of candidateWindowAdapters(adapter)) {
       const selected = chooseMatchingCandidate(
-        candidates,
+        eligibleCandidates,
         windowAdapter,
         selectionState,
         observedAtMs,

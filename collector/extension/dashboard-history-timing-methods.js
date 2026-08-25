@@ -11,15 +11,11 @@
   Object.assign(App.prototype, {
     alternatePaceRatioSummary(windows, activeKey, history, atMs = Date.now()) {
       const comparisonKey = this.USAGE_WINDOWS.alternateWindowKey(activeKey);
-      if (!comparisonKey) {
+      if (!comparisonKey || !windows[comparisonKey]) {
         return null;
       }
 
       const label = `${this.WINDOW_SPECS[comparisonKey].badge}:`;
-      if (!windows[comparisonKey]) {
-        return { className: "", label, value: "--" };
-      }
-
       const presentation = PacePetsLogic.pacePresentationForWindow(
         windows[comparisonKey],
         {

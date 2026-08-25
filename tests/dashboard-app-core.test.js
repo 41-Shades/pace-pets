@@ -365,36 +365,4 @@ describe("PacePetsDashboardApp state commits", () => {
     await expect(app.readDashboardWindowKey()).resolves.toBe("weekly");
     expect(app.storeSessionWindowKey).not.toHaveBeenCalled();
   });
-
-  it("persists the window selection only when dashboard state commits", () => {
-    const app = Object.create(globalThis.PacePetsDashboardApp.prototype);
-    app.storeSessionWindowKey = vi.fn();
-    app.renderResetExhaustedPreview = vi.fn();
-    app.renderHistory = vi.fn();
-    app.paceView = { renderStateRail: vi.fn() };
-    const developerOptions = {
-      brakeIntensityPreview: null,
-      checkerboardRevealWhiteTransparent: false,
-      forcedPaceStateKey: null,
-      manualRefreshLeadWindow: false,
-      maxPoolFill: false,
-      railHidden: false,
-      resetExhaustedPreview: false,
-      splatTimeRemainingPreview: null,
-      sprintIntensityPreview: null,
-    };
-
-    app.applyDashboardState({
-      dashboardWindowKey: "fiveHour",
-      developerOptions,
-      hasChatGptAccess: false,
-      history: { samples: [] },
-      refreshStatus: null,
-      refreshWindowSelection: true,
-    });
-
-    expect(app.selectedWindowKey).toBe("fiveHour");
-    expect(app.currentHasChatGptAccess).toBe(false);
-    expect(app.storeSessionWindowKey).toHaveBeenCalledWith("fiveHour");
-  });
 });
