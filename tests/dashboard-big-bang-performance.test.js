@@ -36,3 +36,17 @@ describe("Big Bang WebGL rendering", () => {
     expect(source).toContain("if (localSeconds >= 10.35)");
   });
 });
+
+describe("Big Bang Canvas rendering", () => {
+  it("replaces the frame opaquely without a redundant clear", () => {
+    const source = extensionSource("dashboard-big-bang-scene-draw.js");
+    const drawBackground = source.slice(
+      source.indexOf("  function drawBackground("),
+      source.indexOf("  function drawStageOneExplosion("),
+    );
+
+    expect(drawBackground).not.toContain("clearRect");
+    expect(drawBackground).toContain('context.fillStyle = "#020617"');
+    expect(drawBackground).toContain("context.fillRect(0, 0, width, height)");
+  });
+});

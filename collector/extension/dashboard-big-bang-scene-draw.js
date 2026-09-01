@@ -60,7 +60,6 @@
   }
 
   function drawBackground(context, width, height, elapsedMs) {
-    context.clearRect(0, 0, width, height);
     resetDrawState(context);
     context.fillStyle = "#020617";
     context.fillRect(0, 0, width, height);

@@ -196,6 +196,7 @@
       this.rays = [];
       this.resources = null;
       this.turnover = null;
+      this.uniformValues = null;
       this.vertexCount = 0;
       this.handleContextLost = this.handleContextLost.bind(this);
       this.handleContextRestored = this.handleContextRestored.bind(this);
@@ -242,6 +243,7 @@
             offset * FLOAT_BYTES,
           );
         }
+        this.uniformValues = Object.create(null);
         return true;
       } catch (error) {
         root.console.warn("Pace Pets sync sunburst WebGL setup failed:", error);
@@ -283,21 +285,31 @@
       );
     }
 
+    uploadUniformIfChanged(name, value) {
+      if (this.uniformValues[name] === value) {
+        return;
+      }
+      this.gl.uniform1f(this.resources.uniforms[name], value);
+      this.uniformValues[name] = value;
+    }
+
     render(frame) {
-      if (!this.gl || !this.resources || this.contextLost) {
+      if (
+        !this.gl ||
+        !this.resources ||
+        !this.uniformValues ||
+        this.contextLost
+      ) {
         return false;
       }
-      const gl = this.gl;
-      const uniforms = this.resources.uniforms;
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.useProgram(this.resources.program);
-      gl.uniform1f(uniforms.u_finishedAtMs, frame.finishedAtMs ?? -1);
-      gl.uniform1f(uniforms.u_frameOpacity, frame.opacity);
-      gl.uniform1f(uniforms.u_halfSize, this.halfSize);
-      gl.uniform1f(uniforms.u_progress, frame.progress);
-      gl.uniform1f(uniforms.u_radius, frame.radius);
-      gl.uniform1f(uniforms.u_timeMs, frame.timestamp);
-      gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
+      this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+      this.uploadUniformIfChanged("u_finishedAtMs", frame.finishedAtMs ?? -1);
+      this.uploadUniformIfChanged("u_frameOpacity", frame.opacity);
+      this.uploadUniformIfChanged("u_halfSize", this.halfSize);
+      this.uploadUniformIfChanged("u_progress", frame.progress);
+      this.uploadUniformIfChanged("u_radius", frame.radius);
+      this.uploadUniformIfChanged("u_timeMs", frame.timestamp);
+      this.gl.drawArrays(this.gl.TRIANGLES, 0, this.vertexCount);
       return true;
     }
 
@@ -305,6 +317,7 @@
       event.preventDefault();
       this.contextLost = true;
       this.resources = null;
+      this.uniformValues = null;
       this.callbacks.onContextLost();
       root.console.warn("Pace Pets sync sunburst WebGL context lost.");
     }
@@ -325,6 +338,7 @@
         this.gl.deleteProgram(this.resources.program);
       }
       this.resources = null;
+      this.uniformValues = null;
     }
 
     destroy() {

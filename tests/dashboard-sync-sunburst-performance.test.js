@@ -353,26 +353,23 @@ describe("Perfect Sync retained WebGL rendering", () => {
       canvas,
       callbacks,
     );
+    const settledFrame = (timestamp) => ({
+      finishedAtMs: 0,
+      opacity: 0.64,
+      progress: 1,
+      radius: 300,
+      timestamp,
+    });
 
     renderer.resize({ pixelRatio: 2, radius: 300 }, { x: 400, y: 300 });
     renderer.uploadRays(rays, turnover);
-    renderer.render({
-      finishedAtMs: 0,
-      opacity: 0.64,
-      progress: 1,
-      radius: 300,
-      timestamp: 31000,
-    });
-    renderer.render({
-      finishedAtMs: 0,
-      opacity: 0.64,
-      progress: 1,
-      radius: 300,
-      timestamp: 31033,
-    });
+    renderer.render(settledFrame(31000));
+    renderer.render(settledFrame(31033));
 
     expect(canvas.getContext).not.toHaveBeenCalledWith("2d");
     expect(gl.bufferData).toHaveBeenCalledTimes(1);
+    expect(gl.uniform1f).toHaveBeenCalledTimes(7);
+    expect(gl.useProgram).toHaveBeenCalledOnce();
     expect(gl.drawArrays).toHaveBeenCalledTimes(2);
     expect(gl.drawArrays).toHaveBeenLastCalledWith(
       gl.TRIANGLES,
@@ -392,6 +389,9 @@ describe("Perfect Sync retained WebGL rendering", () => {
     expect(callbacks.onContextRestored).toHaveBeenCalledOnce();
     expect(callbacks.onRestoreFailed).not.toHaveBeenCalled();
     expect(gl.bufferData).toHaveBeenCalledTimes(2);
+    renderer.render(settledFrame(31066));
+    expect(gl.uniform1f).toHaveBeenCalledTimes(13);
+    expect(gl.useProgram).toHaveBeenCalledTimes(2);
 
     renderer.destroy();
     expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
