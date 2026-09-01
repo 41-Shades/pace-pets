@@ -5,7 +5,7 @@ description: Release Pace Pets from reviewed public source through GitHub and th
 
 # Pace Pets Release
 
-Ship one traceable package from reviewed source. A bare invocation authorizes the normal merge, version, tag, checks, GitHub Release, Web Store ZIP upload, and automatic-on-approval submission. Do not ask for duplicate confirmation when every gate passes.
+Ship one traceable package from reviewed source. A bare invocation authorizes the delegated PR preparation, review, remediation, guarded merge, version, tag, checks, GitHub Release, Web Store ZIP upload, and automatic-on-approval submission. Do not ask for duplicate confirmation when every gate passes.
 
 ## Fixed targets
 
@@ -39,18 +39,19 @@ Never bypass checks, rebuild after pushing the tag, replace the Store item, move
 
 ### 1. Resolve reviewed source
 
-1. Fetch `origin/main` and all tags. Confirm the clean checkout is Pace Pets.
-2. If the active branch has an open PR, require base `main`, matching scope, and green required checks; merge with the repository's normal method. If already merged, continue.
-3. Switch to `main`, fast-forward to `origin/main`, and verify the intended merge is contained in clean `HEAD`.
-4. Resolve the prior shipped version from the latest matching GitHub Release and remote annotated tag. Collect merged PRs since that tag for provenance and notes.
-5. Compare the dashboard description with `docs/operations/chrome-web-store-listing.md`. If an intentional dashboard description is not mirrored, fix the mirror in a separate docs-only PR before releasing. Do not edit the dashboard from repository text.
+1. If the intended release changes still need a PR, invoke `$pr-preflight-create`, then resume from the resulting PR.
+2. Fetch `origin/main` and all tags. Confirm the clean checkout is Pace Pets.
+3. Reuse a matching active PR at its current head and invoke `$pr-accept-merge`; if the intended PR is already merged, continue.
+4. Switch to `main`, fast-forward to `origin/main`, and verify the intended merge is contained in clean `HEAD`.
+5. Resolve the prior shipped version from the latest matching GitHub Release and remote annotated tag. Collect merged PRs since that tag for provenance and notes.
+6. Compare the dashboard description with `docs/operations/chrome-web-store-listing.md`. If an intentional dashboard description is not mirrored, fix the mirror in a separate docs-only PR before releasing. Do not edit the dashboard from repository text.
 
 ### 2. Resolve version
 
 1. Read the published Store version from the direct Package page.
 2. Require matching versions in `package.json`, root and package entries of `package-lock.json`, and `collector/extension/manifest.json`.
 3. Use the aligned source version when it is higher than Store. Skipped unshipped numbers need no synthetic releases.
-4. When source equals Store and packaged changes exist, make the smallest patch bump in those canonical files through a scoped PR, merge it, and fast-forward `main`.
+4. When source equals Store and packaged changes exist, make the smallest patch bump in those canonical files, invoke `$pr-preflight-create`, then invoke `$pr-accept-merge` and fast-forward `main`.
 5. Stop if Store is higher. Resume an existing target only when tag, commit, Release, artifacts, and Store state match exactly.
 
 ### 3. Tag, check, and package
