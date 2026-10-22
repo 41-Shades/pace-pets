@@ -5,22 +5,26 @@ description: Release Pace Pets from reviewed public source through GitHub and th
 
 # Pace Pets Release
 
-Ship one traceable package from reviewed source. A bare invocation authorizes the delegated PR preparation, review, remediation, guarded merge, version, tag, checks, GitHub Release, Web Store ZIP upload, and automatic-on-approval submission. Do not ask for duplicate confirmation when every gate passes.
+Ship one traceable package from reviewed source. A bare invocation authorizes the delegated PR preparation, review, remediation, guarded merge, version, tag, checks, GitHub Release, Web Store ZIP upload, and automatic-on-approval submission. Invocation authorizes all in-scope actions across composed skills and tools; reconfirm only if scope changes or governing policy requires it.
 
 ## Fixed targets
 
 - Repository: `41-Shades/pace-pets`
 - Publisher: `41 Shades`
 - Item ID: `dgemeohjkjclceamjacmfneodafbcbdk`
-- Item dashboard: `https://chrome.google.com/u/1/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit`
-- Package page: `https://chrome.google.com/u/1/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit/package`
-- Store listing: `https://chrome.google.com/u/1/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit/listing`
+- Item dashboard: `https://chrome.google.com/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit`
+- Package page: `https://chrome.google.com/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit/package`
+- Store listing: `https://chrome.google.com/webstore/devconsole/d2e94121-a679-4a8c-8b1a-975be3e608ad/dgemeohjkjclceamjacmfneodafbcbdk/edit/listing`
 
-Use Mac Computer Use targeting `com.google.Chrome` for every Web Store read and action. Navigate directly to these URLs; do not use the dashboard hamburger menu or browser automation.
+Use Mac Computer Use targeting `com.google.Chrome` for every Web Store read and action. Navigate directly to these URLs; do not use the dashboard hamburger menu or browser automation. Prefer focused or incremental state; request a full app snapshot only to resolve missing context.
+
+Inspect existing Chrome windows and tabs first and reuse a dashboard session verified as publisher `41 Shades`. Preserve that session's observed account routing when opening the item pages; never assume `/u/1/` identifies the publisher across Chrome profiles. Use the account-neutral URLs above when no verified dashboard session is open.
+
+If redirected to sign-in or account recovery, check the other existing Chrome windows and profiles for the signed-in publisher session before reporting an access blocker. Never initiate or continue account recovery, reset credentials, or ask the user to complete recovery for a release. If no authorized session is accessible, ask the user to open the publisher dashboard in their signed-in Chrome profile.
 
 ## Read first
 
-Read `AGENTS.md`, `docs/operations/release-packaging.md`, and `docs/operations/chrome-web-store-listing.md`. Also read `.maintainer/agent-notes.md` and `.maintainer/release-ops.md` when present. Repository instructions are canonical; local notes may tighten them.
+Read `AGENTS.md` and available `.maintainer/agent-notes.md` and `.maintainer/release-ops.md`. Load the listing mirror for Store comparison and `docs/operations/release-packaging.md` for packaging; reuse unchanged guidance across phases. Repository instructions are canonical; local notes may tighten them.
 
 ## Stop conditions
 
@@ -29,7 +33,7 @@ Stop and report the exact blocker when:
 - The repository, publisher, item ID, release scope, or intended source is ambiguous.
 - The tree has unrelated changes, `main` cannot fast-forward, reviewed source differs, or required checks fail.
 - Package, lockfile, and manifest versions disagree; Store is newer; or a target tag/Release points elsewhere.
-- No packaged extension change exists since the latest shipped tag. Docs, guardrails, listing copy, and version-only changes are not a release.
+- For a new target, no packaged extension change exists since the latest shipped tag. Docs, guardrails, listing copy, and version-only changes are not a release.
 - Package metadata, checksum, tag, commit, clean-tree evidence, permissions, or listing claims do not match.
 - Store metadata or assets require changes, a different draft/submission exists, a blocking warning appears, or Chrome is signed into the wrong publisher.
 
@@ -37,41 +41,24 @@ Never bypass checks, rebuild after pushing the tag, replace the Store item, move
 
 ## Release steps
 
-### 1. Resolve reviewed source
+### 1. Resolve scope and version
 
-1. If the intended release changes still need a PR, invoke `$pr-preflight-create`, then resume from the resulting PR.
-2. Fetch `origin/main` and all tags. Confirm the clean checkout is Pace Pets.
-3. Reuse a matching active PR at its current head and invoke `$pr-accept-merge`; if the intended PR is already merged, continue.
-4. Switch to `main`, fast-forward to `origin/main`, and verify the intended merge is contained in clean `HEAD`.
-5. Resolve the prior shipped version from the latest matching GitHub Release and remote annotated tag. Collect merged PRs since that tag for provenance and notes.
-6. Compare the dashboard description with `docs/operations/chrome-web-store-listing.md`. If an intentional dashboard description is not mirrored, fix the mirror in a separate docs-only PR before releasing. Do not edit the dashboard from repository text.
+1. Confirm the repository and intended source, fetch `origin/main` and tags, and resolve the prior shipped version from the latest matching GitHub Release and remote annotated tag. For a new target, require packaged changes since that tag.
+2. Read the published Store version and permissions from the Package page. Compare the dashboard description with `docs/operations/chrome-web-store-listing.md`; mirror intentional differences in the source PR without editing the dashboard.
+3. Require aligned package, lockfile, and manifest versions. Use source when higher than Store; when equal, select the bump from `Version Selection` in the packaging guide and include it in the intended release PR. Stop if Store is higher. Skipped unshipped versions need no synthetic releases.
+4. Resume an existing target only when tag, commit, Release, artifacts, and Store state match exactly.
 
-### 2. Resolve version
+### 2. Resolve reviewed source
 
-1. Read the published Store version from the direct Package page.
-2. Require matching versions in `package.json`, root and package entries of `package-lock.json`, and `collector/extension/manifest.json`.
-3. Use the aligned source version when it is higher than Store. Skipped unshipped numbers need no synthetic releases.
-4. When source equals Store and packaged changes exist, make the smallest patch bump in those canonical files, invoke `$pr-preflight-create`, then invoke `$pr-accept-merge` and fast-forward `main`.
-5. Stop if Store is higher. Resume an existing target only when tag, commit, Release, artifacts, and Store state match exactly.
+1. Include source, required version, and listing-mirror changes before PR acceptance. Invoke `$pr-preflight-create` when a PR is needed. For a matching open PR, commit and push required updates with its owning preflight; any new commit requires fresh acceptance. If source is already merged, prepare only the outstanding changes through a new PR.
+2. Invoke `$pr-accept-merge` for the matching PR; skip completed merges.
+3. Fast-forward `main` to `origin/main`, verify the reviewed merge is contained in clean `HEAD`, and collect merged PRs since the prior shipped tag for release notes.
 
-### 3. Tag, check, and package
+### 3. Package and publish GitHub Release
 
-1. Create annotated local tag `v<version>` on exact clean `HEAD`; do not push yet.
-2. Run `./scripts/chks`. Invoking this skill authorizes the full release gate.
-3. Run `npm run package:extension` exactly once.
-4. Inspect:
-   - `dist/pace-pets-chrome-extension-v<version>.zip`
-   - `dist/pace-pets-chrome-extension-v<version>.release.json`
-   - `dist/pace-pets-chrome-extension-v<version>.zip.sha256`
-5. Verify ZIP checksum and allowlisted contents. Require exact version, commit, `gitTag`, clean-tree flag, filename, and SHA-256 in the release JSON.
+Follow `GitHub Tags And Releases` in `docs/operations/release-packaging.md`. It owns gate reuse, local tagging, single-build packaging, artifact verification, and GitHub publication. Carry forward the checked tree/runtime inputs, release commit, Release URL, and ZIP SHA-256.
 
-### 4. Publish GitHub Release
-
-1. Push the tag only after inspection succeeds.
-2. Create the GitHub Release from that tag, generate notes from the prior shipped tag, attach all three artifacts, and mark it Latest.
-3. Verify remote tag commit, Latest status, artifact names, sizes, and available digests. Record the Release URL and ZIP SHA-256. Do not regenerate artifacts.
-
-### 5. Upload and submit the Store package
+### 4. Upload and submit the Store package
 
 1. Open the direct Package page. Confirm publisher `41 Shades`, item ID, published version, and expected permissions.
 2. Click `Upload new package` → `Select file` and choose only `pace-pets-chrome-extension-v<version>.zip`. Never choose the `.release.json`, `.zip.sha256`, an older ZIP, or a CRX.
@@ -83,7 +70,7 @@ Never bypass checks, rebuild after pushing the tag, replace the Store item, move
 
 ## Resume and report
 
-Inspect state before mutating. Never duplicate a merge, tag, Release, upload, or submission.
+Inspect state before mutating. Resume a matching release at its first incomplete phase, including Store approval verification; skip new-release preparation for completed phases. Never duplicate a merge, tag, Release, upload, or submission.
 
 - If pending, report the submitted version and ask the user to invoke the skill after Google's approval notice.
 - If approved with automatic publication, confirm the published Store version. If rejected, report Google's reason and stop.

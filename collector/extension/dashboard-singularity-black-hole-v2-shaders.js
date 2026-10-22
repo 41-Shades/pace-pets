@@ -102,6 +102,9 @@ float infallGlints(vec2 fromCenter, float radius, float progress) {
   float visibleBand =
     smoothstep(1.46, 1.9, localRadius) *
     (1.0 - smoothstep(5.5, 6.4, localRadius));
+  if (visibleBand == 0.0) {
+    return 0.0;
+  }
   float reveal = smoothstep(0.46, 0.72, progress);
   float suction = smoothstep(0.72, 0.98, progress);
   float violence = smoothstep(0.55, 1.0, progress);
@@ -120,7 +123,6 @@ float infallGlints(vec2 fromCenter, float radius, float progress) {
   vec2 grid = vec2(angleTrack, radialTrack);
   vec2 baseCell = floor(grid);
   float glints = 0.0;
-
   for (int y = -1; y <= 1; y += 1) {
     for (int x = -1; x <= 1; x += 1) {
       glints += glintFromCell(
@@ -130,7 +132,6 @@ float infallGlints(vec2 fromCenter, float radius, float progress) {
       );
     }
   }
-
   return
     glints *
     visibleBand *

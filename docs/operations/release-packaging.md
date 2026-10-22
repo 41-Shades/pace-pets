@@ -89,6 +89,17 @@ The release metadata records:
 The package script warns when the working tree has uncommitted changes or when
 `HEAD` is not tagged as `v<manifest version>`.
 
+## Version Selection
+
+Resolve the Store version before preparing the release PR and include any required bump with the
+source changes. Use patch versions for fixes, minor versions for visible feature bundles, and major
+versions for substantial repositioning or incompatible behavior.
+
+Do not bump the extension version for docs-only changes. Align
+`package.json`, `package-lock.json`, and `collector/extension/manifest.json`
+only when the packaged extension behavior, assets, permissions, or release
+contents change.
+
 ## GitHub Tags And Releases
 
 Keep version tags and GitHub Releases in sync. Every pushed `v<version>` tag for
@@ -101,23 +112,24 @@ Use this canonical end-to-end sequence for a packaged release:
    versions, and commit the public source with a clean working tree.
 2. Create the local `v<version>` tag on that exact release commit. Do not push
    the tag yet.
-3. Run the repository's full release gate with `./scripts/chks`.
-4. Run `npm run package:extension` from the clean, locally tagged commit.
-5. Inspect the generated zip, checksum, and release metadata. Confirm the
-   metadata records the intended commit, exact `v<version>` tag, and
-   `workingTreeClean: true`, and use the generated checksum to verify the zip.
+3. Run `./scripts/chks` unless this release has passing source checks for the identical tree and
+   runtime/dependency inputs; record those inputs. Rerun missing, failed, or invalidated gates.
+   Identical-tree merges may reuse source checks. Always run `npm run lint:release` on the final
+   tagged `HEAD` to verify tracked source and version alignment.
+4. Run `npm run package:extension` exactly once from the clean, locally tagged commit.
+5. Verify the ZIP checksum and allowlisted contents. Require the expected version, filename,
+   SHA-256, commit, exact `v<version>` tag, and `workingTreeClean: true` in release metadata.
 6. Push the release commit and `v<version>` tag to GitHub.
-7. Create the matching GitHub Release from that existing tag, use generated
-   release notes with the previous release tag as the start tag, and attach the
-   inspected package artifacts.
+7. Create the matching GitHub Release from that tag, generate notes from the previous shipped tag,
+   attach all three inspected artifacts, and mark it Latest. Verify the remote tag commit, Latest
+   status, artifact names, sizes, and available digests; record the Release URL and ZIP SHA-256.
 8. Submit the same inspected zip to the Chrome Web Store or other distribution
    channel.
 9. Confirm GitHub shows the intended newest shipped version as Latest and that
    the published store version matches the release.
 
-Do not rebuild the distributable after pushing the tag. If the source, tag, or
-artifact must change, correct the release state and repeat the package and
-inspection steps before publishing.
+Do not rebuild after pushing the tag. A source, tag, or artifact mismatch blocks publication;
+preserve the evidence and stop. Resolve it before a new release attempt.
 
 ## Public Source Guardrails
 
@@ -146,8 +158,3 @@ out of public source archives or tracked source:
 - `data/usage.json`
 - ignored maintainer-only guide files
 - local reports such as `security_best_practices_report.md`
-
-Do not bump the extension version for docs-only changes. Align
-`package.json`, `package-lock.json`, and `collector/extension/manifest.json`
-only when the packaged extension behavior, assets, permissions, or release
-contents change.

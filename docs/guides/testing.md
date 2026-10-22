@@ -32,6 +32,31 @@ default.
   release linting, smoke checks, and Vitest tests.
 - `npm run preflight` is the full local release gate and adds dependency audits.
 
+## Dependency Audit Exception
+
+`npm run security:check` runs the production audit without exceptions, then the
+full audit through `scripts/dependency-audit.mjs`. Both retain the high/critical
+failure threshold. Audit command errors and invalid reports fail the check.
+
+The full audit accepts only
+[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+(CVE-2026-93687) for development-only `braces@3.0.3` and findings caused solely by
+that advisory in the existing Stylelint dependency chain. Every affected installed
+node must be marked development-only in the lockfile. Other advisories, production
+dependencies, and findings outside this chain receive no exception. The accepted
+finding remains visible in check output; this is risk acceptance, not a patch.
+
+Accepted on 2026-10-22: the issue requires deeply nested, attacker-controlled glob
+patterns. Pace Pets uses repository-controlled patterns in `package.json` and
+`stylelint.config.mjs`; extension-user input does not reach this development
+tooling. These packages are not included in the extension, and the production
+audit is clean. No patched upstream release was available when reviewed.
+
+Reassess this exception during dependency reviews and before accepting external
+glob patterns or changing the tooling's production scope. Remove it when an
+upstream fix or advisory correction makes it unnecessary. The accepted advisory,
+package version, and dependency-chain scope are defined in the audit script.
+
 ## Source Shape
 
 Keep extension code sized for focused agent edits and human review. The
