@@ -55,7 +55,7 @@
   }
 
   class SyncSunburstScene {
-    constructor(canvas, origin, options) {
+    constructor(canvas, anchor, options) {
       const now = root.performance.now();
       const startedAtMs = options.startedAtMs;
       const startComplete = options.startComplete === true;
@@ -63,6 +63,7 @@
         ? now - GROW_DURATION_MS
         : startedAtMs;
       this.animationFrameId = null;
+      this.anchor = anchor;
       this.canvas = canvas;
       this.core = null;
       this.finished =
@@ -83,7 +84,7 @@
       this.lastPanelOpacity = null;
       this.lastUiGlowOpacity = null;
       this.layout = LAYOUT.create();
-      this.origin = origin;
+      this.origin = null;
       this.rays = RAYS.create();
       this.removeMotionPreferenceListener = () => {};
       this.startTimeMs = initialStartTimeMs;
@@ -95,6 +96,7 @@
       this.handleContextRestored = this.handleContextRestored.bind(this);
       this.handleMotionChange = this.handleMotionChange.bind(this);
       this.handleResize = this.handleResize.bind(this);
+      this.handleScroll = this.handleScroll.bind(this);
       this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
       this.renderFrame = this.renderFrame.bind(this);
     }
@@ -106,9 +108,12 @@
         : clamp((timestamp - this.startTimeMs) / GROW_DURATION_MS);
     }
 
-    updateOrigin(origin) {
-      this.origin = origin;
-      this.draw(this.finished ? FINISHED_PROGRESS : null);
+    updateOrigin() {
+      const rect = this.anchor.getBoundingClientRect();
+      this.origin = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
     }
 
     setUiStyle(progress) {
@@ -253,6 +258,12 @@
     handleResize() {
       this.layout.invalidate();
       this.lastLayout = null;
+      this.updateOrigin();
+      this.draw(this.finished ? FINISHED_PROGRESS : null);
+    }
+
+    handleScroll() {
+      this.updateOrigin();
       this.draw(this.finished ? FINISHED_PROGRESS : null);
     }
 
@@ -290,7 +301,9 @@
         this.handleVisibilityChange,
       );
       root.addEventListener("resize", this.handleResize);
+      root.addEventListener("scroll", this.handleScroll, { passive: true });
       this.webgl.uploadRays(this.rays, this.turnover);
+      this.updateOrigin();
       const now = root.performance.now();
       this.draw(
         this.finished || !motionPreferenceEnabled()
@@ -310,6 +323,7 @@
       this.cancelFrame();
       this.removeMotionPreferenceListener();
       root.removeEventListener("resize", this.handleResize);
+      root.removeEventListener("scroll", this.handleScroll);
       root.document.removeEventListener(
         "visibilitychange",
         this.handleVisibilityChange,
@@ -329,11 +343,11 @@
     }
   }
 
-  function create(origin, options = {}) {
+  function create(anchor, options = {}) {
     const canvas = root.document.createElement("canvas");
     canvas.className = CANVAS_CLASS;
     canvas.setAttribute("aria-hidden", "true");
-    return new SyncSunburstScene(canvas, origin, options).start();
+    return new SyncSunburstScene(canvas, anchor, options).start();
   }
 
   root.PacePetsDashboardSyncSunburst = Object.freeze({ create });

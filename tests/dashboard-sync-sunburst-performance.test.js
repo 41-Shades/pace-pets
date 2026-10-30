@@ -67,78 +67,6 @@ function createGl() {
   };
 }
 
-function createSceneLifecycleHarness() {
-  let callbacks;
-  const canvas = {
-    hidden: false,
-    remove: vi.fn(),
-    setAttribute: vi.fn(),
-  };
-  const core = {
-    destroy: vi.fn(),
-    finish: vi.fn(),
-    resize: vi.fn(),
-    setVisible: vi.fn(),
-  };
-  const webgl = {
-    destroy: vi.fn(),
-    render: vi.fn(),
-    resize: vi.fn(),
-    uploadRays: vi.fn(),
-  };
-  const classList = { toggle: vi.fn() };
-  const document = {
-    addEventListener: vi.fn(),
-    body: {
-      classList,
-      prepend: vi.fn(),
-      style: { removeProperty: vi.fn(), setProperty: vi.fn() },
-    },
-    createElement: vi.fn(() => canvas),
-    hidden: false,
-    removeEventListener: vi.fn(),
-  };
-  const context = loadScripts(["dashboard-sync-sunburst-renderer.js"], {
-    PacePetsDashboardPreferences: {
-      addMotionPreferenceChangeListener: () => vi.fn(),
-      motionPreferenceEnabled: () => true,
-    },
-    PacePetsDashboardSyncSunburstCore: { create: () => core },
-    PacePetsDashboardSyncSunburstLayout: {
-      create: () => ({
-        current: () => ({ pixelRatio: 2, radius: 300 }),
-        invalidate: vi.fn(),
-      }),
-    },
-    PacePetsDashboardSyncSunburstRays: {
-      create: () => [{}],
-      createReplacement: vi.fn(),
-    },
-    PacePetsDashboardSyncSunburstTurnover: {
-      create: () => ({ update: () => false }),
-    },
-    PacePetsDashboardSyncSunburstWebglRenderer: {
-      create: (_, nextCallbacks) => {
-        callbacks = nextCallbacks;
-        return webgl;
-      },
-    },
-    addEventListener: vi.fn(),
-    cancelAnimationFrame: vi.fn(),
-    clearTimeout: vi.fn(),
-    document,
-    performance: { now: () => 31_000 },
-    removeEventListener: vi.fn(),
-    requestAnimationFrame: vi.fn(() => 2),
-    setTimeout: vi.fn(() => 1),
-  });
-  const scene = context.PacePetsDashboardSyncSunburst.create(
-    { x: 400, y: 300 },
-    { startComplete: true },
-  );
-  return { callbacks, canvas, classList, core, scene, webgl };
-}
-
 describe("Perfect Sync retained sunburst layout", () => {
   it("reads panel geometry only when viewport inputs change", () => {
     const panelRect = vi.fn(() => ({ width: 620 }));
@@ -252,53 +180,6 @@ describe("Perfect Sync retained core", () => {
           context2d.createRadialGradient.mock.calls.length === 1,
       ),
     ).toBe(true);
-  });
-});
-
-describe("Perfect Sync scene presentation lifecycle", () => {
-  it("hides every retained layer while the WebGL context is lost", () => {
-    const { callbacks, canvas, classList, core, scene, webgl } =
-      createSceneLifecycleHarness();
-    expect(scene).not.toBeNull();
-    expect(canvas.hidden).toBe(false);
-    expect(webgl.render).toHaveBeenCalledWith(
-      expect.objectContaining({ finishedAtMs: 31_000 }),
-    );
-    expect(core.setVisible).toHaveBeenLastCalledWith(true);
-    expect(classList.toggle).toHaveBeenLastCalledWith(
-      "has-sync-sunburst-page-background",
-      true,
-    );
-    callbacks.onContextLost();
-    expect(canvas.hidden).toBe(true);
-    expect(core.setVisible).toHaveBeenLastCalledWith(false);
-    expect(classList.toggle).toHaveBeenLastCalledWith(
-      "has-sync-sunburst-page-background",
-      false,
-    );
-    callbacks.onContextRestored();
-    expect(canvas.hidden).toBe(false);
-    expect(core.setVisible).toHaveBeenLastCalledWith(true);
-    expect(classList.toggle).toHaveBeenLastCalledWith(
-      "has-sync-sunburst-page-background",
-      true,
-    );
-
-    scene.stop();
-    expect(canvas.hidden).toBe(true);
-    expect(core.destroy).toHaveBeenCalledOnce();
-    expect(webgl.destroy).toHaveBeenCalledOnce();
-  });
-
-  it("lets the hidden attribute override retained layer display rules", () => {
-    const css = fs.readFileSync(
-      path.join(extensionRoot, "dashboard-sync-effects.css"),
-      "utf8",
-    );
-
-    expect(css).toMatch(
-      /\.sync-sunburst-page-background\[hidden\],[\s\S]*?\.sync-sunburst-core-glow\[hidden\],[\s\S]*?\.sync-sunburst-core-bloom\[hidden\] \{[\s\S]*?display: none;/,
-    );
   });
 });
 

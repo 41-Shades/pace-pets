@@ -174,7 +174,8 @@ dashboard and toolbar entry point remain cooldown-limited across Manifest V3
 worker restarts.
 
 The dashboard routes `Clear data` through the background worker. Starting a
-clear invalidates older in-flight fetch generations, then the exclusive
+clear invalidates older refresh requests, including manual requests still
+awaiting permission or cooldown checks, then the exclusive
 usage-data transaction removes history and refresh status and resets the badge;
 an older refresh cannot commit either key afterward. Web Locks are required in
 the extension runtime so dashboard and worker contexts share that exclusion.
@@ -185,6 +186,10 @@ clear releases only after its normalized committed render. A failed clear first
 re-reads authoritative local state; only if that recovery read itself fails does
 it restore the prior presentation, and only when that presentation was
 authoritative and no newer dashboard load owns the boundary.
+
+Status-only storage changes update the cached dashboard directly when no load
+is pending. During a load, they start a newer load through the same generation
+boundary so an older snapshot cannot overwrite the new status.
 
 ## Developer Controls
 

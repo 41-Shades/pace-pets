@@ -3,7 +3,6 @@
 
   const VERTEX_SHADER_SOURCE = `
 attribute vec2 a_position;
-
 void main() {
   gl_Position = vec4(a_position, 0.0, 1.0);
 }
@@ -133,6 +132,7 @@ float crackRayEvent(
 ) {
   float age = max(0.0, localSeconds - start);
   float pulse = pulseWindow(localSeconds, start, 0.025, 0.16, 0.42);
+  if (pulse == 0.0) { return 0.0; }
   float head = mix(0.08, reach, easeOutCubic(age / 0.34));
   float radialGate =
     smoothstep(0.018, 0.075, radius) *

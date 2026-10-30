@@ -46,8 +46,8 @@
       this.setSyncMonkEscapeActive?.(true, { entered: enteredSync });
     },
 
-    createSyncSunburstPageBackgroundScene(origin, enteredSync) {
-      const scene = SyncSunburst.create(origin, {
+    createSyncSunburstPageBackgroundScene(enteredSync) {
+      const scene = SyncSunburst.create(this.elements.paceIcon, {
         startedAtMs: this.syncSunburstPageBackgroundStartedAtMs,
       });
       if (!scene) {
@@ -60,19 +60,7 @@
       return true;
     },
 
-    updateSyncSunburstPageBackgroundScene(origin, enteredSync) {
-      if (origin) {
-        this.syncSunburstPageBackgroundScene.updateOrigin(origin);
-      }
-      this.activateSyncMonkEscape(enteredSync);
-      return true;
-    },
-
-    setSyncSunburstPageBackgroundActive(
-      active,
-      origin,
-      { enteredSync = false } = {},
-    ) {
+    setSyncSunburstPageBackgroundActive(active, { enteredSync = false } = {}) {
       if (!active || this.motionPreferenceEnabled?.() === false) {
         return this.deactivateSyncSunburstPageBackground();
       }
@@ -81,13 +69,11 @@
       this.syncSunburstPageBackgroundStartedAtMs ??= window.performance.now();
 
       if (this.syncSunburstPageBackgroundScene) {
-        return this.updateSyncSunburstPageBackgroundScene(origin, enteredSync);
-      }
-      if (!origin) {
-        return false;
+        this.activateSyncMonkEscape(enteredSync);
+        return true;
       }
 
-      return this.createSyncSunburstPageBackgroundScene(origin, enteredSync);
+      return this.createSyncSunburstPageBackgroundScene(enteredSync);
     },
   });
 })();
