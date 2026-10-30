@@ -424,6 +424,8 @@ existing four-stop color gradients, softened broad-ray edges, length motion,
 fade curves, draw order, and 30-second timing. The center glow and bloom use
 retained canvases rasterized from the original gradient stops only when their
 size changes, while viewport and panel geometry remain cached until resize.
+The icon anchor is remeasured on resize and page scroll without restarting the
+animation or replacing its ray field; ordinary frames reuse that position.
 Settled frames also leave unchanged panel-style variables untouched.
 After 60 continuous seconds in Perfect Sync, the dashboard clones the status
 monk into a fixed page layer, hides the in-card icon, and launches the clone

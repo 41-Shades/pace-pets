@@ -47,14 +47,6 @@
     context.classList.add(level);
   }
 
-  function paceIconOrigin(controller) {
-    const iconRect = controller.elements.paceIcon.getBoundingClientRect();
-    return {
-      x: iconRect.left + iconRect.width / 2,
-      y: iconRect.top + iconRect.height / 2,
-    };
-  }
-
   function hasPaceIconEffect(state) {
     return Boolean(DATA.PACE_ICON_EFFECTS_BY_STATE[state.key]);
   }
@@ -115,14 +107,8 @@
       return;
     }
 
-    const sceneActive = Boolean(controller.syncSunburstPageBackgroundScene);
     const enteredSync = previousState.key !== DATA.PACE_STATES.sync.key;
-    const shouldUpdateOrigin = previousState.key !== state.key || !sceneActive;
-    controller.setSyncSunburstPageBackgroundActive?.(
-      true,
-      shouldUpdateOrigin ? paceIconOrigin(controller) : null,
-      { enteredSync },
-    );
+    controller.setSyncSunburstPageBackgroundActive?.(true, { enteredSync });
   }
 
   function updatePaceLevelSideEffects(

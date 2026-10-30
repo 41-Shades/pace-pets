@@ -288,6 +288,9 @@
     }
 
     const remainingMs = await manualRefreshCooldownRemainingMs();
+    if (!isCurrentUsageDataGeneration(refreshGeneration)) {
+      return REFRESH_CONTROL.refreshNowResponse(lastRefreshState);
+    }
     if (remainingMs > 0) {
       return REFRESH_CONTROL.manualRefreshCooldownResponse(
         lastRefreshState,
@@ -298,6 +301,9 @@
     await persistManualRefreshCooldownUntilMs(
       Date.now() + REFRESH_CONTROL.MANUAL_REFRESH_COOLDOWN_MS,
     );
+    if (!isCurrentUsageDataGeneration(refreshGeneration)) {
+      return REFRESH_CONTROL.refreshNowResponse(lastRefreshState);
+    }
     return runScheduledRefresh().then(REFRESH_CONTROL.refreshNowResponse);
   }
 

@@ -257,7 +257,8 @@
       if (
         !refreshStatusChange ||
         changes[CodexUsageHistory.HISTORY_STORAGE_KEY] ||
-        changes[this.DEVELOPER_OPTIONS_STORAGE_KEY]
+        changes[this.DEVELOPER_OPTIONS_STORAGE_KEY] ||
+        this.dashboardStateLoader.isLoading()
       ) {
         return false;
       }
